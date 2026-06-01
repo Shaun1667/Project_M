@@ -1,0 +1,190 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.Tilemaps;
+
+public class MapGenerator : MonoBehaviour
+{
+    public static MapGenerator instance;
+
+    delegate int Extensive<T>(T count);
+    Extensive<int> PICK;
+
+    private float _subseed = 3141592653; //시드값을 11진수 이상 사용 고려해볼것
+    public int mapX;
+    public int mapY;
+    int Room_count;
+    int Room_maxsize;
+    int Room_minsize;
+    Vector3Int mappos;
+
+    public Sprite tileSprite;
+    public Tilemap tilemap;
+    public TileBase[] groundbase;
+
+
+    public struct MapTile
+    {
+        public int type;    //0 벽, 1 땅
+        public int state;   //0 빈칸, 1 차있음
+        public int obstacle;    //장애물
+    }
+
+    public float subSeed
+    {
+        get { return _subseed; }
+    }
+
+    private int _seed;
+    public int Seed
+    {
+        get
+        {
+            return _seed;
+        }
+        private set
+        {
+            _seed = value;
+        }
+    }
+
+    static class YieldCache
+    {
+        public static readonly WaitForSeconds Seconds001 = new WaitForSeconds(0.01f);
+        public static readonly WaitForSeconds Seconds01 = new WaitForSeconds(0.1f);
+        public static readonly WaitForSeconds Seconds02 = new WaitForSeconds(0.2f);
+        public static readonly WaitForSeconds Seconds1 = new WaitForSeconds(1);
+        public static readonly WaitForEndOfFrame EOF = new WaitForEndOfFrame();
+
+    }
+
+    private void Awake()
+    {
+        if (instance == null)
+        {
+            instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+
+        SetDel();
+    }
+
+    void SetDel()
+    {
+        PICK = (count) => { return Random.Range(0, count); };
+    }
+
+
+
+
+
+    private void Start()
+    {
+        NewGame(); //테스트용
+        MapPrinter(MapMaker());
+    }
+
+    public void NewGame()
+    {
+        //새로 사용할 시드
+        System.Random randSeed = new System.Random();
+        int seed = randSeed.Next();
+
+        Debug.Log(seed);
+        Seed = seed;
+
+        Random.InitState(Seed);  //현재 시드 기준으로 고정
+
+    }
+
+    private MapTile[,] MapMaker()
+    {
+        Room_count = mapX / 10 + mapY / 10;
+        Room_maxsize = mapX / 5 + mapY / 5;
+        Room_minsize = 7;
+        //맵 크기
+        MapTile[,] map = new MapTile[mapX, mapY];
+
+        //방 갯수
+        int pickx, picky, picksizex, picksizey;
+        for (int i = 0; i < Room_count; i++)
+        {
+            while (true)
+            {
+                pickx = PICK(mapX - Room_minsize);
+                picky = PICK(mapY - Room_minsize);
+                picksizex = PICK(Room_maxsize);
+                if (picksizex < Room_minsize)
+                {
+                    picksizex += Room_minsize;
+                }
+                picksizey = PICK(Room_maxsize);
+                if (picksizey < Room_minsize)
+                {
+                    picksizey += Room_minsize;
+                    Debug.Log("최소값보정");
+                }
+                Debug.Log(picksizey);
+                if (map[pickx, picky].type == 0)
+                {
+                    for (int j = 0; j < picksizey; j++)
+                    {
+                        for (int k = 0; k < picksizex; k++)
+                        {
+                            if (pickx + k < mapX && picky + j < mapY)
+                            {
+                                //if (map[pickx + k, picky + j].type == 1)
+                                //{
+                                //    break;
+                                //}
+                                //else
+                                //{
+                                map[pickx + k, picky + j].type = 1;
+                                if (pickx + k + 1 >= mapX)
+                                {
+                                    break;
+                                }
+                                //}
+                            }
+                        }
+                        if (picky + j + 1 >= mapY)
+                        {
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+        return map;
+    }
+
+    private void MapPrinter(MapTile[,] map)
+    {
+        // 특정 좌표(예: 0, 0, 0)의 타일 가져오기
+        mappos.z = 0;
+        //TileBase tile;
+        for (int i = 0; i < mapY; i++)
+        {
+            for (int j = 0; j < mapX; j++)
+            {
+                if (map[j, i].type == 1)
+                {
+                    mappos.x = j;
+                    mappos.y = i;
+                    //tile = tilemap.GetTile(mappos);
+                    tilemap.SetTile(mappos, groundbase[0]);
+                }
+
+            }
+        }
+
+
+
+    }
+
+}
