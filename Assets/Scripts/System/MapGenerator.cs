@@ -10,6 +10,9 @@ public class MapGenerator : MonoBehaviour
     delegate int Extensive<T>(T count);
     Extensive<int> PICK;
 
+    delegate int Extensive2<T>(T count, T count2);
+    Extensive2<int> RANGE;
+
     private float _subseed = 3141592653; //시드값을 11진수 이상 사용 고려해볼것
     public int mapX;
     public int mapY;
@@ -17,6 +20,7 @@ public class MapGenerator : MonoBehaviour
     int Room_maxsize;
     int Room_minsize;
     Vector3Int mappos;
+
 
     public Sprite tileSprite;
     public Tilemap tilemap;
@@ -29,6 +33,7 @@ public class MapGenerator : MonoBehaviour
         public int state;   //0 빈칸, 1 차있음
         public int obstacle;    //장애물
     }
+    List<MapTile[,]> Room_list;
 
     public float subSeed
     {
@@ -76,6 +81,7 @@ public class MapGenerator : MonoBehaviour
     void SetDel()
     {
         PICK = (count) => { return Random.Range(0, count); };
+        RANGE = (count, count2) => { return Random.Range(count, count2); };
     }
 
 
@@ -105,12 +111,14 @@ public class MapGenerator : MonoBehaviour
     {
         Room_count = mapX / 10 + mapY / 10;
         Room_maxsize = mapX / 5 + mapY / 5;
+        //맵 크기와 방 갯수
         Room_minsize = 7;
-        //맵 크기
         MapTile[,] map = new MapTile[mapX, mapY];
-
-        //방 갯수
+        //전체 맵
+        Room_list = new List<MapTile[,]>();
+        //방 리스트
         int pickx, picky, picksizex, picksizey;
+        int[,] nowroom;
         for (int i = 0; i < Room_count; i++)
         {
             while (true)
@@ -120,16 +128,16 @@ public class MapGenerator : MonoBehaviour
                 picksizex = PICK(Room_maxsize);
                 if (picksizex < Room_minsize)
                 {
-                    picksizex += Room_minsize;
+                    picksizex += Room_minsize;  //최소값 보정
                 }
                 picksizey = PICK(Room_maxsize);
                 if (picksizey < Room_minsize)
                 {
-                    picksizey += Room_minsize;
-                    Debug.Log("최소값보정");
+                    picksizey += Room_minsize;  //최소값 보정
                 }
-                Debug.Log(picksizey);
-                if (map[pickx, picky].type == 0)
+                
+                
+                if (map[pickx, picky].type == 0)    //첫 스타트 지점이 벽인지 확인
                 {
                     for (int j = 0; j < picksizey; j++)
                     {
@@ -143,13 +151,18 @@ public class MapGenerator : MonoBehaviour
                                 //}
                                 //else
                                 //{
-                                map[pickx + k, picky + j].type = 1;
+                                map[picky + j, pickx + k].type = 1;
+
                                 if (pickx + k + 1 >= mapX)
                                 {
                                     break;
                                 }
                                 //}
                             }
+                        }
+                        if (picky+j == picksizey || picky + j + 1 >= mapY)
+                        {
+
                         }
                         if (picky + j + 1 >= mapY)
                         {
