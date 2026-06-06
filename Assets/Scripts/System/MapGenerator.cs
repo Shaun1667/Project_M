@@ -1,8 +1,10 @@
+//using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using UnityEngine.UIElements;
 
 
 //[System.Serializable]
@@ -37,8 +39,13 @@ public class MapGenerator : MonoBehaviour
     int Room_count;
     int Room_maxsize;
     int Room_minsize;
+<<<<<<< HEAD
     Vector3Int mappos; 
 
+=======
+    Vector3Int mappos;
+    List<List<int>> mappoints;
+>>>>>>> origin/main
 
     public Sprite tileSprite;
     public Tilemap tilemap;
@@ -50,8 +57,9 @@ public class MapGenerator : MonoBehaviour
         public int type;    //0 벽, 1 땅
         public int state;   //0 빈칸, 1 차있음
         public int obstacle;    //장애물
+        public int x,y;    //좌표
     }
-    List<MapTile[,]> Room_list;
+    List<List<MapTile>> Room_list;
 
     public float subSeed
     {
@@ -133,11 +141,15 @@ public class MapGenerator : MonoBehaviour
         Room_minsize = 7;
         MapTile[,] map = new MapTile[mapX, mapY];
         //전체 맵
-        Room_list = new List<MapTile[,]>();
+        Room_list = new List<List<MapTile>>();
+        mappoints = new List<List<int>>();
         //방 리스트
         int pickx, picky, picksizex, picksizey;
         for (int i = 0; i < Room_count; i++)
         {
+            Room_list.Add(new List<MapTile>());
+            mappoints.Add(new List<int>());
+
             while (true)
             {
                 pickx = PICK(mapX - Room_minsize);
@@ -152,8 +164,8 @@ public class MapGenerator : MonoBehaviour
                 {
                     picksizey += Room_minsize;  //최소값 보정
                 }
-                
-                
+
+
                 if (map[pickx, picky].type == 0)    //첫 스타트 지점이 벽인지 확인
                 {
                     for (int j = 0; j < picksizey; j++)
@@ -169,6 +181,12 @@ public class MapGenerator : MonoBehaviour
                                 //else
                                 //{
                                 map[picky + j, pickx + k].type = 1;
+                                map[picky + j, pickx + k].y = picky + j;
+                                map[picky + j, pickx + k].x = pickx + j;
+
+                                
+                                
+                                Room_list[i].Add(map[picky + j, pickx + k]);
 
                                 if (pickx + k + 1 >= mapX)
                                 {
@@ -177,7 +195,7 @@ public class MapGenerator : MonoBehaviour
                                 //}
                             }
                         }
-                        if (picky+j == picksizey || picky + j + 1 >= mapY)
+                        if (picky + j == picksizey || picky + j + 1 >= mapY)
                         {
 
                         }
@@ -190,6 +208,20 @@ public class MapGenerator : MonoBehaviour
                 }
             }
         }
+        for (int i = 0; i < Room_list.Count; i++)
+        {
+            int ran = PICK(Room_list[i].Count);
+
+            mappoints[i].Add(Room_list[i][ran].y);
+            mappoints[i].Add(Room_list[i][ran].x);
+        }
+
+
+
+
+
+
+
         return map;
     }
 
