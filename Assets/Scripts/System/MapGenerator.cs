@@ -1,4 +1,3 @@
-//using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor.Experimental.GraphView;
@@ -39,13 +38,9 @@ public class MapGenerator : MonoBehaviour
     int Room_count;
     int Room_maxsize;
     int Room_minsize;
-<<<<<<< HEAD
-    Vector3Int mappos; 
-
-=======
     Vector3Int mappos;
     List<List<int>> mappoints;
->>>>>>> origin/main
+
 
     public Sprite tileSprite;
     public Tilemap tilemap;
