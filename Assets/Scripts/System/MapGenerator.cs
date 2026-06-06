@@ -1,7 +1,25 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+
+
+//[System.Serializable]
+//public class MapTile
+//{
+//    public MapTile(int _type, int _x, int _y) { type = _type; x = _x; y = _y; }
+    
+//    public int type;    //0 벽, 1 땅
+//    public int state;   //0 빈칸, 1 차있음
+//    public int obstacle;    //장애물
+
+//    public Node ParentNode;
+
+//    // G : 시작으로부터 이동했던 거리, H : |가로|+|세로| 장애물 무시하여 목표까지의 거리, F : G + H
+//    public int x, y, G, H;
+//    public int F { get { return G + H; } }
+//}
 
 public class MapGenerator : MonoBehaviour
 {
@@ -19,7 +37,7 @@ public class MapGenerator : MonoBehaviour
     int Room_count;
     int Room_maxsize;
     int Room_minsize;
-    Vector3Int mappos;
+    Vector3Int mappos; 
 
 
     public Sprite tileSprite;
@@ -118,7 +136,6 @@ public class MapGenerator : MonoBehaviour
         Room_list = new List<MapTile[,]>();
         //방 리스트
         int pickx, picky, picksizex, picksizey;
-        int[,] nowroom;
         for (int i = 0; i < Room_count; i++)
         {
             while (true)
