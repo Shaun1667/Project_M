@@ -974,6 +974,7 @@ MonoBehaviour:
   tilemap: {fileID: 469002044}
   groundbase:
   - {fileID: 11400000, guid: ee903c320c304824cb4f110734a08cb8, type: 2}
+  - {fileID: 11400000, guid: aab5fecba8310454cbb6b623d0fd1cb9, type: 2}
   bottomLeft: {x: 0, y: 0}
   topRight: {x: 50, y: 50}
   startPos: {x: 0, y: 0}

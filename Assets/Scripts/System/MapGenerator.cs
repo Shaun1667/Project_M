@@ -115,9 +115,11 @@ public class MapGenerator : MonoBehaviour
     {
         NewGame(); //테스트용
         //MapPrinter(MapMaker());
-        MapMaker();
+        MapMaker(2);
+        MapMaker(1);
         
         PathFinding();
+        WallMaker();
         //StartCoroutine(MapPrinter(Wholemap));
         //StartCoroutine(MapPrinter(Wholemap));
     }
@@ -138,14 +140,6 @@ public class MapGenerator : MonoBehaviour
 
         Random.InitState(Seed);  //현재 시드 기준으로 고정
 
-    }
-
-    private void MapMaker()
-    {
-        Room_count = mapX / 10 + mapY / 10;
-        Room_maxsize = mapX / 5 + mapY / 5;
-        //맵 크기와 방 갯수
-        Room_minsize = 7;
         Wholemap = new MapTile[mapX, mapY];   //전체 맵
 
         for (int i = 0; i < mapX; i++)  // 값 초기화
@@ -155,6 +149,23 @@ public class MapGenerator : MonoBehaviour
                 Wholemap[i, j] = new MapTile(0, i, j);  // type=0(null), x=i, y=j
             }
         }
+    }
+
+    private void MapMaker(int mode)
+    {
+        Room_count = 10;
+        Room_maxsize = 20;
+        Room_minsize = 7;
+        //맵 크기와 방 갯수
+        
+        if(mode == 2)
+        {
+            Room_count = Room_count * 2;
+            Room_maxsize = Room_maxsize / 2;
+            Room_minsize = 3;
+        }
+        
+
 
         //각각 방과 방 기준점
         Room_list = new List<List<MapTile>>();
@@ -192,8 +203,14 @@ public class MapGenerator : MonoBehaviour
                         {
                             if (pickx + j < mapX && picky + k < mapY)
                             {
-
-                                Wholemap[pickx + j, picky + k].type = 1;
+                                if (mode == 1&& Wholemap[pickx + j, picky + k].type!=2)
+                                {
+                                    Wholemap[pickx + j, picky + k].type = 1;
+                                }
+                                else if (mode == 2)
+                                {
+                                    Wholemap[pickx + j, picky + k].type = 2;
+                                }
                                 //Wholemap[pickx + j, picky + k].x = pickx + j;
                                 //Wholemap[pickx + j, picky + k].y = picky + k;
 
@@ -236,6 +253,20 @@ public class MapGenerator : MonoBehaviour
 
     }
 
+    private void WallMaker()
+    {
+        for (int i = 0; i < mapX; i++)  // 값 초기화
+        {
+            for (int j = 0; j < mapY; j++)
+            {
+                if(Wholemap[i, j].type == 0)
+                {
+                    Wholemap[i, j].type = 2;
+                }
+            }
+        }
+    }
+
     IEnumerator MapPrinter(MapTile[,] map)
     //private void MapPrinter(MapTile[,] map)
     {
@@ -252,6 +283,14 @@ public class MapGenerator : MonoBehaviour
                     mappos.y = j;
                     //tile = tilemap.GetTile(mappos);
                     tilemap.SetTile(mappos, groundbase[0]);
+                    yield return YieldCache.Seconds001;
+                }
+                if (map[i, j].type == 2)
+                {
+                    mappos.x = i;
+                    mappos.y = j;
+                    //tile = tilemap.GetTile(mappos);
+                    tilemap.SetTile(mappos, groundbase[1]);
                     yield return YieldCache.Seconds001;
                 }
 
