@@ -31,32 +31,28 @@ public class MapGenerator : MonoBehaviour
     delegate int Extensive2<T>(T count, T count2);
     Extensive2<int> RANGE;
 
-    private float _subseed = 3141592653; //시드값을 11진수 이상 사용 고려해볼것
+    delegate void NewGameReset();
+    NewGameReset NEWMAP;
+
+    private float _subseed = 3141592653; //차후 시드가 null일 경우를 대비한 시드값
     public int mapX;
     public int mapY;
     int Room_count;
     int Room_maxsize;
     int Room_minsize;
     Vector3Int mappos;
-    //List<List<int>> mappoints;
     List<MapTile> mappoints;
-
+    List<List<MapTile>> Room_list;
 
     public Sprite tileSprite;
     public Tilemap tilemap;
     public TileBase[] groundbase;
-
     public Vector2Int bottomLeft, topRight, startPos, targetPos;
     public List<MapTile> FinalNodeList;
-
-    int sizeX, sizeY;
 
     MapTile StartNode, TargetNode, CurNode;
     MapTile[,] Wholemap;
     List<MapTile> OpenList, ClosedList;
-
-
-    List<List<MapTile>> Room_list;
 
     public float subSeed
     {
@@ -76,7 +72,7 @@ public class MapGenerator : MonoBehaviour
         }
     }
 
-    static class YieldCache
+    static class YieldCache //추후 이용할 yield return 미리 정리
     {
         public static readonly WaitForSeconds Seconds001 = new WaitForSeconds(0.01f);
         public static readonly WaitForSeconds Seconds01 = new WaitForSeconds(0.1f);
@@ -88,7 +84,7 @@ public class MapGenerator : MonoBehaviour
 
     private void Awake()
     {
-        if (instance == null)
+        if (instance == null)   //싱글톤 패턴
         {
             instance = this;
             DontDestroyOnLoad(gameObject);
@@ -101,10 +97,12 @@ public class MapGenerator : MonoBehaviour
         SetDel();
     }
 
-    void SetDel()
+    void SetDel()   //각각 델리게이트 정리
     {
         PICK = (count) => { return Random.Range(0, count); };
         RANGE = (count, count2) => { return Random.Range(count, count2); };
+        NEWMAP = () => { Wholemap = new MapTile[mapX, mapY]; };
+        NEWMAP += () => { for (int i = 0; i < mapX; i++) { for (int j = 0; j < mapY; j++) { Wholemap[i, j] = new MapTile(0, i, j); } } };
     }
 
 
@@ -113,15 +111,13 @@ public class MapGenerator : MonoBehaviour
 
     private void Start()
     {
-        NewGame(); //테스트용
-        //MapPrinter(MapMaker());
+        NewGame();
+
         MapMaker(2);
         MapMaker(1);
-        
+
         PathFinding();
         WallMaker();
-        //StartCoroutine(MapPrinter(Wholemap));
-        //StartCoroutine(MapPrinter(Wholemap));
     }
 
     public void MapButton()
@@ -140,36 +136,27 @@ public class MapGenerator : MonoBehaviour
 
         Random.InitState(Seed);  //현재 시드 기준으로 고정
 
-        Wholemap = new MapTile[mapX, mapY];   //전체 맵
-
-        for (int i = 0; i < mapX; i++)  // 값 초기화
-        {
-            for (int j = 0; j < mapY; j++)
-            {
-                Wholemap[i, j] = new MapTile(0, i, j);  // type=0(null), x=i, y=j
-            }
-        }
+        NEWMAP();
     }
 
-    private void MapMaker(int mode)
+    private void MapMaker(int mode) //모드1 방설치, 모드2 벽설치
     {
         Room_count = 10;
         Room_maxsize = 20;
         Room_minsize = 7;
-        //맵 크기와 방 갯수
-        
-        if(mode == 2)
+        //방 크기와 갯수
+
+        if (mode == 2)  //벽설치 모드 보정값
         {
             Room_count = Room_count * 2;
             Room_maxsize = Room_maxsize / 2;
             Room_minsize = 3;
         }
-        
 
 
-        //각각 방과 방 기준점
+
+        //각각 방과 방을 이을 길의 기준점
         Room_list = new List<List<MapTile>>();
-        //mappoints = new List<List<MapTile>>();
         mappoints = new List<MapTile>();
 
         int pickx, picky, picksizex, picksizey;
@@ -195,7 +182,7 @@ public class MapGenerator : MonoBehaviour
                 }
 
 
-                if (Wholemap[pickx, picky].type != 2)    //첫 스타트 지점이 벽인지 확인
+                if (Wholemap[pickx, picky].type != 2)    //벽인지 확인
                 {
                     for (int j = 0; j < picksizex; j++)
                     {
@@ -203,7 +190,7 @@ public class MapGenerator : MonoBehaviour
                         {
                             if (pickx + j < mapX && picky + k < mapY)
                             {
-                                if (mode == 1&& Wholemap[pickx + j, picky + k].type!=2)
+                                if (mode == 1 && Wholemap[pickx + j, picky + k].type != 2)
                                 {
                                     Wholemap[pickx + j, picky + k].type = 1;
                                 }
@@ -211,10 +198,6 @@ public class MapGenerator : MonoBehaviour
                                 {
                                     Wholemap[pickx + j, picky + k].type = 2;
                                 }
-                                //Wholemap[pickx + j, picky + k].x = pickx + j;
-                                //Wholemap[pickx + j, picky + k].y = picky + k;
-
-
 
                                 Room_list[i].Add(Wholemap[pickx + j, picky + k]);
 
@@ -222,13 +205,8 @@ public class MapGenerator : MonoBehaviour
                                 {
                                     break;
                                 }
-                                //}
                             }
                         }
-                        //if (pickx + j == picksizey || pickx + j + 1 >= mapX)
-                        //{
-
-                        //}
                         if (pickx + j + 1 >= mapX)
                         {
                             break;
@@ -242,24 +220,19 @@ public class MapGenerator : MonoBehaviour
         for (int i = 0; i < Room_list.Count; i++)
         {
             int ran = PICK(Room_list[i].Count);
-
-
-            //mappoints[i].x = Room_list[i][ran].x;
-            //mappoints[i].y = Room_list[i][ran].y;
             mappoints[i] = Room_list[i][ran];
-
         }
 
 
     }
 
-    private void WallMaker()
+    private void WallMaker()    //type이 0(null)인 모든 곳에 벽 설치
     {
-        for (int i = 0; i < mapX; i++)  // 값 초기화
+        for (int i = 0; i < mapX; i++)  
         {
             for (int j = 0; j < mapY; j++)
             {
-                if(Wholemap[i, j].type == 0)
+                if (Wholemap[i, j].type == 0)
                 {
                     Wholemap[i, j].type = 2;
                 }
@@ -268,11 +241,8 @@ public class MapGenerator : MonoBehaviour
     }
 
     IEnumerator MapPrinter(MapTile[,] map)
-    //private void MapPrinter(MapTile[,] map)
     {
-        // 특정 좌표(예: 0, 0, 0)의 타일 가져오기
         mappos.z = 0;
-        //TileBase tile;
         for (int i = 0; i < mapX; i++)
         {
             for (int j = 0; j < mapY; j++)
@@ -281,7 +251,6 @@ public class MapGenerator : MonoBehaviour
                 {
                     mappos.x = i;
                     mappos.y = j;
-                    //tile = tilemap.GetTile(mappos);
                     tilemap.SetTile(mappos, groundbase[0]);
                     yield return YieldCache.Seconds001;
                 }
@@ -289,7 +258,6 @@ public class MapGenerator : MonoBehaviour
                 {
                     mappos.x = i;
                     mappos.y = j;
-                    //tile = tilemap.GetTile(mappos);
                     tilemap.SetTile(mappos, groundbase[1]);
                     yield return YieldCache.Seconds001;
                 }
@@ -335,8 +303,7 @@ public class MapGenerator : MonoBehaviour
                     FinalNodeList.Add(StartNode);
                     FinalNodeList.Reverse();
 
-                    //for (int j = 0; j < FinalNodeList.Count; j++) print(j + "번째는 " + FinalNodeList[j].x + ", " + FinalNodeList[j].y);
-                    for (int j = 0; j < FinalNodeList.Count; j++)
+                    for (int j = 0; j < FinalNodeList.Count; j++)   //이어진 루트에 땅 설치
                     {
                         Wholemap[FinalNodeList[j].x, FinalNodeList[j].y].type = 1;
                     }
