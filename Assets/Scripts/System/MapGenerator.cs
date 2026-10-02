@@ -38,6 +38,7 @@ public class MapGenerator : MonoBehaviour
     int Room_maxsize;
     int Room_minsize;
     Vector3Int mappos;
+    public Vector3Int startpos, endpos;
     //List<List<int>> mappoints;
     List<MapTile> mappoints;
 
@@ -82,6 +83,7 @@ public class MapGenerator : MonoBehaviour
         public static readonly WaitForSeconds Seconds01 = new WaitForSeconds(0.1f);
         public static readonly WaitForSeconds Seconds02 = new WaitForSeconds(0.2f);
         public static readonly WaitForSeconds Seconds1 = new WaitForSeconds(1);
+        public static readonly WaitForSeconds Seconds5 = new WaitForSeconds(5);
         public static readonly WaitForEndOfFrame EOF = new WaitForEndOfFrame();
 
     }
@@ -107,21 +109,38 @@ public class MapGenerator : MonoBehaviour
         RANGE = (count, count2) => { return Random.Range(count, count2); };
     }
 
-
-
-
-
     private void Start()
     {
-        NewGame(); //테스트용
-        //MapPrinter(MapMaker());
+        //StartCoroutine(teststart());
+        //NewGame();
+
+        //MapMaker(2);
+        //MapMaker(1);
+
+        //PathFinding();
+        //WallMaker();
+    }
+    //IEnumerator teststart()
+    //{
+    //    NewGame();
+
+    //    MapMaker(2);
+    //    yield return YieldCache.Seconds5;
+    //    MapMaker(1);
+    //    yield return YieldCache.Seconds5;
+    //    PathFinding();
+    //    WallMaker();
+    //}
+
+    public void Newmap()
+    {
+        NewGame();
+
         MapMaker(2);
         MapMaker(1);
-        
+
         PathFinding();
         WallMaker();
-        //StartCoroutine(MapPrinter(Wholemap));
-        //StartCoroutine(MapPrinter(Wholemap));
     }
 
     public void MapButton()
@@ -157,14 +176,14 @@ public class MapGenerator : MonoBehaviour
         Room_maxsize = 20;
         Room_minsize = 7;
         //맵 크기와 방 갯수
-        
-        if(mode == 2)
+
+        if (mode == 2)
         {
             Room_count = Room_count * 2;
             Room_maxsize = Room_maxsize / 2;
             Room_minsize = 3;
         }
-        
+
 
 
         //각각 방과 방 기준점
@@ -203,9 +222,10 @@ public class MapGenerator : MonoBehaviour
                         {
                             if (pickx + j < mapX && picky + k < mapY)
                             {
-                                if (mode == 1&& Wholemap[pickx + j, picky + k].type!=2)
+                                if (mode == 1 && Wholemap[pickx + j, picky + k].type != 2)
                                 {
                                     Wholemap[pickx + j, picky + k].type = 1;
+                                    Room_list[i].Add(Wholemap[pickx + j, picky + k]);
                                 }
                                 else if (mode == 2)
                                 {
@@ -213,10 +233,6 @@ public class MapGenerator : MonoBehaviour
                                 }
                                 //Wholemap[pickx + j, picky + k].x = pickx + j;
                                 //Wholemap[pickx + j, picky + k].y = picky + k;
-
-
-
-                                Room_list[i].Add(Wholemap[pickx + j, picky + k]);
 
                                 if (picky + k + 1 >= mapY)
                                 {
@@ -239,15 +255,30 @@ public class MapGenerator : MonoBehaviour
             }
         }
 
-        for (int i = 0; i < Room_list.Count; i++)
+        //각각 방 관리
+        if (mode == 1)
         {
-            int ran = PICK(Room_list[i].Count);
+            for (int i = 0; i < Room_list.Count; i++)
+            {
+                int ran = PICK(Room_list[i].Count);
 
 
-            //mappoints[i].x = Room_list[i][ran].x;
-            //mappoints[i].y = Room_list[i][ran].y;
-            mappoints[i] = Room_list[i][ran];
+                mappoints[i] = Room_list[i][ran];
 
+                if (i == 0)
+                {
+                    startpos.x = mappoints[i].x;
+                    startpos.y = mappoints[i].y;
+                    Wholemap[mappoints[i].x, mappoints[i].y].type = 3;
+                }
+                if (i == Room_list.Count-1)
+                {
+                    endpos.x = mappoints[i].x;
+                    endpos.y = mappoints[i].y;
+                    Wholemap[mappoints[i].x, mappoints[i].y].type = 4;
+                }
+
+            }
         }
 
 
@@ -259,7 +290,7 @@ public class MapGenerator : MonoBehaviour
         {
             for (int j = 0; j < mapY; j++)
             {
-                if(Wholemap[i, j].type == 0)
+                if (Wholemap[i, j].type == 0)
                 {
                     Wholemap[i, j].type = 2;
                 }
@@ -277,28 +308,46 @@ public class MapGenerator : MonoBehaviour
         {
             for (int j = 0; j < mapY; j++)
             {
-                if (map[i, j].type == 1)
+                switch (map[i, j].type)
                 {
-                    mappos.x = i;
-                    mappos.y = j;
-                    //tile = tilemap.GetTile(mappos);
-                    tilemap.SetTile(mappos, groundbase[0]);
-                    yield return YieldCache.Seconds001;
+                    case 1:
+                        mappos.x = i;
+                        mappos.y = j;
+                        //tile = tilemap.GetTile(mappos);
+                        tilemap.SetTile(mappos, groundbase[0]);
+                        //yield return YieldCache.Seconds001;
+                        break;
+                    case 2:
+                        mappos.x = i;
+                        mappos.y = j;
+                        //tile = tilemap.GetTile(mappos);
+                        tilemap.SetTile(mappos, groundbase[1]);
+                        //yield return YieldCache.Seconds001;
+                        break;
+                    case 3:
+                        mappos.x = i;
+                        mappos.y = j;
+                        //tile = tilemap.GetTile(mappos);
+                        tilemap.SetTile(mappos, groundbase[2]);
+                        //yield return YieldCache.Seconds001;
+                        break;
+                    case 4:
+                        mappos.x = i;
+                        mappos.y = j;
+                        //tile = tilemap.GetTile(mappos);
+                        tilemap.SetTile(mappos, groundbase[3]);
+                        //yield return YieldCache.Seconds001;
+                        break;
                 }
-                if (map[i, j].type == 2)
-                {
-                    mappos.x = i;
-                    mappos.y = j;
-                    //tile = tilemap.GetTile(mappos);
-                    tilemap.SetTile(mappos, groundbase[1]);
-                    yield return YieldCache.Seconds001;
-                }
+
 
             }
         }
-
+        yield return YieldCache.Seconds001;
 
     }
+
+
     public void PathFinding()
     {
 
@@ -338,7 +387,10 @@ public class MapGenerator : MonoBehaviour
                     //for (int j = 0; j < FinalNodeList.Count; j++) print(j + "번째는 " + FinalNodeList[j].x + ", " + FinalNodeList[j].y);
                     for (int j = 0; j < FinalNodeList.Count; j++)
                     {
-                        Wholemap[FinalNodeList[j].x, FinalNodeList[j].y].type = 1;
+                        if (Wholemap[FinalNodeList[j].x, FinalNodeList[j].y].type == 0)
+                        {
+                            Wholemap[FinalNodeList[j].x, FinalNodeList[j].y].type = 1;
+                        }
                     }
                     break;
                 }
@@ -349,10 +401,12 @@ public class MapGenerator : MonoBehaviour
                 OpenListAdd(CurNode.x, CurNode.y - 1);
                 OpenListAdd(CurNode.x - 1, CurNode.y);
             }
+
         }
 
 
     }
+
 
     void OpenListAdd(int checkX, int checkY)
     {
