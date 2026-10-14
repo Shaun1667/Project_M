@@ -69,4 +69,4 @@
 
 ## 4. 측정 기준선 · 실험
 
-Phase 4 측정 봇 이후 작성. 형식은 `claude_all_type_genre.md` 17-4.
+Phase 4 측정 봇 이후 작성. 형식은 `Docs/Source/claude_all_type_genre.md` 17-4.

@@ -4,8 +4,37 @@
 > 상태: `[ ]` 대기 / `[~]` 진행 중 / `[x] … — 플레이 확인 대기` / `[x] … — 플레이 확인 완료`
 > 커밋: 한 항목 = 한 커밋, `MM.DD/Phase-항목/PascalCase요약`
 
-## 현재 위치
-**Phase 1 — 1-1 ~ 1-4 완료(확인 대기). 다음은 1-5 맵 생성 (1층)** (2026-10-14)
+## 진행 요약 (2026-10-14 기준 — 새 세션은 여기부터 읽는다)
+
+**현재 위치: Phase 1 — 1-1 ~ 1-4 완료. 다음 작업은 1-5 맵 생성(1층).**
+
+| Phase | 항목 | 상태 | 커밋 |
+|---|---|---|---|
+| 0 세팅 | 0-0 문서 3종 · 0-1 기술 스택(URP 2D · Input System · uGUI) · 0-2 asmdef/테스트 · 0-3 기존 코드 정리 · 0-4 GameConfig/BALANCE | 완료 | 8e66215 ~ 0c2e65f |
+| 1 구조 기반 | 1-1 그리드 · EntityId · PCG32 난수 | 완료 | 1ff6778 |
+| | 1-2 틱 파이프라인 · 커맨드 · TurnClock | 완료 | 7d16c81 |
+| | 1-3 이벤트 버스 · 표현 어댑터 · Main 씬(임시 방) | 완료 | ecf2f14 |
+| | 1-4 World 스냅샷 · 왕복 테스트 | 완료 | b1103f4 |
+| | 1-5 맵 생성 → 1-6 이동 · 공격 · 적 → 1-7 시야 · 사거리 | 대기 | — |
+
+**숫자:** EditMode 테스트 52개 전부 통과 · 콘솔 프로젝트 오류 0 · 씬 1개(`Assets/_Project/Scenes/Main.unity`)
+
+**지금 플레이하면:** 어두운 배경에 12×8 임시 방(진회색 벽 · 연회색 바닥)과 가운데 초록 원(플레이어). 조작 없음. 임시 방은 1-5에서 맵 생성으로 바뀐다.
+
+**1-5 착수 때 물어볼 것 (미정):**
+1. 맵 크기 · 방 개수 · 방 크기 — 이전 값 50×50 · 방 10개 · 7~20(BALANCE.md 2번)을 그대로 쓸지
+2. 이전 MapGenerator 알고리즘(벽 먼저 → 방 → A* 복도)을 그대로 옮길지, SPD식 방-복도 구조로 바꿀지
+3. 시작 · 계단 위치 규칙
+
+**사용자 확인 대기 (플레이 확인):**
+- 0-1 입력 전환 — 지금은 클릭 코드가 없어져 1-6에서 함께 확인
+- 1-3 `Main.unity` 플레이 화면 (MCP로 플레이 모드 진입이 안 돼 편집 모드 캡처로만 확인함)
+- GDD의 [제안] 항목 — 1-2 핵심 재미 · 1-3 핵심 루프 · 14 MVP 콘텐츠 목록 (3-3 틱 순서는 확정됨)
+
+**답을 기다리는 질문:**
+- `.gitattributes` 추가 여부 — Unity가 저장할 때마다 `ProjectSettings/*.asset` 몇 개가 줄바꿈만 바뀌어 변경으로 잡힌다(매번 `git checkout -- ProjectSettings/`로 되돌리는 중)
+
+**사용자 제공 예정 자료:** 속성 × 상태/지형 규칙 표(GDD 8-2, 3-1 전 필요) · 조합 가시성 방향(GDD 12, Phase 5 전 필요)
 
 ---
 
@@ -29,7 +58,7 @@
 목표: 컴파일 오류 없는 빈 씬 + 문서 3종 + 테스트 어셈블리 + 확정된 기술 스택.
 
 - [x] **0-0. 문서 3종 작성** (2026-10-14)
-  - 구현: `CLAUDE.md`, `GDD.md`, `TASKS.md` (원본 `마법시스템_기획서_v0.3.md` + `claude_all_type_genre.md` 기준)
+  - 구현: `CLAUDE.md`, `GDD.md`, `TASKS.md` (원본 `Docs/Source/마법시스템_기획서_v0.3.md` + `Docs/Source/claude_all_type_genre.md` 기준)
   - 참고: GDD 1-2 핵심 재미 · 1-3 루프 · 3-3 틱 순서 · 14 MVP는 [제안] 상태 → 사용자 확인 필요
 
 - [x] **0-1. 기술 스택 확정 (변경 금지로 묶음)** (2026-10-14) — 플레이 확인 대기
@@ -55,8 +84,8 @@
     - 검증: `SampleScene` 카메라 렌더 480×270 → 분홍(셰이더 깨짐) 픽셀 0, 타일 정상 표시. 두 씬 렌더러 모두 `Sprites-Default`(unlit) — URP 2D에서 그대로 동작
     - 콘솔 오류 0
   - 참고: 스프라이트 재질을 `Sprite-Lit-Default`로 바꾸고 2D 라이트를 쓰는 것은 비주얼 단계(Phase 5)에서 결정. 지금은 unlit 유지
-  - 참고: 재시작 후 `Assets/TextMesh Pro/` 필수 리소스 약 60개 파일이 바뀜(셰이더 · 폰트 에셋 실제 내용 변경 약 20개 + 나머지는 줄바꿈만, 새 셰이더 추가). Unity 6.6 · uGUI 2.6의 TMP 리소스 갱신으로 보임 — 커밋 전 확인 필요
-  - **0-1 완료** — 플레이 확인 대기 (재시작 후 `SampleScene 1` 타일 클릭 → 콘솔 좌표)
+  - 참고: 재시작 후 `Assets/TextMesh Pro/` 필수 리소스 약 60개 파일이 바뀜(셰이더 · 폰트 에셋 실제 내용 변경 약 20개 + 나머지는 줄바꿈만, 새 셰이더 추가). Unity 6.6 · uGUI 2.6의 TMP 리소스 갱신 → 1인 개발이라 0-1 커밋(f7aeba3)에 포함
+  - **0-1 완료** — 플레이 확인은 1-6으로 넘김 (`SampleScene 1` · `ClickManager`는 0-3에서 삭제됨)
 
 - [x] **0-2. 폴더 구조 · 어셈블리 · 테스트** (2026-10-14) — 플레이 확인 대기
   - CLAUDE.md 폴더 구조로 생성, 순수 로직 asmdef (`ProjectM.Core` 등, `noEngineReferences`), 어댑터 asmdef, EditMode 테스트 asmdef
@@ -81,7 +110,7 @@
   - 진행 (2026-10-14):
     - `MapGenerator.cs`를 75121da(2026-10-02, 병합 직전 main2 쪽 최신)에서 복구, `.meta`는 HEAD에서 복원 → `MapTile` 컴파일 오류 2개 해결 (콘솔 확인)
     - 이어서 드러난 오류 13개: `Assets/TextMesh Pro/Examples & Extras` 예제 스크립트가 Unity 6.6에서 제거된 API 사용 → 폴더 삭제(git rm, 249개), `GameManager.cs`의 미사용 `using TMPro.Examples` 제거
-    - 삭제 후 컴파일 결과는 **미확인** (확인 직전 Unity 에디터가 종료됨)
+    - 삭제 후 컴파일 결과는 확인 직전 Unity 에디터가 종료돼 미확인이었음 → 에디터 재실행 후 콘솔 오류 0 확인
   - 참고: 복구한 `MapGenerator.cs`는 주석이 CP949 인코딩이고 `using UnityEditor.Experimental.GraphView`가 있어 빌드 시 오류가 난다 → 순수 로직 이식(1-5) 때 정리
   - 피드백: 병합 충돌 해결 중 `.cs` 누락 → 컴파일 오류 → 오류가 다른 오류(TMP 예제)를 가림. 재발 방지: 병합 후 `git ls-files`로 `.cs`/`.meta` 짝 확인, 콘솔 오류 0 확인 후 커밋
   - 결정 (2026-10-14): 3 = 1인 개발이므로 Unity 6.6 업그레이드 변경을 0-1 커밋에 함께 포함
@@ -187,4 +216,15 @@
 ---
 
 ## 다른 PC에서 할 일
-- 1인 개발 (2026-10-14 확인). 다른 PC에서 이어갈 때: pull → Unity 6.6으로 열기 → 콘솔 0 확인 → Test Runner EditMode 통과 확인
+1인 개발 (2026-10-14 확인). 다른 PC로 옮겨 이어갈 때 순서대로:
+
+1. **원래 PC에서:** 작업 브랜치를 main에 병합 · 푸시했는지 확인 (`git status` 깨끗, `git log origin/main`에 최신 커밋)
+2. **새 PC에서 받기:** `git clone https://github.com/Shaun1667/Project_M.git` (이미 있으면 `git pull`). 작성자 이메일을 같은 값으로 맞춘다 (`git config user.email`)
+3. **Unity 6.6 (6000.6.0f1)로 열기** — Unity Hub에 해당 버전 설치 필요. 첫 임포트는 오래 걸린다
+4. **콘솔 오류 0 확인** — `Assets/_Project/Scenes/Main.unity` 열기. 씬 참조가 비어 있으면 메뉴 `ProjectM/Setup/Main Scene` 실행(몇 번 실행해도 같은 결과)
+5. **테스트:** `Window > General > Test Runner > EditMode` → `ProjectM.Tests.EditMode` 실행 → 52개 초록
+6. **플레이 확인:** Main 씬 플레이 → 12×8 방 + 가운데 초록 원
+7. **Claude Code 연결 (선택):** CLAUDE.md "새 PC 환경 준비"대로 Unity MCP 등록 → 새 세션 → Unity에서 연결 승인. 세션은 프로젝트 폴더에서 연다
+8. **새 세션 첫 요청 예:** "CLAUDE.md와 TASKS.md 진행 요약 읽고 1-5 진행해줘"
+
+주의: 이 PC의 Claude 메모리(`~/.claude/projects/…`)는 옮겨지지 않는다. 필요한 내용은 모두 이 저장소의 문서(CLAUDE · TASKS · GDD · BALANCE)에 있다.
