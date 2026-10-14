@@ -15,7 +15,7 @@
 | CLAUDE.md | AI 작업 규칙 (이 문서) | 작성 |
 | GDD.md | 기획서 | 작성 (v0.3 기반) |
 | TASKS.md | 작업 순서 + 작업 일지 | 작성 |
-| BALANCE.md | 수치 · 검산 · 실험 | 첫 수치가 생길 때 |
+| BALANCE.md | 수치 · 검산 · 실험, 데이터 에셋 위치 표 | 작성 (0-4) |
 | REACTIONS.md | 상태/지형 × 속성 규칙 표 상세 설계 | 사용자 속성표 받은 뒤 |
 | TIME_MAGIC.md | 시간 마법 상세 설계 | Phase 8 착수 전 |
 
@@ -75,10 +75,11 @@ Assets/
 - 그레이박스 타일 · 스프라이트는 `Assets/_Project/Art/Greybox/`. 메인 씬은 `Assets/_Project/Scenes/Main.unity` (빌드 씬 유일 항목).
 
 ## 코딩 규칙
-- 네임스페이스: `ProjectM.Core`, `ProjectM.Magic`, `ProjectM.Status`, `ProjectM.Units`, `ProjectM.Dungeon`, `ProjectM.Presentation`, `ProjectM.UI`, `ProjectM.Editor`
+- 네임스페이스: `ProjectM.Core`, `ProjectM.Magic`, `ProjectM.Status`, `ProjectM.Units`, `ProjectM.Dungeon`, `ProjectM.Data`(Runtime/Data), `ProjectM.Presentation`, `ProjectM.UI`, `ProjectM.Editor`
 - 이름: 클래스 · 메서드 · 프로퍼티 PascalCase, private 필드 `_camelCase`, 지역 변수 camelCase
 - 게임 로직과 엔진 컴포넌트를 분리한다. 규칙은 순수 C#으로 쓰고, MonoBehaviour는 얇은 어댑터(이벤트 구독 · 표시 · 입력 전달)만 맡는다.
-- 수치(피해 · 사거리 · 지속 틱 · 마나 · 확률)는 데이터 에셋에 둔다.
+- 수치(피해 · 사거리 · 지속 틱 · 마나 · 확률)는 데이터 에셋에 둔다. 에셋은 `ProjectM.Data`의 ScriptableObject이고 `ToXxx()`로 순수 객체(생성자에서 범위 검사)를 만들어 Simulation에 넘긴다. 예: `GameConfigAsset` → `GameConfig`. 위치는 BALANCE.md 0번.
+- 수치를 새로 넣으면 BALANCE.md 표 + 같은 값을 검사하는 검산 테스트를 함께 추가한다.
 - `Update`에서 규칙을 돌리지 않는다. 시뮬레이션은 틱으로만 진행한다. `Find`/`GetComponent`는 캐시한다.
 - 결합은 C# event/Action으로 낮추고 "바뀐 것만" 알린다.
 - enum은 끝에만 추가한다 (에셋이 정수로 저장함).

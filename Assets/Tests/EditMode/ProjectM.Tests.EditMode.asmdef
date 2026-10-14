@@ -3,6 +3,7 @@
     "rootNamespace": "ProjectM.Tests",
     "references": [
         "ProjectM.Simulation",
+        "ProjectM.Runtime",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],
