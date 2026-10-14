@@ -41,7 +41,7 @@
 | UI | **uGUI + TextMeshPro** | 확정 2026-10-14, 변경 금지 |
 | 맵 표현 | Tilemap (com.unity.modules.tilemap) | 표현 레이어 전용. 규칙은 Tilemap을 모른다 |
 | 테스트 | Unity Test Framework 1.8.0 (EditMode) | 확정 |
-| 버전 관리 | Git (원격 사용, 공동 작업자 있음) | 확정 |
+| 버전 관리 | Git (원격 GitHub, 1인 개발) | 확정 |
 | 에디터 연동 | Unity MCP (`unity-mcp`, Project_M 연결 확인됨) | 사용 가능 |
 
 ## 폴더 구조 (확정 2026-10-14)
@@ -72,7 +72,7 @@ Assets/
 - 순수 로직은 asmdef **하나**(`ProjectM.Simulation`)로 묶는다. 하위 폴더별로 나누면 Magic ↔ Status 순환 참조가 생기기 쉽다. 폴더 · 네임스페이스로만 구분한다.
 - Simulation은 Runtime · Editor를 참조하지 않는다 (의존 방향: Editor → Runtime → Simulation).
 - `SimulationAssemblyTests`가 Simulation의 엔진 참조 0을 검사한다. 실패하면 규칙 1 위반이다.
-- 기존 `Assets/Scripts`, `Assets/Resource`, `Assets/Tile`의 처리는 TASKS 0-3에서 정한다.
+- 그레이박스 타일 · 스프라이트는 `Assets/_Project/Art/Greybox/`. 메인 씬은 `Assets/_Project/Scenes/Main.unity` (빌드 씬 유일 항목).
 
 ## 코딩 규칙
 - 네임스페이스: `ProjectM.Core`, `ProjectM.Magic`, `ProjectM.Status`, `ProjectM.Units`, `ProjectM.Dungeon`, `ProjectM.Presentation`, `ProjectM.UI`, `ProjectM.Editor`
@@ -110,5 +110,8 @@ Assets/
 ## Git · 환경
 - 한 항목 = 한 커밋. 메시지: `MM.DD/Phase-항목/PascalCase요약` (예: `10.14/1-2/TickScheduler`), 수정은 `…Fix`.
 - 커밋 전 `git status`로 의도하지 않은 변경(줄바꿈만 바뀐 설정 파일, 플레이 중 저장된 설정)을 확인한다.
-- 공동 작업자가 있다. pull 후 에디터에 열려 있던 씬은 디스크에서 다시 연다.
+- 1인 개발. 여러 PC에서 작업할 때 pull 후 에디터에 열려 있던 씬은 디스크에서 다시 연다.
+- 커밋 전 `git diff --cached --stat`으로 스테이징 내용을 확인한다 (미리 스테이징된 변경이 섞이지 않게).
+- 에셋 이동 · 삭제는 Unity MCP(`AssetDatabase.MoveAsset/DeleteAsset`)가 확인 창 때문에 막힌다 → `git mv`/`git rm`으로 `.meta`와 함께 처리하고 Refresh.
+- `Reference/`(Assets 밖)는 참고용 원본 코드 보관소. Unity가 컴파일하지 않는다.
 - Unity MCP로 긴 작업이 시간 초과돼도 에디터에서는 계속 진행된다 → 콘솔 로그로 결과를 확인한다.

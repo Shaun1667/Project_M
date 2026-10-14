@@ -5,26 +5,24 @@
 > 커밋: 한 항목 = 한 커밋, `MM.DD/Phase-항목/PascalCase요약`
 
 ## 현재 위치
-**Phase 0 — 0-1 · 0-2 완료(확인 대기), 다음은 0-3 기존 코드 정리 (질문 3번 Unity 6.6 업그레이드 커밋 여부 답변 필요)** (2026-10-14)
+**Phase 0 — 0-1 · 0-2 · 0-3 완료(확인 대기), 다음은 0-4 데이터 에셋 자리 · BALANCE.md** (2026-10-14)
+작업 브랜치: `phase0-setup` (main에 병합 전)
 
 ---
 
-## 현재 구현 대조표 (2026-10-14 기준)
-문서보다 코드가 먼저 있으므로, 기존 코드가 문서 기준과 어떻게 다른지 적는다.
+## 현재 구현 대조표 (2026-10-14, 0-3 정리 후)
+| 이전 파일 | 처리 결과 (0-3) | 새 위치 |
+|---|---|---|
+| `Assets/Scripts/System/GameManager.cs`, `NaviManager.cs`, `ClickManager.cs` | 삭제 — 1-2 · 1-3 · 1-6에서 새 구조로 다시 작성 | — |
+| `MapGenerator.cs` (75121da) | 컴파일 대상에서 빼고 참고용으로 보관 (CP949 → UTF-8) | `Reference/MapGenerator_75121da.cs` (Assets 밖) → 1-5 이식 후 삭제 |
+| `CameraController.cs` | 이동, 싱글턴 · DontDestroyOnLoad 제거, z값 인스펙터로 | `Assets/_Project/Scripts/Runtime/Presentation/CameraController.cs` |
+| `CharacterManager.cs`, `ObjectManager.cs`, `MainSystem.cs`, `Player.cs`, `ObjectPool.cs` | 삭제 (빈 틀 · 주석뿐) | — |
+| `Assets/Resource/TilePalette/*`, `player.png` | 이동 (GUID 유지) | `Assets/_Project/Art/Greybox/` |
+| `Assets/Resource/player.prefab` | 삭제 (삭제된 `Player.cs` 참조) | — |
+| `Assets/Tile/Wall.asset` | 삭제 (스프라이트 없는 빈 규칙 타일, 참조 0) | — |
+| `Assets/Scenes/SampleScene.unity`, `SampleScene 1.unity` | 삭제 (삭제된 스크립트 참조) | 새 씬 `Assets/_Project/Scenes/Main.unity` |
 
-| 파일 | 현재 역할 | 문서 기준과의 차이 | 처리 (0-3에서 결정) |
-|---|---|---|---|
-| `Assets/Scripts/System/GameManager.cs` | `MapGenerator.instance.Newmap()` 후 플레이어 배치, 카메라 이동 | MonoBehaviour 싱글턴이 규칙을 가짐, 사용하지 않는 `using TMPro.Examples` | 교체 |
-| `MapGenerator.cs` | 맵 생성 (벽 먼저 → 방 생성, 커밋 5810c52) | **파일 없음.** 병합 커밋 5c6d9e2에서 충돌 후 `.cs`가 git에서 빠지고 `.meta`만 남음 → 작업 트리에서 `.meta`도 삭제됨 | 복구 또는 새로 작성 |
-| `NaviManager.cs` | 맵 배열 보관 | `MapTile` 타입이 없어 **컴파일 오류 2개** | 교체 |
-| `ClickManager.cs` | 클릭 → `Physics2D.Raycast` → 셀 좌표 출력 | 규칙 판정에 물리 사용 금지(CLAUDE 규칙 2). 입력 → 셀 변환은 어댑터로 유지 가능 | 어댑터로 재작성 |
-| `CameraController.cs` | 대상 위치로 스냅 | 표현 레이어. 문제 없음 | 유지 · 이동 |
-| `CharacterManager.cs`, `ObjectManager.cs`, `MainSystem.cs`, `Player.cs` | 빈 틀 | — | 삭제 또는 교체 |
-| `ObjectPool.cs` | 전체 주석 처리 | — | 삭제 |
-| `Assets/Resource/TilePalette/*`, `Assets/Tile/Wall.asset` | 바닥 · 벽 타일, 팔레트 | 그레이박스로 사용 가능 | 유지 · 이동 |
-| `Assets/Scenes/SampleScene.unity`, `SampleScene 1.unity` | 테스트 씬 2개 | — | 정리 |
-
-**커밋되지 않은 변경 (2026-10-14 확인, 손대지 않음):** Unity 6.6 업그레이드로 바뀐 `Packages/manifest.json`, `packages-lock.json`, `ProjectSettings/*`, `ProjectVersion.txt`, 새 설정 파일 4개, `MapGenerator.cs.meta` 삭제.
+이전 코드 · 씬은 git 기록(커밋 f7aeba3)에서 언제든 꺼낼 수 있다.
 
 ---
 
@@ -74,7 +72,7 @@
   - 확인: Runtime · Editor 어셈블리는 스크립트가 없어 아직 생성되지 않음(정상). 참조 이름 5개는 모두 존재 확인. 콘솔 오류 0 (경고는 기존 `MapGenerator.cs` 2개)
   - 확인 방법: `Window > General > Test Runner > EditMode` → `ProjectM.Tests.EditMode` 실행 → 1개 초록
 
-- [ ] **0-3. 기존 코드 정리**
+- [x] **0-3. 기존 코드 정리** (2026-10-14) — 플레이 확인 대기
   - 착수 질문:
     1. 기존 코드 — **A: 대조표대로 교체 · 삭제하고 새 구조로 시작 (추천: 남은 로직이 거의 없고 구조 규칙과 충돌)** / B: 최대한 유지하며 리팩터링
     2. MapGenerator — A: git 이력(커밋 5810c52 등)에서 복구해 참고 / **B: 복구해서 순수 로직으로 이식 (추천: 벽 → 방 생성 로직 재사용)** / C: 버리고 새로 작성
@@ -87,6 +85,12 @@
     - 삭제 후 컴파일 결과는 **미확인** (확인 직전 Unity 에디터가 종료됨)
   - 참고: 복구한 `MapGenerator.cs`는 주석이 CP949 인코딩이고 `using UnityEditor.Experimental.GraphView`가 있어 빌드 시 오류가 난다 → 순수 로직 이식(1-5) 때 정리
   - 피드백: 병합 충돌 해결 중 `.cs` 누락 → 컴파일 오류 → 오류가 다른 오류(TMP 예제)를 가림. 재발 방지: 병합 후 `git ls-files`로 `.cs`/`.meta` 짝 확인, 콘솔 오류 0 확인 후 커밋
+  - 결정 (2026-10-14): 3 = 1인 개발이므로 Unity 6.6 업그레이드 변경을 0-1 커밋에 함께 포함
+  - 구현 (2026-10-14): 위 "현재 구현 대조표"대로 정리. `Main.unity`(정사영 카메라 하나, 배경 어두운 회색)를 빌드 씬 유일 항목으로 지정. `Assembly-CSharp`(폴더 밖 스크립트) 없음
+  - 확인: 콘솔 오류 · 경고 0, EditMode 테스트 1개 통과, `ProjectM.Runtime` 어셈블리가 처음으로 컴파일됨(asmdef 참조 정상), 그레이박스 타일 7개 로드 확인
+  - 확인 방법: Project 창에 `Assets/_Project`, `Assets/Tests`, `TextMesh Pro`만 남았는지 · `Main.unity` 열어 플레이 시 어두운 회색 화면 + 콘솔 0
+  - 피드백: MCP `AssetDatabase.DeleteAsset/MoveAsset`이 사용자 확인 창을 요구해 실패 → git mv/rm(`.meta` 함께)로 처리 후 Refresh. 에셋 이동은 `.meta`를 같이 옮기면 GUID가 유지된다
+  - 피드백: 0-0 커밋에 미리 스테이징된 TMP 예제 삭제 249개가 섞임 → 푸시 전이라 soft reset 후 다시 나눠 커밋. 재발 방지: 커밋 전 `git diff --cached --stat` 확인
 
 - [ ] **0-4. 데이터 에셋 자리 정하기**
   - `Assets/_Project/Data/` 하위 구조, `GameConfig` ScriptableObject 1개 (첫 수치용)
@@ -133,6 +137,5 @@
 
 ---
 
-## 다른 PC · 공동 작업자와 할 일
-- [ ] `MapGenerator.cs` 원본을 가진 사람이 있으면 커밋 요청 (병합 5c6d9e2에서 누락)
-- [ ] Unity 6.6 업그레이드 합의 여부 확인
+## 다른 PC에서 할 일
+- 1인 개발 (2026-10-14 확인). 다른 PC에서 이어갈 때: pull → Unity 6.6으로 열기 → 콘솔 0 확인 → Test Runner EditMode 통과 확인

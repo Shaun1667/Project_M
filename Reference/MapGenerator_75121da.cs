@@ -1,3 +1,6 @@
+// ì°¸ê³ ìš© ì›ë³¸: git 75121daì˜ Assets/Scripts/System/MapGenerator.cs (CP949 -> UTF-8 ë³€í™˜).
+// Unityê°€ ì»´íŒŒì¼í•˜ì§€ ì•ŠëŠ” ìœ„ì¹˜. TASKS 1-5ì—ì„œ ìˆœìˆ˜ ë¡œì§ìœ¼ë¡œ ì´ì‹í•œ ë’¤ ì‚­ì œí•œë‹¤.
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor.Experimental.GraphView;
@@ -11,12 +14,12 @@ public class MapTile
 {
     public MapTile(int _type, int _x, int _y) { type = _type; x = _x; y = _y; }
 
-    public int type;    //0 null, 1 ¶¥, 2 º®
-    public int state;   //0 ºóÄ­, 1 Â÷ÀÖÀ½
+    public int type;    //0 null, 1 ë•…, 2 ë²½
+    public int state;   //0 ë¹ˆì¹¸, 1 ì°¨ìˆìŒ
 
     public MapTile ParentNode;
 
-    // G : ½ÃÀÛÀ¸·ÎºÎÅÍ ÀÌµ¿Çß´ø °Å¸®, H : |°¡·Î|+|¼¼·Î| Àå¾Ö¹° ¹«½ÃÇÏ¿© ¸ñÇ¥±îÁöÀÇ °Å¸®, F : G + H
+    // G : ì‹œì‘ìœ¼ë¡œë¶€í„° ì´ë™í–ˆë˜ ê±°ë¦¬, H : |ê°€ë¡œ|+|ì„¸ë¡œ| ì¥ì• ë¬¼ ë¬´ì‹œí•˜ì—¬ ëª©í‘œê¹Œì§€ì˜ ê±°ë¦¬, F : G + H
     public int x, y, G, H;
     public int F { get { return G + H; } }
 }
@@ -31,7 +34,7 @@ public class MapGenerator : MonoBehaviour
     delegate int Extensive2<T>(T count, T count2);
     Extensive2<int> RANGE;
 
-    private float _subseed = 3141592653; //½Ãµå°ªÀ» 11Áø¼ö ÀÌ»ó »ç¿ë °í·ÁÇØº¼°Í
+    private float _subseed = 3141592653; //ì‹œë“œê°’ì„ 11ì§„ìˆ˜ ì´ìƒ ì‚¬ìš© ê³ ë ¤í•´ë³¼ê²ƒ
     public int mapX;
     public int mapY;
     int Room_count;
@@ -150,18 +153,18 @@ public class MapGenerator : MonoBehaviour
 
     public void NewGame()
     {
-        //»õ·Î »ç¿ëÇÒ ½Ãµå
+        //ìƒˆë¡œ ì‚¬ìš©í•  ì‹œë“œ
         System.Random randSeed = new System.Random();
         int seed = randSeed.Next();
 
         Debug.Log(seed);
         Seed = seed;
 
-        Random.InitState(Seed);  //ÇöÀç ½Ãµå ±âÁØÀ¸·Î °íÁ¤
+        Random.InitState(Seed);  //í˜„ì¬ ì‹œë“œ ê¸°ì¤€ìœ¼ë¡œ ê³ ì •
 
-        Wholemap = new MapTile[mapX, mapY];   //ÀüÃ¼ ¸Ê
+        Wholemap = new MapTile[mapX, mapY];   //ì „ì²´ ë§µ
 
-        for (int i = 0; i < mapX; i++)  // °ª ÃÊ±âÈ­
+        for (int i = 0; i < mapX; i++)  // ê°’ ì´ˆê¸°í™”
         {
             for (int j = 0; j < mapY; j++)
             {
@@ -175,7 +178,7 @@ public class MapGenerator : MonoBehaviour
         Room_count = 10;
         Room_maxsize = 20;
         Room_minsize = 7;
-        //¸Ê Å©±â¿Í ¹æ °¹¼ö
+        //ë§µ í¬ê¸°ì™€ ë°© ê°¯ìˆ˜
 
         if (mode == 2)
         {
@@ -186,7 +189,7 @@ public class MapGenerator : MonoBehaviour
 
 
 
-        //°¢°¢ ¹æ°ú ¹æ ±âÁØÁ¡
+        //ê°ê° ë°©ê³¼ ë°© ê¸°ì¤€ì 
         Room_list = new List<List<MapTile>>();
         //mappoints = new List<List<MapTile>>();
         mappoints = new List<MapTile>();
@@ -205,16 +208,16 @@ public class MapGenerator : MonoBehaviour
                 picksizex = PICK(Room_maxsize);
                 if (picksizex < Room_minsize)
                 {
-                    picksizex += Room_minsize;  //ÃÖ¼Ò°ª º¸Á¤
+                    picksizex += Room_minsize;  //ìµœì†Œê°’ ë³´ì •
                 }
                 picksizey = PICK(Room_maxsize);
                 if (picksizey < Room_minsize)
                 {
-                    picksizey += Room_minsize;  //ÃÖ¼Ò°ª º¸Á¤
+                    picksizey += Room_minsize;  //ìµœì†Œê°’ ë³´ì •
                 }
 
 
-                if (Wholemap[pickx, picky].type != 2)    //Ã¹ ½ºÅ¸Æ® ÁöÁ¡ÀÌ º®ÀÎÁö È®ÀÎ
+                if (Wholemap[pickx, picky].type != 2)    //ì²« ìŠ¤íƒ€íŠ¸ ì§€ì ì´ ë²½ì¸ì§€ í™•ì¸
                 {
                     for (int j = 0; j < picksizex; j++)
                     {
@@ -255,7 +258,7 @@ public class MapGenerator : MonoBehaviour
             }
         }
 
-        //°¢°¢ ¹æ °ü¸®
+        //ê°ê° ë°© ê´€ë¦¬
         if (mode == 1)
         {
             for (int i = 0; i < Room_list.Count; i++)
@@ -286,7 +289,7 @@ public class MapGenerator : MonoBehaviour
 
     private void WallMaker()
     {
-        for (int i = 0; i < mapX; i++)  // °ª ÃÊ±âÈ­
+        for (int i = 0; i < mapX; i++)  // ê°’ ì´ˆê¸°í™”
         {
             for (int j = 0; j < mapY; j++)
             {
@@ -301,7 +304,7 @@ public class MapGenerator : MonoBehaviour
     IEnumerator MapPrinter(MapTile[,] map)
     //private void MapPrinter(MapTile[,] map)
     {
-        // Æ¯Á¤ ÁÂÇ¥(¿¹: 0, 0, 0)ÀÇ Å¸ÀÏ °¡Á®¿À±â
+        // íŠ¹ì • ì¢Œí‘œ(ì˜ˆ: 0, 0, 0)ì˜ íƒ€ì¼ ê°€ì ¸ì˜¤ê¸°
         mappos.z = 0;
         //TileBase tile;
         for (int i = 0; i < mapX; i++)
@@ -353,7 +356,7 @@ public class MapGenerator : MonoBehaviour
 
         for (int i = 0; i < mappoints.Count - 1; i++)
         {
-            // ½ÃÀÛ°ú ³¡ ³ëµå, ¿­¸°¸®½ºÆ®¿Í ´İÈù¸®½ºÆ®, ¸¶Áö¸·¸®½ºÆ® ÃÊ±âÈ­
+            // ì‹œì‘ê³¼ ë ë…¸ë“œ, ì—´ë¦°ë¦¬ìŠ¤íŠ¸ì™€ ë‹«íŒë¦¬ìŠ¤íŠ¸, ë§ˆì§€ë§‰ë¦¬ìŠ¤íŠ¸ ì´ˆê¸°í™”
             StartNode = mappoints[i];
             TargetNode = mappoints[i + 1];
 
@@ -363,7 +366,7 @@ public class MapGenerator : MonoBehaviour
 
             while (OpenList.Count > 0)
             {
-                // ¿­¸°¸®½ºÆ® Áß °¡Àå F°¡ ÀÛ°í F°¡ °°´Ù¸é H°¡ ÀÛÀº °É ÇöÀç³ëµå·Î ÇÏ°í ¿­¸°¸®½ºÆ®¿¡¼­ ´İÈù¸®½ºÆ®·Î ¿Å±â±â
+                // ì—´ë¦°ë¦¬ìŠ¤íŠ¸ ì¤‘ ê°€ì¥ Fê°€ ì‘ê³  Fê°€ ê°™ë‹¤ë©´ Hê°€ ì‘ì€ ê±¸ í˜„ì¬ë…¸ë“œë¡œ í•˜ê³  ì—´ë¦°ë¦¬ìŠ¤íŠ¸ì—ì„œ ë‹«íŒë¦¬ìŠ¤íŠ¸ë¡œ ì˜®ê¸°ê¸°
                 CurNode = OpenList[0];
                 for (int j = 1; j < OpenList.Count; j++)
                     if (OpenList[j].F <= CurNode.F && OpenList[j].H < CurNode.H) CurNode = OpenList[j];
@@ -372,7 +375,7 @@ public class MapGenerator : MonoBehaviour
                 ClosedList.Add(CurNode);
 
 
-                // ¸¶Áö¸·
+                // ë§ˆì§€ë§‰
                 if (CurNode == TargetNode)
                 {
                     MapTile TargetCurNode = TargetNode;
@@ -384,7 +387,7 @@ public class MapGenerator : MonoBehaviour
                     FinalNodeList.Add(StartNode);
                     FinalNodeList.Reverse();
 
-                    //for (int j = 0; j < FinalNodeList.Count; j++) print(j + "¹øÂ°´Â " + FinalNodeList[j].x + ", " + FinalNodeList[j].y);
+                    //for (int j = 0; j < FinalNodeList.Count; j++) print(j + "ë²ˆì§¸ëŠ” " + FinalNodeList[j].x + ", " + FinalNodeList[j].y);
                     for (int j = 0; j < FinalNodeList.Count; j++)
                     {
                         if (Wholemap[FinalNodeList[j].x, FinalNodeList[j].y].type == 0)
@@ -395,7 +398,7 @@ public class MapGenerator : MonoBehaviour
                     break;
                 }
 
-                // ¡è ¡æ ¡é ¡ç
+                // â†‘ â†’ â†“ â†
                 OpenListAdd(CurNode.x, CurNode.y + 1);
                 OpenListAdd(CurNode.x + 1, CurNode.y);
                 OpenListAdd(CurNode.x, CurNode.y - 1);
@@ -410,17 +413,17 @@ public class MapGenerator : MonoBehaviour
 
     void OpenListAdd(int checkX, int checkY)
     {
-        // »óÇÏÁÂ¿ì ¹üÀ§¸¦ ¹ş¾î³ªÁö ¾Ê°í, º®ÀÌ ¾Æ´Ï¸é¼­, ´İÈù¸®½ºÆ®¿¡ ¾ø´Ù¸é
+        // ìƒí•˜ì¢Œìš° ë²”ìœ„ë¥¼ ë²—ì–´ë‚˜ì§€ ì•Šê³ , ë²½ì´ ì•„ë‹ˆë©´ì„œ, ë‹«íŒë¦¬ìŠ¤íŠ¸ì— ì—†ë‹¤ë©´
         if (checkX >= bottomLeft.x && checkX < mapX && checkY >= bottomLeft.y && checkY < mapY && Wholemap[checkX, checkY].type != 2 && !ClosedList.Contains(Wholemap[checkX, checkY]))
         {
 
 
-            // ÀÌ¿ô³ëµå¿¡ ³Ö°í, Á÷¼±Àº 10, ´ë°¢¼±Àº 14ºñ¿ë
+            // ì´ì›ƒë…¸ë“œì— ë„£ê³ , ì§ì„ ì€ 10, ëŒ€ê°ì„ ì€ 14ë¹„ìš©
             MapTile NeighborNode = Wholemap[checkX, checkY];
             int MoveCost = CurNode.G + (CurNode.x - checkX == 0 || CurNode.y - checkY == 0 ? 10 : 14);
 
 
-            // ÀÌµ¿ºñ¿ëÀÌ ÀÌ¿ô³ëµåGº¸´Ù ÀÛ°Å³ª ¶Ç´Â ¿­¸°¸®½ºÆ®¿¡ ÀÌ¿ô³ëµå°¡ ¾ø´Ù¸é G, H, ParentNode¸¦ ¼³Á¤ ÈÄ ¿­¸°¸®½ºÆ®¿¡ Ãß°¡
+            // ì´ë™ë¹„ìš©ì´ ì´ì›ƒë…¸ë“œGë³´ë‹¤ ì‘ê±°ë‚˜ ë˜ëŠ” ì—´ë¦°ë¦¬ìŠ¤íŠ¸ì— ì´ì›ƒë…¸ë“œê°€ ì—†ë‹¤ë©´ G, H, ParentNodeë¥¼ ì„¤ì • í›„ ì—´ë¦°ë¦¬ìŠ¤íŠ¸ì— ì¶”ê°€
             if (MoveCost < NeighborNode.G || !OpenList.Contains(NeighborNode))
             {
                 NeighborNode.G = MoveCost;
