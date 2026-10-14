@@ -5,7 +5,7 @@
 > 커밋: 한 항목 = 한 커밋, `MM.DD/Phase-항목/PascalCase요약`
 
 ## 현재 위치
-**Phase 1 — 1-1 완료(확인 대기). 다음은 1-2 틱 파이프라인 + 커맨드 큐** (2026-10-14)
+**Phase 1 — 1-1 · 1-2 완료(확인 대기). 다음은 1-3 이벤트 시스템 + 표현 어댑터** (2026-10-14)
 
 ---
 
@@ -119,7 +119,17 @@
   - 확인: 콘솔 오류 · 경고 0
   - 확인 방법: Test Runner EditMode → 21개 초록
   - 참고: 수치 추가 없음 (BALANCE 변경 없음)
-- [ ] **1-2. 틱 파이프라인 + 커맨드 큐** — `TickScheduler`, `ICommand`(행동 비용 틱), 시계 인터페이스(`TurnClock`만 구현). GDD 3-3 틱 순서 확정
+- [x] **1-2. 틱 파이프라인 + 커맨드 큐** (2026-10-14) — 확인 대기 (화면 변화 없음, 테스트로 확인) — `TickScheduler`, `ICommand`(행동 비용 틱), 시계 인터페이스(`TurnClock`만 구현). GDD 3-3 틱 순서 확정
+  - 결정 (2026-10-14): 행동 비용 = 즉시 실행 + N틱 대기 (GDD 3-4) — 추천안
+  - 결정 (2026-10-14): 같은 틱 행동 순서 = 플레이어 → 적 EntityId 오름차순 — 추천안
+  - 결정 (2026-10-14): GDD 3-3 틱 순서 7단계 제안대로 확정. ①만 구현, ②~⑦은 `AddSystem(TickPhase, ITickSystem)` 자리
+  - 구현 (`Core/Tick/`): `TickPhase`, `TickContext`(틱 · 행위자), `ICommand`(CostTicks · Execute), `ICommandSource`, `PlayerCommandSource`(입력 큐), `ITickSystem`, `WaitCommand`, `TickScheduler`(ReadyTick 기반, Tick() 1회 = 1틱), `ITickClock`, `TurnClock`(입력 하나 → 다시 입력이 필요할 때까지 진행, 안전 상한 10000틱)
+  - 규칙: 틱 도중 생성된 행위자는 다음 틱부터, 제거된 행위자는 남은 차례 제외. 비용 < 1 커맨드는 예외. 플레이어는 하나
+  - 테스트 14개 추가 (`TickSchedulerTests` — 입력 대기, 행동 순서, 비용 2 · 3틱, 단계 순서, 같은 단계 등록 순, 사망 · 생성 처리, 잘못된 비용 · 등록, 플레이어 제거 시 정지, Update 무시, 같은 입력 = 같은 결과) — 전체 35개 통과
+  - 확인: 콘솔 오류 · 경고 0
+  - 확인 방법: Test Runner EditMode → 35개 초록
+  - 참고: 커맨드 비용 값은 데이터에서 넣는다(기본 `GameConfig.DefaultActionCostTicks`). 실제 커맨드 생성은 1-6에서 연결. 스케줄러 상태(CurrentTick, ReadyTick)의 스냅샷은 1-4
+  - 참고: 실시간 모드의 "입력 없을 때" 처리는 Phase 9 (`RealtimeClock`) — 지금은 플레이어 입력 없이 플레이어 차례가 오면 예외
 - [ ] **1-3. 이벤트 시스템 + 표현 어댑터** — 로직 이벤트 → Tilemap · 스프라이트 반영
 - [ ] **1-4. 직렬화 가능한 상태 + 스냅샷 왕복 테스트** — "스냅샷 → 복원 → 진행 = 그냥 진행" 테스트
 - [ ] **1-5. 맵 생성 (1층)** — 방 + 복도, 시드 고정 시 같은 맵 (0-3 결정에 따라 MapGenerator 이식)
