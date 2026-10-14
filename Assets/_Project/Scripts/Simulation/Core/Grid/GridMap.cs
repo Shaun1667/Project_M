@@ -28,6 +28,9 @@ namespace ProjectM.Core
 
         public void Set(GridPos pos, TileType type) => _cells[IndexOf(pos)] = type;
 
+        /// <summary>칸 배열의 복사본. 인덱스 = y * Width + x.</summary>
+        public TileType[] CopyCells() => (TileType[])_cells.Clone();
+
         /// <summary>바닥 칸만 걸을 수 있다. 맵 밖은 걸을 수 없다.</summary>
         public bool IsWalkable(GridPos pos) => InBounds(pos) && _cells[IndexOf(pos)] == TileType.Floor;
 

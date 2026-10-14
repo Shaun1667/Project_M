@@ -5,7 +5,7 @@
 > 커밋: 한 항목 = 한 커밋, `MM.DD/Phase-항목/PascalCase요약`
 
 ## 현재 위치
-**Phase 1 — 1-1 · 1-2 완료(확인 대기). 다음은 1-3 이벤트 시스템 + 표현 어댑터** (2026-10-14)
+**Phase 1 — 1-1 · 1-2 · 1-3 완료(확인 대기). 다음은 1-4 직렬화 가능한 상태 + 스냅샷 왕복 테스트** (2026-10-14)
 
 ---
 
@@ -130,7 +130,20 @@
   - 확인 방법: Test Runner EditMode → 35개 초록
   - 참고: 커맨드 비용 값은 데이터에서 넣는다(기본 `GameConfig.DefaultActionCostTicks`). 실제 커맨드 생성은 1-6에서 연결. 스케줄러 상태(CurrentTick, ReadyTick)의 스냅샷은 1-4
   - 참고: 실시간 모드의 "입력 없을 때" 처리는 Phase 9 (`RealtimeClock`) — 지금은 플레이어 입력 없이 플레이어 차례가 오면 예외
-- [ ] **1-3. 이벤트 시스템 + 표현 어댑터** — 로직 이벤트 → Tilemap · 스프라이트 반영
+- [x] **1-3. 이벤트 시스템 + 표현 어댑터** (2026-10-14) — 플레이 확인 대기 — 로직 이벤트 → Tilemap · 스프라이트 반영
+  - 결정 (2026-10-14): 이벤트는 `SimEventBus`에 쌓였다가 ⑦ 단계(`EventFlushSystem`)에서 발행 순서대로 한 번에 전달. 틱 밖(층 시작 등)에서는 직접 `Flush()`. Flush 도중 발행된 이벤트는 다음 Flush로
+  - 결정 (2026-10-14): 비주얼은 ID로만 — `TileType` → `TileVisualSet`(Floor = tile_0 연회색, Wall = tile_1 진회색, Empty 미표시), `VisualId` 문자열 → `EntityVisualCatalog`("player" = player.png)
+  - 구현 — Simulation (`Core/Events/`): `ISimEvent`, `SimEventBus`(타입별 구독, 버퍼, 이중 리스트), `EventFlushSystem`, 이벤트 5종 `MapLoadedEvent`(칸 복사본) · `TileChangedEvent` · `EntitySpawnedEvent`(VisualId) · `EntityMovedEvent` · `EntityRemovedEvent`. `GridMap.CopyCells()` 추가
+  - 구현 — Runtime: `Presentation/{TileVisualSet, EntityVisualCatalog, TilemapPresenter, EntityPresenter}`(칸 중앙으로 즉시 이동, 연출은 비주얼 단계), `GameRoot`(컴포지션 루트, 참조 누락 시 오류 안내)
+  - 구현 — Editor: 메뉴 `ProjectM/Setup/Main Scene`(`MainSceneSetup`) — 비주얼 에셋 `Data/Visuals/*` 생성 + `Main.unity`에 Grid/Terrain(Tilemap) · Entities · GameRoot 배치 · 참조 연결 · 카메라에 CameraController. 두 번 실행 시 씬 · 에셋 파일 바이트 동일(멱등) 확인
+  - 임시: `GameRoot.ShowPreviewRoom()` — 12×8 벽 둘레 방 + 중앙 플레이어. **1-5에서 맵 생성으로 교체하고 삭제**
+  - 테스트 10개 추가 (`SimEventBusTests` 5 — 버퍼 · 순서 · 구독 해제 · Flush 중 발행 · 틱 끝 발행 · 칸 복사, `PresenterTests` 5 — 타입별 타일 · x/y 방향 · 맵 교체 · 타일 변경 · 생성/이동/제거 위치 · Unbind) — 전체 45개 통과
+  - 확인: 편집 모드에서 GameRoot 시작 처리를 실행해 캡처 — 방 12×8(벽 36 · 바닥 60), 플레이어 (6, 4) 칸 중앙, 카메라 중앙, 분홍 픽셀 0. 콘솔 프로젝트 오류 0
+  - 확인 방법: `Main.unity` 열고 플레이 → 어두운 배경에 진회색 벽으로 둘러싸인 연회색 방, 가운데 초록 원(플레이어). 아무 조작 없음(이동은 1-6)
+  - 피드백: Unity 6.6에 `UnityEngine.EntityId`가 있어 `UnityEngine` + `ProjectM.Core`를 함께 쓰는 파일에서 이름 충돌 → `using EntityId = ProjectM.Core.EntityId;` 별칭. CLAUDE.md 코딩 규칙에 추가
+  - 피드백: `GetCellCenterWorld`는 `GridLayout`이 아니라 `Grid`에 있음 → 필드 타입 `Grid`
+  - 피드백: Setup 메뉴가 `OpenScene` 전에 불러온 GameConfig 참조가 null로 저장됨 — `OpenScene`이 쓰지 않는 에셋을 메모리에서 내림(dirty 표시된 비주얼 에셋만 살아남음) → 씬을 먼저 열고 에셋을 불러오도록 수정. CLAUDE.md에 추가
+  - 피드백: MCP로 플레이 모드 진입(`EnterPlaymode` delayCall)이 에디터 포커스 없이 실행되지 않음 → 편집 모드에서 `SendMessage("Awake"/"Start")` 후 캡처하고 씬을 디스크에서 다시 열어 확인(Unity 내부 assertion 1건 남음, 게임 코드와 무관)
 - [ ] **1-4. 직렬화 가능한 상태 + 스냅샷 왕복 테스트** — "스냅샷 → 복원 → 진행 = 그냥 진행" 테스트
 - [ ] **1-5. 맵 생성 (1층)** — 방 + 복도, 시드 고정 시 같은 맵 (0-3 결정에 따라 MapGenerator 이식)
 - [ ] **1-6. 플레이어 이동 · 근접 공격 · 적 1종** — 클릭/키 입력 → 커맨드, 체력 · 사망 (Q3 수치는 임시값)

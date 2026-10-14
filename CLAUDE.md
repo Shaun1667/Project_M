@@ -85,6 +85,8 @@ Assets/
 - enum은 끝에만 추가한다 (에셋이 정수로 저장함).
 - 바뀔 수 있는 판정(시야, 사거리, 전이 경로, 반응 규칙)은 인터페이스 뒤에 둔다.
 - 마법서 · 아이템 효과는 한 조회 지점(예: `SpellModifiers`)에서 읽고, 시뮬레이션 · 미리보기 UI · 연출이 같은 값을 쓴다.
+- Unity 6.6에는 `UnityEngine.EntityId`가 있다. `UnityEngine`과 `ProjectM.Core`를 함께 쓰는 파일은 `using EntityId = ProjectM.Core.EntityId;` 별칭을 둔다.
+- 시뮬레이션 → 화면은 `SimEventBus` 이벤트로만 (`Core/Events/WorldEvents.cs`). 표현 어댑터는 `Bind(bus)`/`Unbind()`로 구독하고 규칙을 갖지 않는다. 씬 연결은 `GameRoot` 하나, 씬 구성은 메뉴 `ProjectM/Setup/Main Scene`(멱등).
 - 싱글턴 + `DontDestroyOnLoad` 남발을 피한다. 순수 로직은 생성자 주입, 어댑터는 씬 컴포지션 루트 하나에서 연결한다.
 
 ## 핵심 설계 규칙 (변경 금지)
@@ -115,4 +117,6 @@ Assets/
 - 커밋 전 `git diff --cached --stat`으로 스테이징 내용을 확인한다 (미리 스테이징된 변경이 섞이지 않게).
 - 에셋 이동 · 삭제는 Unity MCP(`AssetDatabase.MoveAsset/DeleteAsset`)가 확인 창 때문에 막힌다 → `git mv`/`git rm`으로 `.meta`와 함께 처리하고 Refresh.
 - `Reference/`(Assets 밖)는 참고용 원본 코드 보관소. Unity가 컴파일하지 않는다.
+- 에디터 스크립트에서 `EditorSceneManager.OpenScene`은 쓰지 않는 에셋을 메모리에서 내린다 → 에셋 참조는 씬을 연 **뒤에** 불러온다.
+- Unity MCP: 파일을 바꾼 직후 첫 호출은 "Unity not detected"가 나기 쉽다(컴파일 중) → 창 제목에 Compiling이 없어질 때까지 기다린 뒤 호출. `System.Reflection` 네임스페이스 사용 불가. 플레이 모드 진입은 에디터 포커스 없이 안 될 수 있다.
 - Unity MCP로 긴 작업이 시간 초과돼도 에디터에서는 계속 진행된다 → 콘솔 로그로 결과를 확인한다.
