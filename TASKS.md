@@ -5,7 +5,7 @@
 > 커밋: 한 항목 = 한 커밋, `MM.DD/Phase-항목/PascalCase요약`
 
 ## 현재 위치
-**Phase 0 완료 (0-0 ~ 0-4, 플레이 확인 대기). 다음은 Phase 1 — 1-1 그리드 · 엔티티 ID · 시드 난수** (2026-10-14)
+**Phase 1 — 1-1 완료(확인 대기). 다음은 1-2 틱 파이프라인 + 커맨드 큐** (2026-10-14)
 
 ---
 
@@ -109,7 +109,16 @@
 ## Phase 1 — 핵심 조작 그레이박스 + 구조 기반
 목표: 단색 타일 맵에서 플레이어가 한 칸씩 움직이고, 적이 반응하고, 한 행동 = 1틱으로 세계가 진행된다. (GDD 2장 구조 요구사항을 여기서 전부 깐다 — 원본 개발 순서 1)
 
-- [ ] **1-1. 그리드 · 엔티티 ID · 시드 난수** — `GridMap`(순수), `EntityId`, `IRng`(용도별 분리)
+- [x] **1-1. 그리드 · 엔티티 ID · 시드 난수** (2026-10-14) — 확인 대기 (화면 변화 없음, 테스트로 확인) — `GridMap`(순수), `EntityId`, `IRng`(용도별 분리)
+  - 결정 (2026-10-14): 난수는 직접 구현한 PCG32 — `System.Random`은 .NET 버전 간 수열 보장이 없고 상태 저장 불가. PCG32는 상태(ulong 2개)를 저장 · 복원 가능 → 되감기 난수 정책(Q12)을 어느 쪽으로 정해도 대응
+  - 결정 (2026-10-14): 용도별 수열(`RngStream`: MapGen · Combat · Ai · Loot)은 (런 시드, 용도 번호)만으로 SplitMix64 → PCG32 생성. 용도를 추가해도 기존 결과 불변. 연출 난수는 표현 레이어 몫
+  - 결정 (2026-10-14): `TileType` = Empty 0 · Floor 1 · Wall 2 (이전 MapGenerator 번호와 동일). 걸을 수 있는 칸 = Floor. 상태 · 지형 레이어(Q8)는 2-4, 4/8방향 · 거리 방식은 1-6 · 1-7에서
+  - 구현: `Core/Grid/{GridPos, TileType, GridMap}`, `Core/Entities/{EntityId, EntityIdAllocator}`, `Core/Random/{IRng, Pcg32(+Pcg32State), RngStream, RngSet}` — 모두 `ProjectM.Core`, 엔진 의존 없음
+  - 스냅샷 대비: `GridMap`은 1차원 배열 하나, `EntityIdAllocator.NextValue`, `Pcg32.State`, `RngSet.CaptureStates/RestoreStates` (1-4에서 묶음)
+  - 테스트 17개 추가 (`GridTests` 4, `EntityIdTests` 4, `RngTests` 9 — PCG32 공식 데모 기준값 일치, 같은 시드 재현, 상태 복원, 범위 · 치우침 없는 Range, 용도 간 독립, Simulation 소스의 기본 난수 사용 검사) — 전체 21개 통과
+  - 확인: 콘솔 오류 · 경고 0
+  - 확인 방법: Test Runner EditMode → 21개 초록
+  - 참고: 수치 추가 없음 (BALANCE 변경 없음)
 - [ ] **1-2. 틱 파이프라인 + 커맨드 큐** — `TickScheduler`, `ICommand`(행동 비용 틱), 시계 인터페이스(`TurnClock`만 구현). GDD 3-3 틱 순서 확정
 - [ ] **1-3. 이벤트 시스템 + 표현 어댑터** — 로직 이벤트 → Tilemap · 스프라이트 반영
 - [ ] **1-4. 직렬화 가능한 상태 + 스냅샷 왕복 테스트** — "스냅샷 → 복원 → 진행 = 그냥 진행" 테스트
