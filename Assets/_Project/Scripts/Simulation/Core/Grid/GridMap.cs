@@ -22,6 +22,17 @@ namespace ProjectM.Core
             _cells = new TileType[width * height];
         }
 
+        /// <summary>스냅샷 복원용. cells는 복사해서 쓴다.</summary>
+        public static GridMap FromCells(int width, int height, TileType[] cells)
+        {
+            if (cells == null) throw new ArgumentNullException(nameof(cells));
+            var map = new GridMap(width, height);
+            if (cells.Length != map._cells.Length)
+                throw new ArgumentException($"칸 수 {cells.Length}가 {width}x{height}와 맞지 않는다.", nameof(cells));
+            Array.Copy(cells, map._cells, cells.Length);
+            return map;
+        }
+
         public bool InBounds(GridPos pos) => pos.X >= 0 && pos.Y >= 0 && pos.X < Width && pos.Y < Height;
 
         public TileType Get(GridPos pos) => _cells[IndexOf(pos)];

@@ -5,7 +5,7 @@
 > 커밋: 한 항목 = 한 커밋, `MM.DD/Phase-항목/PascalCase요약`
 
 ## 현재 위치
-**Phase 1 — 1-1 · 1-2 · 1-3 완료(확인 대기). 다음은 1-4 직렬화 가능한 상태 + 스냅샷 왕복 테스트** (2026-10-14)
+**Phase 1 — 1-1 ~ 1-4 완료(확인 대기). 다음은 1-5 맵 생성 (1층)** (2026-10-14)
 
 ---
 
@@ -144,7 +144,16 @@
   - 피드백: `GetCellCenterWorld`는 `GridLayout`이 아니라 `Grid`에 있음 → 필드 타입 `Grid`
   - 피드백: Setup 메뉴가 `OpenScene` 전에 불러온 GameConfig 참조가 null로 저장됨 — `OpenScene`이 쓰지 않는 에셋을 메모리에서 내림(dirty 표시된 비주얼 에셋만 살아남음) → 씬을 먼저 열고 에셋을 불러오도록 수정. CLAUDE.md에 추가
   - 피드백: MCP로 플레이 모드 진입(`EnterPlaymode` delayCall)이 에디터 포커스 없이 실행되지 않음 → 편집 모드에서 `SendMessage("Awake"/"Start")` 후 캡처하고 씬을 디스크에서 다시 열어 확인(Unity 내부 assertion 1건 남음, 게임 코드와 무관)
-- [ ] **1-4. 직렬화 가능한 상태 + 스냅샷 왕복 테스트** — "스냅샷 → 복원 → 진행 = 그냥 진행" 테스트
+- [x] **1-4. 직렬화 가능한 상태 + 스냅샷 왕복 테스트** (2026-10-14) — 확인 대기 (화면 변화 없음, 테스트로 확인) — "스냅샷 → 복원 → 진행 = 그냥 진행" 테스트
+  - 결정 (2026-10-14): 저장 대상 상태는 `World` 하나에 모은다(맵 · ID 발급기 · 난수 · 스케줄러 · 플레이어 입력 큐). AI(`ICommandSource`)와 단계 시스템(`ITickSystem`)은 상태를 갖지 않고 World 데이터만 읽고 쓴다 — 복원 시 다시 연결만 하면 되도록. CLAUDE.md 규칙에 추가
+  - 결정 (2026-10-14): 스냅샷 인코딩은 형식 버전이 붙은 자체 바이너리(`WorldSnapshotCodec`, 매직 "PMWS") — 같은 상태 = 같은 바이트라 결정론 검사가 엄격. 세이브 파일 형식은 Phase 6에서 결정
+  - 구현: `Core/World`(Capture · Restore(aiFactory)), `Core/Snapshot/{WorldSnapshot(v1), RngStreamState, WorldSnapshotCodec}`, `Core/Tick/ActorState`, `TickScheduler.CaptureActors()` + 행동 틱 지정 등록 오버로드, `GridMap.FromCells()`
+  - 저장 규칙: 틱 사이 + 처리 안 된 플레이어 입력이 없을 때만 Capture. 이벤트 버스 · 단계 시스템은 저장하지 않음(복원 후 호출한 쪽이 다시 등록 · 다시 그림)
+  - 테스트 7개 추가 (`WorldSnapshotTests` — **저장→불러와 진행 = 저장 없이 진행(바이트 비교)**, 같은 시드 · 입력 = 같은 바이트, 스케줄러 상태 복원, Capture 독립 복사, 입력 대기 중 저장 거부, 코덱 왕복 동일 바이트, 다른 데이터 · 다른 버전 · 남는 데이터 거부) — 전체 52개 통과. 시험용 AI는 Ai 난수로 비용, Combat 난수로 칸을 뒤집어 상태가 실제로 바뀌는지도 확인
+  - 확인: 콘솔 오류 · 경고 0
+  - 확인 방법: Test Runner EditMode → 52개 초록 (`WorldSnapshotTests.SaveLoadThenPlay_EqualsPlayWithoutSave`)
+  - 참고: 되감기 링버퍼(GDD 2-3)는 시간 마법(Phase 8)에서 이 스냅샷으로 만든다. 유닛 · 상태 · 지형 레이어가 생길 때마다 WorldSnapshot에 필드 추가 + FormatVersion 증가 + 이 왕복 테스트가 계속 통과해야 한다
+  - 피드백: 파일을 바꾼 직후 첫 MCP 호출이 30분 무응답 후 끊김(0-4와 같음). 에디터는 정상, 다음 호출에서 컴파일 시작 → 파일 변경 후에는 가벼운 호출(콘솔 읽기)로 먼저 컴파일을 깨우고 대기한 뒤 무거운 호출을 한다
 - [ ] **1-5. 맵 생성 (1층)** — 방 + 복도, 시드 고정 시 같은 맵 (0-3 결정에 따라 MapGenerator 이식)
 - [ ] **1-6. 플레이어 이동 · 근접 공격 · 적 1종** — 클릭/키 입력 → 커맨드, 체력 · 사망 (Q3 수치는 임시값)
 - [ ] **1-7. 시야 · 사거리 (그리드 계산)** — 레이캐스트 없이

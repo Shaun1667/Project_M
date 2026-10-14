@@ -96,7 +96,7 @@ Assets/
 3. **틱 파이프라인 하나.** 상태 지속 · 지형 지속 · 마나 회복이 모두 같은 틱 시스템을 따른다. 틱 순서는 고정하고 문서(GDD 3-3)에 적는다. 구현: `TickScheduler.Tick()` = 1틱, 새 시스템은 `AddSystem(TickPhase.X, ITickSystem)`로 정해진 단계에 넣는다. 행동은 `ICommand`(비용 틱) — GDD 3-4.
 4. **시계 교체 방식.** 규칙은 "1틱 진행"만 받는다. 턴제는 플레이어 행동 확정 시, 제한해제는 1초마다 1틱. 모드별로 마법 · 상태 · AI를 따로 구현하지 않는다. deltaTime 누적이 아닌 고정 간격 틱 스케줄러 + 커맨드 큐.
 5. **모든 지속시간은 틱 단위.** 모든 행동에 행동 비용(틱) 필드를 둔다 (초기값 전부 1).
-6. **상태는 직렬화 가능한 순수 데이터.** 유닛 · 타일 · 상태 · 지형 · 마나를 스냅샷 한 번으로 저장 · 복원할 수 있어야 한다 (시간 마법 · 세이브 · 회귀 테스트 공용).
+6. **상태는 직렬화 가능한 순수 데이터.** 유닛 · 타일 · 상태 · 지형 · 마나를 스냅샷 한 번으로 저장 · 복원할 수 있어야 한다 (시간 마법 · 세이브 · 회귀 테스트 공용). 구현: 저장 대상 상태는 모두 `World`에 두고, AI(`ICommandSource`) · 단계 시스템(`ITickSystem`) · 커맨드는 **상태를 갖지 않는다**. 새 상태를 추가하면 `WorldSnapshot` 필드 + `FormatVersion` 증가 + `WorldSnapshotCodec` + `World.Capture/Restore`를 함께 고치고, `WorldSnapshotTests` 왕복 테스트가 계속 통과해야 한다.
 7. **시드 난수 주입.** `UnityEngine.Random`, `System.Random` 직접 생성 금지. 난수 인터페이스를 주입하고 용도별로 분리한다 (전투 ≠ 맵 생성 ≠ 연출). 구현: `IRng` / `Pcg32` / `RngSet.Get(RngStream.X)`. 새 용도는 `RngStream` 끝에 추가.
 8. **모든 엔티티에 고유 ID.** 참조는 ID로 한다.
 9. **시너지는 규칙 표.** "A마법 + B마법"을 하드코딩하지 않는다. 마법은 속성과 상태/지형 태그를 부여하고, 반응은 `상태/지형 × 속성 → 결과` 데이터 표로 정의한다.
@@ -118,5 +118,5 @@ Assets/
 - 에셋 이동 · 삭제는 Unity MCP(`AssetDatabase.MoveAsset/DeleteAsset`)가 확인 창 때문에 막힌다 → `git mv`/`git rm`으로 `.meta`와 함께 처리하고 Refresh.
 - `Reference/`(Assets 밖)는 참고용 원본 코드 보관소. Unity가 컴파일하지 않는다.
 - 에디터 스크립트에서 `EditorSceneManager.OpenScene`은 쓰지 않는 에셋을 메모리에서 내린다 → 에셋 참조는 씬을 연 **뒤에** 불러온다.
-- Unity MCP: 파일을 바꾼 직후 첫 호출은 "Unity not detected"가 나기 쉽다(컴파일 중) → 창 제목에 Compiling이 없어질 때까지 기다린 뒤 호출. `System.Reflection` 네임스페이스 사용 불가. 플레이 모드 진입은 에디터 포커스 없이 안 될 수 있다.
+- Unity MCP: 파일을 바꾼 직후 첫 호출은 "Unity not detected"가 나거나 30분 무응답으로 끊기기 쉽다(컴파일 전) → 먼저 가벼운 호출(콘솔 읽기)로 깨우고, 창 제목에 Compiling이 없어질 때까지 기다린 뒤 무거운 호출(RunCommand · 테스트). `System.Reflection` 네임스페이스 사용 불가. 플레이 모드 진입은 에디터 포커스 없이 안 될 수 있다.
 - Unity MCP로 긴 작업이 시간 초과돼도 에디터에서는 계속 진행된다 → 콘솔 로그로 결과를 확인한다.

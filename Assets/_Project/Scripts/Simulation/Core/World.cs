@@ -1,0 +1,97 @@
+using System;
+using System.Collections.Generic;
+
+namespace ProjectM.Core
+{
+    /// <summary>
+    /// 한 판의 시뮬레이션 상태 묶음. 저장 대상 상태는 모두 여기(또는 여기서 닿는 객체)에 있어야 하며,
+    /// AI(ICommandSource)와 단계 시스템(ITickSystem)은 상태를 갖지 않고 World의 데이터만 읽고 쓴다.
+    /// 그래야 Capture → Restore 후 같은 결과가 나온다 (스냅샷 왕복 테스트로 검사).
+    /// </summary>
+    public sealed class World
+    {
+        public GridMap Map { get; }
+        public EntityIdAllocator Ids { get; }
+        public RngSet Rng { get; }
+        public TickScheduler Scheduler { get; }
+        public PlayerCommandSource PlayerInput { get; }
+
+        /// <summary>표현 레이어로 가는 이벤트. 저장하지 않는다 (복원 후 화면은 MapLoaded 등으로 다시 그린다).</summary>
+        public SimEventBus Events { get; }
+
+        public World(GridMap map, ulong seed)
+            : this(map, new EntityIdAllocator(), new RngSet(seed), new TickScheduler())
+        {
+        }
+
+        private World(GridMap map, EntityIdAllocator ids, RngSet rng, TickScheduler scheduler)
+        {
+            Map = map ?? throw new ArgumentNullException(nameof(map));
+            Ids = ids;
+            Rng = rng;
+            Scheduler = scheduler;
+            PlayerInput = new PlayerCommandSource();
+            Events = new SimEventBus();
+        }
+
+        /// <summary>
+        /// 지금 상태를 스냅샷으로 만든다. 틱 사이, 처리되지 않은 플레이어 입력이 없을 때만 가능하다.
+        /// </summary>
+        public WorldSnapshot Capture()
+        {
+            if (PlayerInput.HasCommand) throw new InvalidOperationException("처리되지 않은 플레이어 입력이 있을 때는 저장할 수 없다.");
+
+            var rngStates = Rng.CaptureStates();
+            var streams = new List<RngStreamState>(rngStates.Count);
+            foreach (var pair in rngStates)
+                streams.Add(new RngStreamState(pair.Key, pair.Value));
+            streams.Sort((a, b) => ((int)a.Stream).CompareTo((int)b.Stream));
+
+            return new WorldSnapshot
+            {
+                CurrentTick = Scheduler.CurrentTick,
+                MapWidth = Map.Width,
+                MapHeight = Map.Height,
+                Cells = Map.CopyCells(),
+                NextEntityId = Ids.NextValue,
+                RngSeed = Rng.Seed,
+                RngStreams = streams.ToArray(),
+                Actors = Scheduler.CaptureActors().ToArray(),
+            };
+        }
+
+        /// <summary>
+        /// 스냅샷에서 World를 다시 만든다. AI 행위자의 ICommandSource는 aiFactory가 새 World 기준으로 만들어 준다.
+        /// 단계 시스템(ITickSystem)은 저장 대상이 아니므로 호출한 쪽이 다시 등록한다.
+        /// </summary>
+        public static World Restore(WorldSnapshot snapshot, Func<World, EntityId, ICommandSource> aiFactory)
+        {
+            if (snapshot == null) throw new ArgumentNullException(nameof(snapshot));
+            if (aiFactory == null) throw new ArgumentNullException(nameof(aiFactory));
+            if (snapshot.FormatVersion != WorldSnapshot.CurrentFormatVersion)
+                throw new InvalidOperationException($"지원하지 않는 스냅샷 버전 {snapshot.FormatVersion}.");
+
+            var map = GridMap.FromCells(snapshot.MapWidth, snapshot.MapHeight, snapshot.Cells);
+            var ids = new EntityIdAllocator(snapshot.NextEntityId);
+
+            var rng = new RngSet(snapshot.RngSeed);
+            var states = new Dictionary<RngStream, Pcg32State>(snapshot.RngStreams.Length);
+            foreach (var s in snapshot.RngStreams)
+                states.Add(s.Stream, s.State);
+            rng.RestoreStates(states);
+
+            var scheduler = new TickScheduler(snapshot.CurrentTick);
+            var world = new World(map, ids, rng, scheduler);
+
+            foreach (var actor in snapshot.Actors)
+            {
+                if (actor.IsPlayer)
+                    scheduler.RegisterPlayer(actor.Id, world.PlayerInput, actor.ReadyTick);
+                else
+                    scheduler.RegisterActor(actor.Id, aiFactory(world, actor.Id), actor.ReadyTick);
+            }
+
+            return world;
+        }
+    }
+}

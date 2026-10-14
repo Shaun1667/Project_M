@@ -50,8 +50,14 @@ namespace ProjectM.Core
         /// <summary>플레이어를 등록한다. 플레이어는 하나뿐이다.</summary>
         public void RegisterPlayer(EntityId id, PlayerCommandSource source)
         {
+            RegisterPlayer(id, source, DefaultReadyTick());
+        }
+
+        /// <summary>스냅샷 복원용: 다음 행동 틱을 지정해 플레이어를 등록한다.</summary>
+        public void RegisterPlayer(EntityId id, PlayerCommandSource source, long readyTick)
+        {
             if (_playerId.IsValid) throw new InvalidOperationException("플레이어가 이미 등록돼 있다: " + _playerId);
-            AddActor(id, source);
+            AddActor(id, source, readyTick);
             _playerId = id;
             _playerSource = source;
         }
@@ -61,7 +67,24 @@ namespace ProjectM.Core
         /// </summary>
         public void RegisterActor(EntityId id, ICommandSource source)
         {
-            AddActor(id, source);
+            AddActor(id, source, DefaultReadyTick());
+        }
+
+        /// <summary>스냅샷 복원용: 다음 행동 틱을 지정해 행위자를 등록한다.</summary>
+        public void RegisterActor(EntityId id, ICommandSource source, long readyTick)
+        {
+            AddActor(id, source, readyTick);
+        }
+
+        /// <summary>스냅샷용: 등록된 행위자 상태를 EntityId 오름차순으로 돌려준다.</summary>
+        public List<ActorState> CaptureActors()
+        {
+            if (_ticking) throw new InvalidOperationException("틱 처리 중에는 상태를 저장할 수 없다.");
+            var list = new List<ActorState>(_actors.Count);
+            foreach (var entry in _actors.Values)
+                list.Add(new ActorState(entry.Id, entry.ReadyTick, entry.Id == _playerId));
+            list.Sort((a, b) => a.Id.Value.CompareTo(b.Id.Value));
+            return list;
         }
 
         /// <summary>행위자를 뺀다 (사망 등). 틱 처리 도중에 빠지면 그 틱의 남은 차례에서 제외된다.</summary>
@@ -155,13 +178,15 @@ namespace ProjectM.Core
             return a.Id.Value.CompareTo(b.Id.Value);
         }
 
-        private void AddActor(EntityId id, ICommandSource source)
+        private long DefaultReadyTick() => _ticking ? CurrentTick + 1 : CurrentTick;
+
+        private void AddActor(EntityId id, ICommandSource source, long readyTick)
         {
             if (!id.IsValid) throw new ArgumentException("유효하지 않은 EntityId.", nameof(id));
             if (source == null) throw new ArgumentNullException(nameof(source));
+            if (readyTick < 0) throw new ArgumentOutOfRangeException(nameof(readyTick), readyTick, "행동 틱은 0 이상이어야 한다.");
             if (_actors.ContainsKey(id)) throw new InvalidOperationException("이미 등록된 행위자: " + id);
 
-            long readyTick = _ticking ? CurrentTick + 1 : CurrentTick;
             _actors.Add(id, new ActorEntry(id, source, readyTick));
         }
 
