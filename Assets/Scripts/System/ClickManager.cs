@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Tilemaps;
+using UnityEngine.InputSystem;
 
 public class ClickManager : MonoBehaviour
 {
@@ -17,9 +18,10 @@ public class ClickManager : MonoBehaviour
     }
     void Click()
     {
-        if (Input.GetMouseButtonDown(0))
+        Mouse mouse = Mouse.current;
+        if (mouse != null && mouse.leftButton.wasPressedThisFrame)
         {
-            mouseposition = Input.mousePosition;
+            mouseposition = mouse.position.ReadValue();
             mouseposition = maincamera.ScreenToWorldPoint(mouseposition);
 
             RaycastHit2D hit = Physics2D.Raycast(mouseposition, transform.forward, 1000);
