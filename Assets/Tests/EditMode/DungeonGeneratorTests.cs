@@ -33,6 +33,47 @@ namespace ProjectM.Tests
             Assert.That(b.Exit, Is.EqualTo(a.Exit));
         }
 
+        // 같은 시드 = 같은 층 (맵 · 시작 · 계단 · 적 배치 · 난수 상태까지) — 시드 50개를 두 번씩 만들어 스냅샷 바이트 비교.
+        // 게임(GameRoot)과 같은 순서: World.Create(맵 생성) → FloorPopulator(플레이어 · 적 배치).
+        [Test]
+        public void ManySeeds_SameSeed_ByteIdenticalFloorAndSpawns()
+        {
+            var playerDef = new ProjectM.Units.UnitDef("player", 20, 3, 8);
+            var enemyDef = new ProjectM.Units.UnitDef("enemy_melee", 8, 2, 6);
+            var spawn = new ProjectM.Units.SpawnConfig(5, 8);
+            var config = new GameConfig(1, 1f);
+
+            byte[] Build(ulong seed)
+            {
+                var generator = new DungeonGenerator(BalanceConfig());
+                DungeonFloor floor = null;
+                var world = World.Create(seed, rng =>
+                {
+                    floor = generator.Generate(rng);
+                    return floor.Map;
+                });
+                var ai = new ProjectM.Units.MeleeChaserAi(world, config, new ProjectM.Units.RangeOnlySightRule());
+                ProjectM.Units.FloorPopulator.Populate(world, floor.Start, playerDef, enemyDef, spawn, ai);
+                return WorldSnapshotCodec.Encode(world.Capture());
+            }
+
+            for (ulong seed = 1; seed <= 50; seed++)
+                Assert.That(Build(seed), Is.EqualTo(Build(seed)), $"시드 {seed}");
+            Assert.That(Build(20261016UL), Is.Not.EqualTo(Build(20261017UL)));
+        }
+
+        // 기록값: 시드 20261016 (BALANCE 2번 "결과"). 생성 규칙을 일부러 바꿨을 때만 이 값과 BALANCE를 같이 고친다.
+        [Test]
+        public void RecordedSeed_MatchesBalanceResult()
+        {
+            var floor = Generate(20261016UL);
+            var cells = floor.Map.CopyCells();
+            Assert.That(cells.Count(t => t == TileType.Floor), Is.EqualTo(993));
+            Assert.That(cells.Count(t => t == TileType.Wall), Is.EqualTo(1506));
+            Assert.That(cells.Count(t => t == TileType.StairsDown), Is.EqualTo(1));
+            Assert.That(floor.Start, Is.EqualTo(new GridPos(2, 26)));
+        }
+
         [Test]
         public void DifferentSeeds_DifferentFloors()
         {

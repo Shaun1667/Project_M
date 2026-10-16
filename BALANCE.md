@@ -60,6 +60,7 @@
 분포 (`DungeonGeneratorTests.RollSize_KeepsIntendedDistribution`): 7~13 칸당 빈도 / 14~19 칸당 빈도 = 1.8~2.2.
 결과 (시드 20261016 예): 바닥 991 · 벽 1508 · 계단 1. → 막다른 길 잇기 후 (2026-10-16) 바닥 993 · 벽 1506 · 계단 1.
 막다른 길 (`DungeonGeneratorTests.ManySeeds_NoDeadEnds`): 시드 200개 모두 막다른 칸 0.
+재현 (`DungeonGeneratorTests.RecordedSeed_MatchesBalanceResult`): 위 시드 20261016 결과 + 시작 (2, 26)을 고정 검사. 같은 시드 = 같은 맵 · 적 배치 (`ManySeeds_SameSeed_ByteIdenticalFloorAndSpawns`).
 
 ---
 
