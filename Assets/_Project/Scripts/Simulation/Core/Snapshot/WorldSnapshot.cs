@@ -1,4 +1,5 @@
 using System;
+using ProjectM.Units;
 
 namespace ProjectM.Core
 {
@@ -10,7 +11,8 @@ namespace ProjectM.Core
     [Serializable]
     public sealed class WorldSnapshot
     {
-        public const int CurrentFormatVersion = 1;
+        /// <summary>1: 1-4 최초. 2: 유닛(Units) 추가 (1-6).</summary>
+        public const int CurrentFormatVersion = 2;
 
         public int FormatVersion = CurrentFormatVersion;
 
@@ -29,6 +31,37 @@ namespace ProjectM.Core
 
         /// <summary>EntityId 오름차순.</summary>
         public ActorState[] Actors = Array.Empty<ActorState>();
+
+        /// <summary>맵 위 유닛, EntityId 오름차순.</summary>
+        public UnitState[] Units = Array.Empty<UnitState>();
+    }
+
+    /// <summary>유닛 하나의 저장 가능한 상태 (ProjectM.Units.Unit과 같은 필드).</summary>
+    [Serializable]
+    public readonly struct UnitState
+    {
+        public readonly EntityId Id;
+        public readonly Faction Faction;
+        public readonly string VisualId;
+        public readonly int MaxHp;
+        public readonly int AttackDamage;
+        public readonly int SightRange;
+        public readonly int X;
+        public readonly int Y;
+        public readonly int Hp;
+
+        public UnitState(EntityId id, Faction faction, string visualId, int maxHp, int attackDamage, int sightRange, int x, int y, int hp)
+        {
+            Id = id;
+            Faction = faction;
+            VisualId = visualId;
+            MaxHp = maxHp;
+            AttackDamage = attackDamage;
+            SightRange = sightRange;
+            X = x;
+            Y = y;
+            Hp = hp;
+        }
     }
 
     /// <summary>용도별 난수 수열 하나의 상태.</summary>

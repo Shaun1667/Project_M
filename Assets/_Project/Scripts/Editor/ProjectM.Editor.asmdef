@@ -3,7 +3,9 @@
     "rootNamespace": "ProjectM.Editor",
     "references": [
         "ProjectM.Simulation",
-        "ProjectM.Runtime"
+        "ProjectM.Runtime",
+        "Unity.TextMeshPro",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [
         "Editor"

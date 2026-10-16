@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text;
+using ProjectM.Units;
 
 namespace ProjectM.Core
 {
@@ -46,6 +47,20 @@ namespace ProjectM.Core
                     w.Write(a.Id.Value);
                     w.Write(a.ReadyTick);
                     w.Write(a.IsPlayer);
+                }
+
+                w.Write(snapshot.Units.Length);
+                foreach (var u in snapshot.Units)
+                {
+                    w.Write(u.Id.Value);
+                    w.Write((int)u.Faction);
+                    w.Write(u.VisualId);
+                    w.Write(u.MaxHp);
+                    w.Write(u.AttackDamage);
+                    w.Write(u.SightRange);
+                    w.Write(u.X);
+                    w.Write(u.Y);
+                    w.Write(u.Hp);
                 }
 
                 w.Flush();
@@ -98,6 +113,21 @@ namespace ProjectM.Core
                     var readyTick = r.ReadInt64();
                     var isPlayer = r.ReadBoolean();
                     s.Actors[i] = new ActorState(id, readyTick, isPlayer);
+                }
+
+                s.Units = new UnitState[ReadCount(r)];
+                for (int i = 0; i < s.Units.Length; i++)
+                {
+                    var id = new EntityId(r.ReadInt32());
+                    var faction = (Faction)r.ReadInt32();
+                    var visualId = r.ReadString();
+                    var maxHp = r.ReadInt32();
+                    var attackDamage = r.ReadInt32();
+                    var sightRange = r.ReadInt32();
+                    var x = r.ReadInt32();
+                    var y = r.ReadInt32();
+                    var hp = r.ReadInt32();
+                    s.Units[i] = new UnitState(id, faction, visualId, maxHp, attackDamage, sightRange, x, y, hp);
                 }
 
                 if (stream.Position != stream.Length)

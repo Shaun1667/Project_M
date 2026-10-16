@@ -16,3 +16,6 @@ MonoBehaviour:
   - Id: player
     Sprite: {fileID: 21300000, guid: 963162ac300c54745b65f15ec6a4b7ee, type: 3}
     Tint: {r: 1, g: 1, b: 1, a: 1}
+  - Id: enemy_melee
+    Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
+    Tint: {r: 0.9, g: 0.25, b: 0.2, a: 1}

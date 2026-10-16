@@ -1,10 +1,14 @@
 using ProjectM.Core;
 using ProjectM.Data;
+using ProjectM.Input;
 using ProjectM.Presentation;
+using ProjectM.UI;
+using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using UnityEngine.UI;
 
 namespace ProjectM.Editor
 {
@@ -20,12 +24,19 @@ namespace ProjectM.Editor
         private const string EntityCatalogPath = VisualsDir + "/EntityVisualCatalog.asset";
         private const string GameConfigPath = "Assets/_Project/Data/Config/GameConfig.asset";
         private const string DungeonConfigPath = "Assets/_Project/Data/Dungeon/DungeonGenConfig.asset";
+        private const string PlayerDefPath = "Assets/_Project/Data/Units/Player.asset";
+        private const string EnemyDefPath = "Assets/_Project/Data/Units/MeleeEnemy.asset";
+        private const string SpawnConfigPath = "Assets/_Project/Data/Units/SpawnConfig.asset";
+
+        private const string PlayerVisualId = "player";
+        private const string EnemyVisualId = "enemy_melee";
 
         // 그레이박스: tile.png 슬라이스 0 = 연회색, 1 = 진회색, 3 = 파랑
         private const string FloorTilePath = "Assets/_Project/Art/Greybox/TilePalette/tile_0.asset";
         private const string WallTilePath = "Assets/_Project/Art/Greybox/TilePalette/tile_1.asset";
         private const string StairsTilePath = "Assets/_Project/Art/Greybox/TilePalette/tile_3.asset";
         private const string PlayerSpritePath = "Assets/_Project/Art/Greybox/player.png";
+        private const string UnitCircleSpritePath = "Assets/_Project/Art/Greybox/unit_circle.png";
 
         [MenuItem("ProjectM/Setup/Main Scene")]
         public static void Run()
@@ -49,6 +60,13 @@ namespace ProjectM.Editor
             }
             // 없으면 필드 초기값(BALANCE 2번)으로 만든다. 있으면 값을 건드리지 않는다.
             var dungeonConfig = LoadOrCreate<DungeonGenConfigAsset>(DungeonConfigPath);
+            // 유닛 수치 — 없을 때만 BALANCE 3번 값으로 만든다. 있으면 값을 건드리지 않는다.
+            var playerDef = EnsureAsset<UnitDefAsset>(PlayerDefPath,
+                ("_visualId", PlayerVisualId), ("_maxHp", 20), ("_attackDamage", 3), ("_sightRange", 8));
+            var enemyDef = EnsureAsset<UnitDefAsset>(EnemyDefPath,
+                ("_visualId", EnemyVisualId), ("_maxHp", 8), ("_attackDamage", 2), ("_sightRange", 6));
+            var spawnConfig = EnsureAsset<SpawnConfigAsset>(SpawnConfigPath,
+                ("_enemyCount", 5), ("_enemyMinDistanceFromStart", 8));
 
             var gridGo = FindOrCreate("Grid", null);
             var grid = GetOrAdd<Grid>(gridGo);
@@ -69,13 +87,23 @@ namespace ProjectM.Editor
             if (cameraGo != null) cameraController = GetOrAdd<CameraController>(cameraGo);
             else Debug.LogWarning("[MainSceneSetup] MainCamera 태그 카메라 없음");
 
+            var hud = EnsureHud();
+
             var rootGo = FindOrCreate("GameRoot", null);
+            var input = GetOrAdd<PlayerInputController>(rootGo);
+            SetRefs(input, ("_camera", cameraGo != null ? cameraGo.GetComponent<Camera>() : null), ("_grid", grid));
+
             var root = GetOrAdd<GameRoot>(rootGo);
             SetRefs(root,
                 ("_config", config),
                 ("_dungeonConfig", dungeonConfig),
+                ("_playerDef", playerDef),
+                ("_enemyDef", enemyDef),
+                ("_spawnConfig", spawnConfig),
                 ("_tilemapPresenter", tilemapPresenter),
                 ("_entityPresenter", entityPresenter),
+                ("_input", input),
+                ("_hud", hud),
                 ("_camera", cameraController));
 
             EditorSceneManager.MarkSceneDirty(scene);
@@ -97,9 +125,71 @@ namespace ProjectM.Editor
         private static EntityVisualCatalog EnsureEntityCatalog()
         {
             var catalog = LoadOrCreate<EntityVisualCatalog>(EntityCatalogPath);
-            catalog.Set("player", AssetDatabase.LoadAssetAtPath<Sprite>(PlayerSpritePath), Color.white);
+            catalog.Set(PlayerVisualId, AssetDatabase.LoadAssetAtPath<Sprite>(PlayerSpritePath), Color.white);
+            // 그레이박스: 흰 원(player.png와 같은 모양)을 빨갛게
+            catalog.Set(EnemyVisualId, AssetDatabase.LoadAssetAtPath<Sprite>(UnitCircleSpritePath), new Color(0.9f, 0.25f, 0.2f));
             EditorUtility.SetDirty(catalog);
             return catalog;
+        }
+
+        /// <summary>HUD 캔버스: 왼쪽 위 체력 줄 + 그 아래 전투 로그.</summary>
+        private static HudPresenter EnsureHud()
+        {
+            var canvasGo = FindOrCreate("HUD", null);
+            var canvas = GetOrAdd<Canvas>(canvasGo);
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            var scaler = GetOrAdd<CanvasScaler>(canvasGo);
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
+            scaler.matchWidthOrHeight = 0.5f;
+
+            var status = EnsureText(canvasGo.transform, "Status", new Vector2(24, -16), new Vector2(900, 50), 36);
+            var log = EnsureText(canvasGo.transform, "Log", new Vector2(24, -70), new Vector2(900, 260), 26);
+
+            var hud = GetOrAdd<HudPresenter>(canvasGo);
+            SetRefs(hud, ("_statusText", status), ("_logText", log));
+            return hud;
+        }
+
+        private static TextMeshProUGUI EnsureText(Transform parent, string name, Vector2 topLeft, Vector2 size, float fontSize)
+        {
+            var go = FindOrCreate(name, parent);
+            var text = GetOrAdd<TextMeshProUGUI>(go);
+            text.fontSize = fontSize;
+            text.alignment = TextAlignmentOptions.TopLeft;
+            text.color = Color.white;
+            text.raycastTarget = false;
+
+            var rect = (RectTransform)go.transform;
+            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0, 1);
+            rect.anchoredPosition = topLeft;
+            rect.sizeDelta = size;
+            return text;
+        }
+
+        /// <summary>없으면 만들고 필드 값을 넣는다. 이미 있으면 그대로 둔다 (사용자가 고친 수치를 덮어쓰지 않음).</summary>
+        private static T EnsureAsset<T>(string path, params (string field, object value)[] initialValues) where T : ScriptableObject
+        {
+            var asset = AssetDatabase.LoadAssetAtPath<T>(path);
+            if (asset != null) return asset;
+
+            asset = LoadOrCreate<T>(path);
+            var so = new SerializedObject(asset);
+            foreach (var (field, value) in initialValues)
+            {
+                var prop = so.FindProperty(field);
+                if (prop == null)
+                {
+                    Debug.LogError($"[MainSceneSetup] {typeof(T).Name}.{field} 필드 없음");
+                    continue;
+                }
+                if (value is int i) prop.intValue = i;
+                else if (value is string s) prop.stringValue = s;
+                else Debug.LogError($"[MainSceneSetup] {field}: 지원하지 않는 값 형식 {value?.GetType().Name}");
+            }
+            so.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(asset);
+            return asset;
         }
 
         private static T LoadOrCreate<T>(string path) where T : ScriptableObject

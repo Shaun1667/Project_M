@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ProjectM.Units;
 
 namespace ProjectM.Core
 {
@@ -15,6 +16,7 @@ namespace ProjectM.Core
         public RngSet Rng { get; }
         public TickScheduler Scheduler { get; }
         public PlayerCommandSource PlayerInput { get; }
+        public UnitRegistry Units { get; }
 
         /// <summary>표현 레이어로 가는 이벤트. 저장하지 않는다 (복원 후 화면은 MapLoaded 등으로 다시 그린다).</summary>
         public SimEventBus Events { get; }
@@ -43,7 +45,17 @@ namespace ProjectM.Core
             Rng = rng;
             Scheduler = scheduler;
             PlayerInput = new PlayerCommandSource();
+            Units = new UnitRegistry();
             Events = new SimEventBus();
+        }
+
+        /// <summary>
+        /// 기본 단계 시스템을 등록한다: ⑥ 사망 판정 → ⑦ 이벤트 발행. 새 World · 복원한 World 모두 한 번 부른다.
+        /// </summary>
+        public void InstallCoreSystems()
+        {
+            Scheduler.AddSystem(TickPhase.DeathCheck, new DeathCheckSystem(this));
+            Scheduler.AddSystem(TickPhase.EventFlush, new EventFlushSystem(Events));
         }
 
         /// <summary>
@@ -69,7 +81,20 @@ namespace ProjectM.Core
                 RngSeed = Rng.Seed,
                 RngStreams = streams.ToArray(),
                 Actors = Scheduler.CaptureActors().ToArray(),
+                Units = CaptureUnits(),
             };
+        }
+
+        private UnitState[] CaptureUnits()
+        {
+            var units = Units.ToSortedList();
+            var states = new UnitState[units.Count];
+            for (int i = 0; i < units.Count; i++)
+            {
+                var u = units[i];
+                states[i] = new UnitState(u.Id, u.Faction, u.VisualId, u.MaxHp, u.AttackDamage, u.SightRange, u.Pos.X, u.Pos.Y, u.Hp);
+            }
+            return states;
         }
 
         /// <summary>
@@ -94,6 +119,9 @@ namespace ProjectM.Core
 
             var scheduler = new TickScheduler(snapshot.CurrentTick);
             var world = new World(map, ids, rng, scheduler);
+
+            foreach (var u in snapshot.Units)
+                world.Units.Add(new Unit(u.Id, u.Faction, u.VisualId, u.MaxHp, u.AttackDamage, u.SightRange, new GridPos(u.X, u.Y), u.Hp));
 
             foreach (var actor in snapshot.Actors)
             {

@@ -33,6 +33,7 @@ namespace ProjectM.Presentation
         public void Bind(SimEventBus bus)
         {
             Unbind();
+            ClearViews();
             _bus = bus;
             _bus.Subscribe<EntitySpawnedEvent>(OnSpawned);
             _bus.Subscribe<EntityMovedEvent>(OnMoved);
@@ -49,6 +50,18 @@ namespace ProjectM.Presentation
         }
 
         private void OnDestroy() => Unbind();
+
+        /// <summary>남은 모습을 모두 지운다 (새 판 · 새 버스에 연결할 때).</summary>
+        private void ClearViews()
+        {
+            foreach (var view in _views.Values)
+            {
+                if (view == null) continue;
+                if (Application.isPlaying) Destroy(view.gameObject);
+                else DestroyImmediate(view.gameObject);
+            }
+            _views.Clear();
+        }
 
         private void OnSpawned(EntitySpawnedEvent e)
         {

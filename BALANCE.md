@@ -12,7 +12,7 @@
 |---|---|---|---|---|
 | 1 | 게임 전역 (틱 · 행동 비용) | `Assets/_Project/Data/Config/GameConfig.asset` (`GameConfigAsset`) | `ProjectM.Core.GameConfig` | 사용 중 |
 | 2 | 맵 생성 | `Assets/_Project/Data/Dungeon/DungeonGenConfig.asset` (`DungeonGenConfigAsset`) | `ProjectM.Dungeon.DungeonGenConfig` | 사용 중 |
-| 3 | 유닛 (체력 · 피해) | `Data/Units/` (1-6) | — | 예정 |
+| 3 | 유닛 (체력 · 피해 · 시야) · 적 배치 | `Assets/_Project/Data/Units/{Player, MeleeEnemy, SpawnConfig}.asset` (`UnitDefAsset`, `SpawnConfigAsset`) | `ProjectM.Units.UnitDef`, `ProjectM.Units.SpawnConfig` | 사용 중 |
 | 4 | 마나 | `Data/Config/` 또는 `Data/Magic/` (2-1) | — | 예정 |
 | 5 | 주문 | `Data/Spells/` (2-2) | — | 예정 |
 | 6 | 상태 이상 | `Data/Statuses/` (2-3) | — | 예정 |
@@ -61,7 +61,30 @@
 
 ---
 
-## 3. 초기 밸런스 기준 (GDD 원본 15장, [임시])
+## 3. 유닛 · 적 배치 — `Data/Units/`
+
+결정 (2026-10-16): Q3 임시값. 고정 피해(난수 없음). 조정은 Phase 4 재미 검증에서.
+
+| 유닛 | 에셋 | VisualId | 체력 `_maxHp` | 근접 피해 `_attackDamage` | 시야 `_sightRange` |
+|---|---|---|---|---|---|
+| 플레이어 | `Player.asset` | `player` | **20** | **3** | **8** |
+| 근접 적 | `MeleeEnemy.asset` | `enemy_melee` | **8** | **2** | **6** |
+
+| 배치 | 필드 | 값 | 비고 |
+|---|---|---|---|
+| 층당 적 수 | `_enemyCount` | **5** | 놓을 칸이 모자라면 있는 만큼 |
+| 시작 칸과 최소 거리 | `_enemyMinDistanceFromStart` | **8** | 체비셰프 거리, 바닥 칸만(계단 제외) |
+
+검산 (`UnitCombatTests.ProjectAssets_MatchBalanceTable`): 에셋 값이 위 표와 같다.
+결과:
+- 플레이어가 적을 잡는 데 **3대** (3 × 3 = 9 ≥ 8) — `UnitCombatTests.PlayerKillsEnemyInThreeHits_EnemyRemoved`
+- 적 한 마리가 플레이어를 잡는 데 **10대** (2 × 10 = 20) — `UnitCombatTests.PlayerDiesAfterTenHits_ClockStops`
+- 1:1로 붙어 싸우면 플레이어가 적 하나에 4 잃음 (적이 2번 반격). 회복이 없으므로 1:1을 4번 하면 체력 4, 5번째 1:1에서 같이 죽는다 (층의 적 5마리 = 회복 없이는 빠듯함)
+- 시야 6 < 플레이어 8 → 플레이어가 먼저 본다 (1-7 전에는 벽 무시)
+
+---
+
+## 참고 — 초기 밸런스 기준 (GDD 원본 15장, [임시])
 
 테스트 시작용 범위. 실제 값은 각 항목 착수 때 정해 위 번호 표로 옮긴다.
 

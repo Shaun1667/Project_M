@@ -83,7 +83,9 @@ Assets/
 - 그레이박스 타일 · 스프라이트는 `Assets/_Project/Art/Greybox/`. 메인 씬은 `Assets/_Project/Scenes/Main.unity` (빌드 씬 유일 항목).
 
 ## 코딩 규칙
-- 네임스페이스: `ProjectM.Core`, `ProjectM.Magic`, `ProjectM.Status`, `ProjectM.Units`, `ProjectM.Dungeon`, `ProjectM.Data`(Runtime/Data), `ProjectM.Presentation`, `ProjectM.UI`, `ProjectM.Editor`
+- 네임스페이스: `ProjectM.Core`, `ProjectM.Magic`, `ProjectM.Status`, `ProjectM.Units`, `ProjectM.Dungeon`, `ProjectM.Data`(Runtime/Data), `ProjectM.Presentation`, `ProjectM.Input`(Runtime/Input), `ProjectM.UI`, `ProjectM.Editor`
+- 그리드 이동 · 거리 · 경로는 `GridMovement`(8방향, 체비셰프, 대각선 모서리 규칙) · `GridPathfinder` 한 곳만 쓴다. 입력 → 플레이어 커맨드 규칙은 `PlayerActions` 하나 (키보드 · 클릭 공용)
+- 단계 시스템 기본 등록은 `World.InstallCoreSystems()` — 새 World · `World.Restore` 후 모두 부른다
 - 이름: 클래스 · 메서드 · 프로퍼티 PascalCase, private 필드 `_camelCase`, 지역 변수 camelCase
 - 게임 로직과 엔진 컴포넌트를 분리한다. 규칙은 순수 C#으로 쓰고, MonoBehaviour는 얇은 어댑터(이벤트 구독 · 표시 · 입력 전달)만 맡는다.
 - 수치(피해 · 사거리 · 지속 틱 · 마나 · 확률)는 데이터 에셋에 둔다. 에셋은 `ProjectM.Data`의 ScriptableObject이고 `ToXxx()`로 순수 객체(생성자에서 범위 검사)를 만들어 Simulation에 넘긴다. 예: `GameConfigAsset` → `GameConfig`. 위치는 BALANCE.md 0번.
@@ -134,3 +136,5 @@ Assets/
 - 에디터 스크립트에서 `EditorSceneManager.OpenScene`은 쓰지 않는 에셋을 메모리에서 내린다 → 에셋 참조는 씬을 연 **뒤에** 불러온다.
 - Unity MCP: 파일을 바꾼 직후 첫 호출은 "Unity not detected"가 나거나 30분 무응답으로 끊기기 쉽다(컴파일 전) → 먼저 가벼운 호출(콘솔 읽기)로 깨우고, 창 제목에 Compiling이 없어질 때까지 기다린 뒤 무거운 호출(RunCommand · 테스트). `System.Reflection` 네임스페이스 사용 불가. 플레이 모드 진입은 에디터 포커스 없이 안 될 수 있다.
 - Unity MCP로 긴 작업이 시간 초과돼도 에디터에서는 계속 진행된다 → 콘솔 로그로 결과를 확인한다.
+- 테스트 실행: RunCommand 안에서 `TestRunnerApi` + `ExecutionSettings.runSynchronously = true`(EditMode)로 돌리고 콜백 결과를 `result.Log`로 받는다. 비동기 실행은 에디터 포커스 없이 진행되지 않는다. RunCommand 코드에 중첩 클래스를 쓰면 도구가 중복 생성해 컴파일 실패 → 최상위 `internal class`로.
+- 줄바꿈: `.gitattributes`(1-6)가 Unity YAML 에셋을 eol=lf로 고정한다 → ProjectSettings 줄바꿈 변경을 되돌릴 필요 없음.
