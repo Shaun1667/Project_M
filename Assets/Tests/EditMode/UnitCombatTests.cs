@@ -117,6 +117,31 @@ namespace ProjectM.Tests
             Assert.That(s.Events.Exists(e => e is UnitDamagedEvent d && d.Target == s.Player.Id && d.Amount == 2 && d.Hp == 18), Is.True);
         }
 
+        // 2026-10-16: 바로 옆 적에게서 대각선으로 물러나면 적도 대각선으로 따라온다 (직선으로 꺾지 않음)
+        [Test]
+        public void PlayerFleesDiagonally_EnemyFollowsDiagonally()
+        {
+            var s = Start(Room(), new GridPos(3, 1), new GridPos(2, 1));
+            var enemy = s.World.Units.ToSortedList()[1];
+
+            s.Step(1, 1);   // 플레이어 (4,2)
+            Assert.That(enemy.Pos, Is.EqualTo(new GridPos(3, 2)), "적도 오른쪽 위로");
+            s.Step(1, 1);   // 플레이어 (5,3)
+            Assert.That(enemy.Pos, Is.EqualTo(new GridPos(4, 3)), "다시 오른쪽 위로");
+            s.Step(1, 1);   // 플레이어 (6,4)
+            Assert.That(enemy.Pos, Is.EqualTo(new GridPos(5, 4)));
+            Assert.That(s.Player.Hp, Is.EqualTo(20), "계속 물러나는 동안은 맞지 않는다 (따라붙기만 함)");
+        }
+
+        [Test]
+        public void ChaseStep_PrefersDiagonalWhenCloser_StraightWhenStraightIsCloser()
+        {
+            var map = Room();
+            Assert.That(GridPathfinder.ChaseStep(map, new GridPos(2, 1), new GridPos(4, 2)), Is.EqualTo(new GridPos(3, 2)), "대각선이 더 가까움");
+            Assert.That(GridPathfinder.ChaseStep(map, new GridPos(5, 1), new GridPos(1, 1)), Is.EqualTo(new GridPos(4, 1)), "일직선이면 곧게");
+            Assert.That(GridPathfinder.ChaseStep(map, new GridPos(1, 1), new GridPos(1, 1)), Is.Null);
+        }
+
         [Test]
         public void EnemyOutOfSight_Waits()
         {

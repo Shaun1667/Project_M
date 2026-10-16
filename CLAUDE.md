@@ -84,7 +84,7 @@ Assets/
 
 ## 코딩 규칙
 - 네임스페이스: `ProjectM.Core`, `ProjectM.Magic`, `ProjectM.Status`, `ProjectM.Units`, `ProjectM.Dungeon`, `ProjectM.Data`(Runtime/Data), `ProjectM.Presentation`, `ProjectM.Input`(Runtime/Input), `ProjectM.UI`, `ProjectM.Editor`
-- 그리드 이동 · 거리 · 경로는 `GridMovement`(8방향, 체비셰프, 대각선은 양옆이 모두 벽일 때만 막힘) · `GridPathfinder` 한 곳만 쓴다. 입력 → 플레이어 커맨드 규칙은 `PlayerActions` 하나 (키보드 · 클릭 공용)
+- 그리드 이동 · 거리 · 경로는 `GridMovement`(8방향, 체비셰프, 대각선은 양옆이 모두 벽일 때만 막힘) · `GridPathfinder`(클릭 이동 `FindPath` = 곧은 길 선호, 추적 `ChaseStep` = 직선 거리가 가까워지는 칸) 한 곳만 쓴다. 입력 → 플레이어 커맨드 규칙은 `PlayerActions` 하나 (키보드 · 클릭 공용)
 - 단계 시스템 기본 등록은 `World.InstallCoreSystems(sight)` — 새 World · `World.Restore` 후 모두 부르고, 돌려받은 `PlayerVisionSystem.Refresh()`로 첫 시야를 계산한다
 - 시야는 `ISightRule`(지금 `ShadowcastSightRule` → `FieldOfView`), 사거리 · 조준선은 `ITargetingRule`(지금 `BresenhamTargetingRule`) 한 곳만 쓴다
 - 이름: 클래스 · 메서드 · 프로퍼티 PascalCase, private 필드 `_camelCase`, 지역 변수 camelCase

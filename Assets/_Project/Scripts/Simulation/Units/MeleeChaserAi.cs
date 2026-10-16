@@ -47,12 +47,12 @@ namespace ProjectM.Units
             return step;
         }
 
-        /// <summary>goal 쪽으로 한 걸음. 길이 없거나 첫 칸이 막혀 있으면 null.</summary>
+        /// <summary>goal 쪽으로 한 걸음 (GridPathfinder.ChaseStep — 대각선으로 물러나면 대각선으로 따라감). 길이 없거나 첫 칸이 막혀 있으면 null.</summary>
         private ICommand StepToward(Unit self, GridPos goal, int cost)
         {
-            var path = GridPathfinder.FindPath(_world.Map, self.Pos, goal, _world.Units.IsOccupied);
-            if (path == null || path.Count == 0 || _world.Units.IsOccupied(path[0])) return null;
-            return new MoveCommand(_world, path[0], cost);
+            var step = GridPathfinder.ChaseStep(_world.Map, self.Pos, goal, _world.Units.IsOccupied);
+            if (!step.HasValue || _world.Units.IsOccupied(step.Value)) return null;
+            return new MoveCommand(_world, step.Value, cost);
         }
     }
 }

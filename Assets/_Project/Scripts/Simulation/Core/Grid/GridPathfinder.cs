@@ -5,14 +5,69 @@ namespace ProjectM.Core
 {
     /// <summary>
     /// 8방향 A* (GridMovement.CanStep 규칙). 한 걸음 = 1턴이므로 걸음 수가 가장 적은 경로를 찾고,
-    /// 걸음 수가 같으면 대각선이 적은 경로를 고른다 (곧은 길 선호). 동점은 고정 순서로 처리해 결정론적이다.
-    /// 클릭 이동과 적 추적이 같이 쓴다.
+    /// 걸음 수가 같으면 대각선이 적은 경로를 고른다 (곧은 길 선호). 동점은 고정 순서로 처리해 결정론적이다. 클릭 이동이 쓴다.
+    /// 추적용 한 걸음은 ChaseStep — 걸음 수가 같으면 목표와의 직선 거리가 가장 가까워지는 칸 (대각선으로 따라붙음).
     /// </summary>
     public static class GridPathfinder
     {
         // 걸음 비용 = Step, 대각선이면 +1. 대각선 가산이 Step보다 훨씬 작아 걸음 수가 항상 우선한다.
         private const int Step = 1000;
         private const int DiagonalExtra = 1;
+
+        /// <summary>
+        /// 추적용 한 걸음 (2026-10-16): from에서 갈 수 있는 이웃 중 goal까지 남은 걸음 수가 가장 적은 칸.
+        /// 같으면 goal과의 직선 거리(dx² + dy²)가 가장 짧은 칸, 그래도 같으면 GridMovement.Directions 순서.
+        /// 예: 바로 옆 플레이어가 대각선으로 물러나면 적도 대각선으로 따라간다.
+        /// isBlocked인 칸은 지나지 않는다 (goal 칸은 예외). 길이 없으면 null.
+        /// </summary>
+        public static GridPos? ChaseStep(GridMap map, GridPos from, GridPos goal, Func<GridPos, bool> isBlocked = null)
+        {
+            if (map == null) throw new ArgumentNullException(nameof(map));
+            if (from == goal || !map.IsWalkable(goal)) return null;
+
+            // goal에서 거꾸로 걸음 수 (CanStep은 걸을 수 있는 두 칸 사이에서 대칭)
+            int w = map.Width;
+            var dist = new int[w * map.Height];
+            for (int i = 0; i < dist.Length; i++) dist[i] = int.MaxValue;
+            var queue = new Queue<GridPos>();
+            dist[goal.Y * w + goal.X] = 0;
+            queue.Enqueue(goal);
+            while (queue.Count > 0)
+            {
+                var p = queue.Dequeue();
+                int pd = dist[p.Y * w + p.X];
+                for (int d = 0; d < GridMovement.Directions.Count; d++)
+                {
+                    var n = p + GridMovement.Directions[d];
+                    if (!GridMovement.CanStep(map, p, n)) continue;
+                    int ni = n.Y * w + n.X;
+                    if (dist[ni] != int.MaxValue) continue;
+                    if (n != from && isBlocked != null && isBlocked(n)) continue;
+                    dist[ni] = pd + 1;
+                    if (n != from) queue.Enqueue(n);
+                }
+            }
+
+            GridPos? best = null;
+            int bestDist = int.MaxValue, bestEuclid = int.MaxValue;
+            for (int d = 0; d < GridMovement.Directions.Count; d++)
+            {
+                var n = from + GridMovement.Directions[d];
+                if (!GridMovement.CanStep(map, from, n)) continue;
+                if (n != goal && isBlocked != null && isBlocked(n)) continue;
+                int nd = dist[n.Y * w + n.X];
+                if (nd == int.MaxValue) continue;
+                int ex = n.X - goal.X, ey = n.Y - goal.Y;
+                int euclid = ex * ex + ey * ey;
+                if (nd < bestDist || (nd == bestDist && euclid < bestEuclid))
+                {
+                    best = n;
+                    bestDist = nd;
+                    bestEuclid = euclid;
+                }
+            }
+            return best;
+        }
 
         /// <summary>
         /// from → goal 경로 (from 제외, goal 포함). 못 가면 null, from == goal이면 빈 목록.
