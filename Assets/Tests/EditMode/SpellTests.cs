@@ -37,6 +37,33 @@ namespace ProjectM.Tests
             new SpellDef("poison_basic", Element.Poison, SpellShape.Burst, 5, 2, 3, 1, ProjectM.Status.StatusType.Poison, 100),
         }, BalanceStatuses());
 
+        // BALANCE.md 7번 지형 효과
+        internal static ProjectM.Status.TerrainBook BalanceTerrains() => new ProjectM.Status.TerrainBook(new[]
+        {
+            new ProjectM.Status.TerrainDef(ProjectM.Status.TerrainEffectType.FireZone, 4, ProjectM.Status.StatusType.Burn),
+            new ProjectM.Status.TerrainDef(ProjectM.Status.TerrainEffectType.PoisonCloud, 4, ProjectM.Status.StatusType.Poison),
+        }, BalanceStatuses());
+
+        // BALANCE.md 5 · 6 · 7번 전체 (상태 + 지형) — 에셋 검산 · 지형 테스트용
+        internal static SpellBook BalanceBookFull()
+        {
+            var statuses = BalanceStatuses();
+            var terrains = new ProjectM.Status.TerrainBook(new[]
+            {
+                new ProjectM.Status.TerrainDef(ProjectM.Status.TerrainEffectType.FireZone, 4, ProjectM.Status.StatusType.Burn),
+                new ProjectM.Status.TerrainDef(ProjectM.Status.TerrainEffectType.PoisonCloud, 4, ProjectM.Status.StatusType.Poison),
+            }, statuses);
+            return new SpellBook(new[]
+            {
+                new SpellDef("fire_basic", Element.Fire, SpellShape.Bolt, 6, 5, 3, 0, ProjectM.Status.StatusType.Burn, 100,
+                    ProjectM.Status.TerrainEffectType.FireZone),
+                new SpellDef("ice_basic", Element.Ice, SpellShape.Bolt, 6, 3, 2, 0, ProjectM.Status.StatusType.Slow, 100),
+                new SpellDef("lightning_basic", Element.Lightning, SpellShape.Beam, 5, 3, 4, 0, ProjectM.Status.StatusType.Paralyze, 30),
+                new SpellDef("poison_basic", Element.Poison, SpellShape.Burst, 5, 2, 3, 1, ProjectM.Status.StatusType.Poison, 100,
+                    ProjectM.Status.TerrainEffectType.PoisonCloud),
+            }, statuses, terrains);
+        }
+
         private const int Fire = 0, Ice = 1, Lightning = 2, Poison = 3;
 
         private static readonly MagicConfig Magic = new MagicConfig(3, 1, 4);
@@ -82,7 +109,7 @@ namespace ProjectM.Tests
         {
             var world = new World(Room(), 9UL);
             var s = new Session { World = world, Book = BalanceBook(), Clock = new TurnClock(world.Scheduler, world.PlayerInput) };
-            world.InstallCoreSystems(Sight, Magic, s.Book.Statuses);
+            world.InstallCoreSystems(Sight, Magic, s.Book.Statuses, s.Book.Terrains);
             world.Events.Subscribe<SpellCastEvent>(s.Casts.Add);
             s.Player = UnitSpawner.SpawnPlayer(world, PlayerDef, player, Magic.SpellSlotCount);
             foreach (var p in enemies) s.Enemies.Add(UnitSpawner.SpawnEnemy(world, EnemyDef, p, new IdleAi()));
@@ -192,15 +219,18 @@ namespace ProjectM.Tests
             var statusAsset = AssetDatabase.LoadAssetAtPath<StatusCatalogAsset>("Assets/_Project/Data/Statuses/StatusCatalog.asset");
             Assert.That(asset, Is.Not.Null, "SpellCatalog.asset 없음 — 메뉴 ProjectM/Setup/Main Scene 실행");
             Assert.That(statusAsset, Is.Not.Null, "StatusCatalog.asset 없음 — 메뉴 ProjectM/Setup/Main Scene 실행");
-            var book = asset.ToBook(statusAsset.ToBook());
-            var expected = BalanceBookWithStatuses();
+            var terrainAsset = AssetDatabase.LoadAssetAtPath<TerrainCatalogAsset>("Assets/_Project/Data/Terrains/TerrainCatalog.asset");
+            Assert.That(terrainAsset, Is.Not.Null, "TerrainCatalog.asset 없음 — 메뉴 ProjectM/Setup/Main Scene 실행");
+            var statuses = statusAsset.ToBook();
+            var book = asset.ToBook(statuses, terrainAsset.ToBook(statuses));
+            var expected = BalanceBookFull();
             Assert.That(book.Count, Is.EqualTo(expected.Count));
             foreach (var id in new[] { "fire_basic", "ice_basic", "lightning_basic", "poison_basic" })
             {
                 Assert.That(book.TryGet(id, out var a), Is.True, id);
                 expected.TryGet(id, out var e);
-                Assert.That((a.Element, a.Shape, a.Range, a.Damage, a.ManaCost, a.Radius, a.AppliesStatus, a.StatusChancePercent),
-                    Is.EqualTo((e.Element, e.Shape, e.Range, e.Damage, e.ManaCost, e.Radius, e.AppliesStatus, e.StatusChancePercent)), id);
+                Assert.That((a.Element, a.Shape, a.Range, a.Damage, a.ManaCost, a.Radius, a.AppliesStatus, a.StatusChancePercent, a.LeavesTerrain),
+                    Is.EqualTo((e.Element, e.Shape, e.Range, e.Damage, e.ManaCost, e.Radius, e.AppliesStatus, e.StatusChancePercent, e.LeavesTerrain)), id);
             }
         }
     }

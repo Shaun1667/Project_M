@@ -16,7 +16,7 @@
 | 4 | 마나 · 주문 장착 칸 | `Assets/_Project/Data/Magic/MagicConfig.asset` (`MagicConfigAsset`) + `Player.asset`의 `_maxMana` · `_startingSpells` | `ProjectM.Magic.MagicConfig`, `UnitDef.MaxMana` | 사용 중 |
 | 5 | 주문 | `Assets/_Project/Data/Spells/SpellCatalog.asset` (`SpellCatalogAsset`) | `ProjectM.Magic.SpellDef` · `SpellBook` | 사용 중 |
 | 6 | 상태 이상 | `Assets/_Project/Data/Statuses/StatusCatalog.asset` (`StatusCatalogAsset`) | `ProjectM.Status.StatusDef` · `StatusBook` | 사용 중 |
-| 7 | 지형 | `Data/Terrains/` (2-4) | — | 예정 |
+| 7 | 지형 효과 | `Assets/_Project/Data/Terrains/TerrainCatalog.asset` (`TerrainCatalogAsset`) | `ProjectM.Status.TerrainDef` · `TerrainBook` | 사용 중 |
 | 8 | 반응 규칙 표 | `Data/Reactions/` (3-1) | — | 예정 |
 
 **데이터 구조 규칙 (0-4 결정)**
@@ -143,6 +143,25 @@
 - 독 폭발 = 즉시 2 + 중독 5 = 대상마다 **7** → 마나당 2.33 × 맞은 수. 범위 안 시전자도 7
 - 얼음 = 즉시 3 + 둔화 3틱 → 걸린 동안 적 행동이 절반 (0 · 2틱에 행동, 틱 2 끝에 풀림) — `StatusTests.Slow_DoublesActionCostWhileActive`
 - 번개 = 즉시 3 + 30% × 2턴 정지. 4마리를 맞히면 평균 1.2마리 마비. 1000번 시험에서 250~350 — `StatusTests.ParalyzeChance_IsSeededAndNearThirtyPercent`
+
+---
+
+## 7. 지형 효과 — `Data/Terrains/TerrainCatalog.asset`
+
+결정 (2026-10-16): Q8 임시값. 기본 지형 위 별도 레이어, 한 칸에 여러 효과 공존(같은 종류는 지속 갱신). 그 칸 유닛에게 ③ 단계마다 상태 부여(플레이어 포함). 확산 없음. 지속은 질문에 없어 임시 4틱.
+
+| 지형 효과 | 남기는 주문 · 칸 | 지속 `DurationTicks` | 거는 상태 `AppliesStatus` |
+|---|---|---|---|
+| FireZone 화염 지대 | 불 — 투사체가 멈춘 칸 1개 | **4** | Burn 화상 |
+| PoisonCloud 독구름 | 독 — 폭발 3×3 | **4** | Poison 중독 |
+
+필드 `SpellCatalog` 항목의 `LeavesTerrain`: `fire_basic` → FireZone, `poison_basic` → PoisonCloud.
+
+검산 (`TerrainTests.ProjectAsset_MatchesBalanceTable`): 에셋 값이 위 표와 같다.
+결과:
+- 화염 지대에 4틱 내내 서 있으면 화상이 매 틱 갱신 → 지대 4틱 + 사라진 뒤 화상 2틱 = 피해 **6** — `TerrainTests.StandingInFireZone_KeepsBurning`
+- 독구름은 놓인 틱에 이미 중독(5틱)이 걸려 있으므로, 머물면 중독이 계속 5로 갱신 → 떠난 뒤에도 최대 5틱
+- 빈 칸에 불을 쏘면 길목 막기로 쓸 수 있다 (적 AI는 아직 지형을 피하지 않음)
 
 ---
 

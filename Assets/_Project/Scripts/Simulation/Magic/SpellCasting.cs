@@ -171,6 +171,27 @@ namespace ProjectM.Magic
                 if (status != null && victim.IsAlive)
                     StatusEffects.TryApply(_world, victim, status, spell.StatusChancePercent);
             }
+
+            // 지형 효과 (2-4): 놓인 틱의 ③에서 바로 그 칸 유닛에게 상태를 건다
+            if (_book.Terrains.TryGet(spell.LeavesTerrain, out var terrain))
+            {
+                foreach (var cell in TerrainCells(spell, preview))
+                    TerrainEffects.Place(_world, cell, terrain);
+            }
+        }
+
+        /// <summary>지형이 남는 칸: Bolt = 투사체가 멈춘 칸, Beam = 지나간 칸 전부, Burst = 폭발 범위.</summary>
+        public static IReadOnlyList<GridPos> TerrainCells(SpellDef spell, SpellPreview preview)
+        {
+            switch (spell.Shape)
+            {
+                case SpellShape.Bolt:
+                    return preview.Path.Count > 0 ? new[] { preview.Path[preview.Path.Count - 1] } : Array.Empty<GridPos>();
+                case SpellShape.Beam:
+                    return preview.Path;
+                default:
+                    return preview.AffectedCells;
+            }
         }
     }
 

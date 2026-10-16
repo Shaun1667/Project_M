@@ -18,6 +18,22 @@ namespace ProjectM.Core
         }
     }
 
+    /// <summary>칸 하나에 놓인 지형 효과 하나의 저장 상태 (칸 인덱스 = y * MapWidth + x).</summary>
+    [Serializable]
+    public readonly struct TerrainCellState
+    {
+        public readonly int CellIndex;
+        public readonly TerrainEffectType Type;
+        public readonly int Remaining;
+
+        public TerrainCellState(int cellIndex, TerrainEffectType type, int remaining)
+        {
+            CellIndex = cellIndex;
+            Type = type;
+            Remaining = remaining;
+        }
+    }
+
     /// <summary>
     /// World 전체의 저장 가능한 상태 (CLAUDE.md 핵심 설계 규칙 6). 참조 없는 값과 배열만 담는다.
     /// 시간 마법(되감기 · 기록) · 세이브 · 회귀 테스트가 같은 스냅샷을 쓴다.
@@ -26,8 +42,8 @@ namespace ProjectM.Core
     [Serializable]
     public sealed class WorldSnapshot
     {
-        /// <summary>1: 1-4 최초. 2: 유닛(Units) 추가 (1-6). 3: 탐험 기록(Explored) · 유닛 기억(LastSeen) 추가 (1-7). 4: 유닛 마나 · 주문 장착 칸 (2-1). 5: 유닛 발자국(PreviousPos) · 배회 목적지(WanderTarget). 6: 유닛 상태 이상 (2-3).</summary>
-        public const int CurrentFormatVersion = 6;
+        /// <summary>1: 1-4 최초. 2: 유닛(Units) 추가 (1-6). 3: 탐험 기록(Explored) · 유닛 기억(LastSeen) 추가 (1-7). 4: 유닛 마나 · 주문 장착 칸 (2-1). 5: 유닛 발자국(PreviousPos) · 배회 목적지(WanderTarget). 6: 유닛 상태 이상 (2-3). 7: 지형 효과 레이어 (2-4).</summary>
+        public const int CurrentFormatVersion = 7;
 
         public int FormatVersion = CurrentFormatVersion;
 
@@ -39,6 +55,8 @@ namespace ProjectM.Core
         public TileType[] Cells = Array.Empty<TileType>();
         /// <summary>플레이어가 한 번이라도 본 칸. 인덱스는 Cells와 같다.</summary>
         public bool[] Explored = Array.Empty<bool>();
+        /// <summary>지형 효과, 칸 인덱스 순 → 종류 순.</summary>
+        public TerrainCellState[] Terrain = Array.Empty<TerrainCellState>();
 
         public int NextEntityId;
 

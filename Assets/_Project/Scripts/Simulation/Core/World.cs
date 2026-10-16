@@ -23,6 +23,9 @@ namespace ProjectM.Core
         /// <summary>플레이어가 한 번이라도 본 칸 (탐험 기록, 1-7). 인덱스 = y * Map.Width + x. PlayerVisionSystem이 채운다.</summary>
         public bool[] Explored { get; }
 
+        /// <summary>지형 효과 레이어 (2-4): 기본 지형 위에 놓인 화염 지대 · 독구름 등. TerrainEffects로만 놓는다.</summary>
+        public TerrainLayer Terrain { get; }
+
         /// <summary>표현 레이어로 가는 이벤트. 저장하지 않는다 (복원 후 화면은 MapLoaded 등으로 다시 그린다).</summary>
         public SimEventBus Events { get; }
 
@@ -52,20 +55,23 @@ namespace ProjectM.Core
             PlayerInput = new PlayerCommandSource();
             Units = new UnitRegistry();
             Explored = new bool[map.Width * map.Height];
+            Terrain = new TerrainLayer(map.Width, map.Height);
             Events = new SimEventBus();
         }
 
         /// <summary>
-        /// 기본 단계 시스템을 등록한다: ④ 상태 처리 → ⑤ 마나 회복 → ⑥ 사망 판정 → ⑥ 끝 플레이어 시야 갱신 → ⑦ 이벤트 발행.
+        /// 기본 단계 시스템을 등록한다: ③ 지형 처리 → ④ 상태 처리 → ⑤ 마나 회복 → ⑥ 사망 판정 → ⑥ 끝 플레이어 시야 갱신 → ⑦ 이벤트 발행.
         /// 행동 규칙(마비 = 행동 불가, 둔화 = 비용 추가)도 스케줄러에 연결한다.
         /// 새 World · 복원한 World 모두 한 번 부른다. 돌려준 시야 시스템의 Refresh()로 층 시작 · 불러오기 직후 시야를 한 번 계산한다.
         /// </summary>
-        public PlayerVisionSystem InstallCoreSystems(ISightRule sight, MagicConfig magic, StatusBook statuses)
+        public PlayerVisionSystem InstallCoreSystems(ISightRule sight, MagicConfig magic, StatusBook statuses, TerrainBook terrains)
         {
             if (statuses == null) throw new ArgumentNullException(nameof(statuses));
+            if (terrains == null) throw new ArgumentNullException(nameof(terrains));
             var vision = new PlayerVisionSystem(this, sight);
             Scheduler.SetActionRules(id => StatusEffects.CanAct(this, statuses, id),
                 (id, cost) => StatusEffects.AdjustCost(this, statuses, id, cost));
+            Scheduler.AddSystem(TickPhase.Terrain, new TerrainSystem(this, terrains, statuses));
             Scheduler.AddSystem(TickPhase.Status, new StatusSystem(this, statuses));
             Scheduler.AddSystem(TickPhase.ManaRegen, new ManaRegenSystem(this, magic));
             Scheduler.AddSystem(TickPhase.DeathCheck, new DeathCheckSystem(this));
@@ -94,12 +100,22 @@ namespace ProjectM.Core
                 MapHeight = Map.Height,
                 Cells = Map.CopyCells(),
                 Explored = (bool[])Explored.Clone(),
+                Terrain = CaptureTerrain(),
                 NextEntityId = Ids.NextValue,
                 RngSeed = Rng.Seed,
                 RngStreams = streams.ToArray(),
                 Actors = Scheduler.CaptureActors().ToArray(),
                 Units = CaptureUnits(),
             };
+        }
+
+        private TerrainCellState[] CaptureTerrain()
+        {
+            var list = new List<TerrainCellState>();
+            foreach (var pair in Terrain.ToSortedList())
+                foreach (var t in pair.Value)
+                    list.Add(new TerrainCellState(pair.Key, t.Type, t.Remaining));
+            return list.ToArray();
         }
 
         private UnitState[] CaptureUnits()
@@ -142,6 +158,8 @@ namespace ProjectM.Core
             if (snapshot.Explored.Length != world.Explored.Length)
                 throw new InvalidOperationException($"탐험 기록 크기 {snapshot.Explored.Length}가 맵과 맞지 않는다.");
             Array.Copy(snapshot.Explored, world.Explored, snapshot.Explored.Length);
+            foreach (var t in snapshot.Terrain)
+                world.Terrain.Place(world.Terrain.PosOf(t.CellIndex), t.Type, t.Remaining);
 
             foreach (var u in snapshot.Units)
             {

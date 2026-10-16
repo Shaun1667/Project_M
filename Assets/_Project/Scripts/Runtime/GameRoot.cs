@@ -26,10 +26,13 @@ namespace ProjectM
         [SerializeField] private MagicConfigAsset _magicConfig;
         [SerializeField] private SpellCatalogAsset _spellCatalog;
         [SerializeField] private StatusCatalogAsset _statusCatalog;
+        [SerializeField] private TerrainCatalogAsset _terrainCatalog;
         [SerializeField] private TilemapPresenter _tilemapPresenter;
         [SerializeField] private EntityPresenter _entityPresenter;
         [Tooltip("시야 안개. 비우면 안개 없이 전부 보인다")]
         [SerializeField] private FogPresenter _fogPresenter;
+        [Tooltip("지형 효과 오버레이. 비우면 지형 효과가 화면에 안 보인다")]
+        [SerializeField] private TerrainOverlayPresenter _terrainOverlay;
         [SerializeField] private PlayerInputController _input;
         [SerializeField] private HudPresenter _hud;
         [SerializeField] private CameraController _camera;
@@ -41,6 +44,7 @@ namespace ProjectM
         public MagicConfig Magic { get; private set; }
         public SpellBook Spells { get; private set; }
         public StatusBook Statuses { get; private set; }
+        public TerrainBook Terrains { get; private set; }
         public World World { get; private set; }
         public DungeonFloor Floor { get; private set; }
         /// <summary>이번 판의 시드 (디버그 창 · 콘솔 표시용).</summary>
@@ -68,7 +72,7 @@ namespace ProjectM
         private void Awake()
         {
             if (_config == null || _dungeonConfig == null || _playerDef == null || _enemyDef == null || _spawnConfig == null || _magicConfig == null
-                || _spellCatalog == null || _statusCatalog == null || _tilemapPresenter == null || _entityPresenter == null || _input == null || _hud == null)
+                || _spellCatalog == null || _statusCatalog == null || _terrainCatalog == null || _tilemapPresenter == null || _entityPresenter == null || _input == null || _hud == null)
             {
                 Debug.LogError("[GameRoot] 참조가 비어 있다. 메뉴 ProjectM/Setup/Main Scene을 실행한다.", this);
                 enabled = false;
@@ -78,7 +82,8 @@ namespace ProjectM
             Config = _config.ToConfig();
             Magic = _magicConfig.ToConfig();
             Statuses = _statusCatalog.ToBook();
-            Spells = _spellCatalog.ToBook(Statuses);
+            Terrains = _terrainCatalog.ToBook(Statuses);
+            Spells = _spellCatalog.ToBook(Statuses, Terrains);
             foreach (var id in _playerDef.ToDef().StartingSpells)
             {
                 if (!Spells.TryGet(id, out _))
@@ -127,11 +132,12 @@ namespace ProjectM
             });
             Floor = floor;
             var sight = new ShadowcastSightRule();
-            var vision = World.InstallCoreSystems(sight, Magic, Statuses);
+            var vision = World.InstallCoreSystems(sight, Magic, Statuses, Terrains);
 
             _tilemapPresenter.Bind(World.Events);
             _entityPresenter.Bind(World.Events);
             if (_fogPresenter != null) _fogPresenter.Bind(World.Events);
+            if (_terrainOverlay != null) _terrainOverlay.Bind(World.Events);
             World.Events.Subscribe<EntityMovedEvent>(OnEntityMoved);
             World.Events.Subscribe<UnitDiedEvent>(OnUnitDied);
 

@@ -47,14 +47,17 @@ namespace ProjectM.Magic
         public StatusType AppliesStatus { get; }
         /// <summary>상태가 걸릴 확률 (0~100, 맞은 유닛마다 따로). 100이면 난수를 굴리지 않는다.</summary>
         public int StatusChancePercent { get; }
+        /// <summary>남기는 지형 효과 (2-4). Bolt = 멈춘 칸, Beam = 지나간 칸, Burst = 폭발 범위. None이면 없음. 규칙은 TerrainBook.</summary>
+        public TerrainEffectType LeavesTerrain { get; }
 
         public SpellDef(string id, Element element, SpellShape shape, int range, int damage, int manaCost, int radius = 0,
-            StatusType appliesStatus = StatusType.None, int statusChancePercent = 100)
+            StatusType appliesStatus = StatusType.None, int statusChancePercent = 100, TerrainEffectType leavesTerrain = TerrainEffectType.None)
         {
             if (statusChancePercent < 0 || statusChancePercent > 100)
                 throw new ArgumentOutOfRangeException(nameof(statusChancePercent), statusChancePercent, "상태 확률은 0 ~ 100.");
             AppliesStatus = appliesStatus;
             StatusChancePercent = statusChancePercent;
+            LeavesTerrain = leavesTerrain;
             if (string.IsNullOrEmpty(id)) throw new ArgumentException("주문 ID가 비어 있다.", nameof(id));
             if (range < 1) throw new ArgumentOutOfRangeException(nameof(range), range, "사거리는 1 이상이어야 한다.");
             if (damage < 0) throw new ArgumentOutOfRangeException(nameof(damage), damage, "피해는 0 이상이어야 한다.");
@@ -82,16 +85,22 @@ namespace ProjectM.Magic
         /// <summary>주문이 거는 상태 이상의 규칙. 상태를 거는 주문이 없으면 비어 있다.</summary>
         public StatusBook Statuses { get; }
 
-        public SpellBook(IEnumerable<SpellDef> spells, StatusBook statuses = null)
+        /// <summary>주문이 남기는 지형 효과의 규칙. 없으면 비어 있다.</summary>
+        public TerrainBook Terrains { get; }
+
+        public SpellBook(IEnumerable<SpellDef> spells, StatusBook statuses = null, TerrainBook terrains = null)
         {
             if (spells == null) throw new ArgumentNullException(nameof(spells));
             Statuses = statuses ?? new StatusBook(Array.Empty<StatusDef>());
+            Terrains = terrains ?? TerrainBook.Empty;
             foreach (var spell in spells)
             {
                 if (spell == null) throw new ArgumentException("null 주문", nameof(spells));
                 if (_spells.ContainsKey(spell.Id)) throw new ArgumentException("같은 주문 ID가 두 번: " + spell.Id, nameof(spells));
                 if (spell.AppliesStatus != StatusType.None && !Statuses.TryGet(spell.AppliesStatus, out _))
                     throw new ArgumentException($"주문 {spell.Id}의 상태 {spell.AppliesStatus}가 StatusBook에 없다.", nameof(spells));
+                if (spell.LeavesTerrain != TerrainEffectType.None && !Terrains.TryGet(spell.LeavesTerrain, out _))
+                    throw new ArgumentException($"주문 {spell.Id}의 지형 {spell.LeavesTerrain}가 TerrainBook에 없다.", nameof(spells));
                 _spells.Add(spell.Id, spell);
             }
         }

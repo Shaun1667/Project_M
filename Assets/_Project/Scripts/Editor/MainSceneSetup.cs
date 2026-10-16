@@ -32,6 +32,7 @@ namespace ProjectM.Editor
         private const string MagicConfigPath = "Assets/_Project/Data/Magic/MagicConfig.asset";
         private const string SpellCatalogPath = "Assets/_Project/Data/Spells/SpellCatalog.asset";
         private const string StatusCatalogPath = "Assets/_Project/Data/Statuses/StatusCatalog.asset";
+        private const string TerrainCatalogPath = "Assets/_Project/Data/Terrains/TerrainCatalog.asset";
 
         /// <summary>플레이어 시작 주문 (BALANCE 4번). 주문 내용은 2-2 주문 데이터에서 같은 ID로 정의한다.</summary>
         private static readonly string[] PlayerStartingSpells = { "fire_basic", "ice_basic", "lightning_basic", "poison_basic" };
@@ -83,6 +84,7 @@ namespace ProjectM.Editor
                 ("_manaRegenIntervalTicks", 3), ("_manaRegenAmount", 1), ("_spellSlotCount", 4));
             var spellCatalog = EnsureSpellCatalog();
             var statusCatalog = EnsureStatusCatalog();
+            var terrainCatalog = EnsureTerrainCatalog();
 
             var gridGo = FindOrCreate("Grid", null);
             var grid = GetOrAdd<Grid>(gridGo);
@@ -97,6 +99,13 @@ namespace ProjectM.Editor
 
             var tilemapPresenter = GetOrAdd<TilemapPresenter>(terrainGo);
             SetRefs(tilemapPresenter, ("_tilemap", tilemap), ("_visuals", tileVisuals));
+
+            // 지형 효과 오버레이: 바닥(0) 위 · 유닛(10) 아래
+            var terrainFxGo = FindOrCreate("TerrainFx", gridGo.transform);
+            var terrainFxTilemap = GetOrAdd<Tilemap>(terrainFxGo);
+            GetOrAdd<TilemapRenderer>(terrainFxGo).sortingOrder = 5;
+            var terrainOverlay = GetOrAdd<TerrainOverlayPresenter>(terrainFxGo);
+            SetRefs(terrainOverlay, ("_tilemap", terrainFxTilemap), ("_tile", EnsureFogTile()));
 
             // 시야 안개: 엔티티(정렬 10) 위
             var fogGo = FindOrCreate("Fog", gridGo.transform);
@@ -133,6 +142,8 @@ namespace ProjectM.Editor
                 ("_magicConfig", magicConfig),
                 ("_spellCatalog", spellCatalog),
                 ("_statusCatalog", statusCatalog),
+                ("_terrainCatalog", terrainCatalog),
+                ("_terrainOverlay", terrainOverlay),
                 ("_tilemapPresenter", tilemapPresenter),
                 ("_entityPresenter", entityPresenter),
                 ("_fogPresenter", fogPresenter),
@@ -187,6 +198,9 @@ namespace ProjectM.Editor
             changed |= catalog.SetStatusIfNone("ice_basic", StatusType.Slow, 100);
             changed |= catalog.SetStatusIfNone("lightning_basic", StatusType.Paralyze, 30);
             changed |= catalog.SetStatusIfNone("poison_basic", StatusType.Poison, 100);
+            // BALANCE 7번: 주문 → 지형 효과
+            changed |= catalog.SetTerrainIfNone("fire_basic", TerrainEffectType.FireZone);
+            changed |= catalog.SetTerrainIfNone("poison_basic", TerrainEffectType.PoisonCloud);
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }
@@ -200,6 +214,19 @@ namespace ProjectM.Editor
             changed |= catalog.AddIfMissing(new StatusCatalogAsset.Entry { Type = StatusType.Slow, DurationTicks = 3, ExtraActionCostTicks = 1 });
             changed |= catalog.AddIfMissing(new StatusCatalogAsset.Entry { Type = StatusType.Poison, DurationTicks = 5, DamagePerTick = 1 });
             changed |= catalog.AddIfMissing(new StatusCatalogAsset.Entry { Type = StatusType.Paralyze, DurationTicks = 2, PreventsAction = true });
+            if (changed) EditorUtility.SetDirty(catalog);
+            return catalog;
+        }
+
+        /// <summary>지형 효과 규칙: 없는 종류만 BALANCE 7번 값으로 추가한다.</summary>
+        private static TerrainCatalogAsset EnsureTerrainCatalog()
+        {
+            var catalog = LoadOrCreate<TerrainCatalogAsset>(TerrainCatalogPath);
+            bool changed = false;
+            changed |= catalog.AddIfMissing(new TerrainCatalogAsset.Entry
+                { Type = TerrainEffectType.FireZone, DurationTicks = 4, AppliesStatus = StatusType.Burn });
+            changed |= catalog.AddIfMissing(new TerrainCatalogAsset.Entry
+                { Type = TerrainEffectType.PoisonCloud, DurationTicks = 4, AppliesStatus = StatusType.Poison });
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }

@@ -32,6 +32,13 @@ namespace ProjectM.Core
                 w.Write(snapshot.Explored.Length);
                 foreach (var seen in snapshot.Explored)
                     w.Write(seen);
+                w.Write(snapshot.Terrain.Length);
+                foreach (var t in snapshot.Terrain)
+                {
+                    w.Write(t.CellIndex);
+                    w.Write((int)t.Type);
+                    w.Write(t.Remaining);
+                }
 
                 w.Write(snapshot.NextEntityId);
 
@@ -115,6 +122,13 @@ namespace ProjectM.Core
                 s.Explored = new bool[ReadCount(r)];
                 for (int i = 0; i < s.Explored.Length; i++)
                     s.Explored[i] = r.ReadBoolean();
+                s.Terrain = new TerrainCellState[ReadCount(r)];
+                for (int i = 0; i < s.Terrain.Length; i++)
+                {
+                    int cell = r.ReadInt32();
+                    var type = (ProjectM.Status.TerrainEffectType)r.ReadInt32();
+                    s.Terrain[i] = new TerrainCellState(cell, type, r.ReadInt32());
+                }
 
                 s.NextEntityId = r.ReadInt32();
 
