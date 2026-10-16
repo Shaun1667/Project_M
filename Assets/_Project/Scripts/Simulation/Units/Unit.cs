@@ -29,12 +29,21 @@ namespace ProjectM.Units
         /// <summary>AI 기억 (1-7): 마지막으로 상대(플레이어)를 본 칸. 없으면 null. AI가 쓰고 스냅샷에 저장된다.</summary>
         public GridPos? LastSeenTargetPos { get; set; }
 
+        /// <summary>마지막 이동 직전 칸 (발자국). 한 번도 안 움직였으면 null. UnitRegistry.Move가 쓴다.</summary>
+        public GridPos? PreviousPos { get; internal set; }
+
+        /// <summary>AI 배회 목적지 (2026-10-16). 플레이어를 못 봤고 기억도 없을 때 가는 칸. 없으면 null.</summary>
+        public GridPos? WanderTarget { get; set; }
+
         /// <summary>체력이 남아 있는지. 0이 된 유닛은 ⑥ 사망 판정 단계에서 빠질 때까지 행동 · 공격 대상이 되지 않는다.</summary>
         public bool IsAlive => Hp > 0;
 
         public Unit(EntityId id, Faction faction, string visualId, int maxHp, int attackDamage, int sightRange, GridPos pos, int hp,
-            GridPos? lastSeenTargetPos = null, int maxMana = 0, int mana = 0, string[] spellSlots = null)
+            GridPos? lastSeenTargetPos = null, int maxMana = 0, int mana = 0, string[] spellSlots = null,
+            GridPos? previousPos = null, GridPos? wanderTarget = null)
         {
+            PreviousPos = previousPos;
+            WanderTarget = wanderTarget;
             Id = id;
             Faction = faction;
             VisualId = visualId;

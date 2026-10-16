@@ -105,7 +105,8 @@ namespace ProjectM.Core
                 var u = units[i];
                 var seen = u.LastSeenTargetPos;
                 states[i] = new UnitState(u.Id, u.Faction, u.VisualId, u.MaxHp, u.AttackDamage, u.SightRange, u.Pos.X, u.Pos.Y, u.Hp,
-                    seen.HasValue, seen?.X ?? 0, seen?.Y ?? 0, u.MaxMana, u.Mana, (string[])u.SpellSlots.Clone());
+                    seen.HasValue, seen?.X ?? 0, seen?.Y ?? 0, u.MaxMana, u.Mana, (string[])u.SpellSlots.Clone(),
+                    u.PreviousPos, u.WanderTarget);
             }
             return states;
         }
@@ -140,7 +141,7 @@ namespace ProjectM.Core
             {
                 GridPos? seen = u.HasLastSeen ? new GridPos(u.LastSeenX, u.LastSeenY) : (GridPos?)null;
                 world.Units.Add(new Unit(u.Id, u.Faction, u.VisualId, u.MaxHp, u.AttackDamage, u.SightRange, new GridPos(u.X, u.Y), u.Hp, seen,
-                    u.MaxMana, u.Mana, (string[])u.SpellSlots.Clone()));
+                    u.MaxMana, u.Mana, (string[])u.SpellSlots.Clone(), u.PreviousPos, u.WanderTarget));
             }
 
             foreach (var actor in snapshot.Actors)

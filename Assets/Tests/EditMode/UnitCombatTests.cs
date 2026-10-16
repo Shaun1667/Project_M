@@ -119,19 +119,28 @@ namespace ProjectM.Tests
             Assert.That(s.Events.Exists(e => e is UnitDamagedEvent d && d.Target == s.Player.Id && d.Amount == 2 && d.Hp == 18), Is.True);
         }
 
-        // 2026-10-16: 바로 옆 적에게서 대각선으로 물러나면 적도 대각선으로 따라온다 (직선으로 꺾지 않음)
+        // 2026-10-16: 붙어 있던 적은 플레이어가 떠난 칸(발자국)을 그대로 밟고 따라온다
         [Test]
-        public void PlayerFleesDiagonally_EnemyFollowsDiagonally()
+        public void AdjacentEnemy_FollowsPlayersExactTrail()
         {
             var s = Start(Room(), new GridPos(3, 1), new GridPos(2, 1));
             var enemy = s.World.Units.ToSortedList()[1];
+            var trail = new List<GridPos>();
 
-            s.Step(1, 1);   // 플레이어 (4,2)
-            Assert.That(enemy.Pos, Is.EqualTo(new GridPos(3, 2)), "적도 오른쪽 위로");
-            s.Step(1, 1);   // 플레이어 (5,3)
-            Assert.That(enemy.Pos, Is.EqualTo(new GridPos(4, 3)), "다시 오른쪽 위로");
-            s.Step(1, 1);   // 플레이어 (6,4)
-            Assert.That(enemy.Pos, Is.EqualTo(new GridPos(5, 4)));
+            void Step(int dx, int dy)
+            {
+                trail.Add(s.Player.Pos);
+                s.Step(dx, dy);
+            }
+
+            Step(1, 1);   // 플레이어 (4,2)
+            Assert.That(enemy.Pos, Is.EqualTo(trail[0]), "플레이어가 떠난 (3,1)로");
+            Step(1, 0);   // (5,2)
+            Assert.That(enemy.Pos, Is.EqualTo(trail[1]), "(4,2)로 — 대각선 발자국도 그대로");
+            Step(1, 1);   // (6,3)
+            Assert.That(enemy.Pos, Is.EqualTo(trail[2]));
+            Step(0, 1);   // (6,4)
+            Assert.That(enemy.Pos, Is.EqualTo(trail[3]));
             Assert.That(s.Player.Hp, Is.EqualTo(20), "계속 물러나는 동안은 맞지 않는다 (따라붙기만 함)");
         }
 
@@ -144,13 +153,55 @@ namespace ProjectM.Tests
             Assert.That(GridPathfinder.ChaseStep(map, new GridPos(1, 1), new GridPos(1, 1)), Is.Null);
         }
 
+        // 2026-10-16: 플레이어를 못 본 적은 맵을 배회한다 (목적지 = Ai 난수, 같은 시드 = 같은 움직임)
         [Test]
-        public void EnemyOutOfSight_Waits()
+        public void EnemyOutOfSight_WandersDeterministically()
         {
-            var s = Start(Room(), new GridPos(1, 1), new GridPos(10, 4)); // 거리 9 > 시야 6
+            var a = Start(Room(), new GridPos(1, 1), new GridPos(10, 4)); // 거리 9 > 시야 6
+            var b = Start(Room(), new GridPos(1, 1), new GridPos(10, 4));
+            var enemyA = a.World.Units.ToSortedList()[1];
+            var enemyB = b.World.Units.ToSortedList()[1];
+
+            a.Submit(PlayerActions.Wait(Config));
+            b.Submit(PlayerActions.Wait(Config));
+            Assert.That(enemyA.Pos, Is.Not.EqualTo(new GridPos(10, 4)), "가만히 있지 않는다");
+            Assert.That(GridMovement.Chebyshev(enemyA.Pos, new GridPos(10, 4)), Is.EqualTo(1), "한 턴에 한 칸");
+            Assert.That(enemyA.WanderTarget.HasValue, Is.True);
+            Assert.That(enemyA.LastSeenTargetPos.HasValue, Is.False, "아직 플레이어를 못 봤다");
+
+            for (int i = 0; i < 4; i++)
+            {
+                a.Submit(PlayerActions.Wait(Config));
+                b.Submit(PlayerActions.Wait(Config));
+                Assert.That(enemyB.Pos, Is.EqualTo(enemyA.Pos), $"같은 시드 = 같은 배회 ({i + 2}턴)");
+            }
+        }
+
+        [Test]
+        public void Wander_PicksNewTargetOnArrival()
+        {
+            var s = Start(Room(), new GridPos(1, 1), new GridPos(10, 4));
             var enemy = s.World.Units.ToSortedList()[1];
+            enemy.WanderTarget = new GridPos(9, 4); // 한 칸 옆을 목적지로
+
             s.Submit(PlayerActions.Wait(Config));
-            Assert.That(enemy.Pos, Is.EqualTo(new GridPos(10, 4)));
+            Assert.That(enemy.Pos, Is.EqualTo(new GridPos(9, 4)));
+            s.Submit(PlayerActions.Wait(Config));
+            Assert.That(enemy.WanderTarget.HasValue && enemy.WanderTarget.Value != new GridPos(9, 4), Is.True, "도착하면 새 목적지");
+            Assert.That(enemy.Pos, Is.Not.EqualTo(new GridPos(9, 4)), "바로 다시 걷는다");
+        }
+
+        [Test]
+        public void Snapshot_RoundTripsTrailAndWanderTarget()
+        {
+            var s = Start(Room(), new GridPos(1, 1), new GridPos(10, 4));
+            s.Step(1, 0);
+            var enemy = s.World.Units.ToSortedList()[1];
+            var restored = World.Restore(WorldSnapshotCodec.Decode(WorldSnapshotCodec.Encode(s.World.Capture())), (w, id) => Ai(w));
+
+            Assert.That(restored.Units.Get(s.Player.Id).PreviousPos, Is.EqualTo(new GridPos(1, 1)));
+            Assert.That(restored.Units.Get(enemy.Id).WanderTarget, Is.EqualTo(enemy.WanderTarget));
+            Assert.That(restored.Units.Get(enemy.Id).PreviousPos, Is.EqualTo(enemy.PreviousPos));
         }
 
         [Test]

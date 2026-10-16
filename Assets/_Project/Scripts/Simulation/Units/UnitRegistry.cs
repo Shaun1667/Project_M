@@ -48,7 +48,10 @@ namespace ProjectM.Units
 
         public bool IsOccupied(GridPos pos) => _byPos.ContainsKey(pos);
 
-        /// <summary>유닛을 옮긴다. 도착 칸이 비어 있어야 한다. 지형 규칙은 호출한 쪽(커맨드)이 검사한다.</summary>
+        /// <summary>
+        /// 유닛을 옮긴다. 도착 칸이 비어 있어야 한다. 지형 규칙은 호출한 쪽(커맨드)이 검사한다.
+        /// 떠난 칸은 Unit.PreviousPos에 남는다 (적이 플레이어 발자국을 따라올 때 씀).
+        /// </summary>
         public void Move(EntityId id, GridPos to)
         {
             var unit = Get(id);
@@ -56,6 +59,7 @@ namespace ProjectM.Units
             if (_byPos.ContainsKey(to)) throw new InvalidOperationException($"{to}에 이미 유닛이 있다.");
             _byPos.Remove(unit.Pos);
             _byPos.Add(to, id);
+            unit.PreviousPos = unit.Pos;
             unit.Pos = to;
         }
 

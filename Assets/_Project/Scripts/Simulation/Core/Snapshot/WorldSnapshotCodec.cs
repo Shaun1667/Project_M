@@ -72,6 +72,8 @@ namespace ProjectM.Core
                     w.Write(u.SpellSlots.Length);
                     foreach (var slot in u.SpellSlots)
                         w.Write(slot ?? string.Empty); // 빈 칸 = 빈 문자열
+                    WriteOptionalPos(w, u.PreviousPos);
+                    WriteOptionalPos(w, u.WanderTarget);
                 }
 
                 w.Flush();
@@ -152,14 +154,32 @@ namespace ProjectM.Core
                         var slot = r.ReadString();
                         slots[k] = slot.Length == 0 ? null : slot;
                     }
+                    var previousPos = ReadOptionalPos(r);
+                    var wanderTarget = ReadOptionalPos(r);
                     s.Units[i] = new UnitState(id, faction, visualId, maxHp, attackDamage, sightRange, x, y, hp, hasLastSeen, lastSeenX, lastSeenY,
-                        maxMana, mana, slots);
+                        maxMana, mana, slots, previousPos, wanderTarget);
                 }
 
                 if (stream.Position != stream.Length)
                     throw new InvalidDataException("스냅샷 끝에 남는 데이터가 있다.");
                 return s;
             }
+        }
+
+        // 있음 여부(bool) + x · y. 없으면 0, 0을 써서 바이트 길이를 고정한다.
+        private static void WriteOptionalPos(BinaryWriter w, GridPos? pos)
+        {
+            w.Write(pos.HasValue);
+            w.Write(pos?.X ?? 0);
+            w.Write(pos?.Y ?? 0);
+        }
+
+        private static GridPos? ReadOptionalPos(BinaryReader r)
+        {
+            bool has = r.ReadBoolean();
+            int x = r.ReadInt32();
+            int y = r.ReadInt32();
+            return has ? new GridPos(x, y) : (GridPos?)null;
         }
 
         private static int ReadCount(BinaryReader r)
