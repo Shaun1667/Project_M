@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ProjectM.Core;
+using ProjectM.Magic;
 using ProjectM.Units;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -15,12 +16,16 @@ namespace ProjectM.Input
     ///   누르고 있으면 반복하며, 반복 때마다 지금 눌린 키 조합으로 방향을 다시 정한다. 넘패드 5 · 스페이스 · 마침표 = 제자리 대기.
     /// - 클릭: 그 칸까지 경로를 따라 한 칸씩 여러 턴 진행. 적 칸을 누르면 다가가서 한 번 공격.
     ///   키 입력 · 새 클릭 · 길이 막힘 · 새 적이 보임 → 멈춤. 자기 칸 클릭 = 제자리 대기.
-    /// 클릭 경로는 입력 상태일 뿐 World에 저장하지 않는다.
+    /// - 주문 (2-2): 숫자 키 1~N = 그 칸의 주문으로 조준 모드. 보이는 가장 가까운 적이 자동 선택, Tab = 다음 적,
+    ///   방향키 · WASD · 넘패드 = 조준 칸 한 칸씩, 마우스 = 가리킨 칸, Space · Enter · 클릭 = 시전, Esc · 같은 숫자 키 = 취소.
+    ///   조준 중에는 경로 · 맞는 칸을 미리보기로 칠한다 (AimPreviewPresenter). 쓸 수 없으면 이유를 힌트로 보낸다.
+    /// 클릭 경로 · 조준 상태는 입력 상태일 뿐 World에 저장하지 않는다.
     /// </summary>
     public sealed class PlayerInputController : MonoBehaviour
     {
         [SerializeField] private Camera _camera;
         [SerializeField] private Grid _grid;
+        [SerializeField] private ProjectM.Presentation.AimPreviewPresenter _aimPreview;
 
         [Header("입력 반복 (연출 시간, 규칙과 무관)")]
         [Tooltip("키를 누르고 있을 때 첫 반복까지 걸리는 시간, 초")]
@@ -44,10 +49,24 @@ namespace ProjectM.Input
 
         private static readonly Key[] WaitKeys = { Key.Numpad5, Key.Space, Key.Period };
 
+        private static readonly Key[] CastKeys = { Key.Space, Key.Enter, Key.NumpadEnter };
+
         private World _world;
         private GameConfig _config;
         private ITickClock _clock;
         private ISightRule _sight;
+        private SpellBook _spells;
+        private ITargetingRule _targeting;
+
+        // 조준 모드 (주문 칸 번호, -1 = 조준 아님)
+        private int _aimSlot = -1;
+        private GridPos _aimCursor;
+        private Vector2 _lastMousePos;
+
+        /// <summary>HUD에 보일 안내 한 줄 (조준 안내 · 시전 불가 이유). 빈 문자열 = 지움.</summary>
+        public event System.Action<string> HintChanged;
+
+        public bool IsAiming => _aimSlot >= 0;
 
         private bool _comboPending;
         private float _comboEndTime;
@@ -68,14 +87,17 @@ namespace ProjectM.Input
             _grid = grid;
         }
 
-        public void Bind(World world, GameConfig config, ITickClock clock, ISightRule sight)
+        public void Bind(World world, GameConfig config, ITickClock clock, ISightRule sight, SpellBook spells, ITargetingRule targeting)
         {
             _world = world;
             _config = config;
             _clock = clock;
             _sight = sight;
+            _spells = spells;
+            _targeting = targeting;
             _comboPending = false;
             CancelPath();
+            CancelAim();
         }
 
         public void Unbind()
@@ -83,6 +105,7 @@ namespace ProjectM.Input
             _world = null;
             _clock = null;
             CancelPath();
+            CancelAim();
         }
 
         private void Update()
@@ -91,10 +114,18 @@ namespace ProjectM.Input
             if (!PlayerActions.TryGetPlayer(_world, out var player))
             {
                 CancelPath();
+                CancelAim();
                 return;
             }
 
             var keyboard = Keyboard.current;
+            var mouseDevice = Mouse.current;
+            if (IsAiming)
+            {
+                HandleAim(player, keyboard, mouseDevice);
+                return;
+            }
+            if (keyboard != null && TryStartAim(player, keyboard)) return;
             if (keyboard != null && HandleKeyboard(keyboard)) return;
 
             var mouse = Mouse.current;
@@ -106,6 +137,202 @@ namespace ProjectM.Input
 
             if (_path != null && Time.time >= _nextPathStepTime)
                 StepPath();
+        }
+
+        // ── 주문 조준 (2-2) ──
+
+        /// <summary>숫자 키로 조준 시작. 칸이 비었거나 마나가 모자라면 힌트만.</summary>
+        private bool TryStartAim(Unit player, Keyboard keyboard)
+        {
+            if (_spells == null) return false;
+            int slot = PressedSlotKey(keyboard, player.SpellSlots.Length);
+            if (slot < 0) return false;
+
+            CancelPath();
+            _comboPending = false;
+            var id = player.SpellSlots[slot];
+            if (id == null || !_spells.TryGet(id, out var spell))
+            {
+                Hint($"[{slot + 1}] empty slot");
+                return true;
+            }
+            if (player.Mana < spell.ManaCost)
+            {
+                Hint($"[{slot + 1}] {spell.Id}: not enough mana ({player.Mana}/{spell.ManaCost})");
+                return true;
+            }
+
+            _aimSlot = slot;
+            _aimCursor = NearestVisibleEnemy(player, spell.Range) ?? player.Pos;
+            if (Mouse.current != null) _lastMousePos = Mouse.current.position.ReadValue();
+            _nextRepeatTime = Time.time + _keyRepeatDelay;
+            RefreshAim(player);
+            return true;
+        }
+
+        private void HandleAim(Unit player, Keyboard keyboard, Mouse mouse)
+        {
+            if (keyboard != null)
+            {
+                int slot = PressedSlotKey(keyboard, player.SpellSlots.Length);
+                if (keyboard[Key.Escape].wasPressedThisFrame || slot == _aimSlot)
+                {
+                    CancelAim();
+                    return;
+                }
+                if (slot >= 0)
+                {
+                    // 다른 주문으로 바꿔 조준
+                    CancelAim();
+                    TryStartAim(player, keyboard);
+                    return;
+                }
+                foreach (var key in CastKeys)
+                {
+                    if (keyboard[key].wasPressedThisFrame)
+                    {
+                        TryCast(player);
+                        return;
+                    }
+                }
+                if (keyboard[Key.Tab].wasPressedThisFrame)
+                {
+                    _aimCursor = NextVisibleEnemy(player, _aimCursor) ?? _aimCursor;
+                    RefreshAim(player);
+                    return;
+                }
+
+                // 방향키: 조준 칸 한 칸씩 (누르고 있으면 반복)
+                var dir = ReadHeldDirection(keyboard, out bool pressedNow);
+                if (dir != default && (pressedNow || Time.time >= _nextRepeatTime))
+                {
+                    var moved = _aimCursor + dir;
+                    if (_world.Map.InBounds(moved)) _aimCursor = moved;
+                    _nextRepeatTime = Time.time + (pressedNow ? _keyRepeatDelay : _keyRepeatInterval);
+                    RefreshAim(player);
+                    return;
+                }
+            }
+
+            if (mouse != null && _camera != null && _grid != null)
+            {
+                var screen = mouse.position.ReadValue();
+                bool clicked = mouse.leftButton.wasPressedThisFrame;
+                if (clicked || (screen - _lastMousePos).sqrMagnitude > 0.01f)
+                {
+                    _lastMousePos = screen;
+                    var cell = ScreenToCell(screen);
+                    if (_world.Map.InBounds(cell) && cell != _aimCursor)
+                    {
+                        _aimCursor = cell;
+                        RefreshAim(player);
+                    }
+                    if (clicked) TryCast(player);
+                }
+            }
+        }
+
+        private void TryCast(Unit player)
+        {
+            var block = SpellCasting.TryCreateCast(_world, _config, _spells, _targeting, _sight, _aimSlot, _aimCursor, out var command);
+            if (block != CastBlock.None)
+            {
+                Hint(AimHint(player) + "  — " + Describe(block));
+                return;
+            }
+            CancelAim();
+            _clock.SubmitPlayerCommand(command);
+        }
+
+        private void RefreshAim(Unit player)
+        {
+            var block = SpellCasting.Check(_world, _spells, _targeting, _sight, player, _aimSlot, _aimCursor, out _, out var preview);
+            if (_aimPreview != null) _aimPreview.Show(_aimCursor, preview, block == CastBlock.None);
+            Hint(block == CastBlock.None ? AimHint(player) : AimHint(player) + "  — " + Describe(block));
+        }
+
+        private void CancelAim()
+        {
+            bool wasAiming = _aimSlot >= 0;
+            _aimSlot = -1;
+            if (_aimPreview != null) _aimPreview.Hide();
+            if (wasAiming) Hint(string.Empty);
+        }
+
+        private string AimHint(Unit player)
+        {
+            var id = player.SpellSlots[_aimSlot];
+            string cost = _spells.TryGet(id, out var spell) ? $" ({spell.ManaCost} MP)" : string.Empty;
+            return $"[{_aimSlot + 1}] {id}{cost}: Space/Click cast, Tab next target, Esc cancel";
+        }
+
+        private static string Describe(CastBlock block)
+        {
+            switch (block)
+            {
+                case CastBlock.NotEnoughMana: return "not enough mana";
+                case CastBlock.OutOfRange: return "out of range";
+                case CastBlock.NotVisible: return "can't see there";
+                case CastBlock.TargetIsSelf: return "pick a target";
+                case CastBlock.Blocked: return "blocked";
+                case CastBlock.EmptySlot: return "empty slot";
+                case CastBlock.UnknownSpell: return "unknown spell";
+                default: return block.ToString();
+            }
+        }
+
+        private void Hint(string text) => HintChanged?.Invoke(text);
+
+        /// <summary>이번 프레임에 누른 숫자 키(1~count)의 칸 번호, 없으면 -1.</summary>
+        private static int PressedSlotKey(Keyboard keyboard, int count)
+        {
+            for (int i = 0; i < count && i < 9; i++)
+            {
+                if (keyboard[Key.Digit1 + i].wasPressedThisFrame) return i;
+            }
+            return -1;
+        }
+
+        /// <summary>보이는 적 목록: 사거리 안 먼저, 그다음 가까운 순, 같으면 EntityId 순.</summary>
+        private List<Unit> VisibleEnemies(Unit player, int range)
+        {
+            var list = new List<Unit>();
+            foreach (var unit in _world.Units.ToSortedList())
+            {
+                if (unit.Faction == player.Faction || !unit.IsAlive) continue;
+                if (_sight.CanSee(_world.Map, player.Pos, unit.Pos, player.SightRange)) list.Add(unit);
+            }
+            list.Sort((a, b) =>
+            {
+                bool ar = _targeting.InRange(player.Pos, a.Pos, range), br = _targeting.InRange(player.Pos, b.Pos, range);
+                if (ar != br) return ar ? -1 : 1;
+                int da = GridMovement.Chebyshev(player.Pos, a.Pos), db = GridMovement.Chebyshev(player.Pos, b.Pos);
+                if (da != db) return da.CompareTo(db);
+                return a.Id.Value.CompareTo(b.Id.Value);
+            });
+            return list;
+        }
+
+        private GridPos? NearestVisibleEnemy(Unit player, int range)
+        {
+            var list = VisibleEnemies(player, range);
+            return list.Count > 0 ? list[0].Pos : (GridPos?)null;
+        }
+
+        private GridPos? NextVisibleEnemy(Unit player, GridPos current)
+        {
+            _spells.TryGet(player.SpellSlots[_aimSlot], out var spell);
+            var list = VisibleEnemies(player, spell != null ? spell.Range : 0);
+            if (list.Count == 0) return null;
+            int index = list.FindIndex(u => u.Pos == current);
+            return list[(index + 1) % list.Count].Pos;
+        }
+
+        private GridPos ScreenToCell(Vector2 screenPos)
+        {
+            var world = _camera.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, -_camera.transform.position.z));
+            var cell = _grid.WorldToCell(world);
+            return new GridPos(cell.x, cell.y);
         }
 
         /// <returns>키 입력을 처리했으면 true.</returns>
@@ -180,9 +407,7 @@ namespace ProjectM.Input
         {
             CancelPath();
 
-            var world = _camera.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, -_camera.transform.position.z));
-            var cell = _grid.WorldToCell(world);
-            var target = new GridPos(cell.x, cell.y);
+            var target = ScreenToCell(screenPos);
             if (!_world.Map.InBounds(target)) return;
 
             if (target == player.Pos)

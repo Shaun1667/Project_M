@@ -28,6 +28,8 @@ namespace ProjectM.UI
         private int _maxMana;
         private string[] _spellSlots = new string[0];
         private bool _dead;
+        private SpellBook _spellBook;
+        private string _hint = string.Empty;
 
         public string StatusText => _statusText != null ? _statusText.text : null;
         public string LogText => _logText != null ? _logText.text : null;
@@ -39,7 +41,7 @@ namespace ProjectM.UI
             _logText = logText;
         }
 
-        public void Bind(SimEventBus bus, Unit player)
+        public void Bind(SimEventBus bus, Unit player, SpellBook spellBook = null)
         {
             Unbind();
             _bus = bus;
@@ -49,11 +51,14 @@ namespace ProjectM.UI
             _mana = player.Mana;
             _maxMana = player.MaxMana;
             _spellSlots = (string[])player.SpellSlots.Clone();
+            _spellBook = spellBook;
+            _hint = string.Empty;
             _dead = false;
             _log.Clear();
             _bus.Subscribe<UnitDamagedEvent>(OnDamaged);
             _bus.Subscribe<UnitDiedEvent>(OnDied);
             _bus.Subscribe<ManaChangedEvent>(OnManaChanged);
+            _bus.Subscribe<SpellCastEvent>(OnSpellCast);
             Redraw();
         }
 
@@ -63,6 +68,7 @@ namespace ProjectM.UI
             _bus.Unsubscribe<UnitDamagedEvent>(OnDamaged);
             _bus.Unsubscribe<UnitDiedEvent>(OnDied);
             _bus.Unsubscribe<ManaChangedEvent>(OnManaChanged);
+            _bus.Unsubscribe<SpellCastEvent>(OnSpellCast);
             _bus = null;
         }
 
@@ -79,6 +85,20 @@ namespace ProjectM.UI
             {
                 AddLog($"You hit enemy {e.Target} for {e.Amount} ({e.Hp}/{e.MaxHp}).");
             }
+            Redraw();
+        }
+
+        /// <summary>조준 안내 · 시전 불가 이유 한 줄 (로그 위, 노란색). 빈 문자열 = 지움.</summary>
+        public void SetHint(string hint)
+        {
+            _hint = hint ?? string.Empty;
+            Redraw();
+        }
+
+        private void OnSpellCast(SpellCastEvent e)
+        {
+            if (e.Caster != _playerId) return;
+            AddLog($"You cast {e.SpellId}.");
             Redraw();
         }
 
@@ -125,12 +145,16 @@ namespace ProjectM.UI
                     {
                         if (i > 0) sb.Append("  ");
                         sb.Append($"[{i + 1}] {_spellSlots[i] ?? "-"}");
+                        if (_spellBook != null && _spellBook.TryGet(_spellSlots[i], out var spell)) sb.Append($" {spell.ManaCost}MP");
                     }
                 }
                 _statusText.text = sb.ToString();
             }
             if (_logText != null)
-                _logText.text = string.Join("\n", _log);
+            {
+                string hint = _hint.Length > 0 ? $"<color=#FFD54F>{_hint}</color>\n" : string.Empty;
+                _logText.text = hint + string.Join("\n", _log);
+            }
         }
     }
 }

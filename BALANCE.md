@@ -14,7 +14,7 @@
 | 2 | 맵 생성 | `Assets/_Project/Data/Dungeon/DungeonGenConfig.asset` (`DungeonGenConfigAsset`) | `ProjectM.Dungeon.DungeonGenConfig` | 사용 중 |
 | 3 | 유닛 (체력 · 피해 · 시야) · 적 배치 | `Assets/_Project/Data/Units/{Player, MeleeEnemy, SpawnConfig}.asset` (`UnitDefAsset`, `SpawnConfigAsset`) | `ProjectM.Units.UnitDef`, `ProjectM.Units.SpawnConfig` | 사용 중 |
 | 4 | 마나 · 주문 장착 칸 | `Assets/_Project/Data/Magic/MagicConfig.asset` (`MagicConfigAsset`) + `Player.asset`의 `_maxMana` · `_startingSpells` | `ProjectM.Magic.MagicConfig`, `UnitDef.MaxMana` | 사용 중 |
-| 5 | 주문 | `Data/Spells/` (2-2) | — | 예정 |
+| 5 | 주문 | `Assets/_Project/Data/Spells/SpellCatalog.asset` (`SpellCatalogAsset`) | `ProjectM.Magic.SpellDef` · `SpellBook` | 사용 중 |
 | 6 | 상태 이상 | `Data/Statuses/` (2-3) | — | 예정 |
 | 7 | 지형 | `Data/Terrains/` (2-4) | — | 예정 |
 | 8 | 반응 규칙 표 | `Data/Reactions/` (3-1) | — | 예정 |
@@ -102,6 +102,24 @@
 
 검산 (`ManaTests.ProjectAssets_MatchBalanceTable`): 에셋 값이 위 표와 같다.
 결과: 바닥(0)에서 가득(10)까지 30틱. 2-2 주문 마나 비용은 이 회복 속도를 기준으로 정한다 (예: 비용 3 = 9틱마다 한 번 꼴).
+
+---
+
+## 5. 주문 — `Data/Spells/SpellCatalog.asset`
+
+결정 (2026-10-16): Q4 임시값. 항상 명중, 고정 피해. 사거리 = 체비셰프. 시전 = 기본 행동 비용(1틱). 조정은 Phase 4 재미 검증에서.
+
+| ID | 속성 | 모양 | 사거리 | 피해 | 마나 | 반지름 | 비고 |
+|---|---|---|---|---|---|---|---|
+| `fire_basic` | Fire | Bolt (단일, 첫 유닛) | **6** | **5** | **3** | 0 | 적(체력 8)을 2번에 처치 |
+| `ice_basic` | Ice | Bolt | **6** | **3** | **2** | 0 | 2-3 둔화/빙결 자리 |
+| `lightning_basic` | Lightning | Beam (직선 관통, 벽에서 멈춤) | **5** | **3** | **4** | 0 | 일렬로 선 적 여럿 |
+| `poison_basic` | Poison | Burst (투사체가 멈춘 칸 중심) | **5** | **2** | **3** | **1** (3×3) | 범위 안 시전자도 맞음, 2-3 중독 자리 |
+
+검산 (`SpellTests.ProjectAsset_MatchesBalanceTable`): 에셋 값이 위 표와 같다.
+결과:
+- 가득 찬 마나(10)로 불 3번(9) → 적 하나 처치 + 하나 반쯤. 근접(3)보다 강하지만 회복이 3틱에 1이라 연사 불가
+- 마나당 피해: 불 1.67 · 얼음 1.5 · 번개 0.75 × 맞은 수 · 독 0.67 × 맞은 수 → 번개는 2마리 이상, 독은 3마리 이상 모였을 때 이득
 
 ---
 

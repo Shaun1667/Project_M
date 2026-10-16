@@ -1,6 +1,7 @@
 using ProjectM.Core;
 using ProjectM.Data;
 using ProjectM.Input;
+using ProjectM.Magic;
 using ProjectM.Presentation;
 using ProjectM.UI;
 using TMPro;
@@ -28,6 +29,7 @@ namespace ProjectM.Editor
         private const string EnemyDefPath = "Assets/_Project/Data/Units/MeleeEnemy.asset";
         private const string SpawnConfigPath = "Assets/_Project/Data/Units/SpawnConfig.asset";
         private const string MagicConfigPath = "Assets/_Project/Data/Magic/MagicConfig.asset";
+        private const string SpellCatalogPath = "Assets/_Project/Data/Spells/SpellCatalog.asset";
 
         /// <summary>플레이어 시작 주문 (BALANCE 4번). 주문 내용은 2-2 주문 데이터에서 같은 ID로 정의한다.</summary>
         private static readonly string[] PlayerStartingSpells = { "fire_basic", "ice_basic", "lightning_basic", "poison_basic" };
@@ -77,6 +79,7 @@ namespace ProjectM.Editor
             // 마나 · 장착 칸 — 없을 때만 BALANCE 4번 값으로 만든다
             var magicConfig = EnsureAsset<MagicConfigAsset>(MagicConfigPath,
                 ("_manaRegenIntervalTicks", 3), ("_manaRegenAmount", 1), ("_spellSlotCount", 4));
+            var spellCatalog = EnsureSpellCatalog();
 
             var gridGo = FindOrCreate("Grid", null);
             var grid = GetOrAdd<Grid>(gridGo);
@@ -99,6 +102,13 @@ namespace ProjectM.Editor
             var fogPresenter = GetOrAdd<FogPresenter>(fogGo);
             SetRefs(fogPresenter, ("_tilemap", fogTilemap), ("_fogTile", EnsureFogTile()));
 
+            // 주문 조준 미리보기: 안개(20) 위
+            var aimGo = FindOrCreate("Aim", gridGo.transform);
+            var aimTilemap = GetOrAdd<Tilemap>(aimGo);
+            GetOrAdd<TilemapRenderer>(aimGo).sortingOrder = 30;
+            var aimPreview = GetOrAdd<AimPreviewPresenter>(aimGo);
+            SetRefs(aimPreview, ("_tilemap", aimTilemap), ("_tile", EnsureFogTile()));
+
             var cameraGo = GameObject.FindWithTag("MainCamera");
             CameraController cameraController = null;
             if (cameraGo != null) cameraController = GetOrAdd<CameraController>(cameraGo);
@@ -108,7 +118,7 @@ namespace ProjectM.Editor
 
             var rootGo = FindOrCreate("GameRoot", null);
             var input = GetOrAdd<PlayerInputController>(rootGo);
-            SetRefs(input, ("_camera", cameraGo != null ? cameraGo.GetComponent<Camera>() : null), ("_grid", grid));
+            SetRefs(input, ("_camera", cameraGo != null ? cameraGo.GetComponent<Camera>() : null), ("_grid", grid), ("_aimPreview", aimPreview));
 
             var root = GetOrAdd<GameRoot>(rootGo);
             SetRefs(root,
@@ -118,6 +128,7 @@ namespace ProjectM.Editor
                 ("_enemyDef", enemyDef),
                 ("_spawnConfig", spawnConfig),
                 ("_magicConfig", magicConfig),
+                ("_spellCatalog", spellCatalog),
                 ("_tilemapPresenter", tilemapPresenter),
                 ("_entityPresenter", entityPresenter),
                 ("_fogPresenter", fogPresenter),
@@ -152,6 +163,23 @@ namespace ProjectM.Editor
         }
 
         /// <summary>안개 타일: 흰 사각형, 칸별 색을 쓸 수 있게 TileFlags.None.</summary>
+        /// <summary>주문 데이터: 없는 ID만 BALANCE 5번 값으로 추가한다 (있는 항목은 사용자가 고친 값을 건드리지 않음).</summary>
+        private static SpellCatalogAsset EnsureSpellCatalog()
+        {
+            var catalog = LoadOrCreate<SpellCatalogAsset>(SpellCatalogPath);
+            bool changed = false;
+            changed |= catalog.AddIfMissing(new SpellCatalogAsset.Entry
+                { Id = "fire_basic", Element = Element.Fire, Shape = SpellShape.Bolt, Range = 6, Damage = 5, ManaCost = 3 });
+            changed |= catalog.AddIfMissing(new SpellCatalogAsset.Entry
+                { Id = "ice_basic", Element = Element.Ice, Shape = SpellShape.Bolt, Range = 6, Damage = 3, ManaCost = 2 });
+            changed |= catalog.AddIfMissing(new SpellCatalogAsset.Entry
+                { Id = "lightning_basic", Element = Element.Lightning, Shape = SpellShape.Beam, Range = 5, Damage = 3, ManaCost = 4 });
+            changed |= catalog.AddIfMissing(new SpellCatalogAsset.Entry
+                { Id = "poison_basic", Element = Element.Poison, Shape = SpellShape.Burst, Range = 5, Damage = 2, ManaCost = 3, Radius = 1 });
+            if (changed) EditorUtility.SetDirty(catalog);
+            return catalog;
+        }
+
         private static Tile EnsureFogTile()
         {
             var tile = LoadOrCreate<Tile>(FogTilePath);
