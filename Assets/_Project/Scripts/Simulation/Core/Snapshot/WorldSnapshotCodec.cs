@@ -29,6 +29,9 @@ namespace ProjectM.Core
                 w.Write(snapshot.Cells.Length);
                 foreach (var cell in snapshot.Cells)
                     w.Write((int)cell);
+                w.Write(snapshot.Explored.Length);
+                foreach (var seen in snapshot.Explored)
+                    w.Write(seen);
 
                 w.Write(snapshot.NextEntityId);
 
@@ -61,6 +64,9 @@ namespace ProjectM.Core
                     w.Write(u.X);
                     w.Write(u.Y);
                     w.Write(u.Hp);
+                    w.Write(u.HasLastSeen);
+                    w.Write(u.LastSeenX);
+                    w.Write(u.LastSeenY);
                 }
 
                 w.Flush();
@@ -93,6 +99,9 @@ namespace ProjectM.Core
                 s.Cells = new TileType[ReadCount(r)];
                 for (int i = 0; i < s.Cells.Length; i++)
                     s.Cells[i] = (TileType)r.ReadInt32();
+                s.Explored = new bool[ReadCount(r)];
+                for (int i = 0; i < s.Explored.Length; i++)
+                    s.Explored[i] = r.ReadBoolean();
 
                 s.NextEntityId = r.ReadInt32();
 
@@ -127,7 +136,10 @@ namespace ProjectM.Core
                     var x = r.ReadInt32();
                     var y = r.ReadInt32();
                     var hp = r.ReadInt32();
-                    s.Units[i] = new UnitState(id, faction, visualId, maxHp, attackDamage, sightRange, x, y, hp);
+                    var hasLastSeen = r.ReadBoolean();
+                    var lastSeenX = r.ReadInt32();
+                    var lastSeenY = r.ReadInt32();
+                    s.Units[i] = new UnitState(id, faction, visualId, maxHp, attackDamage, sightRange, x, y, hp, hasLastSeen, lastSeenX, lastSeenY);
                 }
 
                 if (stream.Position != stream.Length)

@@ -37,6 +37,8 @@ namespace ProjectM.Editor
         private const string StairsTilePath = "Assets/_Project/Art/Greybox/TilePalette/tile_3.asset";
         private const string PlayerSpritePath = "Assets/_Project/Art/Greybox/player.png";
         private const string UnitCircleSpritePath = "Assets/_Project/Art/Greybox/unit_circle.png";
+        private const string WhiteSquareSpritePath = "Assets/_Project/Art/Greybox/white_square.png";
+        private const string FogTilePath = VisualsDir + "/FogTile.asset";
 
         [MenuItem("ProjectM/Setup/Main Scene")]
         public static void Run()
@@ -82,6 +84,13 @@ namespace ProjectM.Editor
             var tilemapPresenter = GetOrAdd<TilemapPresenter>(terrainGo);
             SetRefs(tilemapPresenter, ("_tilemap", tilemap), ("_visuals", tileVisuals));
 
+            // 시야 안개: 엔티티(정렬 10) 위
+            var fogGo = FindOrCreate("Fog", gridGo.transform);
+            var fogTilemap = GetOrAdd<Tilemap>(fogGo);
+            GetOrAdd<TilemapRenderer>(fogGo).sortingOrder = 20;
+            var fogPresenter = GetOrAdd<FogPresenter>(fogGo);
+            SetRefs(fogPresenter, ("_tilemap", fogTilemap), ("_fogTile", EnsureFogTile()));
+
             var cameraGo = GameObject.FindWithTag("MainCamera");
             CameraController cameraController = null;
             if (cameraGo != null) cameraController = GetOrAdd<CameraController>(cameraGo);
@@ -102,6 +111,7 @@ namespace ProjectM.Editor
                 ("_spawnConfig", spawnConfig),
                 ("_tilemapPresenter", tilemapPresenter),
                 ("_entityPresenter", entityPresenter),
+                ("_fogPresenter", fogPresenter),
                 ("_input", input),
                 ("_hud", hud),
                 ("_camera", cameraController));
@@ -130,6 +140,18 @@ namespace ProjectM.Editor
             catalog.Set(EnemyVisualId, AssetDatabase.LoadAssetAtPath<Sprite>(UnitCircleSpritePath), new Color(0.9f, 0.25f, 0.2f));
             EditorUtility.SetDirty(catalog);
             return catalog;
+        }
+
+        /// <summary>안개 타일: 흰 사각형, 칸별 색을 쓸 수 있게 TileFlags.None.</summary>
+        private static Tile EnsureFogTile()
+        {
+            var tile = LoadOrCreate<Tile>(FogTilePath);
+            tile.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(WhiteSquareSpritePath);
+            tile.color = Color.white;
+            tile.flags = TileFlags.None;
+            tile.colliderType = Tile.ColliderType.None;
+            EditorUtility.SetDirty(tile);
+            return tile;
         }
 
         /// <summary>HUD 캔버스: 왼쪽 위 체력 줄 + 그 아래 전투 로그.</summary>

@@ -23,6 +23,8 @@ namespace ProjectM
         [SerializeField] private SpawnConfigAsset _spawnConfig;
         [SerializeField] private TilemapPresenter _tilemapPresenter;
         [SerializeField] private EntityPresenter _entityPresenter;
+        [Tooltip("시야 안개. 비우면 안개 없이 전부 보인다")]
+        [SerializeField] private FogPresenter _fogPresenter;
         [SerializeField] private PlayerInputController _input;
         [SerializeField] private HudPresenter _hud;
         [SerializeField] private CameraController _camera;
@@ -83,20 +85,21 @@ namespace ProjectM
                 return floor.Map;
             });
             Floor = floor;
-            World.InstallCoreSystems();
+            var sight = new ShadowcastSightRule();
+            var vision = World.InstallCoreSystems(sight);
 
             _tilemapPresenter.Bind(World.Events);
             _entityPresenter.Bind(World.Events);
+            if (_fogPresenter != null) _fogPresenter.Bind(World.Events);
             World.Events.Subscribe<EntityMovedEvent>(OnEntityMoved);
             World.Events.Subscribe<UnitDiedEvent>(OnUnitDied);
 
-            // 1-7에서 시야 계산으로 교체
-            var sight = new RangeOnlySightRule();
             var enemyAi = new MeleeChaserAi(World, Config, sight);
             World.Events.Publish(new MapLoadedEvent(World.Map));
             var player = FloorPopulator.Populate(World, Floor.Start, _playerDef.ToDef(), _enemyDef.ToDef(), _spawnConfig.ToConfig(), enemyAi);
             _playerId = player.Id;
             _playerDead = false;
+            vision.Refresh(); // 첫 시야 — 이후는 매 틱 ⑥ 단계에서
 
             _hud.Bind(World.Events, player.Id, player.Hp, player.MaxHp);
             _input.Bind(World, Config, new TurnClock(World.Scheduler, World.PlayerInput), sight);

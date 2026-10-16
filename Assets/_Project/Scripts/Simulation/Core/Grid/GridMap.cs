@@ -48,6 +48,9 @@ namespace ProjectM.Core
         /// <summary>걸을 수 있는 지형: 바닥 · 계단.</summary>
         public static bool IsWalkableType(TileType type) => type == TileType.Floor || type == TileType.StairsDown;
 
+        /// <summary>시야를 막는 칸인지: 벽 · 빈칸 · 맵 밖. 바닥 · 계단은 보인다.</summary>
+        public bool BlocksSight(GridPos pos) => !InBounds(pos) || !IsWalkableType(_cells[IndexOf(pos)]);
+
         /// <summary>맵 가장자리 한 줄인지.</summary>
         public bool IsBorder(GridPos pos) => pos.X == 0 || pos.Y == 0 || pos.X == Width - 1 || pos.Y == Height - 1;
 

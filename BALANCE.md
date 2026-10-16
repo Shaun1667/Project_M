@@ -68,7 +68,7 @@
 
 결정 (2026-10-16): Q3 임시값. 고정 피해(난수 없음). 조정은 Phase 4 재미 검증에서.
 
-| 유닛 | 에셋 | VisualId | 체력 `_maxHp` | 근접 피해 `_attackDamage` | 시야 `_sightRange` |
+| 유닛 | 에셋 | VisualId | 체력 `_maxHp` | 근접 피해 `_attackDamage` | 시야 반지름 `_sightRange` |
 |---|---|---|---|---|---|
 | 플레이어 | `Player.asset` | `player` | **20** | **3** | **8** |
 | 근접 적 | `MeleeEnemy.asset` | `enemy_melee` | **8** | **2** | **6** |
@@ -83,7 +83,7 @@
 - 플레이어가 적을 잡는 데 **3대** (3 × 3 = 9 ≥ 8) — `UnitCombatTests.PlayerKillsEnemyInThreeHits_EnemyRemoved`
 - 적 한 마리가 플레이어를 잡는 데 **10대** (2 × 10 = 20) — `UnitCombatTests.PlayerDiesAfterTenHits_ClockStops`
 - 1:1로 붙어 싸우면 플레이어가 적 하나에 4 잃음 (적이 2번 반격). 회복이 없으므로 1:1을 4번 하면 체력 4, 5번째 1:1에서 같이 죽는다 (층의 적 5마리 = 회복 없이는 빠듯함)
-- 시야 6 < 플레이어 8 → 플레이어가 먼저 본다 (1-7 전에는 벽 무시)
+- 시야 6 < 플레이어 8 → 플레이어가 먼저 본다. 1-7부터 시야 = 원 반지름(dx² + dy² ≤ r² + r) · 벽에 가려짐 (1-6에서는 체비셰프 거리 · 벽 무시)
 
 ---
 

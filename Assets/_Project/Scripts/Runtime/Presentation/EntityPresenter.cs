@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ProjectM.Core;
+using ProjectM.Units;
 using UnityEngine;
 using EntityId = ProjectM.Core.EntityId; // Unity 6의 UnityEngine.EntityId와 구분
 
@@ -7,6 +8,7 @@ namespace ProjectM.Presentation
 {
     /// <summary>
     /// 엔티티 이벤트(Spawned · Moved · Removed) → 스프라이트. 지금은 칸 중앙으로 즉시 옮긴다 (이동 연출은 비주얼 단계).
+    /// 시야(VisibilityChangedEvent)를 받은 뒤로는 지금 보이는 칸에 있는 엔티티만 그린다 (1-7). 시야 이벤트가 없으면 전부 그린다.
     /// </summary>
     public sealed class EntityPresenter : MonoBehaviour
     {
@@ -15,6 +17,8 @@ namespace ProjectM.Presentation
         [SerializeField] private int _sortingOrder = 10;
 
         private readonly Dictionary<EntityId, SpriteRenderer> _views = new Dictionary<EntityId, SpriteRenderer>();
+        private readonly Dictionary<EntityId, GridPos> _positions = new Dictionary<EntityId, GridPos>();
+        private VisibilityChangedEvent _visibility;
         private SimEventBus _bus;
 
         public int ViewCount => _views.Count;
@@ -38,6 +42,7 @@ namespace ProjectM.Presentation
             _bus.Subscribe<EntitySpawnedEvent>(OnSpawned);
             _bus.Subscribe<EntityMovedEvent>(OnMoved);
             _bus.Subscribe<EntityRemovedEvent>(OnRemoved);
+            _bus.Subscribe<VisibilityChangedEvent>(OnVisibilityChanged);
         }
 
         public void Unbind()
@@ -46,6 +51,7 @@ namespace ProjectM.Presentation
             _bus.Unsubscribe<EntitySpawnedEvent>(OnSpawned);
             _bus.Unsubscribe<EntityMovedEvent>(OnMoved);
             _bus.Unsubscribe<EntityRemovedEvent>(OnRemoved);
+            _bus.Unsubscribe<VisibilityChangedEvent>(OnVisibilityChanged);
             _bus = null;
         }
 
@@ -61,6 +67,8 @@ namespace ProjectM.Presentation
                 else DestroyImmediate(view.gameObject);
             }
             _views.Clear();
+            _positions.Clear();
+            _visibility = null;
         }
 
         private void OnSpawned(EntitySpawnedEvent e)
@@ -88,20 +96,38 @@ namespace ProjectM.Presentation
 
             go.transform.position = CellCenter(e.Pos);
             _views.Add(e.Id, renderer);
+            _positions[e.Id] = e.Pos;
+            ApplyVisibility(e.Id, renderer);
         }
 
         private void OnMoved(EntityMovedEvent e)
         {
-            if (_views.TryGetValue(e.Id, out var view))
-                view.transform.position = CellCenter(e.To);
+            _positions[e.Id] = e.To;
+            if (!_views.TryGetValue(e.Id, out var view)) return;
+            view.transform.position = CellCenter(e.To);
+            ApplyVisibility(e.Id, view);
         }
 
         private void OnRemoved(EntityRemovedEvent e)
         {
             if (!_views.TryGetValue(e.Id, out var view)) return;
             _views.Remove(e.Id);
+            _positions.Remove(e.Id);
             if (Application.isPlaying) Destroy(view.gameObject);
             else DestroyImmediate(view.gameObject);
+        }
+
+        private void OnVisibilityChanged(VisibilityChangedEvent e)
+        {
+            _visibility = e;
+            foreach (var pair in _views)
+                ApplyVisibility(pair.Key, pair.Value);
+        }
+
+        private void ApplyVisibility(EntityId id, SpriteRenderer view)
+        {
+            if (view == null) return;
+            view.enabled = _visibility == null || !_positions.TryGetValue(id, out var pos) || _visibility.IsVisible(pos);
         }
     }
 }

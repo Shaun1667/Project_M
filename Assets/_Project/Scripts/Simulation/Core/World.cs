@@ -18,6 +18,9 @@ namespace ProjectM.Core
         public PlayerCommandSource PlayerInput { get; }
         public UnitRegistry Units { get; }
 
+        /// <summary>플레이어가 한 번이라도 본 칸 (탐험 기록, 1-7). 인덱스 = y * Map.Width + x. PlayerVisionSystem이 채운다.</summary>
+        public bool[] Explored { get; }
+
         /// <summary>표현 레이어로 가는 이벤트. 저장하지 않는다 (복원 후 화면은 MapLoaded 등으로 다시 그린다).</summary>
         public SimEventBus Events { get; }
 
@@ -46,16 +49,21 @@ namespace ProjectM.Core
             Scheduler = scheduler;
             PlayerInput = new PlayerCommandSource();
             Units = new UnitRegistry();
+            Explored = new bool[map.Width * map.Height];
             Events = new SimEventBus();
         }
 
         /// <summary>
-        /// 기본 단계 시스템을 등록한다: ⑥ 사망 판정 → ⑦ 이벤트 발행. 새 World · 복원한 World 모두 한 번 부른다.
+        /// 기본 단계 시스템을 등록한다: ⑥ 사망 판정 → ⑥ 끝 플레이어 시야 갱신 → ⑦ 이벤트 발행.
+        /// 새 World · 복원한 World 모두 한 번 부른다. 돌려준 시야 시스템의 Refresh()로 층 시작 · 불러오기 직후 시야를 한 번 계산한다.
         /// </summary>
-        public void InstallCoreSystems()
+        public PlayerVisionSystem InstallCoreSystems(ISightRule sight)
         {
+            var vision = new PlayerVisionSystem(this, sight);
             Scheduler.AddSystem(TickPhase.DeathCheck, new DeathCheckSystem(this));
+            Scheduler.AddSystem(TickPhase.DeathCheck, vision);
             Scheduler.AddSystem(TickPhase.EventFlush, new EventFlushSystem(Events));
+            return vision;
         }
 
         /// <summary>
@@ -77,6 +85,7 @@ namespace ProjectM.Core
                 MapWidth = Map.Width,
                 MapHeight = Map.Height,
                 Cells = Map.CopyCells(),
+                Explored = (bool[])Explored.Clone(),
                 NextEntityId = Ids.NextValue,
                 RngSeed = Rng.Seed,
                 RngStreams = streams.ToArray(),
@@ -92,7 +101,9 @@ namespace ProjectM.Core
             for (int i = 0; i < units.Count; i++)
             {
                 var u = units[i];
-                states[i] = new UnitState(u.Id, u.Faction, u.VisualId, u.MaxHp, u.AttackDamage, u.SightRange, u.Pos.X, u.Pos.Y, u.Hp);
+                var seen = u.LastSeenTargetPos;
+                states[i] = new UnitState(u.Id, u.Faction, u.VisualId, u.MaxHp, u.AttackDamage, u.SightRange, u.Pos.X, u.Pos.Y, u.Hp,
+                    seen.HasValue, seen?.X ?? 0, seen?.Y ?? 0);
             }
             return states;
         }
@@ -119,9 +130,15 @@ namespace ProjectM.Core
 
             var scheduler = new TickScheduler(snapshot.CurrentTick);
             var world = new World(map, ids, rng, scheduler);
+            if (snapshot.Explored.Length != world.Explored.Length)
+                throw new InvalidOperationException($"탐험 기록 크기 {snapshot.Explored.Length}가 맵과 맞지 않는다.");
+            Array.Copy(snapshot.Explored, world.Explored, snapshot.Explored.Length);
 
             foreach (var u in snapshot.Units)
-                world.Units.Add(new Unit(u.Id, u.Faction, u.VisualId, u.MaxHp, u.AttackDamage, u.SightRange, new GridPos(u.X, u.Y), u.Hp));
+            {
+                GridPos? seen = u.HasLastSeen ? new GridPos(u.LastSeenX, u.LastSeenY) : (GridPos?)null;
+                world.Units.Add(new Unit(u.Id, u.Faction, u.VisualId, u.MaxHp, u.AttackDamage, u.SightRange, new GridPos(u.X, u.Y), u.Hp, seen));
+            }
 
             foreach (var actor in snapshot.Actors)
             {

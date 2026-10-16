@@ -52,7 +52,7 @@ namespace ProjectM.Tests
                     floor = generator.Generate(rng);
                     return floor.Map;
                 });
-                var ai = new ProjectM.Units.MeleeChaserAi(world, config, new ProjectM.Units.RangeOnlySightRule());
+                var ai = new ProjectM.Units.MeleeChaserAi(world, config, new ProjectM.Units.ShadowcastSightRule());
                 ProjectM.Units.FloorPopulator.Populate(world, floor.Start, playerDef, enemyDef, spawn, ai);
                 return WorldSnapshotCodec.Encode(world.Capture());
             }

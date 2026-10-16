@@ -15,7 +15,7 @@ namespace ProjectM.Data
         [Min(1)] [SerializeField] private int _maxHp = 10;
         [Tooltip("근접 공격 한 번의 고정 피해")]
         [Min(0)] [SerializeField] private int _attackDamage = 1;
-        [Tooltip("상대를 알아채는 거리 (칸, 대각선 포함). 1-7 전까지는 벽을 무시한다")]
+        [Tooltip("시야 반지름 (칸). 원형 범위, 벽에 가려진다")]
         [Min(1)] [SerializeField] private int _sightRange = 6;
 
         public UnitDef ToDef() => new UnitDef(_visualId, _maxHp, _attackDamage, _sightRange);

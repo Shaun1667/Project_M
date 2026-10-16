@@ -12,7 +12,7 @@ namespace ProjectM.Units
         public int MaxHp { get; }
         /// <summary>근접 공격 한 번의 고정 피해.</summary>
         public int AttackDamage { get; }
-        /// <summary>상대를 알아채는 거리 (체비셰프). 실제 판정은 ISightRule — 1-7에서 시야 계산으로 바뀐다.</summary>
+        /// <summary>시야 반지름 (원형, 벽에 가려짐). 실제 판정은 ISightRule.</summary>
         public int SightRange { get; }
 
         public UnitDef(string visualId, int maxHp, int attackDamage, int sightRange)

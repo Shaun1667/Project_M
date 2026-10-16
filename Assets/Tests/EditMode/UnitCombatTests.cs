@@ -30,21 +30,23 @@ namespace ProjectM.Tests
             }
         }
 
-        private static ICommandSource Ai(World world) => new MeleeChaserAi(world, Config, new RangeOnlySightRule());
+        private static ICommandSource Ai(World world) => new MeleeChaserAi(world, Config, new ShadowcastSightRule());
 
         private static Session Start(GridMap map, GridPos playerPos, params GridPos[] enemies)
         {
             var world = new World(map, 42UL);
-            world.InstallCoreSystems();
+            var vision = world.InstallCoreSystems(new ShadowcastSightRule());
             var session = new Session { World = world, Clock = new TurnClock(world.Scheduler, world.PlayerInput) };
             world.Events.Subscribe<UnitDamagedEvent>(session.Events.Add);
             world.Events.Subscribe<UnitDiedEvent>(session.Events.Add);
             world.Events.Subscribe<EntityRemovedEvent>(session.Events.Add);
+            world.Events.Subscribe<VisibilityChangedEvent>(session.Events.Add);
 
             session.Player = UnitSpawner.SpawnPlayer(world, PlayerDef, playerPos);
             var ai = Ai(world);
             foreach (var pos in enemies)
                 UnitSpawner.SpawnEnemy(world, EnemyDef, pos, ai);
+            vision.Refresh();
             world.Events.Flush();
             return session;
         }
@@ -182,13 +184,89 @@ namespace ProjectM.Tests
             byte[] withoutSave = WorldSnapshotCodec.Encode(original.World.Capture());
 
             var restoredWorld = World.Restore(WorldSnapshotCodec.Decode(saved), (w, id) => Ai(w));
-            restoredWorld.InstallCoreSystems();
+            restoredWorld.InstallCoreSystems(new ShadowcastSightRule());
             var restored = new Session { World = restoredWorld, Clock = new TurnClock(restoredWorld.Scheduler, restoredWorld.PlayerInput) };
             Play(restored, split, moves.Length);
             byte[] afterLoad = WorldSnapshotCodec.Encode(restoredWorld.Capture());
 
             Assert.That(original.Player.Hp, Is.LessThan(20), "시험 중 전투가 실제로 일어나야 의미가 있다");
             Assert.That(afterLoad, Is.EqualTo(withoutSave));
+        }
+
+        // ── 1-7 시야 · 탐험 기록 · 적 기억 ──
+
+        // ㄱ자 복도: 위 줄 x1~7, 오른쪽 아래로 x7 두 칸
+        private static GridMap Corner() => GridMovementTests.Parse(
+            "#########",
+            "#.......#",
+            "#######.#",
+            "#######.#",
+            "#########");
+
+        [Test]
+        public void Enemy_LosesSight_GoesToLastSeen_ThenFindsPlayer()
+        {
+            var map = Corner();
+            var s = Start(map, new GridPos(5, 3), new GridPos(1, 3));
+            var enemy = s.World.Units.ToSortedList()[1];
+
+            s.Step(1, 0);   // (6,3)
+            s.Step(1, -1);  // (7,2) — 모퉁이
+            s.Step(0, -1);  // (7,1) — 벽 뒤
+            Assert.That(FieldOfView.CanSee(map, enemy.Pos, s.Player.Pos, enemy.SightRange), Is.False, "전제: 적이 플레이어를 놓쳤다");
+            Assert.That(enemy.LastSeenTargetPos.HasValue, Is.True, "마지막으로 본 칸을 기억");
+
+            for (int i = 0; i < 8 && s.Player.Hp == 20; i++)
+                s.Submit(PlayerActions.Wait(Config));
+            Assert.That(s.Player.Hp, Is.LessThan(20), "기억한 칸으로 와서 다시 찾아 공격했다");
+        }
+
+        [Test]
+        public void Enemy_ForgetsAfterReachingLastSeen()
+        {
+            var s = Start(Room(), new GridPos(1, 1), new GridPos(10, 4));
+            var enemy = s.World.Units.ToSortedList()[1];
+            enemy.LastSeenTargetPos = new GridPos(8, 4); // 시야 밖(거리 9)에서 기억만 남은 상태
+
+            s.Submit(PlayerActions.Wait(Config));
+            s.Submit(PlayerActions.Wait(Config));
+            Assert.That(enemy.Pos, Is.EqualTo(new GridPos(8, 4)));
+            s.Submit(PlayerActions.Wait(Config));
+            Assert.That(enemy.LastSeenTargetPos.HasValue, Is.False, "도착하면 잊는다");
+            Assert.That(enemy.Pos, Is.EqualTo(new GridPos(8, 4)), "잊은 뒤에는 대기");
+        }
+
+        [Test]
+        public void Exploration_GrowsAndPersists()
+        {
+            var map = Corner();
+            var s = Start(map, new GridPos(1, 3));
+            int Index(int x, int y) => y * map.Width + x;
+
+            Assert.That(s.World.Explored[Index(1, 3)], Is.True, "시작 칸");
+            Assert.That(s.World.Explored[Index(7, 1)], Is.False, "모퉁이 너머는 아직 안 봄");
+
+            for (int i = 0; i < 6; i++) s.Step(1, 0);   // (7,3)
+            s.Step(0, -1);                               // (7,2)
+            Assert.That(s.World.Explored[Index(7, 1)], Is.True);
+            Assert.That(s.World.Explored[Index(1, 3)], Is.True, "지금은 안 보여도 기록은 남는다");
+
+            var last = (VisibilityChangedEvent)s.Events.FindLast(e => e is VisibilityChangedEvent);
+            Assert.That(last.IsVisible(s.Player.Pos), Is.True);
+            Assert.That(last.Explored[Index(1, 3)], Is.True);
+        }
+
+        [Test]
+        public void Snapshot_RoundTripsExploredAndMemory()
+        {
+            var s = Start(Corner(), new GridPos(1, 3), new GridPos(5, 3));
+            s.Submit(PlayerActions.Wait(Config));
+            var enemy = s.World.Units.ToSortedList()[1];
+            Assert.That(enemy.LastSeenTargetPos.HasValue, Is.True);
+
+            var restored = World.Restore(WorldSnapshotCodec.Decode(WorldSnapshotCodec.Encode(s.World.Capture())), (w, id) => Ai(w));
+            Assert.That(restored.Explored, Is.EqualTo(s.World.Explored));
+            Assert.That(restored.Units.Get(enemy.Id).LastSeenTargetPos, Is.EqualTo(enemy.LastSeenTargetPos));
         }
 
         [Test]

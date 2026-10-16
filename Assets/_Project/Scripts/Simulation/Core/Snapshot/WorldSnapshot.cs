@@ -11,8 +11,8 @@ namespace ProjectM.Core
     [Serializable]
     public sealed class WorldSnapshot
     {
-        /// <summary>1: 1-4 최초. 2: 유닛(Units) 추가 (1-6).</summary>
-        public const int CurrentFormatVersion = 2;
+        /// <summary>1: 1-4 최초. 2: 유닛(Units) 추가 (1-6). 3: 탐험 기록(Explored) · 유닛 기억(LastSeen) 추가 (1-7).</summary>
+        public const int CurrentFormatVersion = 3;
 
         public int FormatVersion = CurrentFormatVersion;
 
@@ -22,6 +22,8 @@ namespace ProjectM.Core
         public int MapHeight;
         /// <summary>인덱스 = y * MapWidth + x.</summary>
         public TileType[] Cells = Array.Empty<TileType>();
+        /// <summary>플레이어가 한 번이라도 본 칸. 인덱스는 Cells와 같다.</summary>
+        public bool[] Explored = Array.Empty<bool>();
 
         public int NextEntityId;
 
@@ -49,9 +51,16 @@ namespace ProjectM.Core
         public readonly int X;
         public readonly int Y;
         public readonly int Hp;
+        public readonly bool HasLastSeen;
+        public readonly int LastSeenX;
+        public readonly int LastSeenY;
 
-        public UnitState(EntityId id, Faction faction, string visualId, int maxHp, int attackDamage, int sightRange, int x, int y, int hp)
+        public UnitState(EntityId id, Faction faction, string visualId, int maxHp, int attackDamage, int sightRange, int x, int y, int hp,
+            bool hasLastSeen, int lastSeenX, int lastSeenY)
         {
+            HasLastSeen = hasLastSeen;
+            LastSeenX = lastSeenX;
+            LastSeenY = lastSeenY;
             Id = id;
             Faction = faction;
             VisualId = visualId;
