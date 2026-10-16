@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using ProjectM.Core;
 using ProjectM.Magic;
+using ProjectM.UI;
 using ProjectM.Units;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -67,6 +68,9 @@ namespace ProjectM.Input
         public event System.Action<string> HintChanged;
 
         public bool IsAiming => _aimSlot >= 0;
+
+        /// <summary>안내 문구 (한글 · 주문 표시 이름). GameRoot가 SpellCatalog 이름으로 채운다.</summary>
+        public HudText Text { get; set; } = new HudText();
 
         private bool _comboPending;
         private float _comboEndTime;
@@ -153,12 +157,12 @@ namespace ProjectM.Input
             var id = player.SpellSlots[slot];
             if (id == null || !_spells.TryGet(id, out var spell))
             {
-                Hint($"[{slot + 1}] empty slot");
+                Hint(HudText.EmptySlot(slot));
                 return true;
             }
             if (player.Mana < spell.ManaCost)
             {
-                Hint($"[{slot + 1}] {spell.Id}: not enough mana ({player.Mana}/{spell.ManaCost})");
+                Hint(Text.NotEnoughMana(slot, spell.Id, player.Mana, spell.ManaCost));
                 return true;
             }
 
@@ -237,7 +241,7 @@ namespace ProjectM.Input
             var block = SpellCasting.TryCreateCast(_world, _config, _spells, _targeting, _sight, _aimSlot, _aimCursor, out var command);
             if (block != CastBlock.None)
             {
-                Hint(AimHint(player) + "  — " + Describe(block));
+                Hint(AimHint(player) + "  — " + HudText.CastBlockReason(block));
                 return;
             }
             CancelAim();
@@ -248,7 +252,7 @@ namespace ProjectM.Input
         {
             var block = SpellCasting.Check(_world, _spells, _targeting, _sight, player, _aimSlot, _aimCursor, out _, out var preview);
             if (_aimPreview != null) _aimPreview.Show(_aimCursor, preview, block == CastBlock.None);
-            Hint(block == CastBlock.None ? AimHint(player) : AimHint(player) + "  — " + Describe(block));
+            Hint(block == CastBlock.None ? AimHint(player) : AimHint(player) + "  — " + HudText.CastBlockReason(block));
         }
 
         private void CancelAim()
@@ -262,23 +266,7 @@ namespace ProjectM.Input
         private string AimHint(Unit player)
         {
             var id = player.SpellSlots[_aimSlot];
-            string cost = _spells.TryGet(id, out var spell) ? $" ({spell.ManaCost} MP)" : string.Empty;
-            return $"[{_aimSlot + 1}] {id}{cost}: Space/Click cast, Tab next target, Esc cancel";
-        }
-
-        private static string Describe(CastBlock block)
-        {
-            switch (block)
-            {
-                case CastBlock.NotEnoughMana: return "not enough mana";
-                case CastBlock.OutOfRange: return "out of range";
-                case CastBlock.NotVisible: return "can't see there";
-                case CastBlock.TargetIsSelf: return "pick a target";
-                case CastBlock.Blocked: return "blocked";
-                case CastBlock.EmptySlot: return "empty slot";
-                case CastBlock.UnknownSpell: return "unknown spell";
-                default: return block.ToString();
-            }
+            return _spells.TryGet(id, out var spell) ? Text.AimHint(_aimSlot, id, spell.ManaCost) : HudText.EmptySlot(_aimSlot);
         }
 
         private void Hint(string text) => HintChanged?.Invoke(text);

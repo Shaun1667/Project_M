@@ -116,6 +116,8 @@
 | `lightning_basic` | Lightning | Beam (직선 관통, 벽에서 멈춤) | **5** | **3** | **4** | 0 | 일렬로 선 적 여럿, + 30% 마비 (6번) |
 | `poison_basic` | Poison | Burst (투사체가 멈춘 칸 중심) | **5** | **2** | **3** | **1** (3×3) | 범위 안 시전자도 맞음, + 중독 (6번) |
 
+표시 이름 (2-5, 필드 `DisplayName` — 수치가 아니라 HUD · 로그 표시 전용, 규칙에 쓰지 않음): `fire_basic` 불꽃 화살 · `ice_basic` 얼음 화살 · `lightning_basic` 번개 줄기 · `poison_basic` 독 폭발. 비어 있으면 ID를 보인다.
+
 주문 → 상태 이상 (2-3, 6번 규칙): `fire_basic` → 화상 100%, `ice_basic` → 둔화 100%, `lightning_basic` → 마비 **30%**(맞은 적마다 따로), `poison_basic` → 중독 100%. 필드 `AppliesStatus` · `StatusChancePercent`.
 
 검산 (`SpellTests.ProjectAsset_MatchesBalanceTable`): 에셋 값(상태 · 확률 포함)이 위 표와 같다.

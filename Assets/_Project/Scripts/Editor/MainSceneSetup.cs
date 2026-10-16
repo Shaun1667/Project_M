@@ -49,6 +49,10 @@ namespace ProjectM.Editor
         private const string WhiteSquareSpritePath = "Assets/_Project/Art/Greybox/white_square.png";
         private const string FogTilePath = VisualsDir + "/FogTile.asset";
 
+        // HUD 한글 폰트 (2-5): Galmuri11 — SIL OFL 1.1, 배포 가능. 원본 ttf에서 TMP 동적 SDF 에셋을 만든다
+        private const string HudFontSourcePath = "Assets/_Project/Art/Fonts/Galmuri11.ttf";
+        private const string HudFontAssetPath = "Assets/_Project/Art/Fonts/Galmuri11 SDF.asset";
+
         [MenuItem("ProjectM/Setup/Main Scene")]
         public static void Run()
         {
@@ -201,6 +205,11 @@ namespace ProjectM.Editor
             // BALANCE 7번: 주문 → 지형 효과
             changed |= catalog.SetTerrainIfNone("fire_basic", TerrainEffectType.FireZone);
             changed |= catalog.SetTerrainIfNone("poison_basic", TerrainEffectType.PoisonCloud);
+            // 2-5: HUD · 로그 표시 이름 (비어 있을 때만)
+            changed |= catalog.SetDisplayNameIfEmpty("fire_basic", "불꽃 화살");
+            changed |= catalog.SetDisplayNameIfEmpty("ice_basic", "얼음 화살");
+            changed |= catalog.SetDisplayNameIfEmpty("lightning_basic", "번개 줄기");
+            changed |= catalog.SetDisplayNameIfEmpty("poison_basic", "독 폭발");
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }
@@ -243,7 +252,9 @@ namespace ProjectM.Editor
             return tile;
         }
 
-        /// <summary>HUD 캔버스: 왼쪽 위 체력 줄 + 그 아래 전투 로그.</summary>
+        /// <summary>
+        /// HUD 캔버스 (2-5, 기준 1920×1080): 왼쪽 위 HP · MP 막대, 그 오른쪽 상태 아이콘 줄, 아래로 주문 칸 · 안내 줄, 왼쪽 아래 전투 로그.
+        /// </summary>
         private static HudPresenter EnsureHud()
         {
             var canvasGo = FindOrCreate("HUD", null);
@@ -254,28 +265,126 @@ namespace ProjectM.Editor
             scaler.referenceResolution = new Vector2(1920, 1080);
             scaler.matchWidthOrHeight = 0.5f;
 
-            // 상태 2줄 (체력 · 마나 / 주문 장착 칸)
-            var status = EnsureText(canvasGo.transform, "Status", new Vector2(24, -16), new Vector2(1400, 100), 36);
-            var log = EnsureText(canvasGo.transform, "Log", new Vector2(24, -120), new Vector2(1400, 260), 26);
+            var font = EnsureHudFont();
+            var topLeft = new Vector2(0, 1);
+            var bottomLeft = new Vector2(0, 0);
+
+            // 2-4까지의 한 덩어리 상태 글상자는 막대 · 칸 줄로 나뉘었다
+            var oldStatus = canvasGo.transform.Find("Status");
+            if (oldStatus != null) Object.DestroyImmediate(oldStatus.gameObject);
+
+            var (hpFill, hpLabel) = EnsureBar(canvasGo.transform, "HpBar", new Vector2(24, -16), new Color(0.85f, 0.22f, 0.2f), font);
+            var (mpFill, mpLabel) = EnsureBar(canvasGo.transform, "MpBar", new Vector2(24, -54), new Color(0.25f, 0.5f, 1f), font);
+
+            var iconsGo = FindOrCreate("StatusIcons", canvasGo.transform);
+            var icons = GetOrAdd<RectTransform>(iconsGo);
+            Place(icons, topLeft, new Vector2(404, -16), new Vector2(1000, 30));
+            var row = GetOrAdd<HorizontalLayoutGroup>(iconsGo);
+            row.spacing = 8;
+            row.childAlignment = TextAnchor.UpperLeft;
+            row.childControlWidth = row.childControlHeight = true;
+            row.childForceExpandWidth = row.childForceExpandHeight = false;
+
+            var slots = EnsureText(canvasGo.transform, "Slots", topLeft, new Vector2(24, -94), new Vector2(1600, 40), 28, font, TextAlignmentOptions.TopLeft);
+            var hint = EnsureText(canvasGo.transform, "Hint", topLeft, new Vector2(24, -134), new Vector2(1600, 40), 26, font, TextAlignmentOptions.TopLeft);
+            // 로그 8줄: 아래쪽 기준으로 쌓인다 (새 줄이 맨 아래)
+            var log = EnsureText(canvasGo.transform, "Log", bottomLeft, new Vector2(24, 24), new Vector2(1100, 300), 26, font, TextAlignmentOptions.BottomLeft);
 
             var hud = GetOrAdd<HudPresenter>(canvasGo);
-            SetRefs(hud, ("_statusText", status), ("_logText", log));
+            SetRefs(hud,
+                ("_hpFill", hpFill), ("_hpLabel", hpLabel),
+                ("_mpFill", mpFill), ("_mpLabel", mpLabel),
+                ("_statusIcons", icons), ("_slotsText", slots), ("_hintText", hint), ("_logText", log));
+            // 로그 줄 수 (결정 2026-10-16: 8줄). 2-4까지 씬에 저장된 6을 덮어쓴다
+            var hudSo = new SerializedObject(hud);
+            hudSo.FindProperty("_logLines").intValue = 8;
+            hudSo.ApplyModifiedPropertiesWithoutUndo();
             return hud;
         }
 
-        private static TextMeshProUGUI EnsureText(Transform parent, string name, Vector2 topLeft, Vector2 size, float fontSize)
+        /// <summary>막대 하나: 어두운 바탕 + 왼쪽부터 차는 색 칸(Fill) + 가운데 숫자(Label). 360×30.</summary>
+        private static (RectTransform fill, TextMeshProUGUI label) EnsureBar(Transform parent, string name, Vector2 topLeft, Color color, TMP_FontAsset font)
+        {
+            var go = FindOrCreate(name, parent);
+            Place(GetOrAdd<RectTransform>(go), new Vector2(0, 1), topLeft, new Vector2(360, 30));
+            var bg = GetOrAdd<Image>(go);
+            bg.color = new Color(0.12f, 0.12f, 0.12f, 0.85f);
+            bg.raycastTarget = false;
+
+            var fillGo = FindOrCreate("Fill", go.transform);
+            var fill = GetOrAdd<RectTransform>(fillGo);
+            fill.anchorMin = Vector2.zero;
+            fill.anchorMax = Vector2.one;
+            fill.offsetMin = fill.offsetMax = Vector2.zero;
+            var fillImage = GetOrAdd<Image>(fillGo);
+            fillImage.color = color;
+            fillImage.raycastTarget = false;
+
+            var label = EnsureText(go.transform, "Label", new Vector2(0, 1), Vector2.zero, new Vector2(360, 30), 24, font, TextAlignmentOptions.Center);
+            label.transform.SetAsLastSibling(); // 막대 위에 그린다
+            return (fill, label);
+        }
+
+        private static void Place(RectTransform rect, Vector2 anchor, Vector2 position, Vector2 size)
+        {
+            rect.anchorMin = rect.anchorMax = rect.pivot = anchor;
+            rect.anchoredPosition = position;
+            rect.sizeDelta = size;
+        }
+
+        /// <summary>
+        /// HUD 폰트: 원본 ttf에서 TMP 동적 SDF 에셋을 만든다 (없을 때만). 한글은 쓰는 글자만 실행 중에 아틀라스에 추가되고,
+        /// 빌드 때 동적 데이터를 비워 git에 글리프 변경이 쌓이지 않게 한다. 원본이 없으면 null (기본 폰트 유지).
+        /// </summary>
+        private static TMP_FontAsset EnsureHudFont()
+        {
+            var existing = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(HudFontAssetPath);
+            if (existing != null) return existing;
+
+            var source = AssetDatabase.LoadAssetAtPath<Font>(HudFontSourcePath);
+            if (source == null)
+            {
+                Debug.LogWarning("[MainSceneSetup] HUD 폰트 원본 없음 — 기본 TMP 폰트 유지: " + HudFontSourcePath);
+                return null;
+            }
+
+            // 샘플링 48pt(Galmuri11 원래 격자 12px의 4배) · 여백 6 · 1024 아틀라스, 다 차면 아틀라스 추가
+            var asset = TMP_FontAsset.CreateFontAsset(source, 48, 6, UnityEngine.TextCore.LowLevel.GlyphRenderMode.SDFAA,
+                1024, 1024, AtlasPopulationMode.Dynamic, true);
+            asset.name = System.IO.Path.GetFileNameWithoutExtension(HudFontAssetPath);
+            AssetDatabase.CreateAsset(asset, HudFontAssetPath);
+            var so = new SerializedObject(asset); // clearDynamicDataOnBuild는 공개 속성이 없어 직렬화 필드로
+            var clearOnBuild = so.FindProperty("m_ClearDynamicDataOnBuild");
+            if (clearOnBuild != null) clearOnBuild.boolValue = true;
+            else Debug.LogWarning("[MainSceneSetup] m_ClearDynamicDataOnBuild 필드 없음 — 빌드 후 폰트 에셋 변경을 확인할 것");
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            // 아틀라스 텍스처 · 재질을 하위 에셋으로 저장해야 씬에서 참조가 유지된다
+            var atlas = asset.atlasTextures[0];
+            atlas.name = asset.name + " Atlas";
+            AssetDatabase.AddObjectToAsset(atlas, asset);
+            asset.material.name = asset.name + " Material";
+            AssetDatabase.AddObjectToAsset(asset.material, asset);
+
+            // 영문 · 숫자 · 기호는 미리 넣어 둔다 (HUD 첫 표시에서 아틀라스 갱신이 몰리지 않게)
+            asset.TryAddCharacters(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~", out _);
+            EditorUtility.SetDirty(asset);
+            AssetDatabase.SaveAssets();
+            return asset;
+        }
+
+        private static TextMeshProUGUI EnsureText(Transform parent, string name, Vector2 anchor, Vector2 position, Vector2 size, float fontSize,
+            TMP_FontAsset font, TextAlignmentOptions alignment)
         {
             var go = FindOrCreate(name, parent);
             var text = GetOrAdd<TextMeshProUGUI>(go);
+            if (font != null) text.font = font;
             text.fontSize = fontSize;
-            text.alignment = TextAlignmentOptions.TopLeft;
+            text.alignment = alignment;
             text.color = Color.white;
             text.raycastTarget = false;
-
-            var rect = (RectTransform)go.transform;
-            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0, 1);
-            rect.anchoredPosition = topLeft;
-            rect.sizeDelta = size;
+            text.textWrappingMode = TextWrappingModes.NoWrap;
+            Place((RectTransform)go.transform, anchor, position, size);
             return text;
         }
 

@@ -23,6 +23,7 @@ MonoBehaviour:
     AppliesStatus: 1
     StatusChancePercent: 100
     LeavesTerrain: 1
+    DisplayName: "\uBD88\uAF43 \uD654\uC0B4"
   - Id: ice_basic
     Element: 1
     Shape: 0
@@ -33,6 +34,7 @@ MonoBehaviour:
     AppliesStatus: 2
     StatusChancePercent: 100
     LeavesTerrain: 0
+    DisplayName: "\uC5BC\uC74C \uD654\uC0B4"
   - Id: lightning_basic
     Element: 2
     Shape: 1
@@ -43,6 +45,7 @@ MonoBehaviour:
     AppliesStatus: 4
     StatusChancePercent: 30
     LeavesTerrain: 0
+    DisplayName: "\uBC88\uAC1C \uC904\uAE30"
   - Id: poison_basic
     Element: 3
     Shape: 2
@@ -53,3 +56,4 @@ MonoBehaviour:
     AppliesStatus: 3
     StatusChancePercent: 100
     LeavesTerrain: 2
+    DisplayName: "\uB3C5 \uD3ED\uBC1C"

@@ -68,6 +68,7 @@ namespace ProjectM
 
         private EntityId _playerId;
         private bool _playerDead;
+        private HudText _hudText;
 
         private void Awake()
         {
@@ -89,6 +90,8 @@ namespace ProjectM
                 if (!Spells.TryGet(id, out _))
                     Debug.LogWarning($"[GameRoot] 시작 주문 '{id}'가 SpellCatalog에 없다 — 그 칸은 쓸 수 없다.", this);
             }
+            _hudText = new HudText(_spellCatalog.DisplayNames());
+            _input.Text = _hudText;
             _input.HintChanged += _hud.SetHint;
         }
 
@@ -149,7 +152,7 @@ namespace ProjectM
             _playerDead = false;
             vision.Refresh(); // 첫 시야 — 이후는 매 틱 ⑥ 단계에서
 
-            _hud.Bind(World.Events, player, Spells);
+            _hud.Bind(World.Events, player, Spells, _hudText);
             _input.Bind(World, Config, new TurnClock(World.Scheduler, World.PlayerInput), sight, Spells, new BresenhamTargetingRule());
             World.Events.Flush();
 

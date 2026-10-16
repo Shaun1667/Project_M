@@ -80,6 +80,7 @@ Assets/
 - 순수 로직은 asmdef **하나**(`ProjectM.Simulation`)로 묶는다. 하위 폴더별로 나누면 Magic ↔ Status 순환 참조가 생기기 쉽다. 폴더 · 네임스페이스로만 구분한다.
 - Simulation은 Runtime · Editor를 참조하지 않는다 (의존 방향: Editor → Runtime → Simulation).
 - `SimulationAssemblyTests`가 Simulation의 엔진 참조 0을 검사한다. 실패하면 규칙 1 위반이다.
+- UI 폰트는 `Assets/_Project/Art/Fonts/Galmuri11 SDF.asset`(원본 `Galmuri11.ttf`, SIL OFL 1.1, 동적 SDF — Setup 메뉴가 생성). 새 TMP 글상자는 이 폰트를 쓴다 (기본 LiberationSans에는 한글이 없음).
 - 그레이박스 타일 · 스프라이트는 `Assets/_Project/Art/Greybox/`. 메인 씬은 `Assets/_Project/Scenes/Main.unity` (빌드 씬 유일 항목).
 
 ## 코딩 규칙
@@ -102,6 +103,7 @@ Assets/
 - 마법서 · 아이템 효과는 한 조회 지점(예: `SpellModifiers`)에서 읽고, 시뮬레이션 · 미리보기 UI · 연출이 같은 값을 쓴다.
 - Unity 6.6에는 `UnityEngine.EntityId`가 있다. `UnityEngine`과 `ProjectM.Core`를 함께 쓰는 파일은 `using EntityId = ProjectM.Core.EntityId;` 별칭을 둔다.
 - 시뮬레이션 → 화면은 `SimEventBus` 이벤트로만 (`Core/Events/WorldEvents.cs`). 표현 어댑터는 `Bind(bus)`/`Unbind()`로 구독하고 규칙을 갖지 않는다. 씬 연결은 `GameRoot` 하나, 씬 구성은 메뉴 `ProjectM/Setup/Main Scene`(멱등).
+- HUD는 `HudModel`(순수 C#, 이벤트 → 값 · 로그) + `HudPresenter`(그리기만). 화면에 보이는 한글 문구는 `HudText` 한곳, 주문 이름은 `SpellCatalog`의 `DisplayName`(표시 전용 데이터). 새 이벤트를 로그에 넣을 때는 HudModel에 넣고 `HudModelTests`로 문구를 검사한다
 - 개발자 디버그 기능은 디버그 창(`Editor/Debug/DebugWindow`, 메뉴 ProjectM/Debug/Debug Window)에 섹션으로 추가한다. 표시만 바꾸는 기능이 기본이고, 게임 상태를 바꾸는 기능은 [상태 변경]으로 표시한다. 런타임 쪽 진입점은 `GameRoot.DebugXxx`.
 - 싱글턴 + `DontDestroyOnLoad` 남발을 피한다. 순수 로직은 생성자 주입, 어댑터는 씬 컴포지션 루트 하나에서 연결한다.
 
