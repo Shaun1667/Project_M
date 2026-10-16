@@ -84,7 +84,7 @@ Assets/
 
 ## 코딩 규칙
 - 네임스페이스: `ProjectM.Core`, `ProjectM.Magic`, `ProjectM.Status`, `ProjectM.Units`, `ProjectM.Dungeon`, `ProjectM.Data`(Runtime/Data), `ProjectM.Presentation`, `ProjectM.Input`(Runtime/Input), `ProjectM.UI`, `ProjectM.Editor`
-- 그리드 이동 · 거리 · 경로는 `GridMovement`(8방향, 체비셰프, 대각선 모서리 규칙) · `GridPathfinder` 한 곳만 쓴다. 입력 → 플레이어 커맨드 규칙은 `PlayerActions` 하나 (키보드 · 클릭 공용)
+- 그리드 이동 · 거리 · 경로는 `GridMovement`(8방향, 체비셰프, 대각선은 양옆이 모두 벽일 때만 막힘) · `GridPathfinder` 한 곳만 쓴다. 입력 → 플레이어 커맨드 규칙은 `PlayerActions` 하나 (키보드 · 클릭 공용)
 - 단계 시스템 기본 등록은 `World.InstallCoreSystems()` — 새 World · `World.Restore` 후 모두 부른다
 - 이름: 클래스 · 메서드 · 프로퍼티 PascalCase, private 필드 `_camelCase`, 지역 변수 camelCase
 - 게임 로직과 엔진 컴포넌트를 분리한다. 규칙은 순수 C#으로 쓰고, MonoBehaviour는 얇은 어댑터(이벤트 구독 · 표시 · 입력 전달)만 맡는다.

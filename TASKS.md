@@ -19,9 +19,9 @@
 | | 1-6 8방향 이동 · 근접 공격 · 적 1종 · 체력/사망 · HUD | 완료 (병합 대기) | 브랜치 커밋 |
 | | 1-7 시야 · 사거리 | 대기 | — |
 
-**숫자:** EditMode 테스트 79개 전부 통과 · 콘솔 프로젝트 오류 0 · 씬 1개(`Assets/_Project/Scenes/Main.unity`)
+**숫자:** EditMode 테스트 80개 전부 통과 · 콘솔 프로젝트 오류 0 · 씬 1개(`Assets/_Project/Scenes/Main.unity`)
 
-**지금 플레이하면:** 매번 새 시드로 50×50 층 + 플레이어(초록) + 적 5마리(빨강). 방향키/WASD/넘패드(+Q/E/Z/C 대각선)로 한 칸씩, 클릭하면 경로 따라 이동, 적에게 부딪히면 공격. 적은 6칸 안에 들어오면 쫓아와 때린다. 왼쪽 위 HUD에 체력 · 전투 로그(영어). 죽으면 R로 새 판.
+**지금 플레이하면:** 매번 새 시드로 50×50 층 + 플레이어(초록) + 적 5마리(빨강). 방향키/WASD/넘패드로 한 칸씩(대각선 = W+D처럼 두 키 함께, 넘패드 7·9·1·3), 클릭하면 경로 따라 이동, 적에게 부딪히면 공격. 적은 6칸 안에 들어오면 쫓아와 때린다. 왼쪽 위 HUD에 체력 · 전투 로그(영어). 죽으면 R로 새 판.
 
 **1-7 착수 때 물어볼 것 (미정):**
 1. 시야 알고리즘 — 대칭 그림자 투사(Symmetric Shadowcasting, 추천: 서로 보이면 양쪽 다 보임, 기둥 뒤 숨기 가능) / 레이 캐스트(브레젠험) / SPD식
@@ -200,15 +200,17 @@
   - 확인 방법: `Main.unity` 플레이 → 콘솔에 `[GameRoot] 시드 …` → 플레이어(초록) 주변이 보임. 플레이할 때마다 다른 맵. 같은 맵을 보려면 GameRoot 인스펙터 `_fixedSeed`에 그 시드 입력. 맵 전체는 Scene 뷰에서 확인
   - 참고: 계단 · 시작점 외 환경 타일(물 · 풀 등) 배치는 Q15(Phase 6)
 - [x] **1-6. 플레이어 이동 · 근접 공격 · 적 1종** (2026-10-16) — 플레이 확인 대기 — 클릭/키 입력 → 커맨드, 체력 · 사망 (Q3 수치는 임시값)
-  - 결정 (2026-10-16): **8방향** 이동, 거리는 체비셰프. 대각선은 양옆 두 칸이 모두 걸을 수 있어야 함(벽 모서리 비스듬히 통과 금지). 대각선 공격도 같은 규칙 — 추천안
+  - 결정 (2026-10-16): **8방향** 이동, 거리는 체비셰프. 대각선은 양옆 두 칸이 모두 걸을 수 있어야 함(벽 모서리 비스듬히 통과 금지). 대각선 공격도 같은 규칙 — 추천안 (→ 아래 "변경"으로 바뀜)
   - 결정 (2026-10-16): 입력은 **키보드 + 클릭 이동 둘 다** — 추천안
+  - 변경 (2026-10-16, 사용자 요청): ① 대각선은 양옆 중 **하나라도** 걸을 수 있으면 이동 · 공격 가능 — 양옆이 모두 벽인 틈만 막힘 ② 키보드 대각선은 Q/E/Z/C 대신 **두 방향키를 함께** 누름(W+D, ↑+→ 등). 첫 키 뒤 0.07초(`_comboWindow`) 동안 두 번째 키를 기다렸다 합쳐서 한 걸음, 이미 대각선이면 바로. 누르고 있으면 반복 때마다 지금 눌린 조합으로 방향을 정함. 반대 키(A+D)는 상쇄. 넘패드 7·9·1·3은 그대로
+  - 영향: 직선 키 한 번 누를 때 0.07초 늦게 움직임. 경로 · 적 추적도 새 모서리 규칙을 따름 (테스트: `CanStep_DiagonalPassesOneWallCorner`, `CanStep_DiagonalBlockedWhenBothSidesAreWalls`, 벽 돌아가기 6 → 4걸음) — 전체 80개
   - 결정 (2026-10-16): Q3 임시값 플레이어 체력 20 · 피해 3, 적 체력 8 · 피해 2, **고정 피해(난수 없음)**. 적 1종 = 보이면 다가와 근접 공격, 안 보이면 대기 — 추천안. 수치는 BALANCE 3번
   - 결정 (2026-10-16): `.gitattributes` 추가 (Unity YAML은 eol=lf) — 추천안
   - 정한 것 (기본값으로 진행, 바꿀 수 있음): 적 칸으로 이동 = 공격(SPD식 부딪히기). 벽에 부딪히면 차례를 쓰지 않음. 층마다 적 5마리, 시작 칸에서 8칸 이상 떨어진 바닥에 맵 생성 난수로 배치. 플레이어 사망 → 조작 멈춤 + HUD "DEAD" + R로 새 판. 적 그레이박스 = 흰 원(`unit_circle.png`, player.png와 같은 모양) 빨간 틴트
   - 구현 — Simulation: `Core/Grid/{GridMovement(8방향 · 체비셰프 · CanStep), GridPathfinder(8방향 A*, 걸음 수 최소 → 대각선 적은 길, 결정론적 동점, 목표 칸은 막힘 무시)}`, `Units/{Faction, UnitDef, Unit, UnitRegistry(칸당 1유닛, ID 순 순회), Combat.ApplyDamage, UnitDamagedEvent · UnitDiedEvent, MoveCommand, AttackCommand, PlayerActions(입력 → 커맨드 규칙), ISightRule + RangeOnlySightRule(1-7 전 임시: 거리만), MeleeChaserAi(상태 없음), DeathCheckSystem(⑥), UnitSpawner, SpawnConfig, FloorPopulator}`
   - 구현 — World: `Units` 추가, `InstallCoreSystems()`(⑥ 사망 판정 + ⑦ 이벤트 발행 — 새 World · 복원 World 공용). 스냅샷 **v2** = `UnitState[] Units` 추가(코덱 · Capture · Restore)
   - 규칙: 체력 0이 된 유닛은 같은 틱의 남은 차례에서 행동 · 공격 대상이 되지 않고, ⑥에서 맵 · 스케줄러에서 빠진다(UnitDied → EntityRemoved)
-  - 구현 — Runtime: `Input/PlayerInputController`(방향키 · WASD 4방향, 넘패드 · Q/E/Z/C 대각선, 넘패드5 · 스페이스 · 마침표 대기, 누르고 있으면 0.3초 뒤 0.12초마다 반복. 클릭 = 경로 따라 0.08초마다 한 칸, 적 칸 클릭 = 다가가 한 번 공격, 자기 칸 = 대기, 키 입력 · 길 막힘 · 출발 때 없던 적이 보이면 멈춤), `UI/HudPresenter`(체력 + 로그 6줄, TMP 기본 폰트라 영어), `Data/{UnitDefAsset, SpawnConfigAsset}`, `EntityPresenter` 새 버스 연결 시 남은 모습 정리, `GameRoot`(배치 · 시스템 등록 · 카메라가 플레이어를 따라감 · 사망 처리 · R 재시작)
+  - 구현 — Runtime: `Input/PlayerInputController`(방향키 · WASD · 넘패드, 대각선은 아래 "변경" 참고, 넘패드5 · 스페이스 · 마침표 대기, 누르고 있으면 0.3초 뒤 0.12초마다 반복. 클릭 = 경로 따라 0.08초마다 한 칸, 적 칸 클릭 = 다가가 한 번 공격, 자기 칸 = 대기, 키 입력 · 길 막힘 · 출발 때 없던 적이 보이면 멈춤), `UI/HudPresenter`(체력 + 로그 6줄, TMP 기본 폰트라 영어), `Data/{UnitDefAsset, SpawnConfigAsset}`, `EntityPresenter` 새 버스 연결 시 남은 모습 정리, `GameRoot`(배치 · 시스템 등록 · 카메라가 플레이어를 따라감 · 사망 처리 · R 재시작)
   - 구현 — Editor: Setup 메뉴에 유닛 에셋(`Data/Units/{Player, MeleeEnemy, SpawnConfig}.asset` — 없을 때만 BALANCE 값으로 생성) · 적 비주얼 · HUD 캔버스 · 입력 컨트롤러 연결 추가. Editor asmdef에 TMP · UI 참조
   - 테스트 17개 추가 (`GridMovementTests` 6 — 체비셰프 · 8방향 · 모서리 규칙 · 대각선/곧은 길 선호 · 벽/유닛 돌아가기 · 목표 칸 · 못 감, `UnitCombatTests` 11 — 이동/공격/무행동, 3대에 처치 · 죽은 틱 무행동, 추적 후 공격, 시야 밖 대기, 10대에 사망 · 시계 멈춤, 적끼리 겹치지 않고 포위, **유닛 · AI · 전투 포함 저장→불러와 진행 = 그냥 진행**, 유닛 스냅샷 왕복, 적 배치 재현 · 거리, 수치 검사, BALANCE 3번 검산) — 전체 79개 통과
   - 확인: 시드 20261016 편집 모드 시작 — 플레이어 (2, 26) 체력 20, 적 5마리 체력 8, 스프라이트 6개(적은 빨강), HUD "HP 20/20", 카메라가 플레이어 칸. 콘솔 프로젝트 오류 0 (편집 모드 `SendMessage` assertion 1건은 1-3과 같은 것)

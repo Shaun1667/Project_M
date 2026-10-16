@@ -10,7 +10,9 @@ namespace ProjectM.Input
     /// <summary>
     /// 키보드 · 마우스 → 플레이어 커맨드 → 시계 (결정 2026-10-16: 8방향, 키보드 + 클릭 이동 둘 다).
     /// 규칙은 PlayerActions가 정하고, 여기서는 입력을 읽어 넘기기만 한다.
-    /// - 키보드: 방향키 · WASD(4방향), 넘패드 1~9 · Q/E/Z/C(대각선 포함 8방향). 누르고 있으면 반복. 넘패드 5 · 스페이스 · 마침표 = 제자리 대기.
+    /// - 키보드: 방향키 · WASD · 넘패드. 대각선은 두 방향을 함께 누른다 (W+D = 오른쪽 위, 변경 2026-10-16) — 넘패드 7 · 9 · 1 · 3도 대각선.
+    ///   첫 키를 누르면 _comboWindow 동안 두 번째 키를 기다렸다가 합쳐서 한 걸음 (이미 대각선이면 바로).
+    ///   누르고 있으면 반복하며, 반복 때마다 지금 눌린 키 조합으로 방향을 다시 정한다. 넘패드 5 · 스페이스 · 마침표 = 제자리 대기.
     /// - 클릭: 그 칸까지 경로를 따라 한 칸씩 여러 턴 진행. 적 칸을 누르면 다가가서 한 번 공격.
     ///   키 입력 · 새 클릭 · 길이 막힘 · 새 적이 보임 → 멈춤. 자기 칸 클릭 = 제자리 대기.
     /// 클릭 경로는 입력 상태일 뿐 World에 저장하지 않는다.
@@ -27,17 +29,17 @@ namespace ProjectM.Input
         [SerializeField] private float _keyRepeatInterval = 0.12f;
         [Tooltip("클릭 이동 한 칸 간격, 초")]
         [SerializeField] private float _pathStepInterval = 0.08f;
+        [Tooltip("첫 방향키 뒤 두 번째 키(대각선)를 기다리는 시간, 초")]
+        [SerializeField] private float _comboWindow = 0.07f;
 
         private static readonly (Key key, GridPos dir)[] DirectionKeys =
         {
             (Key.UpArrow, new GridPos(0, 1)), (Key.W, new GridPos(0, 1)), (Key.Numpad8, new GridPos(0, 1)),
-            (Key.Numpad9, new GridPos(1, 1)), (Key.E, new GridPos(1, 1)),
             (Key.RightArrow, new GridPos(1, 0)), (Key.D, new GridPos(1, 0)), (Key.Numpad6, new GridPos(1, 0)),
-            (Key.Numpad3, new GridPos(1, -1)), (Key.C, new GridPos(1, -1)),
             (Key.DownArrow, new GridPos(0, -1)), (Key.S, new GridPos(0, -1)), (Key.Numpad2, new GridPos(0, -1)),
-            (Key.Numpad1, new GridPos(-1, -1)), (Key.Z, new GridPos(-1, -1)),
             (Key.LeftArrow, new GridPos(-1, 0)), (Key.A, new GridPos(-1, 0)), (Key.Numpad4, new GridPos(-1, 0)),
-            (Key.Numpad7, new GridPos(-1, 1)), (Key.Q, new GridPos(-1, 1)),
+            (Key.Numpad9, new GridPos(1, 1)), (Key.Numpad3, new GridPos(1, -1)),
+            (Key.Numpad1, new GridPos(-1, -1)), (Key.Numpad7, new GridPos(-1, 1)),
         };
 
         private static readonly Key[] WaitKeys = { Key.Numpad5, Key.Space, Key.Period };
@@ -47,7 +49,9 @@ namespace ProjectM.Input
         private ITickClock _clock;
         private ISightRule _sight;
 
-        private GridPos? _heldDirection;
+        private bool _comboPending;
+        private float _comboEndTime;
+        private GridPos _comboDirection;
         private float _nextRepeatTime;
 
         private List<GridPos> _path;
@@ -70,7 +74,7 @@ namespace ProjectM.Input
             _config = config;
             _clock = clock;
             _sight = sight;
-            _heldDirection = null;
+            _comboPending = false;
             CancelPath();
         }
 
@@ -115,47 +119,55 @@ namespace ProjectM.Input
                 return true;
             }
 
-            var direction = ReadDirection(keyboard, out bool pressedNow);
-            if (!direction.HasValue)
+            var held = ReadHeldDirection(keyboard, out bool pressedNow);
+            float now = Time.time;
+
+            // 새 키 → 잠깐 기다리며 함께 누른 키를 모은다 (W 다음 D = 오른쪽 위)
+            if (pressedNow && !_comboPending)
             {
-                _heldDirection = null;
-                return false;
+                _comboPending = true;
+                _comboEndTime = now + _comboWindow;
+                _comboDirection = default;
+                CancelPath();
             }
 
-            CancelPath();
-            float now = Time.time;
-            if (pressedNow || _heldDirection != direction)
+            if (_comboPending)
             {
-                Step(direction.Value);
+                // 기다리는 사이 먼저 뗀 키도 놓치지 않게, 눌린 축만 덮어쓴다
+                _comboDirection = new GridPos(held.X != 0 ? held.X : _comboDirection.X, held.Y != 0 ? held.Y : _comboDirection.Y);
+                if (now < _comboEndTime && !GridMovement.IsDiagonal(_comboDirection)) return true;
+
+                _comboPending = false;
+                if (_comboDirection != default) Step(_comboDirection);
                 _nextRepeatTime = now + _keyRepeatDelay;
+                return true;
             }
-            else if (now >= _nextRepeatTime)
+
+            if (held == default) return false;
+
+            CancelPath();
+            if (now >= _nextRepeatTime)
             {
-                Step(direction.Value);
+                Step(held);
                 _nextRepeatTime = now + _keyRepeatInterval;
             }
-            _heldDirection = direction;
             return true;
         }
 
-        /// <summary>이번 프레임에 새로 누른 방향이 있으면 그것, 없으면 누르고 있는 방향 (표 순서대로 첫 번째).</summary>
-        private static GridPos? ReadDirection(Keyboard keyboard, out bool pressedNow)
+        /// <summary>눌린 방향키를 모두 합친 방향 (축마다 -1 · 0 · 1, 반대 키끼리는 상쇄). 이번 프레임에 새로 누른 키가 있으면 pressedNow.</summary>
+        private static GridPos ReadHeldDirection(Keyboard keyboard, out bool pressedNow)
         {
-            foreach (var (key, dir) in DirectionKeys)
-            {
-                if (keyboard[key].wasPressedThisFrame)
-                {
-                    pressedNow = true;
-                    return dir;
-                }
-            }
-
             pressedNow = false;
+            int x = 0, y = 0;
             foreach (var (key, dir) in DirectionKeys)
             {
-                if (keyboard[key].isPressed) return dir;
+                var control = keyboard[key];
+                if (control.wasPressedThisFrame) pressedNow = true;
+                if (!control.isPressed && !control.wasPressedThisFrame) continue;
+                x += dir.X;
+                y += dir.Y;
             }
-            return null;
+            return new GridPos(System.Math.Sign(x), System.Math.Sign(y));
         }
 
         private void Step(GridPos direction)

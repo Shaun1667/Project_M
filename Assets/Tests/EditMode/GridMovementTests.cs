@@ -45,17 +45,29 @@ namespace ProjectM.Tests
         }
 
         [Test]
-        public void CanStep_DiagonalBlockedByWallCorner()
+        public void CanStep_DiagonalPassesOneWallCorner()
         {
-            // (1,1)에서 (2,2)로: 오른쪽 (2,1)이 벽 → 모서리 통과 금지
+            // (1,1)에서 (2,2)로: 오른쪽 (2,1)만 벽, 위 (1,2)는 바닥 → 통과 가능
             var map = Parse(
                 "####",
                 "#..#",
                 "#.##",
                 "####");
-            Assert.That(GridMovement.CanStep(map, new GridPos(1, 1), new GridPos(2, 2)), Is.False);
+            Assert.That(GridMovement.CanStep(map, new GridPos(1, 1), new GridPos(2, 2)), Is.True);
             Assert.That(GridMovement.CanStep(map, new GridPos(1, 1), new GridPos(1, 2)), Is.True);
             Assert.That(GridMovement.CanStep(map, new GridPos(1, 1), new GridPos(2, 1)), Is.False, "벽");
+        }
+
+        [Test]
+        public void CanStep_DiagonalBlockedWhenBothSidesAreWalls()
+        {
+            // (1,1)에서 (2,2)로: 오른쪽 (2,1) · 위 (1,2) 모두 벽 → 틈으로 못 지나감
+            var map = Parse(
+                "####",
+                "##.#",
+                "#.##",
+                "####");
+            Assert.That(GridMovement.CanStep(map, new GridPos(1, 1), new GridPos(2, 2)), Is.False);
         }
 
         [Test]
@@ -88,7 +100,7 @@ namespace ProjectM.Tests
             var to = new GridPos(5, 2);
             var path = GridPathfinder.FindPath(map, from, to);
             Assert.That(path, Is.Not.Null);
-            Assert.That(path.Count, Is.EqualTo(6), "벽 모서리를 비스듬히 못 지나므로 위 또는 아래 줄로 6걸음");
+            Assert.That(path.Count, Is.EqualTo(4), "벽 모서리를 비스듬히 지나 위 또는 아래 줄로 4걸음");
             AssertValidPath(map, from, path);
 
             // 위쪽 줄을 막으면 아래로 돈다
