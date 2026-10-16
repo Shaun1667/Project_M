@@ -67,6 +67,11 @@ namespace ProjectM.Core
                     w.Write(u.HasLastSeen);
                     w.Write(u.LastSeenX);
                     w.Write(u.LastSeenY);
+                    w.Write(u.MaxMana);
+                    w.Write(u.Mana);
+                    w.Write(u.SpellSlots.Length);
+                    foreach (var slot in u.SpellSlots)
+                        w.Write(slot ?? string.Empty); // 빈 칸 = 빈 문자열
                 }
 
                 w.Flush();
@@ -139,7 +144,16 @@ namespace ProjectM.Core
                     var hasLastSeen = r.ReadBoolean();
                     var lastSeenX = r.ReadInt32();
                     var lastSeenY = r.ReadInt32();
-                    s.Units[i] = new UnitState(id, faction, visualId, maxHp, attackDamage, sightRange, x, y, hp, hasLastSeen, lastSeenX, lastSeenY);
+                    var maxMana = r.ReadInt32();
+                    var mana = r.ReadInt32();
+                    var slots = new string[ReadCount(r)];
+                    for (int k = 0; k < slots.Length; k++)
+                    {
+                        var slot = r.ReadString();
+                        slots[k] = slot.Length == 0 ? null : slot;
+                    }
+                    s.Units[i] = new UnitState(id, faction, visualId, maxHp, attackDamage, sightRange, x, y, hp, hasLastSeen, lastSeenX, lastSeenY,
+                        maxMana, mana, slots);
                 }
 
                 if (stream.Position != stream.Length)

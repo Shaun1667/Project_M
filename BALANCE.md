@@ -13,7 +13,7 @@
 | 1 | 게임 전역 (틱 · 행동 비용) | `Assets/_Project/Data/Config/GameConfig.asset` (`GameConfigAsset`) | `ProjectM.Core.GameConfig` | 사용 중 |
 | 2 | 맵 생성 | `Assets/_Project/Data/Dungeon/DungeonGenConfig.asset` (`DungeonGenConfigAsset`) | `ProjectM.Dungeon.DungeonGenConfig` | 사용 중 |
 | 3 | 유닛 (체력 · 피해 · 시야) · 적 배치 | `Assets/_Project/Data/Units/{Player, MeleeEnemy, SpawnConfig}.asset` (`UnitDefAsset`, `SpawnConfigAsset`) | `ProjectM.Units.UnitDef`, `ProjectM.Units.SpawnConfig` | 사용 중 |
-| 4 | 마나 | `Data/Config/` 또는 `Data/Magic/` (2-1) | — | 예정 |
+| 4 | 마나 · 주문 장착 칸 | `Assets/_Project/Data/Magic/MagicConfig.asset` (`MagicConfigAsset`) + `Player.asset`의 `_maxMana` · `_startingSpells` | `ProjectM.Magic.MagicConfig`, `UnitDef.MaxMana` | 사용 중 |
 | 5 | 주문 | `Data/Spells/` (2-2) | — | 예정 |
 | 6 | 상태 이상 | `Data/Statuses/` (2-3) | — | 예정 |
 | 7 | 지형 | `Data/Terrains/` (2-4) | — | 예정 |
@@ -87,6 +87,24 @@
 
 ---
 
+## 4. 마나 · 주문 장착 칸 — `Data/Magic/MagicConfig.asset`
+
+결정 (2026-10-16): Q1 · Q2 임시값. 틱당 회복만 (처치 회복 없음). 조정은 Phase 4 재미 검증에서.
+
+| 항목 | 위치 · 필드 | 값 | 비고 |
+|---|---|---|---|
+| 플레이어 최대 마나 | `Player.asset` `_maxMana` | **10** | 시작 시 가득 |
+| 적 최대 마나 | `MeleeEnemy.asset` `_maxMana` | **0** | 마나 없음 · 회복 없음 |
+| 회복 주기 | `_manaRegenIntervalTicks` | **3틱** | (틱 + 1)이 3의 배수인 틱의 ⑤ 단계 |
+| 회복량 | `_manaRegenAmount` | **1** | 최대치에서 멈춤 |
+| 주문 장착 칸 | `_spellSlotCount` | **4** | 키 1 ~ 4 |
+| 시작 주문 | `Player.asset` `_startingSpells` | **fire_basic · ice_basic · lightning_basic · poison_basic** | 임시 ID, 주문 내용은 2-2 (5번) |
+
+검산 (`ManaTests.ProjectAssets_MatchBalanceTable`): 에셋 값이 위 표와 같다.
+결과: 바닥(0)에서 가득(10)까지 30틱. 2-2 주문 마나 비용은 이 회복 속도를 기준으로 정한다 (예: 비용 3 = 9틱마다 한 번 꼴).
+
+---
+
 ## 참고 — 초기 밸런스 기준 (GDD 원본 15장, [임시])
 
 테스트 시작용 범위. 실제 값은 각 항목 착수 때 정해 위 번호 표로 옮긴다.
@@ -103,6 +121,6 @@
 
 ---
 
-## 4. 측정 기준선 · 실험
+## 측정 기준선 · 실험
 
 Phase 4 측정 봇 이후 작성. 형식은 `Docs/Source/claude_all_type_genre.md` 17-4.

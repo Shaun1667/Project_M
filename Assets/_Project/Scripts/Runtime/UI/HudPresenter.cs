@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using System.Text;
 using ProjectM.Core;
+using ProjectM.Magic;
 using ProjectM.Units;
 using TMPro;
 using UnityEngine;
@@ -8,8 +10,8 @@ using EntityId = ProjectM.Core.EntityId; // Unity 6의 UnityEngine.EntityId와 �
 namespace ProjectM.UI
 {
     /// <summary>
-    /// 그레이박스 HUD: 플레이어 체력 + 최근 전투 로그 몇 줄. 이벤트만 보고 그린다.
-    /// 기본 TMP 폰트(LiberationSans)에 한글이 없어 영어로 쓴다 — 한글 폰트는 UI 단계에서.
+    /// 그레이박스 HUD: 체력 · 마나 · 주문 장착 칸 + 최근 전투 로그 몇 줄. 이벤트만 보고 그린다.
+    /// 기본 TMP 폰트(LiberationSans)에 한글이 없어 영어로 쓴다 — 한글 폰트 · 막대 · 아이콘은 2-5 HUD에서.
     /// </summary>
     public sealed class HudPresenter : MonoBehaviour
     {
@@ -22,6 +24,9 @@ namespace ProjectM.UI
         private EntityId _playerId;
         private int _hp;
         private int _maxHp;
+        private int _mana;
+        private int _maxMana;
+        private string[] _spellSlots = new string[0];
         private bool _dead;
 
         public string StatusText => _statusText != null ? _statusText.text : null;
@@ -34,17 +39,21 @@ namespace ProjectM.UI
             _logText = logText;
         }
 
-        public void Bind(SimEventBus bus, EntityId playerId, int hp, int maxHp)
+        public void Bind(SimEventBus bus, Unit player)
         {
             Unbind();
             _bus = bus;
-            _playerId = playerId;
-            _hp = hp;
-            _maxHp = maxHp;
+            _playerId = player.Id;
+            _hp = player.Hp;
+            _maxHp = player.MaxHp;
+            _mana = player.Mana;
+            _maxMana = player.MaxMana;
+            _spellSlots = (string[])player.SpellSlots.Clone();
             _dead = false;
             _log.Clear();
             _bus.Subscribe<UnitDamagedEvent>(OnDamaged);
             _bus.Subscribe<UnitDiedEvent>(OnDied);
+            _bus.Subscribe<ManaChangedEvent>(OnManaChanged);
             Redraw();
         }
 
@@ -53,6 +62,7 @@ namespace ProjectM.UI
             if (_bus == null) return;
             _bus.Unsubscribe<UnitDamagedEvent>(OnDamaged);
             _bus.Unsubscribe<UnitDiedEvent>(OnDied);
+            _bus.Unsubscribe<ManaChangedEvent>(OnManaChanged);
             _bus = null;
         }
 
@@ -69,6 +79,14 @@ namespace ProjectM.UI
             {
                 AddLog($"You hit enemy {e.Target} for {e.Amount} ({e.Hp}/{e.MaxHp}).");
             }
+            Redraw();
+        }
+
+        private void OnManaChanged(ManaChangedEvent e)
+        {
+            if (e.Id != _playerId) return;
+            _mana = e.Mana;
+            _maxMana = e.MaxMana;
             Redraw();
         }
 
@@ -95,7 +113,22 @@ namespace ProjectM.UI
         private void Redraw()
         {
             if (_statusText != null)
-                _statusText.text = _dead ? $"HP 0/{_maxHp}   DEAD - press R to restart" : $"HP {_hp}/{_maxHp}";
+            {
+                var sb = new StringBuilder();
+                sb.Append(_dead ? $"HP 0/{_maxHp}" : $"HP {_hp}/{_maxHp}");
+                if (_maxMana > 0) sb.Append($"   MP {_mana}/{_maxMana}");
+                if (_dead) sb.Append("   DEAD - press R to restart");
+                if (_spellSlots.Length > 0)
+                {
+                    sb.Append('\n');
+                    for (int i = 0; i < _spellSlots.Length; i++)
+                    {
+                        if (i > 0) sb.Append("  ");
+                        sb.Append($"[{i + 1}] {_spellSlots[i] ?? "-"}");
+                    }
+                }
+                _statusText.text = sb.ToString();
+            }
             if (_logText != null)
                 _logText.text = string.Join("\n", _log);
         }

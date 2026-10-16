@@ -2,6 +2,7 @@ using ProjectM.Core;
 using ProjectM.Data;
 using ProjectM.Dungeon;
 using ProjectM.Input;
+using ProjectM.Magic;
 using ProjectM.Presentation;
 using ProjectM.UI;
 using ProjectM.Units;
@@ -21,6 +22,7 @@ namespace ProjectM
         [SerializeField] private UnitDefAsset _playerDef;
         [SerializeField] private UnitDefAsset _enemyDef;
         [SerializeField] private SpawnConfigAsset _spawnConfig;
+        [SerializeField] private MagicConfigAsset _magicConfig;
         [SerializeField] private TilemapPresenter _tilemapPresenter;
         [SerializeField] private EntityPresenter _entityPresenter;
         [Tooltip("시야 안개. 비우면 안개 없이 전부 보인다")]
@@ -33,6 +35,7 @@ namespace ProjectM
         [SerializeField] private long _fixedSeed;
 
         public GameConfig Config { get; private set; }
+        public MagicConfig Magic { get; private set; }
         public World World { get; private set; }
         public DungeonFloor Floor { get; private set; }
         /// <summary>이번 판의 시드 (디버그 창 · 콘솔 표시용).</summary>
@@ -59,7 +62,7 @@ namespace ProjectM
 
         private void Awake()
         {
-            if (_config == null || _dungeonConfig == null || _playerDef == null || _enemyDef == null || _spawnConfig == null
+            if (_config == null || _dungeonConfig == null || _playerDef == null || _enemyDef == null || _spawnConfig == null || _magicConfig == null
                 || _tilemapPresenter == null || _entityPresenter == null || _input == null || _hud == null)
             {
                 Debug.LogError("[GameRoot] 참조가 비어 있다. 메뉴 ProjectM/Setup/Main Scene을 실행한다.", this);
@@ -68,6 +71,7 @@ namespace ProjectM
             }
 
             Config = _config.ToConfig();
+            Magic = _magicConfig.ToConfig();
         }
 
         private void Start()
@@ -105,7 +109,7 @@ namespace ProjectM
             });
             Floor = floor;
             var sight = new ShadowcastSightRule();
-            var vision = World.InstallCoreSystems(sight);
+            var vision = World.InstallCoreSystems(sight, Magic);
 
             _tilemapPresenter.Bind(World.Events);
             _entityPresenter.Bind(World.Events);
@@ -115,12 +119,13 @@ namespace ProjectM
 
             var enemyAi = new MeleeChaserAi(World, Config, sight);
             World.Events.Publish(new MapLoadedEvent(World.Map));
-            var player = FloorPopulator.Populate(World, Floor.Start, _playerDef.ToDef(), _enemyDef.ToDef(), _spawnConfig.ToConfig(), enemyAi);
+            var player = FloorPopulator.Populate(World, Floor.Start, _playerDef.ToDef(), _enemyDef.ToDef(), _spawnConfig.ToConfig(), enemyAi,
+                Magic.SpellSlotCount);
             _playerId = player.Id;
             _playerDead = false;
             vision.Refresh(); // 첫 시야 — 이후는 매 틱 ⑥ 단계에서
 
-            _hud.Bind(World.Events, player.Id, player.Hp, player.MaxHp);
+            _hud.Bind(World.Events, player);
             _input.Bind(World, Config, new TurnClock(World.Scheduler, World.PlayerInput), sight);
             World.Events.Flush();
 

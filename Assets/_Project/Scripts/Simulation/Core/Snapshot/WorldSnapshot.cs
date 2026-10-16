@@ -11,8 +11,8 @@ namespace ProjectM.Core
     [Serializable]
     public sealed class WorldSnapshot
     {
-        /// <summary>1: 1-4 최초. 2: 유닛(Units) 추가 (1-6). 3: 탐험 기록(Explored) · 유닛 기억(LastSeen) 추가 (1-7).</summary>
-        public const int CurrentFormatVersion = 3;
+        /// <summary>1: 1-4 최초. 2: 유닛(Units) 추가 (1-6). 3: 탐험 기록(Explored) · 유닛 기억(LastSeen) 추가 (1-7). 4: 유닛 마나 · 주문 장착 칸 (2-1).</summary>
+        public const int CurrentFormatVersion = 4;
 
         public int FormatVersion = CurrentFormatVersion;
 
@@ -54,10 +54,17 @@ namespace ProjectM.Core
         public readonly bool HasLastSeen;
         public readonly int LastSeenX;
         public readonly int LastSeenY;
+        public readonly int MaxMana;
+        public readonly int Mana;
+        /// <summary>주문 장착 칸. 빈 칸은 null.</summary>
+        public readonly string[] SpellSlots;
 
         public UnitState(EntityId id, Faction faction, string visualId, int maxHp, int attackDamage, int sightRange, int x, int y, int hp,
-            bool hasLastSeen, int lastSeenX, int lastSeenY)
+            bool hasLastSeen, int lastSeenX, int lastSeenY, int maxMana, int mana, string[] spellSlots)
         {
+            MaxMana = maxMana;
+            Mana = mana;
+            SpellSlots = spellSlots ?? Array.Empty<string>();
             HasLastSeen = hasLastSeen;
             LastSeenX = lastSeenX;
             LastSeenY = lastSeenY;

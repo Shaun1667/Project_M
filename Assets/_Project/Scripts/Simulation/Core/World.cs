@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ProjectM.Magic;
 using ProjectM.Units;
 
 namespace ProjectM.Core
@@ -54,12 +55,13 @@ namespace ProjectM.Core
         }
 
         /// <summary>
-        /// 기본 단계 시스템을 등록한다: ⑥ 사망 판정 → ⑥ 끝 플레이어 시야 갱신 → ⑦ 이벤트 발행.
+        /// 기본 단계 시스템을 등록한다: ⑤ 마나 회복 → ⑥ 사망 판정 → ⑥ 끝 플레이어 시야 갱신 → ⑦ 이벤트 발행.
         /// 새 World · 복원한 World 모두 한 번 부른다. 돌려준 시야 시스템의 Refresh()로 층 시작 · 불러오기 직후 시야를 한 번 계산한다.
         /// </summary>
-        public PlayerVisionSystem InstallCoreSystems(ISightRule sight)
+        public PlayerVisionSystem InstallCoreSystems(ISightRule sight, MagicConfig magic)
         {
             var vision = new PlayerVisionSystem(this, sight);
+            Scheduler.AddSystem(TickPhase.ManaRegen, new ManaRegenSystem(this, magic));
             Scheduler.AddSystem(TickPhase.DeathCheck, new DeathCheckSystem(this));
             Scheduler.AddSystem(TickPhase.DeathCheck, vision);
             Scheduler.AddSystem(TickPhase.EventFlush, new EventFlushSystem(Events));
@@ -103,7 +105,7 @@ namespace ProjectM.Core
                 var u = units[i];
                 var seen = u.LastSeenTargetPos;
                 states[i] = new UnitState(u.Id, u.Faction, u.VisualId, u.MaxHp, u.AttackDamage, u.SightRange, u.Pos.X, u.Pos.Y, u.Hp,
-                    seen.HasValue, seen?.X ?? 0, seen?.Y ?? 0);
+                    seen.HasValue, seen?.X ?? 0, seen?.Y ?? 0, u.MaxMana, u.Mana, (string[])u.SpellSlots.Clone());
             }
             return states;
         }
@@ -137,7 +139,8 @@ namespace ProjectM.Core
             foreach (var u in snapshot.Units)
             {
                 GridPos? seen = u.HasLastSeen ? new GridPos(u.LastSeenX, u.LastSeenY) : (GridPos?)null;
-                world.Units.Add(new Unit(u.Id, u.Faction, u.VisualId, u.MaxHp, u.AttackDamage, u.SightRange, new GridPos(u.X, u.Y), u.Hp, seen));
+                world.Units.Add(new Unit(u.Id, u.Faction, u.VisualId, u.MaxHp, u.AttackDamage, u.SightRange, new GridPos(u.X, u.Y), u.Hp, seen,
+                    u.MaxMana, u.Mana, (string[])u.SpellSlots.Clone()));
             }
 
             foreach (var actor in snapshot.Actors)

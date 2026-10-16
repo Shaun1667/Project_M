@@ -13,6 +13,8 @@ namespace ProjectM.Tests
         private static readonly UnitDef PlayerDef = new UnitDef("player", 20, 3, 8);
         private static readonly UnitDef EnemyDef = new UnitDef("enemy_melee", 8, 2, 6);
         private static readonly GameConfig Config = new GameConfig(1, 1f);
+        // BALANCE.md 4번과 같은 값
+        private static readonly ProjectM.Magic.MagicConfig Magic = new ProjectM.Magic.MagicConfig(3, 1, 4);
 
         private sealed class Session
         {
@@ -35,7 +37,7 @@ namespace ProjectM.Tests
         private static Session Start(GridMap map, GridPos playerPos, params GridPos[] enemies)
         {
             var world = new World(map, 42UL);
-            var vision = world.InstallCoreSystems(new ShadowcastSightRule());
+            var vision = world.InstallCoreSystems(new ShadowcastSightRule(), Magic);
             var session = new Session { World = world, Clock = new TurnClock(world.Scheduler, world.PlayerInput) };
             world.Events.Subscribe<UnitDamagedEvent>(session.Events.Add);
             world.Events.Subscribe<UnitDiedEvent>(session.Events.Add);
@@ -209,7 +211,7 @@ namespace ProjectM.Tests
             byte[] withoutSave = WorldSnapshotCodec.Encode(original.World.Capture());
 
             var restoredWorld = World.Restore(WorldSnapshotCodec.Decode(saved), (w, id) => Ai(w));
-            restoredWorld.InstallCoreSystems(new ShadowcastSightRule());
+            restoredWorld.InstallCoreSystems(new ShadowcastSightRule(), Magic);
             var restored = new Session { World = restoredWorld, Clock = new TurnClock(restoredWorld.Scheduler, restoredWorld.PlayerInput) };
             Play(restored, split, moves.Length);
             byte[] afterLoad = WorldSnapshotCodec.Encode(restoredWorld.Capture());

@@ -17,7 +17,11 @@ namespace ProjectM.Data
         [Min(0)] [SerializeField] private int _attackDamage = 1;
         [Tooltip("시야 반지름 (칸). 원형 범위, 벽에 가려진다")]
         [Min(1)] [SerializeField] private int _sightRange = 6;
+        [Tooltip("최대 마나 (BALANCE 4번). 0이면 마나 없음")]
+        [Min(0)] [SerializeField] private int _maxMana;
+        [Tooltip("시작할 때 장착 칸 1번부터 채우는 주문 ID (주문 데이터는 2-2)")]
+        [SerializeField] private string[] _startingSpells = new string[0];
 
-        public UnitDef ToDef() => new UnitDef(_visualId, _maxHp, _attackDamage, _sightRange);
+        public UnitDef ToDef() => new UnitDef(_visualId, _maxHp, _attackDamage, _sightRange, _maxMana, _startingSpells);
     }
 }

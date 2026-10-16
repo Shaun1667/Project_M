@@ -396,8 +396,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 24, y: -70}
-  m_SizeDelta: {x: 900, y: 260}
+  m_AnchoredPosition: {x: 24, y: -120}
+  m_SizeDelta: {x: 1400, y: 260}
   m_Pivot: {x: 0, y: 1}
 --- !u!1 &1455783066
 GameObject:
@@ -534,7 +534,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 24, y: -16}
-  m_SizeDelta: {x: 900, y: 50}
+  m_SizeDelta: {x: 1400, y: 100}
   m_Pivot: {x: 0, y: 1}
 --- !u!1 &1701493085
 GameObject:
@@ -571,6 +571,7 @@ MonoBehaviour:
   _playerDef: {fileID: 11400000, guid: 864f0170db0183b4691ede2e8c6739a1, type: 2}
   _enemyDef: {fileID: 11400000, guid: 8cf3b61c14b647b49852985152984ea0, type: 2}
   _spawnConfig: {fileID: 11400000, guid: 97324289cd98993439d34909471507ab, type: 2}
+  _magicConfig: {fileID: 11400000, guid: db61fbf46bbfbc441aa4a98582c8dd36, type: 2}
   _tilemapPresenter: {fileID: 2048705274}
   _entityPresenter: {fileID: 2108178770}
   _fogPresenter: {fileID: 2006350448}

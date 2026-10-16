@@ -10,12 +10,13 @@ namespace ProjectM.Units
     /// </summary>
     public static class FloorPopulator
     {
-        public static Unit Populate(World world, GridPos start, UnitDef playerDef, UnitDef enemyDef, SpawnConfig spawn, ICommandSource enemyAi)
+        public static Unit Populate(World world, GridPos start, UnitDef playerDef, UnitDef enemyDef, SpawnConfig spawn, ICommandSource enemyAi,
+            int spellSlotCount = 0)
         {
             if (world == null) throw new ArgumentNullException(nameof(world));
             if (spawn == null) throw new ArgumentNullException(nameof(spawn));
 
-            var player = UnitSpawner.SpawnPlayer(world, playerDef, start);
+            var player = UnitSpawner.SpawnPlayer(world, playerDef, start, spellSlotCount);
             var cells = PickEnemyCells(world.Map, start, spawn.EnemyCount, spawn.EnemyMinDistanceFromStart, world.Rng.Get(RngStream.MapGen));
             foreach (var cell in cells)
                 UnitSpawner.SpawnEnemy(world, enemyDef, cell, enemyAi);

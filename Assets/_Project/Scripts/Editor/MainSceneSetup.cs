@@ -27,6 +27,10 @@ namespace ProjectM.Editor
         private const string PlayerDefPath = "Assets/_Project/Data/Units/Player.asset";
         private const string EnemyDefPath = "Assets/_Project/Data/Units/MeleeEnemy.asset";
         private const string SpawnConfigPath = "Assets/_Project/Data/Units/SpawnConfig.asset";
+        private const string MagicConfigPath = "Assets/_Project/Data/Magic/MagicConfig.asset";
+
+        /// <summary>플레이어 시작 주문 (BALANCE 4번). 주문 내용은 2-2 주문 데이터에서 같은 ID로 정의한다.</summary>
+        private static readonly string[] PlayerStartingSpells = { "fire_basic", "ice_basic", "lightning_basic", "poison_basic" };
 
         private const string PlayerVisualId = "player";
         private const string EnemyVisualId = "enemy_melee";
@@ -64,11 +68,15 @@ namespace ProjectM.Editor
             var dungeonConfig = LoadOrCreate<DungeonGenConfigAsset>(DungeonConfigPath);
             // 유닛 수치 — 없을 때만 BALANCE 3번 값으로 만든다. 있으면 값을 건드리지 않는다.
             var playerDef = EnsureAsset<UnitDefAsset>(PlayerDefPath,
-                ("_visualId", PlayerVisualId), ("_maxHp", 20), ("_attackDamage", 3), ("_sightRange", 8));
+                ("_visualId", PlayerVisualId), ("_maxHp", 20), ("_attackDamage", 3), ("_sightRange", 8),
+                ("_maxMana", 10), ("_startingSpells", PlayerStartingSpells));
             var enemyDef = EnsureAsset<UnitDefAsset>(EnemyDefPath,
                 ("_visualId", EnemyVisualId), ("_maxHp", 8), ("_attackDamage", 2), ("_sightRange", 6));
             var spawnConfig = EnsureAsset<SpawnConfigAsset>(SpawnConfigPath,
                 ("_enemyCount", 5), ("_enemyMinDistanceFromStart", 8));
+            // 마나 · 장착 칸 — 없을 때만 BALANCE 4번 값으로 만든다
+            var magicConfig = EnsureAsset<MagicConfigAsset>(MagicConfigPath,
+                ("_manaRegenIntervalTicks", 3), ("_manaRegenAmount", 1), ("_spellSlotCount", 4));
 
             var gridGo = FindOrCreate("Grid", null);
             var grid = GetOrAdd<Grid>(gridGo);
@@ -109,6 +117,7 @@ namespace ProjectM.Editor
                 ("_playerDef", playerDef),
                 ("_enemyDef", enemyDef),
                 ("_spawnConfig", spawnConfig),
+                ("_magicConfig", magicConfig),
                 ("_tilemapPresenter", tilemapPresenter),
                 ("_entityPresenter", entityPresenter),
                 ("_fogPresenter", fogPresenter),
@@ -165,8 +174,9 @@ namespace ProjectM.Editor
             scaler.referenceResolution = new Vector2(1920, 1080);
             scaler.matchWidthOrHeight = 0.5f;
 
-            var status = EnsureText(canvasGo.transform, "Status", new Vector2(24, -16), new Vector2(900, 50), 36);
-            var log = EnsureText(canvasGo.transform, "Log", new Vector2(24, -70), new Vector2(900, 260), 26);
+            // 상태 2줄 (체력 · 마나 / 주문 장착 칸)
+            var status = EnsureText(canvasGo.transform, "Status", new Vector2(24, -16), new Vector2(1400, 100), 36);
+            var log = EnsureText(canvasGo.transform, "Log", new Vector2(24, -120), new Vector2(1400, 260), 26);
 
             var hud = GetOrAdd<HudPresenter>(canvasGo);
             SetRefs(hud, ("_statusText", status), ("_logText", log));
@@ -207,6 +217,12 @@ namespace ProjectM.Editor
                 }
                 if (value is int i) prop.intValue = i;
                 else if (value is string s) prop.stringValue = s;
+                else if (value is string[] list)
+                {
+                    prop.arraySize = list.Length;
+                    for (int k = 0; k < list.Length; k++)
+                        prop.GetArrayElementAtIndex(k).stringValue = list[k];
+                }
                 else Debug.LogError($"[MainSceneSetup] {field}: 지원하지 않는 값 형식 {value?.GetType().Name}");
             }
             so.ApplyModifiedPropertiesWithoutUndo();
