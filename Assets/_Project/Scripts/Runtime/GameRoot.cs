@@ -35,6 +35,24 @@ namespace ProjectM
         public GameConfig Config { get; private set; }
         public World World { get; private set; }
         public DungeonFloor Floor { get; private set; }
+        /// <summary>이번 판의 시드 (디버그 창 · 콘솔 표시용).</summary>
+        public ulong Seed { get; private set; }
+        public EntityId PlayerId => _playerId;
+        public bool PlayerDead => _playerDead;
+
+        /// <summary>
+        /// 디버그: 맵 전체 밝히기 (안개 숨김 + 모든 엔티티 표시). 표시만 바꾸며 게임 상태 · 시드 재현에는 영향이 없다.
+        /// 새 판(R)에도 유지된다. 디버그 창(ProjectM/Debug/Debug Window)에서 켜고 끈다.
+        /// </summary>
+        public bool DebugRevealAll
+        {
+            get => _entityPresenter != null && _entityPresenter.RevealAll;
+            set
+            {
+                if (_entityPresenter != null) _entityPresenter.RevealAll = value;
+                if (_fogPresenter != null) _fogPresenter.RevealAll = value;
+            }
+        }
 
         private EntityId _playerId;
         private bool _playerDead;
@@ -69,6 +87,7 @@ namespace ProjectM
         private void StartNewRun()
         {
             ulong seed = _fixedSeed != 0 ? (ulong)_fixedSeed : (ulong)System.DateTime.UtcNow.Ticks;
+            Seed = seed;
             Debug.Log($"[GameRoot] 시드 {(long)seed}");
 
             if (World != null)

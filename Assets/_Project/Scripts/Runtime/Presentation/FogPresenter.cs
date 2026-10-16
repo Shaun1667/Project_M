@@ -21,6 +21,22 @@ namespace ProjectM.Presentation
         private SimEventBus _bus;
         private CellState[] _states = System.Array.Empty<CellState>();
         private int _width;
+        private bool _revealAll;
+
+        /// <summary>
+        /// 디버그: 안개를 숨겨 맵 전체를 밝힌다. 안개 타일은 계속 갱신하므로 끄면 지금 시야가 그대로 돌아온다.
+        /// 표시만 바꾸며 게임 상태(탐험 기록 등)는 건드리지 않는다.
+        /// </summary>
+        public bool RevealAll
+        {
+            get => _revealAll;
+            set
+            {
+                _revealAll = value;
+                var renderer = _tilemap != null ? _tilemap.GetComponent<TilemapRenderer>() : null;
+                if (renderer != null) renderer.enabled = !value;
+            }
+        }
 
         /// <summary>테스트 · 에디터 Setup용. 씬에서는 인스펙터로 연결한다.</summary>
         public void Configure(Tilemap tilemap, TileBase fogTile)

@@ -20,8 +20,21 @@ namespace ProjectM.Presentation
         private readonly Dictionary<EntityId, GridPos> _positions = new Dictionary<EntityId, GridPos>();
         private VisibilityChangedEvent _visibility;
         private SimEventBus _bus;
+        private bool _revealAll;
 
         public int ViewCount => _views.Count;
+
+        /// <summary>디버그: 시야와 상관없이 모든 엔티티를 그린다. 표시만 바꾸며 게임 상태는 건드리지 않는다.</summary>
+        public bool RevealAll
+        {
+            get => _revealAll;
+            set
+            {
+                _revealAll = value;
+                foreach (var pair in _views)
+                    ApplyVisibility(pair.Key, pair.Value);
+            }
+        }
 
         /// <summary>테스트 · 에디터 Setup용. 씬에서는 인스펙터로 연결한다.</summary>
         public void Configure(Grid grid, EntityVisualCatalog catalog)
@@ -127,7 +140,7 @@ namespace ProjectM.Presentation
         private void ApplyVisibility(EntityId id, SpriteRenderer view)
         {
             if (view == null) return;
-            view.enabled = _visibility == null || !_positions.TryGetValue(id, out var pos) || _visibility.IsVisible(pos);
+            view.enabled = _revealAll || _visibility == null || !_positions.TryGetValue(id, out var pos) || _visibility.IsVisible(pos);
         }
     }
 }

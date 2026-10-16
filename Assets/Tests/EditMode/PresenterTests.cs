@@ -146,5 +146,57 @@ namespace ProjectM.Tests
             _bus.Flush();
             Assert.That(presenter.ViewCount, Is.EqualTo(0));
         }
+
+        // ── 1-7 시야 표시 · 디버그 맵 전체 밝히기 ──
+
+        private static ProjectM.Units.VisibilityChangedEvent Visibility(int w, int h, params GridPos[] visible)
+        {
+            var v = new bool[w * h];
+            foreach (var p in visible) v[p.Y * w + p.X] = true;
+            return new ProjectM.Units.VisibilityChangedEvent(w, h, v, (bool[])v.Clone());
+        }
+
+        [Test]
+        public void Entity_HiddenOutsideVisibility_RevealAllShowsAndRestores()
+        {
+            var presenter = CreateEntityPresenter();
+            var id = new EntityId(3);
+            _bus.Publish(new EntitySpawnedEvent(id, new GridPos(4, 0), "player"));
+            _bus.Publish(Visibility(5, 1, new GridPos(0, 0)));
+            _bus.Flush();
+            presenter.TryGetView(id, out var view);
+            Assert.That(view.enabled, Is.False, "시야 밖이면 숨김");
+
+            presenter.RevealAll = true;
+            Assert.That(view.enabled, Is.True, "디버그 밝히기");
+            presenter.RevealAll = false;
+            Assert.That(view.enabled, Is.False, "끄면 시야대로");
+        }
+
+        [Test]
+        public void Fog_PaintsByVisibility_RevealAllHidesFogOnly()
+        {
+            var fogGo = new GameObject("Fog");
+            fogGo.transform.SetParent(_root.transform, false);
+            var fogMap = fogGo.AddComponent<Tilemap>();
+            var fogRenderer = fogGo.AddComponent<TilemapRenderer>();
+            var fog = fogGo.AddComponent<FogPresenter>();
+            fog.Configure(fogMap, _floorTile);
+            fog.Bind(_bus);
+
+            _bus.Publish(new MapLoadedEvent(new GridMap(3, 1)));
+            _bus.Publish(Visibility(3, 1, new GridPos(0, 0)));
+            _bus.Flush();
+            Assert.That(fogMap.GetTile(new Vector3Int(0, 0, 0)), Is.Null, "보이는 칸은 안개 없음");
+            Assert.That(fogMap.GetTile(new Vector3Int(2, 0, 0)), Is.Not.Null, "안 본 칸은 안개");
+
+            fog.RevealAll = true;
+            Assert.That(fogRenderer.enabled, Is.False);
+            _bus.Publish(Visibility(3, 1, new GridPos(2, 0)));
+            _bus.Flush();
+            Assert.That(fogMap.GetTile(new Vector3Int(2, 0, 0)), Is.Null, "밝힌 동안에도 안개는 계속 갱신");
+            fog.RevealAll = false;
+            Assert.That(fogRenderer.enabled, Is.True);
+        }
     }
 }
