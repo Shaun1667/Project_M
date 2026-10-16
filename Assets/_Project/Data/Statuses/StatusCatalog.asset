@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 539670a278fc16d47856e461e1a40367, type: 3}
+  m_Name: StatusCatalog
+  m_EditorClassIdentifier: ProjectM.Runtime::ProjectM.Data.StatusCatalogAsset
+  _statuses:
+  - Type: 1
+    DurationTicks: 3
+    DamagePerTick: 1
+    ExtraActionCostTicks: 0
+    PreventsAction: 0
+  - Type: 2
+    DurationTicks: 3
+    DamagePerTick: 0
+    ExtraActionCostTicks: 1
+    PreventsAction: 0
+  - Type: 3
+    DurationTicks: 5
+    DamagePerTick: 1
+    ExtraActionCostTicks: 0
+    PreventsAction: 0
+  - Type: 4
+    DurationTicks: 2
+    DamagePerTick: 0
+    ExtraActionCostTicks: 0
+    PreventsAction: 1

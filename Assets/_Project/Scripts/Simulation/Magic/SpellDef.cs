@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ProjectM.Status;
 
 namespace ProjectM.Magic
 {
@@ -42,9 +43,18 @@ namespace ProjectM.Magic
         public int ManaCost { get; }
         /// <summary>Burst 반지름. 다른 모양은 0.</summary>
         public int Radius { get; }
+        /// <summary>맞은 유닛에 거는 상태 이상 (2-3). None이면 없음. 규칙은 StatusBook.</summary>
+        public StatusType AppliesStatus { get; }
+        /// <summary>상태가 걸릴 확률 (0~100, 맞은 유닛마다 따로). 100이면 난수를 굴리지 않는다.</summary>
+        public int StatusChancePercent { get; }
 
-        public SpellDef(string id, Element element, SpellShape shape, int range, int damage, int manaCost, int radius = 0)
+        public SpellDef(string id, Element element, SpellShape shape, int range, int damage, int manaCost, int radius = 0,
+            StatusType appliesStatus = StatusType.None, int statusChancePercent = 100)
         {
+            if (statusChancePercent < 0 || statusChancePercent > 100)
+                throw new ArgumentOutOfRangeException(nameof(statusChancePercent), statusChancePercent, "상태 확률은 0 ~ 100.");
+            AppliesStatus = appliesStatus;
+            StatusChancePercent = statusChancePercent;
             if (string.IsNullOrEmpty(id)) throw new ArgumentException("주문 ID가 비어 있다.", nameof(id));
             if (range < 1) throw new ArgumentOutOfRangeException(nameof(range), range, "사거리는 1 이상이어야 한다.");
             if (damage < 0) throw new ArgumentOutOfRangeException(nameof(damage), damage, "피해는 0 이상이어야 한다.");
@@ -62,18 +72,26 @@ namespace ProjectM.Magic
         }
     }
 
-    /// <summary>주문 ID → 데이터. 같은 ID가 두 번 나오면 예외.</summary>
+    /// <summary>
+    /// 주문 ID → 데이터 + 주문이 거는 상태 규칙(StatusBook). 같은 ID가 두 번 나오거나, 거는 상태가 StatusBook에 없으면 예외.
+    /// </summary>
     public sealed class SpellBook
     {
         private readonly Dictionary<string, SpellDef> _spells = new Dictionary<string, SpellDef>();
 
-        public SpellBook(IEnumerable<SpellDef> spells)
+        /// <summary>주문이 거는 상태 이상의 규칙. 상태를 거는 주문이 없으면 비어 있다.</summary>
+        public StatusBook Statuses { get; }
+
+        public SpellBook(IEnumerable<SpellDef> spells, StatusBook statuses = null)
         {
             if (spells == null) throw new ArgumentNullException(nameof(spells));
+            Statuses = statuses ?? new StatusBook(Array.Empty<StatusDef>());
             foreach (var spell in spells)
             {
                 if (spell == null) throw new ArgumentException("null 주문", nameof(spells));
                 if (_spells.ContainsKey(spell.Id)) throw new ArgumentException("같은 주문 ID가 두 번: " + spell.Id, nameof(spells));
+                if (spell.AppliesStatus != StatusType.None && !Statuses.TryGet(spell.AppliesStatus, out _))
+                    throw new ArgumentException($"주문 {spell.Id}의 상태 {spell.AppliesStatus}가 StatusBook에 없다.", nameof(spells));
                 _spells.Add(spell.Id, spell);
             }
         }

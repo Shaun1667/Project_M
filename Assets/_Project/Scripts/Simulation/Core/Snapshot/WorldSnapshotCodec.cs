@@ -74,6 +74,12 @@ namespace ProjectM.Core
                         w.Write(slot ?? string.Empty); // 빈 칸 = 빈 문자열
                     WriteOptionalPos(w, u.PreviousPos);
                     WriteOptionalPos(w, u.WanderTarget);
+                    w.Write(u.Statuses.Length);
+                    foreach (var st in u.Statuses)
+                    {
+                        w.Write((int)st.Type);
+                        w.Write(st.Remaining);
+                    }
                 }
 
                 w.Flush();
@@ -156,8 +162,14 @@ namespace ProjectM.Core
                     }
                     var previousPos = ReadOptionalPos(r);
                     var wanderTarget = ReadOptionalPos(r);
+                    var statuses = new UnitStatusState[ReadCount(r)];
+                    for (int k = 0; k < statuses.Length; k++)
+                    {
+                        var type = (ProjectM.Status.StatusType)r.ReadInt32();
+                        statuses[k] = new UnitStatusState(type, r.ReadInt32());
+                    }
                     s.Units[i] = new UnitState(id, faction, visualId, maxHp, attackDamage, sightRange, x, y, hp, hasLastSeen, lastSeenX, lastSeenY,
-                        maxMana, mana, slots, previousPos, wanderTarget);
+                        maxMana, mana, slots, previousPos, wanderTarget, statuses);
                 }
 
                 if (stream.Position != stream.Length)

@@ -31,6 +31,20 @@ namespace ProjectM.Core
         private PlayerCommandSource _playerSource;
         private bool _ticking;
 
+        // 행동 규칙 (2-3, 상태 없음 — 복원 후 다시 연결): 행동 가능 여부(마비) · 비용 조정(둔화)
+        private Func<EntityId, bool> _canAct;
+        private Func<EntityId, int, int> _adjustCost;
+
+        /// <summary>
+        /// 행동 규칙을 연결한다. canAct가 false면 차례가 와도 커맨드를 받지 않고 1틱 뒤로 미룬다 (플레이어 입력도 기다리지 않음).
+        /// adjustCost는 커맨드 비용을 고친다 (결과 1 이상). 둘 다 상태를 갖지 않는 규칙이어야 한다.
+        /// </summary>
+        public void SetActionRules(Func<EntityId, bool> canAct, Func<EntityId, int, int> adjustCost)
+        {
+            _canAct = canAct;
+            _adjustCost = adjustCost;
+        }
+
         /// <summary>다음에 처리할 틱 번호.</summary>
         public long CurrentTick { get; private set; }
 
@@ -114,7 +128,8 @@ namespace ProjectM.Core
 
         /// <summary>플레이어가 이번 틱에 행동해야 하는데 입력이 없다 → 턴제에서는 여기서 멈춘다.</summary>
         public bool IsWaitingForPlayer =>
-            _playerId.IsValid && _actors[_playerId].ReadyTick <= CurrentTick && !_playerSource.HasCommand;
+            _playerId.IsValid && _actors[_playerId].ReadyTick <= CurrentTick && !_playerSource.HasCommand
+            && (_canAct == null || _canAct(_playerId));
 
         /// <summary>1틱 진행.</summary>
         public void Tick()
@@ -160,13 +175,22 @@ namespace ProjectM.Core
                 // 앞선 행동으로 빠진(사망한) 행위자는 건너뛴다.
                 if (!_actors.TryGetValue(entry.Id, out var current) || current != entry) continue;
 
+                // 행동 불가(마비): 커맨드를 받지 않고 다음 틱으로 미룬다
+                if (_canAct != null && !_canAct(entry.Id))
+                {
+                    entry.ReadyTick = tick + 1;
+                    continue;
+                }
+
                 var context = new TickContext(tick, entry.Id);
                 var command = entry.Source.NextCommand(context);
                 if (command == null) throw new InvalidOperationException(entry.Id + "의 커맨드가 null이다.");
                 if (command.CostTicks < 1) throw new InvalidOperationException(entry.Id + "의 행동 비용이 1틱 미만이다: " + command.CostTicks);
 
                 command.Execute(context);
-                entry.ReadyTick = tick + command.CostTicks;
+                int cost = _adjustCost != null ? _adjustCost(entry.Id, command.CostTicks) : command.CostTicks;
+                if (cost < 1) throw new InvalidOperationException(entry.Id + "의 조정된 행동 비용이 1틱 미만이다: " + cost);
+                entry.ReadyTick = tick + cost;
             }
         }
 

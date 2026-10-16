@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using ProjectM.Core;
+using ProjectM.Status;
 
 namespace ProjectM.Units
 {
@@ -34,6 +36,11 @@ namespace ProjectM.Units
 
         /// <summary>AI 배회 목적지 (2026-10-16). 플레이어를 못 봤고 기억도 없을 때 가는 칸. 없으면 null.</summary>
         public GridPos? WanderTarget { get; set; }
+
+        /// <summary>걸려 있는 상태 이상 (2-3). 종류 순으로 정렬, 종류마다 하나. StatusEffects로만 바꾼다.</summary>
+        public List<StatusInstance> Statuses { get; } = new List<StatusInstance>();
+
+        public bool HasStatus(StatusType type) => Statuses.Exists(s => s.Type == type);
 
         /// <summary>체력이 남아 있는지. 0이 된 유닛은 ⑥ 사망 판정 단계에서 빠질 때까지 행동 · 공격 대상이 되지 않는다.</summary>
         public bool IsAlive => Hp > 0;

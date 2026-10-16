@@ -2,6 +2,7 @@ using ProjectM.Core;
 using ProjectM.Data;
 using ProjectM.Input;
 using ProjectM.Magic;
+using ProjectM.Status;
 using ProjectM.Presentation;
 using ProjectM.UI;
 using TMPro;
@@ -30,6 +31,7 @@ namespace ProjectM.Editor
         private const string SpawnConfigPath = "Assets/_Project/Data/Units/SpawnConfig.asset";
         private const string MagicConfigPath = "Assets/_Project/Data/Magic/MagicConfig.asset";
         private const string SpellCatalogPath = "Assets/_Project/Data/Spells/SpellCatalog.asset";
+        private const string StatusCatalogPath = "Assets/_Project/Data/Statuses/StatusCatalog.asset";
 
         /// <summary>플레이어 시작 주문 (BALANCE 4번). 주문 내용은 2-2 주문 데이터에서 같은 ID로 정의한다.</summary>
         private static readonly string[] PlayerStartingSpells = { "fire_basic", "ice_basic", "lightning_basic", "poison_basic" };
@@ -80,6 +82,7 @@ namespace ProjectM.Editor
             var magicConfig = EnsureAsset<MagicConfigAsset>(MagicConfigPath,
                 ("_manaRegenIntervalTicks", 3), ("_manaRegenAmount", 1), ("_spellSlotCount", 4));
             var spellCatalog = EnsureSpellCatalog();
+            var statusCatalog = EnsureStatusCatalog();
 
             var gridGo = FindOrCreate("Grid", null);
             var grid = GetOrAdd<Grid>(gridGo);
@@ -129,6 +132,7 @@ namespace ProjectM.Editor
                 ("_spawnConfig", spawnConfig),
                 ("_magicConfig", magicConfig),
                 ("_spellCatalog", spellCatalog),
+                ("_statusCatalog", statusCatalog),
                 ("_tilemapPresenter", tilemapPresenter),
                 ("_entityPresenter", entityPresenter),
                 ("_fogPresenter", fogPresenter),
@@ -162,8 +166,10 @@ namespace ProjectM.Editor
             return catalog;
         }
 
-        /// <summary>안개 타일: 흰 사각형, 칸별 색을 쓸 수 있게 TileFlags.None.</summary>
-        /// <summary>주문 데이터: 없는 ID만 BALANCE 5번 값으로 추가한다 (있는 항목은 사용자가 고친 값을 건드리지 않음).</summary>
+        /// <summary>
+        /// 주문 데이터: 없는 ID만 BALANCE 5번 값으로 추가한다 (있는 항목은 사용자가 고친 값을 건드리지 않음).
+        /// 2-3 상태 이상은 상태가 아직 없는 항목에만 채운다.
+        /// </summary>
         private static SpellCatalogAsset EnsureSpellCatalog()
         {
             var catalog = LoadOrCreate<SpellCatalogAsset>(SpellCatalogPath);
@@ -176,10 +182,29 @@ namespace ProjectM.Editor
                 { Id = "lightning_basic", Element = Element.Lightning, Shape = SpellShape.Beam, Range = 5, Damage = 3, ManaCost = 4 });
             changed |= catalog.AddIfMissing(new SpellCatalogAsset.Entry
                 { Id = "poison_basic", Element = Element.Poison, Shape = SpellShape.Burst, Range = 5, Damage = 2, ManaCost = 3, Radius = 1 });
+            // BALANCE 6번: 주문 → 상태 이상 · 확률
+            changed |= catalog.SetStatusIfNone("fire_basic", StatusType.Burn, 100);
+            changed |= catalog.SetStatusIfNone("ice_basic", StatusType.Slow, 100);
+            changed |= catalog.SetStatusIfNone("lightning_basic", StatusType.Paralyze, 30);
+            changed |= catalog.SetStatusIfNone("poison_basic", StatusType.Poison, 100);
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }
 
+        /// <summary>상태 이상 규칙: 없는 종류만 BALANCE 6번 값으로 추가한다.</summary>
+        private static StatusCatalogAsset EnsureStatusCatalog()
+        {
+            var catalog = LoadOrCreate<StatusCatalogAsset>(StatusCatalogPath);
+            bool changed = false;
+            changed |= catalog.AddIfMissing(new StatusCatalogAsset.Entry { Type = StatusType.Burn, DurationTicks = 3, DamagePerTick = 1 });
+            changed |= catalog.AddIfMissing(new StatusCatalogAsset.Entry { Type = StatusType.Slow, DurationTicks = 3, ExtraActionCostTicks = 1 });
+            changed |= catalog.AddIfMissing(new StatusCatalogAsset.Entry { Type = StatusType.Poison, DurationTicks = 5, DamagePerTick = 1 });
+            changed |= catalog.AddIfMissing(new StatusCatalogAsset.Entry { Type = StatusType.Paralyze, DurationTicks = 2, PreventsAction = true });
+            if (changed) EditorUtility.SetDirty(catalog);
+            return catalog;
+        }
+
+        /// <summary>안개 타일: 흰 사각형, 칸별 색을 쓸 수 있게 TileFlags.None.</summary>
         private static Tile EnsureFogTile()
         {
             var tile = LoadOrCreate<Tile>(FogTilePath);

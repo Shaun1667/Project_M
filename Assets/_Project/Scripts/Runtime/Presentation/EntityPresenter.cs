@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ProjectM.Core;
+using ProjectM.Status;
 using ProjectM.Units;
 using UnityEngine;
 using EntityId = ProjectM.Core.EntityId; // Unity 6의 UnityEngine.EntityId와 구분
@@ -21,6 +22,8 @@ namespace ProjectM.Presentation
         private VisibilityChangedEvent _visibility;
         private SimEventBus _bus;
         private bool _revealAll;
+        private readonly Dictionary<EntityId, Color> _baseTints = new Dictionary<EntityId, Color>();
+        private readonly Dictionary<EntityId, List<StatusType>> _statuses = new Dictionary<EntityId, List<StatusType>>();
 
         public int ViewCount => _views.Count;
 
@@ -56,6 +59,7 @@ namespace ProjectM.Presentation
             _bus.Subscribe<EntityMovedEvent>(OnMoved);
             _bus.Subscribe<EntityRemovedEvent>(OnRemoved);
             _bus.Subscribe<VisibilityChangedEvent>(OnVisibilityChanged);
+            _bus.Subscribe<StatusChangedEvent>(OnStatusChanged);
         }
 
         public void Unbind()
@@ -65,6 +69,7 @@ namespace ProjectM.Presentation
             _bus.Unsubscribe<EntityMovedEvent>(OnMoved);
             _bus.Unsubscribe<EntityRemovedEvent>(OnRemoved);
             _bus.Unsubscribe<VisibilityChangedEvent>(OnVisibilityChanged);
+            _bus.Unsubscribe<StatusChangedEvent>(OnStatusChanged);
             _bus = null;
         }
 
@@ -81,6 +86,8 @@ namespace ProjectM.Presentation
             }
             _views.Clear();
             _positions.Clear();
+            _baseTints.Clear();
+            _statuses.Clear();
             _visibility = null;
         }
 
@@ -101,6 +108,7 @@ namespace ProjectM.Presentation
             {
                 renderer.sprite = visual.Sprite;
                 renderer.color = visual.Tint;
+                _baseTints[e.Id] = visual.Tint;
             }
             else
             {
@@ -126,6 +134,8 @@ namespace ProjectM.Presentation
             if (!_views.TryGetValue(e.Id, out var view)) return;
             _views.Remove(e.Id);
             _positions.Remove(e.Id);
+            _baseTints.Remove(e.Id);
+            _statuses.Remove(e.Id);
             if (Application.isPlaying) Destroy(view.gameObject);
             else DestroyImmediate(view.gameObject);
         }
@@ -141,6 +151,52 @@ namespace ProjectM.Presentation
         {
             if (view == null) return;
             view.enabled = _revealAll || _visibility == null || !_positions.TryGetValue(id, out var pos) || _visibility.IsVisible(pos);
+        }
+
+        // ── 상태 이상 틴트 (2-3, 그레이박스 표시 — 아이콘은 2-5) ──
+
+        /// <summary>틴트 우선순위: 마비 > 화상 > 중독 > 둔화. 여러 개면 앞의 것 하나만.</summary>
+        private static readonly (StatusType type, Color color)[] StatusTints =
+        {
+            (StatusType.Paralyze, new Color(1f, 0.95f, 0.25f)),
+            (StatusType.Burn, new Color(1f, 0.5f, 0.1f)),
+            (StatusType.Poison, new Color(0.7f, 0.3f, 1f)),
+            (StatusType.Slow, new Color(0.35f, 0.85f, 1f)),
+        };
+
+        private const float StatusTintStrength = 0.65f;
+
+        public static Color StatusTint(StatusType type)
+        {
+            foreach (var (t, c) in StatusTints)
+                if (t == type) return c;
+            return Color.white;
+        }
+
+        private void OnStatusChanged(StatusChangedEvent e)
+        {
+            if (!_statuses.TryGetValue(e.Id, out var list))
+            {
+                list = new List<StatusType>();
+                _statuses[e.Id] = list;
+            }
+            if (e.Remaining > 0) { if (!list.Contains(e.Type)) list.Add(e.Type); }
+            else list.Remove(e.Type);
+
+            if (_views.TryGetValue(e.Id, out var view)) ApplyTint(e.Id, view);
+        }
+
+        private void ApplyTint(EntityId id, SpriteRenderer view)
+        {
+            var baseTint = _baseTints.TryGetValue(id, out var b) ? b : Color.white;
+            view.color = baseTint;
+            if (!_statuses.TryGetValue(id, out var list)) return;
+            foreach (var (type, color) in StatusTints)
+            {
+                if (!list.Contains(type)) continue;
+                view.color = Color.Lerp(baseTint, color, StatusTintStrength);
+                return;
+            }
         }
     }
 }

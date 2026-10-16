@@ -40,7 +40,7 @@ namespace ProjectM.Tests
         private static Session Start(params GridPos[] enemies)
         {
             var world = new World(Room(), 5UL);
-            world.InstallCoreSystems(new ShadowcastSightRule(), Magic);
+            world.InstallCoreSystems(new ShadowcastSightRule(), Magic, new ProjectM.Status.StatusBook(new ProjectM.Status.StatusDef[0]));
             var s = new Session { World = world, Clock = new TurnClock(world.Scheduler, world.PlayerInput) };
             world.Events.Subscribe<ManaChangedEvent>(s.ManaEvents.Add);
             s.Player = UnitSpawner.SpawnPlayer(world, PlayerDef, new GridPos(1, 1), Magic.SpellSlotCount);

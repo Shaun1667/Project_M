@@ -4,6 +4,7 @@ using ProjectM.Dungeon;
 using ProjectM.Input;
 using ProjectM.Magic;
 using ProjectM.Presentation;
+using ProjectM.Status;
 using ProjectM.UI;
 using ProjectM.Units;
 using UnityEngine;
@@ -24,6 +25,7 @@ namespace ProjectM
         [SerializeField] private SpawnConfigAsset _spawnConfig;
         [SerializeField] private MagicConfigAsset _magicConfig;
         [SerializeField] private SpellCatalogAsset _spellCatalog;
+        [SerializeField] private StatusCatalogAsset _statusCatalog;
         [SerializeField] private TilemapPresenter _tilemapPresenter;
         [SerializeField] private EntityPresenter _entityPresenter;
         [Tooltip("시야 안개. 비우면 안개 없이 전부 보인다")]
@@ -38,6 +40,7 @@ namespace ProjectM
         public GameConfig Config { get; private set; }
         public MagicConfig Magic { get; private set; }
         public SpellBook Spells { get; private set; }
+        public StatusBook Statuses { get; private set; }
         public World World { get; private set; }
         public DungeonFloor Floor { get; private set; }
         /// <summary>이번 판의 시드 (디버그 창 · 콘솔 표시용).</summary>
@@ -65,7 +68,7 @@ namespace ProjectM
         private void Awake()
         {
             if (_config == null || _dungeonConfig == null || _playerDef == null || _enemyDef == null || _spawnConfig == null || _magicConfig == null
-                || _spellCatalog == null || _tilemapPresenter == null || _entityPresenter == null || _input == null || _hud == null)
+                || _spellCatalog == null || _statusCatalog == null || _tilemapPresenter == null || _entityPresenter == null || _input == null || _hud == null)
             {
                 Debug.LogError("[GameRoot] 참조가 비어 있다. 메뉴 ProjectM/Setup/Main Scene을 실행한다.", this);
                 enabled = false;
@@ -74,7 +77,8 @@ namespace ProjectM
 
             Config = _config.ToConfig();
             Magic = _magicConfig.ToConfig();
-            Spells = _spellCatalog.ToBook();
+            Statuses = _statusCatalog.ToBook();
+            Spells = _spellCatalog.ToBook(Statuses);
             foreach (var id in _playerDef.ToDef().StartingSpells)
             {
                 if (!Spells.TryGet(id, out _))
@@ -123,7 +127,7 @@ namespace ProjectM
             });
             Floor = floor;
             var sight = new ShadowcastSightRule();
-            var vision = World.InstallCoreSystems(sight, Magic);
+            var vision = World.InstallCoreSystems(sight, Magic, Statuses);
 
             _tilemapPresenter.Bind(World.Events);
             _entityPresenter.Bind(World.Events);

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Text;
 using ProjectM.Core;
 using ProjectM.Magic;
+using ProjectM.Status;
 using ProjectM.Units;
 using TMPro;
 using UnityEngine;
@@ -30,6 +31,7 @@ namespace ProjectM.UI
         private bool _dead;
         private SpellBook _spellBook;
         private string _hint = string.Empty;
+        private readonly SortedDictionary<StatusType, int> _playerStatuses = new SortedDictionary<StatusType, int>();
 
         public string StatusText => _statusText != null ? _statusText.text : null;
         public string LogText => _logText != null ? _logText.text : null;
@@ -55,10 +57,13 @@ namespace ProjectM.UI
             _hint = string.Empty;
             _dead = false;
             _log.Clear();
+            _playerStatuses.Clear();
+            foreach (var s in player.Statuses) _playerStatuses[s.Type] = s.Remaining;
             _bus.Subscribe<UnitDamagedEvent>(OnDamaged);
             _bus.Subscribe<UnitDiedEvent>(OnDied);
             _bus.Subscribe<ManaChangedEvent>(OnManaChanged);
             _bus.Subscribe<SpellCastEvent>(OnSpellCast);
+            _bus.Subscribe<StatusChangedEvent>(OnStatusChanged);
             Redraw();
         }
 
@@ -69,6 +74,7 @@ namespace ProjectM.UI
             _bus.Unsubscribe<UnitDiedEvent>(OnDied);
             _bus.Unsubscribe<ManaChangedEvent>(OnManaChanged);
             _bus.Unsubscribe<SpellCastEvent>(OnSpellCast);
+            _bus.Unsubscribe<StatusChangedEvent>(OnStatusChanged);
             _bus = null;
         }
 
@@ -76,15 +82,35 @@ namespace ProjectM.UI
 
         private void OnDamaged(UnitDamagedEvent e)
         {
+            bool fromStatus = !e.Attacker.IsValid; // 상태 이상(화상 · 중독) 피해
             if (e.Target == _playerId)
             {
                 _hp = e.Hp;
-                AddLog($"Enemy {e.Attacker} hits you for {e.Amount}.");
+                AddLog(fromStatus ? $"You take {e.Amount} damage." : $"Enemy {e.Attacker} hits you for {e.Amount}.");
             }
             else if (e.Attacker == _playerId)
             {
                 AddLog($"You hit enemy {e.Target} for {e.Amount} ({e.Hp}/{e.MaxHp}).");
             }
+            else if (fromStatus)
+            {
+                AddLog($"Enemy {e.Target} takes {e.Amount} ({e.Hp}/{e.MaxHp}).");
+            }
+            Redraw();
+        }
+
+        private void OnStatusChanged(StatusChangedEvent e)
+        {
+            bool isPlayer = e.Id == _playerId;
+            if (isPlayer)
+            {
+                if (e.Remaining > 0) _playerStatuses[e.Type] = e.Remaining;
+                else _playerStatuses.Remove(e.Type);
+            }
+
+            string who = isPlayer ? "You" : $"Enemy {e.Id}";
+            if (e.Applied) AddLog($"{who}: {e.Type} ({e.Remaining}).");
+            else if (e.Remaining <= 0) AddLog($"{who}: {e.Type} wears off.");
             Redraw();
         }
 
@@ -137,6 +163,7 @@ namespace ProjectM.UI
                 var sb = new StringBuilder();
                 sb.Append(_dead ? $"HP 0/{_maxHp}" : $"HP {_hp}/{_maxHp}");
                 if (_maxMana > 0) sb.Append($"   MP {_mana}/{_maxMana}");
+                foreach (var pair in _playerStatuses) sb.Append($"   {pair.Key} {pair.Value}");
                 if (_dead) sb.Append("   DEAD - press R to restart");
                 if (_spellSlots.Length > 0)
                 {

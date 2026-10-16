@@ -720,6 +720,7 @@ MonoBehaviour:
   _spawnConfig: {fileID: 11400000, guid: 97324289cd98993439d34909471507ab, type: 2}
   _magicConfig: {fileID: 11400000, guid: db61fbf46bbfbc441aa4a98582c8dd36, type: 2}
   _spellCatalog: {fileID: 11400000, guid: 956c31c6ca499d041b06f330e39782d3, type: 2}
+  _statusCatalog: {fileID: 11400000, guid: 1660968089b43ea4d962a855c6b94250, type: 2}
   _tilemapPresenter: {fileID: 2048705274}
   _entityPresenter: {fileID: 2108178770}
   _fogPresenter: {fileID: 2006350448}

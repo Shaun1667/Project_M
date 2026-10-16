@@ -58,7 +58,8 @@ namespace ProjectM.Editor.Debugging
                 EditorGUILayout.SelectableLabel($"시드 {(long)root.Seed}", GUILayout.Height(EditorGUIUtility.singleLineHeight));
                 EditorGUILayout.LabelField("틱", root.World.Scheduler.CurrentTick.ToString());
                 if (root.World.Units.TryGet(root.PlayerId, out var player))
-                    EditorGUILayout.LabelField("플레이어", $"{player.Pos}  HP {player.Hp}/{player.MaxHp}  MP {player.Mana}/{player.MaxMana}");
+                    EditorGUILayout.LabelField("플레이어", $"{player.Pos}  HP {player.Hp}/{player.MaxHp}  MP {player.Mana}/{player.MaxMana}"
+                        + string.Concat(player.Statuses.ConvertAll(s => $"  {s.Type} {s.Remaining}")));
                 else
                     EditorGUILayout.LabelField("플레이어", root.PlayerDead ? "사망 (R로 새 판)" : "없음");
 

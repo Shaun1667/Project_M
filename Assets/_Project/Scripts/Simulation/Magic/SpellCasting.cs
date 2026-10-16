@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using ProjectM.Core;
+using ProjectM.Status;
 using ProjectM.Units;
 
 namespace ProjectM.Magic
@@ -162,8 +163,14 @@ namespace ProjectM.Magic
             {
                 if (_world.Units.TryGetAt(cell, out var unit) && unit.IsAlive) victims.Add(unit);
             }
+            // 피해 → (살아 있으면) 상태 이상. 확률은 맞은 유닛마다 전투 난수로 따로 (같은 시드 = 같은 결과)
+            _book.Statuses.TryGet(spell.AppliesStatus, out var status);
             foreach (var victim in victims)
+            {
                 Combat.ApplyDamage(_world, caster.Id, victim, spell.Damage);
+                if (status != null && victim.IsAlive)
+                    StatusEffects.TryApply(_world, victim, status, spell.StatusChancePercent);
+            }
         }
     }
 

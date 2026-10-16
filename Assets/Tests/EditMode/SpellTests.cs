@@ -11,7 +11,7 @@ namespace ProjectM.Tests
 {
     public class SpellTests
     {
-        // BALANCE.md 5번과 같은 값
+        // BALANCE.md 5번과 같은 값. 주문 모양 · 피해만 보는 테스트는 상태 이상 없이 (상태는 StatusTests)
         private static SpellBook BalanceBook() => new SpellBook(new[]
         {
             new SpellDef("fire_basic", Element.Fire, SpellShape.Bolt, 6, 5, 3),
@@ -19,6 +19,23 @@ namespace ProjectM.Tests
             new SpellDef("lightning_basic", Element.Lightning, SpellShape.Beam, 5, 3, 4),
             new SpellDef("poison_basic", Element.Poison, SpellShape.Burst, 5, 2, 3, 1),
         });
+
+        // BALANCE.md 5번 · 6번 전체 (상태 이상 포함) — 에셋 검산용
+        internal static ProjectM.Status.StatusBook BalanceStatuses() => new ProjectM.Status.StatusBook(new[]
+        {
+            new ProjectM.Status.StatusDef(ProjectM.Status.StatusType.Burn, 3, damagePerTick: 1),
+            new ProjectM.Status.StatusDef(ProjectM.Status.StatusType.Slow, 3, extraActionCostTicks: 1),
+            new ProjectM.Status.StatusDef(ProjectM.Status.StatusType.Poison, 5, damagePerTick: 1),
+            new ProjectM.Status.StatusDef(ProjectM.Status.StatusType.Paralyze, 2, preventsAction: true),
+        });
+
+        internal static SpellBook BalanceBookWithStatuses() => new SpellBook(new[]
+        {
+            new SpellDef("fire_basic", Element.Fire, SpellShape.Bolt, 6, 5, 3, 0, ProjectM.Status.StatusType.Burn, 100),
+            new SpellDef("ice_basic", Element.Ice, SpellShape.Bolt, 6, 3, 2, 0, ProjectM.Status.StatusType.Slow, 100),
+            new SpellDef("lightning_basic", Element.Lightning, SpellShape.Beam, 5, 3, 4, 0, ProjectM.Status.StatusType.Paralyze, 30),
+            new SpellDef("poison_basic", Element.Poison, SpellShape.Burst, 5, 2, 3, 1, ProjectM.Status.StatusType.Poison, 100),
+        }, BalanceStatuses());
 
         private const int Fire = 0, Ice = 1, Lightning = 2, Poison = 3;
 
@@ -64,8 +81,8 @@ namespace ProjectM.Tests
         private static Session Start(GridPos player, params GridPos[] enemies)
         {
             var world = new World(Room(), 9UL);
-            world.InstallCoreSystems(Sight, Magic);
             var s = new Session { World = world, Book = BalanceBook(), Clock = new TurnClock(world.Scheduler, world.PlayerInput) };
+            world.InstallCoreSystems(Sight, Magic, s.Book.Statuses);
             world.Events.Subscribe<SpellCastEvent>(s.Casts.Add);
             s.Player = UnitSpawner.SpawnPlayer(world, PlayerDef, player, Magic.SpellSlotCount);
             foreach (var p in enemies) s.Enemies.Add(UnitSpawner.SpawnEnemy(world, EnemyDef, p, new IdleAi()));
@@ -172,16 +189,18 @@ namespace ProjectM.Tests
         public void ProjectAsset_MatchesBalanceTable()
         {
             var asset = AssetDatabase.LoadAssetAtPath<SpellCatalogAsset>("Assets/_Project/Data/Spells/SpellCatalog.asset");
+            var statusAsset = AssetDatabase.LoadAssetAtPath<StatusCatalogAsset>("Assets/_Project/Data/Statuses/StatusCatalog.asset");
             Assert.That(asset, Is.Not.Null, "SpellCatalog.asset 없음 — 메뉴 ProjectM/Setup/Main Scene 실행");
-            var book = asset.ToBook();
-            var expected = BalanceBook();
+            Assert.That(statusAsset, Is.Not.Null, "StatusCatalog.asset 없음 — 메뉴 ProjectM/Setup/Main Scene 실행");
+            var book = asset.ToBook(statusAsset.ToBook());
+            var expected = BalanceBookWithStatuses();
             Assert.That(book.Count, Is.EqualTo(expected.Count));
             foreach (var id in new[] { "fire_basic", "ice_basic", "lightning_basic", "poison_basic" })
             {
                 Assert.That(book.TryGet(id, out var a), Is.True, id);
                 expected.TryGet(id, out var e);
-                Assert.That((a.Element, a.Shape, a.Range, a.Damage, a.ManaCost, a.Radius),
-                    Is.EqualTo((e.Element, e.Shape, e.Range, e.Damage, e.ManaCost, e.Radius)), id);
+                Assert.That((a.Element, a.Shape, a.Range, a.Damage, a.ManaCost, a.Radius, a.AppliesStatus, a.StatusChancePercent),
+                    Is.EqualTo((e.Element, e.Shape, e.Range, e.Damage, e.ManaCost, e.Radius, e.AppliesStatus, e.StatusChancePercent)), id);
             }
         }
     }

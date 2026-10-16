@@ -1,8 +1,23 @@
 using System;
+using ProjectM.Status;
 using ProjectM.Units;
 
 namespace ProjectM.Core
 {
+    /// <summary>유닛에 걸린 상태 이상 하나의 저장 상태.</summary>
+    [Serializable]
+    public readonly struct UnitStatusState
+    {
+        public readonly StatusType Type;
+        public readonly int Remaining;
+
+        public UnitStatusState(StatusType type, int remaining)
+        {
+            Type = type;
+            Remaining = remaining;
+        }
+    }
+
     /// <summary>
     /// World 전체의 저장 가능한 상태 (CLAUDE.md 핵심 설계 규칙 6). 참조 없는 값과 배열만 담는다.
     /// 시간 마법(되감기 · 기록) · 세이브 · 회귀 테스트가 같은 스냅샷을 쓴다.
@@ -11,8 +26,8 @@ namespace ProjectM.Core
     [Serializable]
     public sealed class WorldSnapshot
     {
-        /// <summary>1: 1-4 최초. 2: 유닛(Units) 추가 (1-6). 3: 탐험 기록(Explored) · 유닛 기억(LastSeen) 추가 (1-7). 4: 유닛 마나 · 주문 장착 칸 (2-1). 5: 유닛 발자국(PreviousPos) · 배회 목적지(WanderTarget).</summary>
-        public const int CurrentFormatVersion = 5;
+        /// <summary>1: 1-4 최초. 2: 유닛(Units) 추가 (1-6). 3: 탐험 기록(Explored) · 유닛 기억(LastSeen) 추가 (1-7). 4: 유닛 마나 · 주문 장착 칸 (2-1). 5: 유닛 발자국(PreviousPos) · 배회 목적지(WanderTarget). 6: 유닛 상태 이상 (2-3).</summary>
+        public const int CurrentFormatVersion = 6;
 
         public int FormatVersion = CurrentFormatVersion;
 
@@ -60,12 +75,15 @@ namespace ProjectM.Core
         public readonly string[] SpellSlots;
         public readonly GridPos? PreviousPos;
         public readonly GridPos? WanderTarget;
+        /// <summary>걸린 상태 이상, 종류 순.</summary>
+        public readonly UnitStatusState[] Statuses;
 
         public UnitState(EntityId id, Faction faction, string visualId, int maxHp, int attackDamage, int sightRange, int x, int y, int hp,
             bool hasLastSeen, int lastSeenX, int lastSeenY, int maxMana, int mana, string[] spellSlots,
-            GridPos? previousPos, GridPos? wanderTarget)
+            GridPos? previousPos, GridPos? wanderTarget, UnitStatusState[] statuses)
         {
             PreviousPos = previousPos;
+            Statuses = statuses ?? Array.Empty<UnitStatusState>();
             WanderTarget = wanderTarget;
             MaxMana = maxMana;
             Mana = mana;

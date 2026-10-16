@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using ProjectM.Magic;
+using ProjectM.Status;
 using ProjectM.Units;
 
 namespace ProjectM.Core
@@ -55,12 +56,17 @@ namespace ProjectM.Core
         }
 
         /// <summary>
-        /// 기본 단계 시스템을 등록한다: ⑤ 마나 회복 → ⑥ 사망 판정 → ⑥ 끝 플레이어 시야 갱신 → ⑦ 이벤트 발행.
+        /// 기본 단계 시스템을 등록한다: ④ 상태 처리 → ⑤ 마나 회복 → ⑥ 사망 판정 → ⑥ 끝 플레이어 시야 갱신 → ⑦ 이벤트 발행.
+        /// 행동 규칙(마비 = 행동 불가, 둔화 = 비용 추가)도 스케줄러에 연결한다.
         /// 새 World · 복원한 World 모두 한 번 부른다. 돌려준 시야 시스템의 Refresh()로 층 시작 · 불러오기 직후 시야를 한 번 계산한다.
         /// </summary>
-        public PlayerVisionSystem InstallCoreSystems(ISightRule sight, MagicConfig magic)
+        public PlayerVisionSystem InstallCoreSystems(ISightRule sight, MagicConfig magic, StatusBook statuses)
         {
+            if (statuses == null) throw new ArgumentNullException(nameof(statuses));
             var vision = new PlayerVisionSystem(this, sight);
+            Scheduler.SetActionRules(id => StatusEffects.CanAct(this, statuses, id),
+                (id, cost) => StatusEffects.AdjustCost(this, statuses, id, cost));
+            Scheduler.AddSystem(TickPhase.Status, new StatusSystem(this, statuses));
             Scheduler.AddSystem(TickPhase.ManaRegen, new ManaRegenSystem(this, magic));
             Scheduler.AddSystem(TickPhase.DeathCheck, new DeathCheckSystem(this));
             Scheduler.AddSystem(TickPhase.DeathCheck, vision);
@@ -106,7 +112,7 @@ namespace ProjectM.Core
                 var seen = u.LastSeenTargetPos;
                 states[i] = new UnitState(u.Id, u.Faction, u.VisualId, u.MaxHp, u.AttackDamage, u.SightRange, u.Pos.X, u.Pos.Y, u.Hp,
                     seen.HasValue, seen?.X ?? 0, seen?.Y ?? 0, u.MaxMana, u.Mana, (string[])u.SpellSlots.Clone(),
-                    u.PreviousPos, u.WanderTarget);
+                    u.PreviousPos, u.WanderTarget, u.Statuses.ConvertAll(s => new UnitStatusState(s.Type, s.Remaining)).ToArray());
             }
             return states;
         }
@@ -140,8 +146,11 @@ namespace ProjectM.Core
             foreach (var u in snapshot.Units)
             {
                 GridPos? seen = u.HasLastSeen ? new GridPos(u.LastSeenX, u.LastSeenY) : (GridPos?)null;
-                world.Units.Add(new Unit(u.Id, u.Faction, u.VisualId, u.MaxHp, u.AttackDamage, u.SightRange, new GridPos(u.X, u.Y), u.Hp, seen,
-                    u.MaxMana, u.Mana, (string[])u.SpellSlots.Clone(), u.PreviousPos, u.WanderTarget));
+                var unit = new Unit(u.Id, u.Faction, u.VisualId, u.MaxHp, u.AttackDamage, u.SightRange, new GridPos(u.X, u.Y), u.Hp, seen,
+                    u.MaxMana, u.Mana, (string[])u.SpellSlots.Clone(), u.PreviousPos, u.WanderTarget);
+                foreach (var st in u.Statuses)
+                    unit.Statuses.Add(new StatusInstance(st.Type, st.Remaining));
+                world.Units.Add(unit);
             }
 
             foreach (var actor in snapshot.Actors)
