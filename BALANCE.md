@@ -54,10 +54,12 @@
 | 벽 덩어리 최소 크기 | `_wallBlockMinSize` | **3** | (3~5가 2배) | |
 | 벽 뚫기 비용 배수 | `_wallTunnelCostMultiplier` | **5** | — | 1-5 신규. 복도가 벽 1칸 뚫기 = 바닥 5칸 돌아가기 |
 | 배치 재시도 상한 | `_placementAttemptLimit` | **1000** | — | 1-5 신규 안전장치 (이전 코드는 무한 반복 가능) |
+| 막다른 길 잇기 최소 걸음 | `_deadEndLoopMinWalkDistance` | **10** | — | 2026-10-16 신규. 막다른 칸에서 벽을 뚫어 이을 상대는 걸어서 10걸음 이상 떨어진 칸 (자기 길 옆에 붙이지 않고 순환로를 만듦) |
 
 검산 (`DungeonGeneratorTests.ProjectAsset_MatchesBalanceTable`): 에셋 값이 위 표와 같다.
 분포 (`DungeonGeneratorTests.RollSize_KeepsIntendedDistribution`): 7~13 칸당 빈도 / 14~19 칸당 빈도 = 1.8~2.2.
-결과 (시드 20261016 예): 바닥 991 · 벽 1508 · 계단 1.
+결과 (시드 20261016 예): 바닥 991 · 벽 1508 · 계단 1. → 막다른 길 잇기 후 (2026-10-16) 바닥 993 · 벽 1506 · 계단 1.
+막다른 길 (`DungeonGeneratorTests.ManySeeds_NoDeadEnds`): 시드 200개 모두 막다른 칸 0.
 
 ---
 

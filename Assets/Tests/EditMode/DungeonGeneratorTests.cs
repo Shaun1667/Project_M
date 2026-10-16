@@ -17,7 +17,8 @@ namespace ProjectM.Tests
             width: 50, height: 50,
             roomCount: 10, roomSizeRoll: 20, roomMinSize: 7,
             wallBlockCount: 20, wallBlockSizeRoll: 10, wallBlockMinSize: 3,
-            wallTunnelCostMultiplier: 5, placementAttemptLimit: 1000);
+            wallTunnelCostMultiplier: 5, placementAttemptLimit: 1000,
+            deadEndLoopMinWalkDistance: 10);
 
         private static DungeonFloor Generate(ulong seed) =>
             new DungeonGenerator(BalanceConfig()).Generate(new RngSet(seed).Get(RngStream.MapGen));
@@ -57,6 +58,40 @@ namespace ProjectM.Tests
                     }
                 }
             }
+        }
+
+        // 2026-10-16: 막다른 길이 없다 — 모든 칸이 한 걸음에 갈 수 있는 이웃을 2개 이상 가진다
+        [Test]
+        public void ManySeeds_NoDeadEnds()
+        {
+            for (ulong seed = 1; seed <= 200; seed++)
+            {
+                var map = Generate(seed).Map;
+                for (int y = 0; y < map.Height; y++)
+                {
+                    for (int x = 0; x < map.Width; x++)
+                    {
+                        if (DungeonGenerator.IsDeadEnd(map, new GridPos(x, y)))
+                            Assert.Fail($"시드 {seed}: ({x}, {y})가 막다른 길이다");
+                    }
+                }
+            }
+        }
+
+        [Test]
+        public void IsDeadEnd_CorridorTipOnly()
+        {
+            var map = GridMovementTests.Parse(
+                "#######",
+                "#.....#",
+                "#.....#",
+                "###.###",
+                "###.###",
+                "#######");
+            Assert.That(DungeonGenerator.IsDeadEnd(map, new GridPos(3, 1)), Is.True, "복도 끝");
+            Assert.That(DungeonGenerator.IsDeadEnd(map, new GridPos(3, 2)), Is.False, "복도 중간");
+            Assert.That(DungeonGenerator.IsDeadEnd(map, new GridPos(1, 4)), Is.False, "방 모서리");
+            Assert.That(DungeonGenerator.IsDeadEnd(map, new GridPos(0, 0)), Is.False, "벽");
         }
 
         [Test]
@@ -135,10 +170,10 @@ namespace ProjectM.Tests
         [Test]
         public void Config_RejectsInvalidValues()
         {
-            Assert.Throws<ArgumentOutOfRangeException>(() => new DungeonGenConfig(50, 50, 10, 7, 7, 20, 10, 3, 5, 1000));
-            Assert.Throws<ArgumentOutOfRangeException>(() => new DungeonGenConfig(50, 50, 1, 20, 7, 20, 10, 3, 5, 1000));
-            Assert.Throws<ArgumentOutOfRangeException>(() => new DungeonGenConfig(8, 8, 10, 20, 7, 20, 10, 3, 5, 1000));
-            Assert.Throws<ArgumentOutOfRangeException>(() => new DungeonGenConfig(50, 50, 10, 20, 7, 20, 10, 3, 0, 1000));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new DungeonGenConfig(50, 50, 10, 7, 7, 20, 10, 3, 5, 1000, 10));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new DungeonGenConfig(50, 50, 1, 20, 7, 20, 10, 3, 5, 1000, 10));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new DungeonGenConfig(8, 8, 10, 20, 7, 20, 10, 3, 5, 1000, 10));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new DungeonGenConfig(50, 50, 10, 20, 7, 20, 10, 3, 0, 1000, 10));
         }
 
         [Test]
@@ -170,6 +205,7 @@ namespace ProjectM.Tests
             Assert.That(c.WallBlockMinSize, Is.EqualTo(expected.WallBlockMinSize));
             Assert.That(c.WallTunnelCostMultiplier, Is.EqualTo(expected.WallTunnelCostMultiplier));
             Assert.That(c.PlacementAttemptLimit, Is.EqualTo(expected.PlacementAttemptLimit));
+            Assert.That(c.DeadEndLoopMinWalkDistance, Is.EqualTo(expected.DeadEndLoopMinWalkDistance));
         }
     }
 }

@@ -29,6 +29,8 @@ namespace ProjectM.Data
         [Min(1)] [SerializeField] private int _wallTunnelCostMultiplier = 5;
         [Tooltip("방 · 벽 덩어리 시작점을 다시 뽑는 최대 횟수")]
         [Min(1)] [SerializeField] private int _placementAttemptLimit = 1000;
+        [Tooltip("막다른 길을 이을 상대 칸까지의 최소 걸음 수. 클수록 크게 돌아가는 순환로가 생긴다")]
+        [Min(2)] [SerializeField] private int _deadEndLoopMinWalkDistance = 10;
 
         public DungeonGenConfig ToConfig()
         {
@@ -36,7 +38,8 @@ namespace ProjectM.Data
                 _width, _height,
                 _roomCount, _roomSizeRoll, _roomMinSize,
                 _wallBlockCount, _wallBlockSizeRoll, _wallBlockMinSize,
-                _wallTunnelCostMultiplier, _placementAttemptLimit);
+                _wallTunnelCostMultiplier, _placementAttemptLimit,
+                _deadEndLoopMinWalkDistance);
         }
     }
 }

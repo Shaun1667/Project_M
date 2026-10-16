@@ -26,12 +26,20 @@ namespace ProjectM.Dungeon
         /// <summary>방 · 벽 덩어리 하나의 시작점을 다시 뽑는 최대 횟수. 넘으면 그 하나는 건너뛴다.</summary>
         public int PlacementAttemptLimit { get; }
 
+        /// <summary>
+        /// 막다른 길 잇기: 막다른 칸에서 벽을 뚫어 이을 상대 칸은 걸어서 이 거리 이상 떨어져 있어야 한다 (8방향 걸음 수).
+        /// 바로 옆 자기 길에 붙이지 않고 돌아가는 길(순환로)을 만들기 위한 값.
+        /// </summary>
+        public int DeadEndLoopMinWalkDistance { get; }
+
         public DungeonGenConfig(
             int width, int height,
             int roomCount, int roomSizeRoll, int roomMinSize,
             int wallBlockCount, int wallBlockSizeRoll, int wallBlockMinSize,
-            int wallTunnelCostMultiplier, int placementAttemptLimit)
+            int wallTunnelCostMultiplier, int placementAttemptLimit,
+            int deadEndLoopMinWalkDistance)
         {
+            Require(deadEndLoopMinWalkDistance >= 2, nameof(deadEndLoopMinWalkDistance), "막다른 길 잇기 최소 걸음 수는 2 이상");
             Require(roomMinSize >= 1, nameof(roomMinSize), "방 최소 크기는 1 이상");
             Require(roomSizeRoll > roomMinSize, nameof(roomSizeRoll), "방 크기 뽑기 범위는 최소 크기보다 커야 한다");
             Require(wallBlockMinSize >= 1, nameof(wallBlockMinSize), "벽 덩어리 최소 크기는 1 이상");
@@ -52,6 +60,7 @@ namespace ProjectM.Dungeon
             WallBlockMinSize = wallBlockMinSize;
             WallTunnelCostMultiplier = wallTunnelCostMultiplier;
             PlacementAttemptLimit = placementAttemptLimit;
+            DeadEndLoopMinWalkDistance = deadEndLoopMinWalkDistance;
         }
 
         private static void Require(bool condition, string name, string message)
