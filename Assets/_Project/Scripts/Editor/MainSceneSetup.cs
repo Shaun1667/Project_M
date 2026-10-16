@@ -19,10 +19,12 @@ namespace ProjectM.Editor
         private const string TileVisualSetPath = VisualsDir + "/TileVisualSet.asset";
         private const string EntityCatalogPath = VisualsDir + "/EntityVisualCatalog.asset";
         private const string GameConfigPath = "Assets/_Project/Data/Config/GameConfig.asset";
+        private const string DungeonConfigPath = "Assets/_Project/Data/Dungeon/DungeonGenConfig.asset";
 
-        // 그레이박스: tile.png 슬라이스 0 = 연회색, 1 = 진회색
+        // 그레이박스: tile.png 슬라이스 0 = 연회색, 1 = 진회색, 3 = 파랑
         private const string FloorTilePath = "Assets/_Project/Art/Greybox/TilePalette/tile_0.asset";
         private const string WallTilePath = "Assets/_Project/Art/Greybox/TilePalette/tile_1.asset";
+        private const string StairsTilePath = "Assets/_Project/Art/Greybox/TilePalette/tile_3.asset";
         private const string PlayerSpritePath = "Assets/_Project/Art/Greybox/player.png";
 
         [MenuItem("ProjectM/Setup/Main Scene")]
@@ -45,6 +47,8 @@ namespace ProjectM.Editor
                 Debug.LogError("[MainSceneSetup] GameConfig 에셋 없음: " + GameConfigPath);
                 return;
             }
+            // 없으면 필드 초기값(BALANCE 2번)으로 만든다. 있으면 값을 건드리지 않는다.
+            var dungeonConfig = LoadOrCreate<DungeonGenConfigAsset>(DungeonConfigPath);
 
             var gridGo = FindOrCreate("Grid", null);
             var grid = GetOrAdd<Grid>(gridGo);
@@ -69,6 +73,7 @@ namespace ProjectM.Editor
             var root = GetOrAdd<GameRoot>(rootGo);
             SetRefs(root,
                 ("_config", config),
+                ("_dungeonConfig", dungeonConfig),
                 ("_tilemapPresenter", tilemapPresenter),
                 ("_entityPresenter", entityPresenter),
                 ("_camera", cameraController));
@@ -84,6 +89,7 @@ namespace ProjectM.Editor
             var set = LoadOrCreate<TileVisualSet>(TileVisualSetPath);
             set.Set(TileType.Floor, AssetDatabase.LoadAssetAtPath<TileBase>(FloorTilePath));
             set.Set(TileType.Wall, AssetDatabase.LoadAssetAtPath<TileBase>(WallTilePath));
+            set.Set(TileType.StairsDown, AssetDatabase.LoadAssetAtPath<TileBase>(StairsTilePath));
             EditorUtility.SetDirty(set);
             return set;
         }

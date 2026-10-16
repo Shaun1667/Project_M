@@ -9,5 +9,7 @@ namespace ProjectM.Core
         Empty = 0,
         Floor = 1,
         Wall = 2,
+        /// <summary>내려가는 계단 — 층의 도착점. 걸을 수 있다 (밟았을 때 동작은 3-4).</summary>
+        StairsDown = 3,
     }
 }

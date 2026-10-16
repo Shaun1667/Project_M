@@ -291,11 +291,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: ProjectM.Runtime::ProjectM.GameRoot
   _config: {fileID: 11400000, guid: 365727f6c54c9eb4ba911ed8db70bdfc, type: 2}
+  _dungeonConfig: {fileID: 11400000, guid: cd08810331e2dab44b423203dd342706, type: 2}
   _tilemapPresenter: {fileID: 2048705274}
   _entityPresenter: {fileID: 2108178770}
   _camera: {fileID: 29343493}
-  _previewRoomWidth: 12
-  _previewRoomHeight: 8
+  _fixedSeed: 0
 --- !u!4 &1701493087
 Transform:
   m_ObjectHideFlags: 0

@@ -18,7 +18,6 @@
 | `README.md` | 문서 지도 · 빠른 시작 | 사용 중 |
 | `Docs/Source/마법시스템_기획서_v0.3.md` | 원본 기획서 (보존용, 고치지 않음 — 기준은 GDD.md) | 보존 |
 | `Docs/Source/claude_all_type_genre.md` | 장르 무관 협업 가이드 (방법론) | 보존 |
-| `Reference/MapGenerator_75121da.cs` | 이전 맵 생성 코드 (참고용, Unity가 컴파일 안 함) | 1-5 이식 후 삭제 |
 | `REACTIONS.md` | 상태/지형 × 속성 규칙 표 상세 설계 | 사용자 속성표 받은 뒤 작성 |
 | `TIME_MAGIC.md` | 시간 마법 상세 설계 | Phase 8 착수 전 작성 |
 
@@ -131,7 +130,7 @@ Assets/
 - 1인 개발. 여러 PC에서 작업할 때 pull 후 에디터에 열려 있던 씬은 디스크에서 다시 연다.
 - 커밋 전 `git diff --cached --stat`으로 스테이징 내용을 확인한다 (미리 스테이징된 변경이 섞이지 않게).
 - 에셋 이동 · 삭제는 Unity MCP(`AssetDatabase.MoveAsset/DeleteAsset`)가 확인 창 때문에 막힌다 → `git mv`/`git rm`으로 `.meta`와 함께 처리하고 Refresh.
-- `Reference/`(Assets 밖)는 참고용 원본 코드 보관소. Unity가 컴파일하지 않는다.
+- 참고용 원본 코드가 필요하면 Assets 밖 `Reference/`에 두고(Unity가 컴파일 안 함), 이식이 끝나면 지운다. 이전 MapGenerator는 1-5에서 이식 후 삭제 — 원본은 git 75121da.
 - 에디터 스크립트에서 `EditorSceneManager.OpenScene`은 쓰지 않는 에셋을 메모리에서 내린다 → 에셋 참조는 씬을 연 **뒤에** 불러온다.
 - Unity MCP: 파일을 바꾼 직후 첫 호출은 "Unity not detected"가 나거나 30분 무응답으로 끊기기 쉽다(컴파일 전) → 먼저 가벼운 호출(콘솔 읽기)로 깨우고, 창 제목에 Compiling이 없어질 때까지 기다린 뒤 무거운 호출(RunCommand · 테스트). `System.Reflection` 네임스페이스 사용 불가. 플레이 모드 진입은 에디터 포커스 없이 안 될 수 있다.
 - Unity MCP로 긴 작업이 시간 초과돼도 에디터에서는 계속 진행된다 → 콘솔 로그로 결과를 확인한다.

@@ -42,8 +42,14 @@ namespace ProjectM.Core
         /// <summary>칸 배열의 복사본. 인덱스 = y * Width + x.</summary>
         public TileType[] CopyCells() => (TileType[])_cells.Clone();
 
-        /// <summary>바닥 칸만 걸을 수 있다. 맵 밖은 걸을 수 없다.</summary>
-        public bool IsWalkable(GridPos pos) => InBounds(pos) && _cells[IndexOf(pos)] == TileType.Floor;
+        /// <summary>걸을 수 있는 칸인지. 맵 밖은 걸을 수 없다.</summary>
+        public bool IsWalkable(GridPos pos) => InBounds(pos) && IsWalkableType(_cells[IndexOf(pos)]);
+
+        /// <summary>걸을 수 있는 지형: 바닥 · 계단.</summary>
+        public static bool IsWalkableType(TileType type) => type == TileType.Floor || type == TileType.StairsDown;
+
+        /// <summary>맵 가장자리 한 줄인지.</summary>
+        public bool IsBorder(GridPos pos) => pos.X == 0 || pos.Y == 0 || pos.X == Width - 1 || pos.Y == Height - 1;
 
         private int IndexOf(GridPos pos)
         {

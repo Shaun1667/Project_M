@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 32f248e39edc24b4aa1f07953d4b3a39, type: 3}
+  m_Name: DungeonGenConfig
+  m_EditorClassIdentifier: ProjectM.Runtime::ProjectM.Data.DungeonGenConfigAsset
+  _width: 50
+  _height: 50
+  _roomCount: 10
+  _roomSizeRoll: 20
+  _roomMinSize: 7
+  _wallBlockCount: 20
+  _wallBlockSizeRoll: 10
+  _wallBlockMinSize: 3
+  _wallTunnelCostMultiplier: 5
+  _placementAttemptLimit: 1000

@@ -12,7 +12,6 @@ Unity 6.6 · URP 2D · Input System · 1인 개발.
 | [GDD.md](GDD.md) | 기획서 (마법 · 틱 · 상태 · 지형 · 결정 사항 · 열린 질문) |
 | [BALANCE.md](BALANCE.md) | 수치 표 · 데이터 에셋 위치 · 검산 |
 | [Docs/Source/](Docs/Source/) | 원본 기획서 v0.3 · 장르 무관 협업 가이드 (보존용) |
-| [Reference/](Reference/) | 이전 맵 생성 코드 (참고용, 컴파일 안 함) |
 
 ## 빠른 시작
 

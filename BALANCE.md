@@ -11,7 +11,7 @@
 | 번호 | 내용 | 에셋 | 순수 로직 타입 | 상태 |
 |---|---|---|---|---|
 | 1 | 게임 전역 (틱 · 행동 비용) | `Assets/_Project/Data/Config/GameConfig.asset` (`GameConfigAsset`) | `ProjectM.Core.GameConfig` | 사용 중 |
-| 2 | 맵 생성 | `Data/Dungeon/` (1-5에서 생성) | — | 예정 |
+| 2 | 맵 생성 | `Assets/_Project/Data/Dungeon/DungeonGenConfig.asset` (`DungeonGenConfigAsset`) | `ProjectM.Dungeon.DungeonGenConfig` | 사용 중 |
 | 3 | 유닛 (체력 · 피해) | `Data/Units/` (1-6) | — | 예정 |
 | 4 | 마나 | `Data/Config/` 또는 `Data/Magic/` (2-1) | — | 예정 |
 | 5 | 주문 | `Data/Spells/` (2-2) | — | 예정 |
@@ -38,16 +38,26 @@
 
 ---
 
-## 2. 맵 생성 — 참고값 (1-5에서 결정)
+## 2. 맵 생성 — `DungeonGenConfig.asset`
 
-이전 `MapGenerator.cs`(Reference/MapGenerator_75121da.cs)와 그 씬에서 쓰던 값. **구속력 없음.**
+결정 (2026-10-16): 이전 `MapGenerator`(git 75121da) 값을 그대로 쓴다. 조정은 Phase 4 재미 검증에서.
+크기 뽑기 = `[0, 뽑기범위)`에서 뽑고 최소 미만이면 최소를 더함 → 결과 `[최소, 뽑기범위)`, 그중 `[최소, 2·최소)`가 두 배 자주 나옴 (의도된 분포).
 
-| 항목 | 이전 값 | 비고 |
-|---|---|---|
-| 맵 크기 | 50 × 50 | `SampleScene 1` 인스펙터 값 |
-| 방 개수 | 10 (특정 조건에서 2배) | 코드 상수 |
-| 방 크기 | 7 ~ 20 (특정 조건에서 3 ~ 10) | 코드 상수 |
-| 시드 | `System.Random` 직접 생성 | CLAUDE 규칙 7 위반 → 1-1 `IRng`로 교체 |
+| 항목 | 필드 | 값 | 결과 범위 | 비고 |
+|---|---|---|---|---|
+| 맵 크기 | `_width` × `_height` | **50 × 50** | — | 바깥 한 줄은 항상 벽 |
+| 방 개수 | `_roomCount` | **10** | — | 첫 방 = 시작, 마지막 방 = 계단 |
+| 방 크기 뽑기 범위 | `_roomSizeRoll` | **20** | 7 ~ 19 | 이전 코드 `Room_maxsize` |
+| 방 최소 크기 | `_roomMinSize` | **7** | (7~13이 2배) | |
+| 벽 덩어리 개수 | `_wallBlockCount` | **20** | — | 이전 코드 mode 2 (방 개수 × 2) |
+| 벽 덩어리 크기 뽑기 범위 | `_wallBlockSizeRoll` | **10** | 3 ~ 9 | 이전 코드 mode 2 (최대 / 2) |
+| 벽 덩어리 최소 크기 | `_wallBlockMinSize` | **3** | (3~5가 2배) | |
+| 벽 뚫기 비용 배수 | `_wallTunnelCostMultiplier` | **5** | — | 1-5 신규. 복도가 벽 1칸 뚫기 = 바닥 5칸 돌아가기 |
+| 배치 재시도 상한 | `_placementAttemptLimit` | **1000** | — | 1-5 신규 안전장치 (이전 코드는 무한 반복 가능) |
+
+검산 (`DungeonGeneratorTests.ProjectAsset_MatchesBalanceTable`): 에셋 값이 위 표와 같다.
+분포 (`DungeonGeneratorTests.RollSize_KeepsIntendedDistribution`): 7~13 칸당 빈도 / 14~19 칸당 빈도 = 1.8~2.2.
+결과 (시드 20261016 예): 바닥 991 · 벽 1508 · 계단 1.
 
 ---
 

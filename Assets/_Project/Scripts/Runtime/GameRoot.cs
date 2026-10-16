@@ -1,5 +1,6 @@
 using ProjectM.Core;
 using ProjectM.Data;
+using ProjectM.Dungeon;
 using ProjectM.Presentation;
 using UnityEngine;
 
@@ -11,20 +12,21 @@ namespace ProjectM
     public sealed class GameRoot : MonoBehaviour
     {
         [SerializeField] private GameConfigAsset _config;
+        [SerializeField] private DungeonGenConfigAsset _dungeonConfig;
         [SerializeField] private TilemapPresenter _tilemapPresenter;
         [SerializeField] private EntityPresenter _entityPresenter;
         [SerializeField] private CameraController _camera;
 
-        [Header("1-3 확인용 임시 방 — 1-5 맵 생성으로 교체")]
-        [SerializeField] private int _previewRoomWidth = 12;
-        [SerializeField] private int _previewRoomHeight = 8;
+        [Header("시드 — 0이면 매번 새로 정한다. 같은 맵을 다시 보려면 콘솔에 찍힌 시드를 넣는다")]
+        [SerializeField] private long _fixedSeed;
 
-        public SimEventBus Events { get; private set; }
         public GameConfig Config { get; private set; }
+        public World World { get; private set; }
+        public DungeonFloor Floor { get; private set; }
 
         private void Awake()
         {
-            if (_config == null || _tilemapPresenter == null || _entityPresenter == null)
+            if (_config == null || _dungeonConfig == null || _tilemapPresenter == null || _entityPresenter == null)
             {
                 Debug.LogError("[GameRoot] 참조가 비어 있다. 메뉴 ProjectM/Setup/Main Scene을 실행한다.", this);
                 enabled = false;
@@ -32,38 +34,38 @@ namespace ProjectM
             }
 
             Config = _config.ToConfig();
-            Events = new SimEventBus();
-            _tilemapPresenter.Bind(Events);
-            _entityPresenter.Bind(Events);
         }
 
         private void Start()
         {
-            if (Events == null) return;
-            ShowPreviewRoom();
+            if (Config == null) return;
+            StartNewRun();
         }
 
-        // TODO(1-5): 맵 생성 결과로 교체하고 이 메서드와 _previewRoom* 필드를 지운다.
-        private void ShowPreviewRoom()
+        private void StartNewRun()
         {
-            var map = new GridMap(_previewRoomWidth, _previewRoomHeight);
-            for (int y = 0; y < map.Height; y++)
-            {
-                for (int x = 0; x < map.Width; x++)
-                {
-                    bool border = x == 0 || y == 0 || x == map.Width - 1 || y == map.Height - 1;
-                    map.Set(new GridPos(x, y), border ? TileType.Wall : TileType.Floor);
-                }
-            }
+            ulong seed = _fixedSeed != 0 ? (ulong)_fixedSeed : (ulong)System.DateTime.UtcNow.Ticks;
+            Debug.Log($"[GameRoot] 시드 {(long)seed}");
 
-            var ids = new EntityIdAllocator();
-            var center = new GridPos(map.Width / 2, map.Height / 2);
-            Events.Publish(new MapLoadedEvent(map));
-            Events.Publish(new EntitySpawnedEvent(ids.Allocate(), center, "player"));
-            Events.Flush();
+            var generator = new DungeonGenerator(_dungeonConfig.ToConfig());
+            DungeonFloor floor = null;
+            World = World.Create(seed, rng =>
+            {
+                floor = generator.Generate(rng);
+                return floor.Map;
+            });
+            Floor = floor;
+
+            _tilemapPresenter.Bind(World.Events);
+            _entityPresenter.Bind(World.Events);
+
+            // 플레이어는 지금 모습만 둔다. 스케줄러 등록 · 이동은 1-6.
+            World.Events.Publish(new MapLoadedEvent(World.Map));
+            World.Events.Publish(new EntitySpawnedEvent(World.Ids.Allocate(), Floor.Start, "player"));
+            World.Events.Flush();
 
             if (_camera != null)
-                _camera.SnapToTarget(_entityPresenter.CellCenter(center));
+                _camera.SnapToTarget(_entityPresenter.CellCenter(Floor.Start));
         }
     }
 }

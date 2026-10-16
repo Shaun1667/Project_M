@@ -6,7 +6,7 @@
 
 ## 진행 요약 (2026-10-14 기준 — 새 세션은 여기부터 읽는다)
 
-**현재 위치: Phase 1 — 1-1 ~ 1-4 완료. 다음 작업은 1-5 맵 생성(1층).**
+**현재 위치: Phase 1 — 1-1 ~ 1-5 완료. 다음 작업은 1-6 플레이어 이동 · 근접 공격 · 적 1종.**
 
 | Phase | 항목 | 상태 | 커밋 |
 |---|---|---|---|
@@ -15,20 +15,21 @@
 | | 1-2 틱 파이프라인 · 커맨드 · TurnClock | 완료 | 7d16c81 |
 | | 1-3 이벤트 버스 · 표현 어댑터 · Main 씬(임시 방) | 완료 | ecf2f14 |
 | | 1-4 World 스냅샷 · 왕복 테스트 | 완료 | b1103f4 |
-| | 1-5 맵 생성 → 1-6 이동 · 공격 · 적 → 1-7 시야 · 사거리 | 대기 | — |
+| | 1-5 맵 생성 (이전 MapGenerator 이식 + 연결 보장 + 계단) | 완료 | (이번 커밋) |
+| | 1-6 이동 · 공격 · 적 → 1-7 시야 · 사거리 | 대기 | — |
 
-**숫자:** EditMode 테스트 52개 전부 통과 · 콘솔 프로젝트 오류 0 · 씬 1개(`Assets/_Project/Scenes/Main.unity`)
+**숫자:** EditMode 테스트 62개 전부 통과 · 콘솔 프로젝트 오류 0 · 씬 1개(`Assets/_Project/Scenes/Main.unity`)
 
-**지금 플레이하면:** 어두운 배경에 12×8 임시 방(진회색 벽 · 연회색 바닥)과 가운데 초록 원(플레이어). 조작 없음. 임시 방은 1-5에서 맵 생성으로 바뀐다.
+**지금 플레이하면:** 매번 새 시드로 50×50 층이 생성된다(겹친 방 + 복도 + 벽 덩어리, 테두리 벽, 파란 계단 1개). 플레이어(초록)는 첫 방에 서 있고 카메라가 따라 비춘다. 조작 없음. 콘솔에 시드가 찍힌다.
 
-**1-5 착수 때 물어볼 것 (미정):**
-1. 맵 크기 · 방 개수 · 방 크기 — 이전 값 50×50 · 방 10개 · 7~20(BALANCE.md 2번)을 그대로 쓸지
-2. 이전 MapGenerator 알고리즘(벽 먼저 → 방 → A* 복도)을 그대로 옮길지, SPD식 방-복도 구조로 바꿀지
-3. 시작 · 계단 위치 규칙
+**1-6 착수 때 물어볼 것 (미정):**
+1. 이동 방향 — 4방향 / 8방향(SPD는 8방향, 대각선 벽 모서리 통과 규칙 포함)
+2. 입력 — 키보드(방향키 · WASD · 넘패드) / 클릭 이동(경로 따라 여러 턴) / 둘 다
+3. 플레이어 · 적 기본 체력 · 피해(Q3) 임시값과 적 1종의 행동(다가와서 근접 공격)
 
 **사용자 확인 대기 (플레이 확인):**
 - 0-1 입력 전환 — 지금은 클릭 코드가 없어져 1-6에서 함께 확인
-- 1-3 `Main.unity` 플레이 화면 (MCP로 플레이 모드 진입이 안 돼 편집 모드 캡처로만 확인함)
+- 1-3 · 1-5 `Main.unity` 플레이 화면 (MCP로 플레이 모드 진입이 안 돼 편집 모드 캡처로만 확인함)
 - GDD의 [제안] 항목 — 1-2 핵심 재미 · 1-3 핵심 루프 · 14 MVP 콘텐츠 목록 (3-3 틱 순서는 확정됨)
 
 **답을 기다리는 질문:**
@@ -42,7 +43,7 @@
 | 이전 파일 | 처리 결과 (0-3) | 새 위치 |
 |---|---|---|
 | `Assets/Scripts/System/GameManager.cs`, `NaviManager.cs`, `ClickManager.cs` | 삭제 — 1-2 · 1-3 · 1-6에서 새 구조로 다시 작성 | — |
-| `MapGenerator.cs` (75121da) | 컴파일 대상에서 빼고 참고용으로 보관 (CP949 → UTF-8) | `Reference/MapGenerator_75121da.cs` (Assets 밖) → 1-5 이식 후 삭제 |
+| `MapGenerator.cs` (75121da) | 참고용 보관 후 1-5에서 `ProjectM.Dungeon.DungeonGenerator`로 이식 · 삭제 (원본은 git 75121da) | `Assets/_Project/Scripts/Simulation/Dungeon/` |
 | `CameraController.cs` | 이동, 싱글턴 · DontDestroyOnLoad 제거, z값 인스펙터로 | `Assets/_Project/Scripts/Runtime/Presentation/CameraController.cs` |
 | `CharacterManager.cs`, `ObjectManager.cs`, `MainSystem.cs`, `Player.cs`, `ObjectPool.cs` | 삭제 (빈 틀 · 주석뿐) | — |
 | `Assets/Resource/TilePalette/*`, `player.png` | 이동 (GUID 유지) | `Assets/_Project/Art/Greybox/` |
@@ -183,7 +184,21 @@
   - 확인 방법: Test Runner EditMode → 52개 초록 (`WorldSnapshotTests.SaveLoadThenPlay_EqualsPlayWithoutSave`)
   - 참고: 되감기 링버퍼(GDD 2-3)는 시간 마법(Phase 8)에서 이 스냅샷으로 만든다. 유닛 · 상태 · 지형 레이어가 생길 때마다 WorldSnapshot에 필드 추가 + FormatVersion 증가 + 이 왕복 테스트가 계속 통과해야 한다
   - 피드백: 파일을 바꾼 직후 첫 MCP 호출이 30분 무응답 후 끊김(0-4와 같음). 에디터는 정상, 다음 호출에서 컴파일 시작 → 파일 변경 후에는 가벼운 호출(콘솔 읽기)로 먼저 컴파일을 깨우고 대기한 뒤 무거운 호출을 한다
-- [ ] **1-5. 맵 생성 (1층)** — 방 + 복도, 시드 고정 시 같은 맵 (0-3 결정에 따라 MapGenerator 이식)
+- [x] **1-5. 맵 생성 (1층)** (2026-10-16) — 플레이 확인 대기 — 방 + 복도, 시드 고정 시 같은 맵 (0-3 결정에 따라 MapGenerator 이식)
+  - 결정 (2026-10-16): 방 겹침 · 크기 분포 불균형은 **의도된 것** — 그대로 이식 (사용자 확인). 고칠 것은 연결 끊김만
+  - 결정 (2026-10-16): 연결 보장 = 벽을 뚫고 지나가기 — 복도 A*가 벽을 지날 수 있되 비용 5배라 보통은 돌아감 — 추천안
+  - 결정 (2026-10-16): 수치는 이전 값 그대로 (BALANCE 2번) — 추천안
+  - 결정 (2026-10-16): 도착점은 계단 타일 `TileType.StairsDown = 3`(걸을 수 있음, 파란 tile_3). 밟았을 때 동작은 3-4 — 추천안
+  - 결정 (2026-10-16): 맵 바깥 한 줄은 항상 벽 — 추천안
+  - 끊김 원인 (이전 코드): ① 복도 A*가 먼저 깐 벽 덩어리를 못 지나 목표가 갇히면 그 구간 복도 없음 ② 방 안에 벽 덩어리가 끼면 방이 여러 조각으로 갈라지고, 기준점이 없는 조각은 끊긴 채 남음 ③ A*의 G · H · Parent를 탐색마다 초기화하지 않아 이전 값이 남음
+  - 구현 (`Simulation/Dungeon/`): `DungeonGenConfig`(생성자 검사), `DungeonFloor`(Map · Start · Exit), `CorridorPathfinder`(4방향 A*, 테두리 제외, 벽 비용 배수, 탐색마다 새 배열, 결정론적 동점 처리), `DungeonGenerator`(① 벽 덩어리 ② 방 ③ 테두리 벽 ④ 기준점 ⑤ 차례로 복도 ⑥ 시작점과 끊긴 조각을 시작점까지 잇기 ⑦ 빈칸 → 벽 ⑧ 계단). 테두리는 복도 **전에** 친다(나중에 치면 가장자리 복도가 잘림)
+  - 구현 — 기타: `TileType.StairsDown`, `GridMap.IsWalkableType/IsBorder`, `World.Create(seed, buildMap)`(MapGen 난수 소비가 World에 남음), `DungeonGenConfigAsset` + 에셋 `Data/Dungeon/DungeonGenConfig.asset`, `GameRoot`(임시 방 삭제 → 시드로 층 생성 · 시작점에 플레이어 · 시드 콘솔 출력, `_fixedSeed`로 같은 맵 재현), Setup 메뉴에 계단 타일 · 던전 수치 연결
+  - 삭제: `Reference/MapGenerator_75121da.cs` (이식 완료, 원본은 git 75121da)
+  - 수치: BALANCE.md 2번
+  - 테스트 10개 추가 (`DungeonGeneratorTests` 9 — 같은 시드 = 같은 층, 시드별로 다름, **시드 200개 모두 걸을 수 있는 칸이 시작점과 연결**, 200개 모두 테두리 벽 · 빈칸 없음 · 시작 바닥 · 계단 1개 · 시작 ≠ 도착, 크기 분포 2배 유지, A* 돌아가기 · 막히면 1칸만 뚫기, 수치 검사, World.Create가 MapGen 소비, BALANCE 2번 검산 / `GridTests` 계단 · 테두리 확인 추가) — 전체 62개 통과
+  - 확인: 시드 20261016로 편집 모드 생성 · 캡처 — 50×50, 바닥 991 · 벽 1508 · 계단 1, 겹친 방 · 복도 연결 · 테두리 벽 확인. 콘솔 프로젝트 오류 0 (편집 모드 `SendMessage` 확인용 Unity assertion 1건은 게임 코드와 무관)
+  - 확인 방법: `Main.unity` 플레이 → 콘솔에 `[GameRoot] 시드 …` → 플레이어(초록) 주변이 보임. 플레이할 때마다 다른 맵. 같은 맵을 보려면 GameRoot 인스펙터 `_fixedSeed`에 그 시드 입력. 맵 전체는 Scene 뷰에서 확인
+  - 참고: 계단 · 시작점 외 환경 타일(물 · 풀 등) 배치는 Q15(Phase 6)
 - [ ] **1-6. 플레이어 이동 · 근접 공격 · 적 1종** — 클릭/키 입력 → 커맨드, 체력 · 사망 (Q3 수치는 임시값)
 - [ ] **1-7. 시야 · 사거리 (그리드 계산)** — 레이캐스트 없이
 
@@ -222,8 +237,8 @@
 2. **새 PC에서 받기:** `git clone https://github.com/Shaun1667/Project_M.git` (이미 있으면 `git pull`). 작성자 이메일을 같은 값으로 맞춘다 (`git config user.email`)
 3. **Unity 6.6 (6000.6.0f1)로 열기** — Unity Hub에 해당 버전 설치 필요. 첫 임포트는 오래 걸린다
 4. **콘솔 오류 0 확인** — `Assets/_Project/Scenes/Main.unity` 열기. 씬 참조가 비어 있으면 메뉴 `ProjectM/Setup/Main Scene` 실행(몇 번 실행해도 같은 결과)
-5. **테스트:** `Window > General > Test Runner > EditMode` → `ProjectM.Tests.EditMode` 실행 → 52개 초록
-6. **플레이 확인:** Main 씬 플레이 → 12×8 방 + 가운데 초록 원
+5. **테스트:** `Window > General > Test Runner > EditMode` → `ProjectM.Tests.EditMode` 실행 → 전부 초록 (개수는 진행 요약 "숫자" 참고)
+6. **플레이 확인:** Main 씬 플레이 → 생성된 층 + 첫 방의 초록 원, 콘솔에 시드
 7. **Claude Code 연결 (선택):** CLAUDE.md "새 PC 환경 준비"대로 Unity MCP 등록 → 새 세션 → Unity에서 연결 승인. 세션은 프로젝트 폴더에서 연다
 8. **새 세션 첫 요청 예:** "CLAUDE.md와 TASKS.md 진행 요약 읽고 1-5 진행해줘"
 

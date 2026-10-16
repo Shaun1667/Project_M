@@ -54,6 +54,10 @@ namespace ProjectM.Tests
             Assert.That(map.IsWalkable(new GridPos(0, 1)), Is.False, "빈칸");
             Assert.That(map.IsWalkable(new GridPos(-1, 0)), Is.False, "맵 밖");
 
+            map.Set(new GridPos(1, 1), TileType.StairsDown);
+            Assert.That(map.IsWalkable(new GridPos(1, 1)), Is.True, "계단");
+            Assert.That(map.IsBorder(new GridPos(0, 1)), Is.True);
+
             Assert.Throws<ArgumentOutOfRangeException>(() => map.Get(new GridPos(2, 0)));
             Assert.Throws<ArgumentOutOfRangeException>(() => map.Set(new GridPos(0, 2), TileType.Floor));
         }

@@ -24,6 +24,18 @@ namespace ProjectM.Core
         {
         }
 
+        /// <summary>
+        /// 새 판: 시드에서 난수 묶음을 만들고, 맵 생성 난수(RngStream.MapGen)로 맵을 만든 뒤 World를 만든다.
+        /// 맵 생성에 쓴 난수 소비가 World의 MapGen 수열에 그대로 남아, 다음 층 생성이 같은 맵을 반복하지 않는다.
+        /// </summary>
+        public static World Create(ulong seed, Func<IRng, GridMap> buildMap)
+        {
+            if (buildMap == null) throw new ArgumentNullException(nameof(buildMap));
+            var rng = new RngSet(seed);
+            var map = buildMap(rng.Get(RngStream.MapGen));
+            return new World(map, new EntityIdAllocator(), rng, new TickScheduler());
+        }
+
         private World(GridMap map, EntityIdAllocator ids, RngSet rng, TickScheduler scheduler)
         {
             Map = map ?? throw new ArgumentNullException(nameof(map));
