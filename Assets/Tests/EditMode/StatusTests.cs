@@ -195,7 +195,8 @@ namespace ProjectM.Tests
         [Test]
         public void Ice_Slows_Poison_PoisonsArea()
         {
-            var s = Start(1, new GridPos(1, 2), new GridPos(4, 2), new GridPos(6, 2), new GridPos(6, 3)); // 독 사거리 5 안
+            // 얼음 대상은 독 조준선 (1,2)→(6,2) 밖에 둔다 (투사체는 처음 만난 유닛에서 멈추므로). 독 대상은 사거리 5 안
+            var s = Start(1, new GridPos(1, 2), new GridPos(4, 3), new GridPos(6, 2), new GridPos(6, 3));
             s.Cast(Ice, s.Enemies[0].Pos);
             Assert.That(s.Enemies[0].HasStatus(StatusType.Slow), Is.True);
             s.Cast(Poison, s.Enemies[1].Pos);

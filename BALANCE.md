@@ -15,7 +15,7 @@
 | 3 | 유닛 (체력 · 피해 · 시야) · 적 배치 | `Assets/_Project/Data/Units/{Player, MeleeEnemy, SpawnConfig}.asset` (`UnitDefAsset`, `SpawnConfigAsset`) | `ProjectM.Units.UnitDef`, `ProjectM.Units.SpawnConfig` | 사용 중 |
 | 4 | 마나 · 주문 장착 칸 | `Assets/_Project/Data/Magic/MagicConfig.asset` (`MagicConfigAsset`) + `Player.asset`의 `_maxMana` · `_startingSpells` | `ProjectM.Magic.MagicConfig`, `UnitDef.MaxMana` | 사용 중 |
 | 5 | 주문 | `Assets/_Project/Data/Spells/SpellCatalog.asset` (`SpellCatalogAsset`) | `ProjectM.Magic.SpellDef` · `SpellBook` | 사용 중 |
-| 6 | 상태 이상 | `Data/Statuses/` (2-3) | — | 예정 |
+| 6 | 상태 이상 | `Assets/_Project/Data/Statuses/StatusCatalog.asset` (`StatusCatalogAsset`) | `ProjectM.Status.StatusDef` · `StatusBook` | 사용 중 |
 | 7 | 지형 | `Data/Terrains/` (2-4) | — | 예정 |
 | 8 | 반응 규칙 표 | `Data/Reactions/` (3-1) | — | 예정 |
 
@@ -111,15 +111,38 @@
 
 | ID | 속성 | 모양 | 사거리 | 피해 | 마나 | 반지름 | 비고 |
 |---|---|---|---|---|---|---|---|
-| `fire_basic` | Fire | Bolt (단일, 첫 유닛) | **6** | **5** | **3** | 0 | 적(체력 8)을 2번에 처치 |
-| `ice_basic` | Ice | Bolt | **6** | **3** | **2** | 0 | 2-3 둔화/빙결 자리 |
-| `lightning_basic` | Lightning | Beam (직선 관통, 벽에서 멈춤) | **5** | **3** | **4** | 0 | 일렬로 선 적 여럿 |
-| `poison_basic` | Poison | Burst (투사체가 멈춘 칸 중심) | **5** | **2** | **3** | **1** (3×3) | 범위 안 시전자도 맞음, 2-3 중독 자리 |
+| `fire_basic` | Fire | Bolt (단일, 첫 유닛) | **6** | **5** | **3** | 0 | + 화상 (6번) → 한 발 처치 |
+| `ice_basic` | Ice | Bolt | **6** | **3** | **2** | 0 | + 둔화 (6번) |
+| `lightning_basic` | Lightning | Beam (직선 관통, 벽에서 멈춤) | **5** | **3** | **4** | 0 | 일렬로 선 적 여럿, + 30% 마비 (6번) |
+| `poison_basic` | Poison | Burst (투사체가 멈춘 칸 중심) | **5** | **2** | **3** | **1** (3×3) | 범위 안 시전자도 맞음, + 중독 (6번) |
 
-검산 (`SpellTests.ProjectAsset_MatchesBalanceTable`): 에셋 값이 위 표와 같다.
-결과:
+주문 → 상태 이상 (2-3, 6번 규칙): `fire_basic` → 화상 100%, `ice_basic` → 둔화 100%, `lightning_basic` → 마비 **30%**(맞은 적마다 따로), `poison_basic` → 중독 100%. 필드 `AppliesStatus` · `StatusChancePercent`.
+
+검산 (`SpellTests.ProjectAsset_MatchesBalanceTable`): 에셋 값(상태 · 확률 포함)이 위 표와 같다.
+결과 (2-2, 직접 피해만):
 - 가득 찬 마나(10)로 불 3번(9) → 적 하나 처치 + 하나 반쯤. 근접(3)보다 강하지만 회복이 3틱에 1이라 연사 불가
 - 마나당 피해: 불 1.67 · 얼음 1.5 · 번개 0.75 × 맞은 수 · 독 0.67 × 맞은 수 → 번개는 2마리 이상, 독은 3마리 이상 모였을 때 이득
+- 2-3 이후 상태 피해 포함은 6번 결과 참고
+
+---
+
+## 6. 상태 이상 — `Data/Statuses/StatusCatalog.asset`
+
+결정 (2026-10-16): Q5 임시값. 같은 상태 중첩 = 지속 갱신(남은 틱을 더 긴 쪽으로, 강도 그대로). 걸린 틱의 ④ 단계부터 센다.
+
+| 상태 | 거는 주문 · 확률 | 지속 `DurationTicks` | 틱당 피해 `DamagePerTick` | 행동 비용 추가 `ExtraActionCostTicks` | 행동 불가 `PreventsAction` |
+|---|---|---|---|---|---|
+| Burn 화상 | 불 100% | **3** | **1** | 0 | 아니오 |
+| Slow 둔화 | 얼음 100% | **3** | 0 | **+1** (행동 2틱) | 아니오 |
+| Poison 중독 | 독 100% | **5** | **1** | 0 | 아니오 |
+| Paralyze 마비 | 번개 **30%** | **2** | 0 | 0 | **예** |
+
+검산 (`StatusTests.ProjectAsset_MatchesBalanceTable`): 에셋 값이 위 표와 같다.
+결과:
+- 불 한 발 = 즉시 5 + 화상 3 = **8** → 적(체력 8) 한 발 처치(2턴 뒤). 마나당 피해 2.67 — `StatusTests.Fire_BurnsForThreeTicks_AndKills`
+- 독 폭발 = 즉시 2 + 중독 5 = 대상마다 **7** → 마나당 2.33 × 맞은 수. 범위 안 시전자도 7
+- 얼음 = 즉시 3 + 둔화 3틱 → 걸린 동안 적 행동이 절반 (0 · 2틱에 행동, 틱 2 끝에 풀림) — `StatusTests.Slow_DoublesActionCostWhileActive`
+- 번개 = 즉시 3 + 30% × 2턴 정지. 4마리를 맞히면 평균 1.2마리 마비. 1000번 시험에서 250~350 — `StatusTests.ParalyzeChance_IsSeededAndNearThirtyPercent`
 
 ---
 

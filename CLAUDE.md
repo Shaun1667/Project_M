@@ -85,9 +85,10 @@ Assets/
 ## 코딩 규칙
 - 네임스페이스: `ProjectM.Core`, `ProjectM.Magic`, `ProjectM.Status`, `ProjectM.Units`, `ProjectM.Dungeon`, `ProjectM.Data`(Runtime/Data), `ProjectM.Presentation`, `ProjectM.Input`(Runtime/Input), `ProjectM.UI`, `ProjectM.Editor`
 - 그리드 이동 · 거리 · 경로는 `GridMovement`(8방향, 체비셰프, 대각선은 양옆이 모두 벽일 때만 막힘) · `GridPathfinder`(클릭 이동 `FindPath` = 곧은 길 선호, 추적 `ChaseStep` = 직선 거리가 가까워지는 칸) 한 곳만 쓴다. 입력 → 플레이어 커맨드 규칙은 `PlayerActions` 하나 (키보드 · 클릭 공용)
-- 단계 시스템 기본 등록은 `World.InstallCoreSystems(sight, magic)`(⑤ 마나 회복 · ⑥ 사망 판정 · 시야 · ⑦ 이벤트) — 새 World · `World.Restore` 후 모두 부르고, 돌려받은 `PlayerVisionSystem.Refresh()`로 첫 시야를 계산한다
+- 단계 시스템 기본 등록은 `World.InstallCoreSystems(sight, magic, statuses)`(④ 상태 처리 · ⑤ 마나 회복 · ⑥ 사망 판정 · 시야 · ⑦ 이벤트, 마비 · 둔화 행동 규칙) — 새 World · `World.Restore` 후 모두 부르고, 돌려받은 `PlayerVisionSystem.Refresh()`로 첫 시야를 계산한다
 - 마나는 `ProjectM.Magic.Mana.TrySpend` · `Mana.Restore`로만 바꾼다 (ManaChangedEvent 발행). 체력은 `Combat.ApplyDamage`.
 - 주문 조준 · 시전은 `SpellCasting`(`Preview` · `Check` · `TryCreateCast`) 하나 — 입력 미리보기와 실제 시전이 같은 계산을 쓴다. 주문 수치는 `SpellCatalog.asset`, 상태 · 지형 효과는 SpellDef 필드(태그)로 추가하고 조합은 반응 규칙 표에서 (규칙 9).
+- 상태 이상은 `StatusEffects`(Apply · TryApply)로만 걸고, 효과는 `StatusDef` 데이터 필드(틱당 피해 · 행동 비용 추가 · 행동 불가)로만 정한다 — 상태 종류별 분기 코드를 늘리지 않는다. 확률은 `RngStream.Combat`.
 - 시야는 `ISightRule`(지금 `ShadowcastSightRule` → `FieldOfView`), 사거리 · 조준선은 `ITargetingRule`(지금 `BresenhamTargetingRule`) 한 곳만 쓴다
 - 이름: 클래스 · 메서드 · 프로퍼티 PascalCase, private 필드 `_camelCase`, 지역 변수 camelCase
 - 게임 로직과 엔진 컴포넌트를 분리한다. 규칙은 순수 C#으로 쓰고, MonoBehaviour는 얇은 어댑터(이벤트 구독 · 표시 · 입력 전달)만 맡는다.
