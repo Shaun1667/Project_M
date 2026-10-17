@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using ProjectM.Core;
+using ProjectM.Items;
 using ProjectM.Magic;
 using ProjectM.Status;
 using ProjectM.UI;
@@ -46,7 +47,7 @@ namespace ProjectM.Tests
             var world = new World(map, 7);
             var s = new Session { World = world, Book = SpellTests.BalanceBookFull(), Clock = new TurnClock(world.Scheduler, world.PlayerInput) };
             world.InstallCoreSystems(new ShadowcastSightRule(), Magic, s.Book.Statuses, s.Book.Terrains);
-            s.Player = UnitSpawner.SpawnPlayer(world, PlayerDef, new GridPos(1, 2), Magic.SpellSlotCount);
+            s.Player = UnitSpawner.SpawnPlayer(world, PlayerDef, new GridPos(1, 2), Magic.QuickSlotCount);
             s.Enemy = UnitSpawner.SpawnEnemy(world, EnemyDef, new GridPos(9, 2), new IdleAi());
             s.Hud = new HudModel(logLines, Text);
             s.Hud.Bind(world.Events, s.Player, s.Book);
@@ -67,7 +68,7 @@ namespace ProjectM.Tests
             Assert.That(s.Hud.MaxHp, Is.EqualTo(20));
             Assert.That(s.Hud.Mana, Is.EqualTo(10));
             Assert.That(s.Hud.MaxMana, Is.EqualTo(10));
-            Assert.That(s.Hud.SpellSlots, Is.EqualTo(new[] { "fire_basic", "ice_basic", "lightning_basic", "poison_basic" }));
+            Assert.That(s.Hud.QuickSlots, Is.EqualTo(new[] { InventoryRef.Spell("fire_basic"), InventoryRef.Spell("ice_basic"), InventoryRef.Spell("lightning_basic"), InventoryRef.Spell("poison_basic") }));
             Assert.That(s.Hud.SlotCosts, Is.EqualTo(new[] { 3, 2, 4, 3 }), "BALANCE 5번 마나 비용");
             Assert.That(s.Hud.Log, Is.Empty);
         }
@@ -199,17 +200,17 @@ namespace ProjectM.Tests
             Assert.That(hud.Log, Is.EqualTo(new[] { $"독화! 적 {s.Enemy.Id}", "gas_explosion!" }));
         }
 
-        // 3-1: 디버그 창에서 장착 칸을 바꾸면 HUD 칸 · 비용이 따라 바뀐다
+        // 3-2a: 빠른 칸을 바꾸면 HUD 칸 · 비용이 따라 바뀐다 (3-1 장착 칸 테스트를 옮김)
         [Test]
-        public void SpellSlotsChange_UpdatesSlotsAndCosts()
+        public void QuickSlotsChange_UpdatesSlotsAndCosts()
         {
             var s = Start();
-            SpellSlots.Assign(s.World, s.Book, s.Player, 0, null);
-            SpellSlots.Assign(s.World, s.Book, s.Player, 3, "fire_basic");
+            Inventory.AssignQuickSlot(s.World, s.Player, 0, InventoryRef.Empty);
+            Inventory.AssignQuickSlot(s.World, s.Player, 3, InventoryRef.Spell("fire_basic"));
             s.World.Events.Flush();
-            Assert.That(s.Hud.SpellSlots, Is.EqualTo(new[] { null, "ice_basic", "lightning_basic", "fire_basic" }));
+            Assert.That(s.Hud.QuickSlots, Is.EqualTo(new[] { InventoryRef.Empty, InventoryRef.Spell("ice_basic"), InventoryRef.Spell("lightning_basic"), InventoryRef.Spell("fire_basic") }));
             Assert.That(s.Hud.SlotCosts, Is.EqualTo(new[] { -1, 2, 4, 3 }));
-            Assert.Throws<System.ArgumentException>(() => SpellSlots.Assign(s.World, s.Book, s.Player, 0, "no_such_spell"));
+            Assert.Throws<System.ArgumentException>(() => Inventory.AssignQuickSlot(s.World, s.Player, 0, InventoryRef.Spell("no_such_spell")), "인벤토리에 없는 주문");
         }
     }
 }

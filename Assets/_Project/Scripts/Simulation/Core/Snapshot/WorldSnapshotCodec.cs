@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text;
+using ProjectM.Items;
 using ProjectM.Units;
 
 namespace ProjectM.Core
@@ -76,9 +77,8 @@ namespace ProjectM.Core
                     w.Write(u.LastSeenY);
                     w.Write(u.MaxMana);
                     w.Write(u.Mana);
-                    w.Write(u.SpellSlots.Length);
-                    foreach (var slot in u.SpellSlots)
-                        w.Write(slot ?? string.Empty); // 빈 칸 = 빈 문자열
+                    WriteRefs(w, u.InventorySlots);
+                    WriteRefs(w, u.QuickSlots);
                     WriteOptionalPos(w, u.PreviousPos);
                     WriteOptionalPos(w, u.WanderTarget);
                     w.Write(u.Statuses.Length);
@@ -168,12 +168,8 @@ namespace ProjectM.Core
                     var lastSeenY = r.ReadInt32();
                     var maxMana = r.ReadInt32();
                     var mana = r.ReadInt32();
-                    var slots = new string[ReadCount(r)];
-                    for (int k = 0; k < slots.Length; k++)
-                    {
-                        var slot = r.ReadString();
-                        slots[k] = slot.Length == 0 ? null : slot;
-                    }
+                    var inventory = ReadRefs(r);
+                    var quick = ReadRefs(r);
                     var previousPos = ReadOptionalPos(r);
                     var wanderTarget = ReadOptionalPos(r);
                     var statuses = new UnitStatusState[ReadCount(r)];
@@ -183,13 +179,37 @@ namespace ProjectM.Core
                         statuses[k] = new UnitStatusState(type, r.ReadInt32());
                     }
                     s.Units[i] = new UnitState(id, faction, visualId, maxHp, attackDamage, sightRange, x, y, hp, hasLastSeen, lastSeenX, lastSeenY,
-                        maxMana, mana, slots, previousPos, wanderTarget, statuses);
+                        maxMana, mana, inventory, quick, previousPos, wanderTarget, statuses);
                 }
 
                 if (stream.Position != stream.Length)
                     throw new InvalidDataException("스냅샷 끝에 남는 데이터가 있다.");
                 return s;
             }
+        }
+
+        // 인벤토리 · 빠른 칸 (3-2a): 개수 + 칸마다 종류(int) · ID(빈 칸 = 빈 문자열)
+        private static void WriteRefs(BinaryWriter w, InventoryRef[] refs)
+        {
+            w.Write(refs.Length);
+            foreach (var entry in refs)
+            {
+                w.Write((int)entry.Kind);
+                w.Write(entry.Id ?? string.Empty);
+            }
+        }
+
+        private static InventoryRef[] ReadRefs(BinaryReader r)
+        {
+            var refs = new InventoryRef[ReadCount(r)];
+            for (int k = 0; k < refs.Length; k++)
+            {
+                var kind = (InventoryKind)r.ReadInt32();
+                var id = r.ReadString();
+                if (!Enum.IsDefined(typeof(InventoryKind), kind)) throw new InvalidDataException("알 수 없는 인벤토리 종류 " + (int)kind);
+                refs[k] = kind == InventoryKind.None ? InventoryRef.Empty : new InventoryRef(kind, id);
+            }
+            return refs;
         }
 
         // 있음 여부(bool) + x · y. 없으면 0, 0을 써서 바이트 길이를 고정한다.

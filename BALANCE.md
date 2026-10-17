@@ -87,7 +87,7 @@
 
 ---
 
-## 4. 마나 · 주문 장착 칸 — `Data/Magic/MagicConfig.asset`
+## 4. 마나 · 빠른 칸 · 인벤토리 — `Data/Magic/MagicConfig.asset`
 
 결정 (2026-10-16): Q1 · Q2 임시값. 틱당 회복만 (처치 회복 없음). 조정은 Phase 4 재미 검증에서.
 
@@ -97,10 +97,11 @@
 | 적 최대 마나 | `MeleeEnemy.asset` `_maxMana` | **0** | 마나 없음 · 회복 없음 |
 | 회복 주기 | `_manaRegenIntervalTicks` | **3틱** | (틱 + 1)이 3의 배수인 틱의 ⑤ 단계 |
 | 회복량 | `_manaRegenAmount` | **1** | 최대치에서 멈춤 |
-| 주문 장착 칸 | `_spellSlotCount` | **4** | 키 1 ~ 4 |
+| 빠른 칸 | `_spellSlotCount` (이름은 2-1 그대로) | **6** | 키 1 ~ 6, 주문 · 아이템 등록 (3-2a — 장착 칸 4개를 대신함) |
+| 인벤토리 칸 | `_inventorySlotCount` | **20** | 고정 칸 (3-2a 사용자 결정). 같은 주문은 한 번만, 아이템은 여러 개, 꽉 차면 못 넣음 |
 | 체력 자동 회복 주기 | `_hpRegenIntervalTicks` | **10틱** | 2-6 (2026-10-17 사용자 요청). (틱 + 1)이 10의 배수인 틱의 ⑤ 단계, 마나 회복 다음. 0이면 없음 |
 | 체력 자동 회복량 | `_hpRegenPercent` | **1%** | 최대 체력의 1%를 올림 · 최소 1 → 최대 체력 20이면 10틱마다 **1** (실제 5%). 플레이어만, 상태 이상 중에도 회복, 최대치에서 멈춤 |
-| 시작 주문 | `Player.asset` `_startingSpells` | **없음 (빈 칸 4개)** | 3-1부터 주문은 게임 중 획득 (REACTIONS.md D8), 지금은 디버그 창에서 칸마다 고름. 주문 내용은 5번 |
+| 시작 주문 | `Player.asset` `_startingSpells` | **없음** | 3-1부터 주문은 게임 중 획득 (REACTIONS.md D8). 시작 주문이 있으면 인벤토리 · 빠른 칸 앞쪽부터. 지금은 디버그 창 "[상태 변경] 인벤토리 · 빠른 칸"에서 넣는다 |
 
 검산 (`ManaTests.ProjectAssets_MatchBalanceTable`): 에셋 값이 위 표와 같다.
 결과: 바닥(0)에서 가득(10)까지 30틱. 체력은 1 → 20까지 190틱 (10틱마다 1). 2-2 주문 마나 비용은 이 회복 속도를 기준으로 정한다 (예: 비용 3 = 9틱마다 한 번 꼴).
@@ -219,6 +220,18 @@
 - 독 → 번개 콤보: 마나 3 + 4 = 7로 무리 전체에 독 2 + (중독 70%면) 폭발 최대 5. 플레이어가 폭발 범위에 있으면 같이 맞는다 — `ReactionTests.Explosion_AlsoHitsCasterInRange`
 - 독구름 위로 번개 광선 = 지나간 구름 칸마다 가스 폭발(주문당 4회 상한), 겹친 대상은 1회만 — `ReactionTests.GasExplosion_ConsumesCloud_OverlapHitsOnce`
 - 물 → 불 콤보 (3-2): 마나 2 + 3 = 5로 불 5 + 증발 2 = **7** + 화상 70% (기대 9.1) — 불 단독(7.1)보다 2 높지만 마나 2와 한 턴이 더 든다. 물 웅덩이에 독을 쏘면 9칸이 오염된 물(위 유닛 매 틱 1 + 젖음)로 바뀌어 길목 막기 · 지속 피해 지대가 된다 — `WaterTests`
+
+---
+
+## 9. 아이템 — `Data/Items/ItemCatalog.asset`
+
+결정 (2026-10-17, 3-2a 사용자 결정): 인벤토리(20칸) · 빠른 칸(6개)에 주문과 아이템을 함께 둔다. 아이템은 지금 마도구 하나. 얻는 방법(제작 · 획득)은 Phase 6, 그 전까지 디버그 창.
+
+| ID | 이름 `DisplayName` | 사용 `Use` | 비고 |
+|---|---|---|---|
+| `fusion_device` | 마법 융합기 | Fusion | 사용 → 주문 두 개를 골라 융합 시전 (3-2b, REACTIONS.md 5번). 3-2a에서는 "아직 쓸 수 없다" 안내만 |
+
+검산 (`InventoryTests.ProjectAsset_MatchesBalanceTable`): 에셋 값이 위 표와 같다.
 
 ---
 

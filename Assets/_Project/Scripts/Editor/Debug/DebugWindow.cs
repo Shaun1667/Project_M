@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using ProjectM.Items;
 using ProjectM.Units;
 using UnityEditor;
 using UnityEngine;
@@ -48,7 +50,7 @@ namespace ProjectM.Editor.Debugging
             EditorGUILayout.Space();
             DrawView(root);
             EditorGUILayout.Space();
-            DrawSpellSlots(root);
+            DrawInventory(root);
             EditorGUILayout.Space();
             DrawMana(root);
             EditorGUILayout.EndScrollView();
@@ -73,39 +75,81 @@ namespace ProjectM.Editor.Debugging
             }
         }
 
+        private int _spellPick;
+        private int _itemPick;
+
         /// <summary>
-        /// [상태 변경] 주문 장착 칸 (3-1, REACTIONS.md D8): 시작 칸은 비어 있고, 테스트용으로 칸마다 주문을 고른다.
-        /// 게임 상태(World)를 바꾸므로 시드 재현 · 저장에 영향이 있다.
+        /// [상태 변경] 인벤토리 · 빠른 칸 (3-2a): 주문 · 아이템 넣기 / 빼기, 빠른 칸마다 등록할 항목 고르기.
+        /// 주문 · 아이템은 게임 중에 얻는다 (Phase 6) — 그 전까지 테스트용. 게임 상태(World)를 바꾸므로 시드 재현 · 저장에 영향이 있다.
         /// </summary>
-        private static void DrawSpellSlots(GameRoot root)
+        private void DrawInventory(GameRoot root)
         {
-            EditorGUILayout.LabelField("[상태 변경] 주문 장착 칸", EditorStyles.boldLabel);
-            if (!root.World.Units.TryGet(root.PlayerId, out var player) || root.Spells == null)
+            EditorGUILayout.LabelField("[상태 변경] 인벤토리 · 빠른 칸", EditorStyles.boldLabel);
+            if (!root.World.Units.TryGet(root.PlayerId, out var player) || root.Spells == null || root.Items == null)
             {
                 EditorGUILayout.HelpBox("플레이어가 없다.", MessageType.None);
                 return;
             }
 
-            var ids = root.Spells.Ids;
-            var options = new string[ids.Count + 1];
-            options[0] = "(빈 칸)";
-            for (int i = 0; i < ids.Count; i++) options[i + 1] = ids[i];
-
             using (new EditorGUI.IndentLevelScope())
             {
-                for (int slot = 0; slot < player.SpellSlots.Length; slot++)
-                {
-                    var current = player.SpellSlots[slot];
-                    int index = 0;
-                    for (int i = 0; i < ids.Count; i++)
-                        if (ids[i] == current) index = i + 1;
+                _spellPick = AddRow("주문 넣기", root.Spells.Ids, _spellPick, id => InventoryRef.Spell(id), root, player);
+                _itemPick = AddRow("아이템 넣기", root.Items.Ids, _itemPick, id => InventoryRef.Item(id), root, player);
 
-                    int picked = EditorGUILayout.Popup($"칸 {slot + 1}", index, options);
+                // 인벤토리 목록 (빈 칸 제외) + 빼기
+                var slots = player.InventorySlots;
+                int filled = 0;
+                for (int i = 0; i < slots.Length; i++)
+                {
+                    if (slots[i].IsEmpty) continue;
+                    filled++;
+                    using (new EditorGUILayout.HorizontalScope())
+                    {
+                        EditorGUILayout.LabelField($"칸 {i + 1}", slots[i].ToString());
+                        if (GUILayout.Button("빼기", GUILayout.Width(48)))
+                        {
+                            Inventory.RemoveAt(root.World, player, i);
+                            root.World.Events.Flush();
+                            GUIUtility.ExitGUI();
+                        }
+                    }
+                }
+                EditorGUILayout.LabelField("인벤토리", $"{filled}/{slots.Length}칸");
+
+                // 빠른 칸: (빈 칸) + 인벤토리 항목
+                var entries = new List<InventoryRef>();
+                foreach (var e in slots)
+                    if (!e.IsEmpty && !entries.Contains(e)) entries.Add(e);
+                var options = new string[entries.Count + 1];
+                options[0] = "(빈 칸)";
+                for (int i = 0; i < entries.Count; i++) options[i + 1] = entries[i].ToString();
+                for (int slot = 0; slot < player.QuickSlots.Length; slot++)
+                {
+                    int index = entries.IndexOf(player.QuickSlots[slot]) + 1;
+                    int picked = EditorGUILayout.Popup($"빠른 칸 {slot + 1}", index, options);
                     if (picked == index) continue;
-                    ProjectM.Magic.SpellSlots.Assign(root.World, root.Spells, player, slot, picked == 0 ? null : ids[picked - 1]);
+                    Inventory.AssignQuickSlot(root.World, player, slot, picked == 0 ? InventoryRef.Empty : entries[picked - 1]);
                     root.World.Events.Flush(); // 틱 밖 변경 → HUD에 바로 보이게
                 }
             }
+        }
+
+        private static int AddRow(string label, IReadOnlyList<string> ids, int pick, System.Func<string, InventoryRef> make, GameRoot root, Unit player)
+        {
+            if (ids.Count == 0) return 0;
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                var names = new string[ids.Count];
+                for (int i = 0; i < ids.Count; i++) names[i] = ids[i];
+                pick = EditorGUILayout.Popup(label, Mathf.Clamp(pick, 0, ids.Count - 1), names);
+                if (GUILayout.Button("넣기", GUILayout.Width(48)))
+                {
+                    if (Inventory.TryAdd(root.World, root.Spells, root.Items, player, make(ids[pick])) < 0)
+                        Debug.LogWarning("[DebugWindow] 넣지 못함 — 인벤토리가 꽉 찼거나 이미 있는 주문");
+                    root.World.Events.Flush();
+                }
+            }
+            return pick;
         }
 
         private static void DrawInfo(GameRoot root)

@@ -22,7 +22,7 @@ namespace ProjectM.Tests
 
         private static void EquipWater(ReactionTests.Session s)
         {
-            SpellSlots.Assign(s.World, s.Book, s.Player, Water, "water_basic");
+            TestInventory.Equip(s.World, s.Book, s.Player, Water, "water_basic");
             s.World.Events.Flush();
         }
 

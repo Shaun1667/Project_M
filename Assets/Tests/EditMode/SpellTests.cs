@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using ProjectM.Core;
 using ProjectM.Data;
+using ProjectM.Items;
 using ProjectM.Magic;
 using ProjectM.Units;
 using UnityEditor;
@@ -116,7 +117,7 @@ namespace ProjectM.Tests
             var s = new Session { World = world, Book = BalanceBook(), Clock = new TurnClock(world.Scheduler, world.PlayerInput) };
             world.InstallCoreSystems(Sight, Magic, s.Book.Statuses, s.Book.Terrains);
             world.Events.Subscribe<SpellCastEvent>(s.Casts.Add);
-            s.Player = UnitSpawner.SpawnPlayer(world, PlayerDef, player, Magic.SpellSlotCount);
+            s.Player = UnitSpawner.SpawnPlayer(world, PlayerDef, player, Magic.QuickSlotCount);
             foreach (var p in enemies) s.Enemies.Add(UnitSpawner.SpawnEnemy(world, EnemyDef, p, new IdleAi()));
             world.Events.Flush();
             return s;
@@ -186,9 +187,9 @@ namespace ProjectM.Tests
             Mana.TrySpend(s.World, s.Player, 9);
             Assert.That(Check(Fire, new GridPos(3, 2)), Is.EqualTo(CastBlock.NotEnoughMana));
 
-            s.Player.SpellSlots[Fire] = null;
+            s.Player.QuickSlots[Fire] = InventoryRef.Empty;
             Assert.That(Check(Fire, new GridPos(3, 2)), Is.EqualTo(CastBlock.EmptySlot));
-            s.Player.SpellSlots[Fire] = "no_such_spell";
+            s.Player.InventorySlots[0] = s.Player.QuickSlots[Fire] = InventoryRef.Spell("no_such_spell"); // 데이터에서 빠진 주문
             Assert.That(Check(Fire, new GridPos(3, 2)), Is.EqualTo(CastBlock.UnknownSpell));
         }
 

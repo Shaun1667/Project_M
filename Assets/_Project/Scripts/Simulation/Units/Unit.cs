@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using ProjectM.Core;
+using ProjectM.Items;
 using ProjectM.Status;
 
 namespace ProjectM.Units
@@ -23,10 +24,21 @@ namespace ProjectM.Units
         public int Hp { get; internal set; }
         public int Mana { get; internal set; }
 
+        /// <summary>인벤토리 (3-2a). 길이 = 칸 수(MagicConfig.InventorySlotCount), 빈 칸은 Empty. Items.Inventory로만 바꾼다.</summary>
+        public InventoryRef[] InventorySlots { get; }
+
         /// <summary>
-        /// 주문 장착 칸 (2-1). 길이 = 칸 수(MagicConfig.SpellSlotCount), 빈 칸은 null. 칸 번호 i는 키 i+1.
+        /// 빠른 칸 (3-2a, 2-1 주문 장착 칸을 대신함). 길이 = 칸 수(MagicConfig.QuickSlotCount), 칸 번호 i는 키 i+1.
+        /// 인벤토리에 있는 주문 · 아이템을 가리킨다. Items.Inventory로만 바꾼다.
         /// </summary>
-        public string[] SpellSlots { get; }
+        public InventoryRef[] QuickSlots { get; }
+
+        /// <summary>빠른 칸 slot의 주문 ID. 칸 밖 · 빈 칸 · 아이템이면 null.</summary>
+        public string QuickSlotSpell(int slot) =>
+            slot >= 0 && slot < QuickSlots.Length && QuickSlots[slot].Kind == InventoryKind.Spell ? QuickSlots[slot].Id : null;
+
+        /// <summary>인벤토리에 그 주문이 있는지.</summary>
+        public bool HasSpell(string spellId) => spellId != null && Array.IndexOf(InventorySlots, InventoryRef.Spell(spellId)) >= 0;
 
         /// <summary>AI 기억 (1-7): 마지막으로 상대(플레이어)를 본 칸. 없으면 null. AI가 쓰고 스냅샷에 저장된다.</summary>
         public GridPos? LastSeenTargetPos { get; set; }
@@ -46,7 +58,7 @@ namespace ProjectM.Units
         public bool IsAlive => Hp > 0;
 
         public Unit(EntityId id, Faction faction, string visualId, int maxHp, int attackDamage, int sightRange, GridPos pos, int hp,
-            GridPos? lastSeenTargetPos = null, int maxMana = 0, int mana = 0, string[] spellSlots = null,
+            GridPos? lastSeenTargetPos = null, int maxMana = 0, int mana = 0, InventoryRef[] inventorySlots = null, InventoryRef[] quickSlots = null,
             GridPos? previousPos = null, GridPos? wanderTarget = null)
         {
             PreviousPos = previousPos;
@@ -62,24 +74,28 @@ namespace ProjectM.Units
             LastSeenTargetPos = lastSeenTargetPos;
             MaxMana = maxMana;
             Mana = mana;
-            SpellSlots = spellSlots ?? Array.Empty<string>();
+            InventorySlots = inventorySlots ?? Array.Empty<InventoryRef>();
+            QuickSlots = quickSlots ?? Array.Empty<InventoryRef>();
         }
 
         /// <summary>
-        /// 데이터에서 새 유닛: 체력 · 마나 가득. 장착 칸 spellSlotCount개를 시작 주문으로 앞쪽부터 채운다.
+        /// 데이터에서 새 유닛: 체력 · 마나 가득. 인벤토리 inventorySize칸 · 빠른 칸 quickSlotCount칸을 만들고,
+        /// 시작 주문을 인벤토리 앞쪽부터 넣고 같은 순서로 빠른 칸에 등록한다 (3-2a).
         /// </summary>
-        public static Unit FromDef(EntityId id, Faction faction, UnitDef def, GridPos pos, int spellSlotCount = 0)
+        public static Unit FromDef(EntityId id, Faction faction, UnitDef def, GridPos pos, int quickSlotCount = 0, int inventorySize = 0)
         {
-            if (spellSlotCount < 0) throw new ArgumentOutOfRangeException(nameof(spellSlotCount));
-            if (def.StartingSpells.Count > spellSlotCount)
-                throw new ArgumentException($"시작 주문 {def.StartingSpells.Count}개가 장착 칸 {spellSlotCount}개보다 많다.", nameof(def));
+            if (quickSlotCount < 0) throw new ArgumentOutOfRangeException(nameof(quickSlotCount));
+            if (inventorySize < 0) throw new ArgumentOutOfRangeException(nameof(inventorySize));
+            if (def.StartingSpells.Count > quickSlotCount || def.StartingSpells.Count > inventorySize)
+                throw new ArgumentException($"시작 주문 {def.StartingSpells.Count}개가 빠른 칸 {quickSlotCount}개 · 인벤토리 {inventorySize}칸보다 많다.", nameof(def));
 
-            var slots = new string[spellSlotCount];
+            var inventory = new InventoryRef[inventorySize];
+            var quick = new InventoryRef[quickSlotCount];
             for (int i = 0; i < def.StartingSpells.Count; i++)
-                slots[i] = def.StartingSpells[i];
+                inventory[i] = quick[i] = InventoryRef.Spell(def.StartingSpells[i]);
 
             return new Unit(id, faction, def.VisualId, def.MaxHp, def.AttackDamage, def.SightRange, pos, def.MaxHp,
-                null, def.MaxMana, def.MaxMana, slots);
+                null, def.MaxMana, def.MaxMana, inventory, quick);
         }
     }
 }

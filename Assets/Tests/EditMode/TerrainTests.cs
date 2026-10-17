@@ -73,7 +73,7 @@ namespace ProjectM.Tests
             var world = new World(Room(), 3UL);
             var s = new Session { World = world, Book = SpellTests.BalanceBookFull(), Clock = new TurnClock(world.Scheduler, world.PlayerInput) };
             world.InstallCoreSystems(Sight, Magic, s.Book.Statuses, s.Book.Terrains);
-            s.Player = UnitSpawner.SpawnPlayer(world, PlayerDef, player, Magic.SpellSlotCount);
+            s.Player = UnitSpawner.SpawnPlayer(world, PlayerDef, player, Magic.QuickSlotCount);
             foreach (var p in enemies) s.Enemies.Add(UnitSpawner.SpawnEnemy(world, EnemyDef, p, new IdleAi()));
             world.Events.Flush();
             return s;

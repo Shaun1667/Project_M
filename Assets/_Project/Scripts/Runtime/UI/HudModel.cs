@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using ProjectM.Core;
+using ProjectM.Items;
 using ProjectM.Magic;
 using ProjectM.Status;
 using ProjectM.Units;
@@ -19,7 +20,7 @@ namespace ProjectM.UI
         private readonly Dictionary<EntityId, HashSet<StatusType>> _activeStatuses = new Dictionary<EntityId, HashSet<StatusType>>();
         private SimEventBus _bus;
         private EntityId _playerId;
-        private string[] _spellSlots = new string[0];
+        private InventoryRef[] _quickSlots = new InventoryRef[0];
         private int[] _slotCosts = new int[0];
         private SpellBook _spellBook;
 
@@ -36,8 +37,9 @@ namespace ProjectM.UI
         public int Mana { get; private set; }
         public int MaxMana { get; private set; }
         public bool Dead { get; private set; }
-        public IReadOnlyList<string> SpellSlots => _spellSlots;
-        /// <summary>칸마다 마나 비용, 주문이 없으면 -1.</summary>
+        /// <summary>빠른 칸 (3-2a). 빈 칸은 Empty.</summary>
+        public IReadOnlyList<InventoryRef> QuickSlots => _quickSlots;
+        /// <summary>칸마다 마나 비용, 주문이 아니면(빈 칸 · 아이템) -1.</summary>
         public IReadOnlyList<int> SlotCosts => _slotCosts;
         /// <summary>플레이어 상태 → 남은 틱 (종류 순).</summary>
         public IReadOnlyDictionary<StatusType, int> PlayerStatuses => _playerStatuses;
@@ -58,7 +60,7 @@ namespace ProjectM.UI
             MaxMana = player.MaxMana;
             Dead = false;
             _spellBook = spellBook;
-            SetSlots(player.SpellSlots);
+            SetSlots(player.QuickSlots);
             _log.Clear();
             _playerStatuses.Clear();
             _activeStatuses.Clear();
@@ -74,20 +76,20 @@ namespace ProjectM.UI
             _bus.Subscribe<ManaChangedEvent>(OnManaChanged);
             _bus.Subscribe<SpellCastEvent>(OnSpellCast);
             _bus.Subscribe<StatusChangedEvent>(OnStatusChanged);
-            _bus.Subscribe<SpellSlotsChangedEvent>(OnSlotsChanged);
+            _bus.Subscribe<QuickSlotsChangedEvent>(OnSlotsChanged);
             _bus.Subscribe<ReactionTriggeredEvent>(OnReaction);
             Changed?.Invoke();
         }
 
-        private void SetSlots(string[] slots)
+        private void SetSlots(InventoryRef[] slots)
         {
-            _spellSlots = (string[])slots.Clone();
-            _slotCosts = new int[_spellSlots.Length];
-            for (int i = 0; i < _spellSlots.Length; i++)
-                _slotCosts[i] = _spellBook != null && _spellSlots[i] != null && _spellBook.TryGet(_spellSlots[i], out var spell) ? spell.ManaCost : -1;
+            _quickSlots = (InventoryRef[])slots.Clone();
+            _slotCosts = new int[_quickSlots.Length];
+            for (int i = 0; i < _quickSlots.Length; i++)
+                _slotCosts[i] = _spellBook != null && _quickSlots[i].Kind == InventoryKind.Spell && _spellBook.TryGet(_quickSlots[i].Id, out var spell) ? spell.ManaCost : -1;
         }
 
-        private void OnSlotsChanged(SpellSlotsChangedEvent e)
+        private void OnSlotsChanged(QuickSlotsChangedEvent e)
         {
             if (e.Id != _playerId) return;
             SetSlots(e.Slots);
@@ -110,7 +112,7 @@ namespace ProjectM.UI
             _bus.Unsubscribe<ManaChangedEvent>(OnManaChanged);
             _bus.Unsubscribe<SpellCastEvent>(OnSpellCast);
             _bus.Unsubscribe<StatusChangedEvent>(OnStatusChanged);
-            _bus.Unsubscribe<SpellSlotsChangedEvent>(OnSlotsChanged);
+            _bus.Unsubscribe<QuickSlotsChangedEvent>(OnSlotsChanged);
             _bus.Unsubscribe<ReactionTriggeredEvent>(OnReaction);
             _bus = null;
         }

@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eb779607fd44e6443b1f6d594b3d2233, type: 3}
+  m_Name: ItemCatalog
+  m_EditorClassIdentifier: ProjectM.Runtime::ProjectM.Data.ItemCatalogAsset
+  _items:
+  - Id: fusion_device
+    DisplayName: "\uB9C8\uBC95 \uC735\uD569\uAE30"
+    Use: 1

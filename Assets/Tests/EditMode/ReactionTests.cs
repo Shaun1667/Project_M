@@ -119,7 +119,7 @@ namespace ProjectM.Tests
             world.InstallCoreSystems(Sight, Magic, book.Statuses, book.Terrains);
             world.Events.Subscribe<ReactionTriggeredEvent>(e => s.Reactions.Add(e.ReactionId));
             world.Events.Subscribe<UnitDamagedEvent>(s.Hits.Add);
-            s.Player = UnitSpawner.SpawnPlayer(world, PlayerDef, player, Magic.SpellSlotCount);
+            s.Player = UnitSpawner.SpawnPlayer(world, PlayerDef, player, Magic.QuickSlotCount);
             foreach (var p in enemies) s.Enemies.Add(UnitSpawner.SpawnEnemy(world, EnemyDef, p, new IdleAi()));
             world.Events.Flush();
             return s;
@@ -258,7 +258,7 @@ namespace ProjectM.Tests
         {
             var book = Book(new SpellDef("fire_poison", Element.Fire, SpellShape.Bolt, 6, 1, 0, 0, StatusType.Poison, 100));
             var s = Start(book, new GridPos(1, 2), new GridPos(4, 2));
-            s.Player.SpellSlots[0] = "fire_poison";
+            TestInventory.Equip(s.World, book, s.Player, 0, "fire_poison");
             s.Cast(0, s.Enemies[0].Pos);
             Assert.That(s.Reactions, Is.Empty, "첫 시전: 중독은 반응 뒤에 걸림");
             s.Cast(0, s.Enemies[0].Pos);
@@ -276,7 +276,7 @@ namespace ProjectM.Tests
             }, new ReactionConfig(4, 3, 5), statuses);
             var book = new SpellBook(new[] { new SpellDef("ice_basic", Element.Ice, SpellShape.Bolt, 6, 1, 0) }, statuses, null, reactions);
             var s = Start(book, new GridPos(1, 2), new GridPos(4, 2));
-            s.Player.SpellSlots[1] = "ice_basic";
+            TestInventory.Equip(s.World, book, s.Player, 1, "ice_basic");
             s.Poison(s.Enemies[0]);
             s.Cast(Ice, s.Enemies[0].Pos);
             Assert.That(s.HitsOn(s.Enemies[0]), Is.EqualTo(new[] { 1, 3 }), "주문 피해 1 → 상한 3");

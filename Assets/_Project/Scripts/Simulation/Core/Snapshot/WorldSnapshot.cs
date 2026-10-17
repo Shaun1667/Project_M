@@ -1,4 +1,5 @@
 using System;
+using ProjectM.Items;
 using ProjectM.Status;
 using ProjectM.Units;
 
@@ -42,8 +43,8 @@ namespace ProjectM.Core
     [Serializable]
     public sealed class WorldSnapshot
     {
-        /// <summary>1: 1-4 최초. 2: 유닛(Units) 추가 (1-6). 3: 탐험 기록(Explored) · 유닛 기억(LastSeen) 추가 (1-7). 4: 유닛 마나 · 주문 장착 칸 (2-1). 5: 유닛 발자국(PreviousPos) · 배회 목적지(WanderTarget). 6: 유닛 상태 이상 (2-3). 7: 지형 효과 레이어 (2-4).</summary>
-        public const int CurrentFormatVersion = 7;
+        /// <summary>1: 1-4 최초. 2: 유닛(Units) 추가 (1-6). 3: 탐험 기록(Explored) · 유닛 기억(LastSeen) 추가 (1-7). 4: 유닛 마나 · 주문 장착 칸 (2-1). 5: 유닛 발자국(PreviousPos) · 배회 목적지(WanderTarget). 6: 유닛 상태 이상 (2-3). 7: 지형 효과 레이어 (2-4). 8: 주문 장착 칸 → 인벤토리 · 빠른 칸 (3-2a).</summary>
+        public const int CurrentFormatVersion = 8;
 
         public int FormatVersion = CurrentFormatVersion;
 
@@ -89,15 +90,17 @@ namespace ProjectM.Core
         public readonly int LastSeenY;
         public readonly int MaxMana;
         public readonly int Mana;
-        /// <summary>주문 장착 칸. 빈 칸은 null.</summary>
-        public readonly string[] SpellSlots;
+        /// <summary>인벤토리 칸 (3-2a). 빈 칸은 Empty.</summary>
+        public readonly InventoryRef[] InventorySlots;
+        /// <summary>빠른 칸 (3-2a). 빈 칸은 Empty.</summary>
+        public readonly InventoryRef[] QuickSlots;
         public readonly GridPos? PreviousPos;
         public readonly GridPos? WanderTarget;
         /// <summary>걸린 상태 이상, 종류 순.</summary>
         public readonly UnitStatusState[] Statuses;
 
         public UnitState(EntityId id, Faction faction, string visualId, int maxHp, int attackDamage, int sightRange, int x, int y, int hp,
-            bool hasLastSeen, int lastSeenX, int lastSeenY, int maxMana, int mana, string[] spellSlots,
+            bool hasLastSeen, int lastSeenX, int lastSeenY, int maxMana, int mana, InventoryRef[] inventorySlots, InventoryRef[] quickSlots,
             GridPos? previousPos, GridPos? wanderTarget, UnitStatusState[] statuses)
         {
             PreviousPos = previousPos;
@@ -105,7 +108,8 @@ namespace ProjectM.Core
             WanderTarget = wanderTarget;
             MaxMana = maxMana;
             Mana = mana;
-            SpellSlots = spellSlots ?? Array.Empty<string>();
+            InventorySlots = inventorySlots ?? Array.Empty<InventoryRef>();
+            QuickSlots = quickSlots ?? Array.Empty<InventoryRef>();
             HasLastSeen = hasLastSeen;
             LastSeenX = lastSeenX;
             LastSeenY = lastSeenY;

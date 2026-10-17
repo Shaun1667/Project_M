@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ProjectM.Core;
+using ProjectM.Items;
 using ProjectM.Magic;
 using ProjectM.UI;
 using ProjectM.Units;
@@ -17,16 +18,19 @@ namespace ProjectM.Input
     ///   누르고 있으면 반복하며, 반복 때마다 지금 눌린 키 조합으로 방향을 다시 정한다. 넘패드 5 · 스페이스 · 마침표 = 제자리 대기.
     /// - 클릭: 그 칸까지 경로를 따라 한 칸씩 여러 턴 진행. 적 칸을 누르면 다가가서 한 번 공격.
     ///   키 입력 · 새 클릭 · 길이 막힘 · 새 적이 보임 → 멈춤. 자기 칸 클릭 = 제자리 대기.
-    /// - 주문 (2-2): 숫자 키 1~N = 그 칸의 주문으로 조준 모드. 보이는 가장 가까운 적이 자동 선택, Tab = 다음 적,
-    ///   방향키 · WASD · 넘패드 = 조준 칸 한 칸씩, 마우스 = 가리킨 칸, Space · Enter · 클릭 = 시전, Esc · 같은 숫자 키 = 취소.
-    ///   조준 중에는 경로 · 맞는 칸을 미리보기로 칠한다 (AimPreviewPresenter). 쓸 수 없으면 이유를 힌트로 보낸다.
-    /// 클릭 경로 · 조준 상태는 입력 상태일 뿐 World에 저장하지 않는다.
+    /// - 빠른 칸 (3-2a): 숫자 키 1~N · HUD 칸 클릭. 주문 = 조준 모드, 아이템 = 사용, 빈 칸 = 인벤토리가 열려 그 칸에 등록할 항목 고르기.
+    /// - 조준 (2-2): 보이는 가장 가까운 적이 자동 선택, Tab = 다음 적, 방향키 · WASD · 넘패드 = 조준 칸 한 칸씩, 마우스 = 가리킨 칸,
+    ///   Space · Enter · 클릭 = 시전, Esc · 같은 숫자 키 = 취소. 미리보기는 AimPreviewPresenter. 쓸 수 없으면 이유를 힌트로 보낸다.
+    /// - 인벤토리 (3-2a): I 키로 열고 닫는다. 열려 있는 동안 다른 입력은 받지 않는다 (차례도 안 감) — 규칙은 InventoryMenu.
+    /// 클릭 경로 · 조준 · 인벤토리 창 상태는 입력 상태일 뿐 World에 저장하지 않는다.
     /// </summary>
     public sealed class PlayerInputController : MonoBehaviour
     {
         [SerializeField] private Camera _camera;
         [SerializeField] private Grid _grid;
         [SerializeField] private ProjectM.Presentation.AimPreviewPresenter _aimPreview;
+        [Tooltip("빠른 칸 클릭 판정 · 강조 (3-2a)")] [SerializeField] private HudPresenter _hud;
+        [Tooltip("인벤토리 창 (3-2a)")] [SerializeField] private InventoryPresenter _inventoryView;
 
         [Header("입력 반복 (연출 시간, 규칙과 무관)")]
         [Tooltip("키를 누르고 있을 때 첫 반복까지 걸리는 시간, 초")]
@@ -59,17 +63,21 @@ namespace ProjectM.Input
         private SpellBook _spells;
         private ITargetingRule _targeting;
 
-        // 조준 모드 (주문 칸 번호, -1 = 조준 아님)
+        // 조준 모드: 주문 ID (null = 조준 아님) · 빠른 칸 번호 (-1 = 인벤토리에서 바로)
+        private string _aimSpellId;
         private int _aimSlot = -1;
         private GridPos _aimCursor;
         private Vector2 _lastMousePos;
 
-        /// <summary>HUD에 보일 안내 한 줄 (조준 안내 · 시전 불가 이유). 빈 문자열 = 지움.</summary>
+        private readonly InventoryMenu _inventory = new InventoryMenu();
+
+        /// <summary>HUD에 보일 안내 한 줄 (조준 안내 · 시전 불가 이유 · 인벤토리 안내). 빈 문자열 = 지움.</summary>
         public event System.Action<string> HintChanged;
 
-        public bool IsAiming => _aimSlot >= 0;
+        public bool IsAiming => _aimSpellId != null;
+        public InventoryMenu Inventory => _inventory;
 
-        /// <summary>안내 문구 (한글 · 주문 표시 이름). GameRoot가 SpellCatalog 이름으로 채운다.</summary>
+        /// <summary>안내 문구 (한글 · 주문 · 아이템 표시 이름). GameRoot가 Catalog 이름으로 채운다.</summary>
         public HudText Text { get; set; } = new HudText();
 
         private bool _comboPending;
@@ -91,8 +99,13 @@ namespace ProjectM.Input
             _grid = grid;
         }
 
+        private void Awake() => _inventory.Changed += DrawInventory;
+
+        private void OnDestroy() => _inventory.Changed -= DrawInventory;
+
         public void Bind(World world, GameConfig config, ITickClock clock, ISightRule sight, SpellBook spells, ITargetingRule targeting)
         {
+            Unbind();
             _world = world;
             _config = config;
             _clock = clock;
@@ -100,16 +113,22 @@ namespace ProjectM.Input
             _spells = spells;
             _targeting = targeting;
             _comboPending = false;
-            CancelPath();
-            CancelAim();
+            _world.Events.Subscribe<InventoryChangedEvent>(OnInventoryChanged);
+            _world.Events.Subscribe<QuickSlotsChangedEvent>(OnQuickSlotsChanged);
         }
 
         public void Unbind()
         {
-            _world = null;
-            _clock = null;
             CancelPath();
             CancelAim();
+            _inventory.Close();
+            if (_world != null)
+            {
+                _world.Events.Unsubscribe<InventoryChangedEvent>(OnInventoryChanged);
+                _world.Events.Unsubscribe<QuickSlotsChangedEvent>(OnQuickSlotsChanged);
+            }
+            _world = null;
+            _clock = null;
         }
 
         private void Update()
@@ -119,23 +138,44 @@ namespace ProjectM.Input
             {
                 CancelPath();
                 CancelAim();
+                _inventory.Close();
                 return;
             }
 
             var keyboard = Keyboard.current;
-            var mouseDevice = Mouse.current;
-            if (IsAiming)
+            var mouse = Mouse.current;
+            if (_inventory.IsOpen)
             {
-                HandleAim(player, keyboard, mouseDevice);
+                HandleInventory(player, keyboard, mouse);
                 return;
             }
-            if (keyboard != null && TryStartAim(player, keyboard)) return;
-            if (keyboard != null && HandleKeyboard(keyboard)) return;
-
-            var mouse = Mouse.current;
-            if (mouse != null && mouse.leftButton.wasPressedThisFrame && _camera != null && _grid != null)
+            if (keyboard != null && keyboard[Key.I].wasPressedThisFrame)
             {
-                OnClick(player, mouse.position.ReadValue());
+                OpenInventory();
+                return;
+            }
+            if (IsAiming)
+            {
+                HandleAim(player, keyboard, mouse);
+                return;
+            }
+            if (keyboard != null)
+            {
+                int slot = PressedSlotKey(keyboard, player.QuickSlots.Length);
+                if (slot >= 0)
+                {
+                    UseQuickSlot(player, slot);
+                    return;
+                }
+                if (HandleKeyboard(keyboard)) return;
+            }
+
+            if (mouse != null && mouse.leftButton.wasPressedThisFrame)
+            {
+                var screen = mouse.position.ReadValue();
+                int slot = _hud != null ? _hud.QuickSlotAt(screen) : -1;
+                if (slot >= 0) UseQuickSlot(player, slot);
+                else if (_camera != null && _grid != null) OnClick(player, screen);
                 return;
             }
 
@@ -143,52 +183,191 @@ namespace ProjectM.Input
                 StepPath();
         }
 
-        // ── 주문 조준 (2-2) ──
+        // ── 빠른 칸 (3-2a) ──
 
-        /// <summary>숫자 키로 조준 시작. 칸이 비었거나 마나가 모자라면 힌트만.</summary>
-        private bool TryStartAim(Unit player, Keyboard keyboard)
+        /// <summary>빠른 칸 사용: 주문 = 조준, 아이템 = 사용, 빈 칸 = 인벤토리에서 등록할 항목 고르기.</summary>
+        private void UseQuickSlot(Unit player, int slot)
         {
-            if (_spells == null) return false;
-            int slot = PressedSlotKey(keyboard, player.SpellSlots.Length);
-            if (slot < 0) return false;
-
             CancelPath();
             _comboPending = false;
-            var id = player.SpellSlots[slot];
-            if (id == null || !_spells.TryGet(id, out var spell))
+            var entry = player.QuickSlots[slot];
+            if (entry.IsEmpty)
             {
-                Hint(HudText.EmptySlot(slot));
-                return true;
+                _inventory.OpenForAssign(slot);
+                Hint(HudText.AssignHint(slot));
+                return;
+            }
+            if (entry.Kind == InventoryKind.Spell) TryStartAim(player, entry.Id, slot);
+            else UseItem(entry);
+        }
+
+        /// <summary>아이템 사용 — 마법 융합기는 3-2b에서. 지금은 안내만.</summary>
+        private void UseItem(InventoryRef entry)
+        {
+            Hint(Text.ItemNotUsableYet(entry));
+        }
+
+        // ── 인벤토리 (3-2a) ──
+
+        private void OpenInventory()
+        {
+            CancelPath();
+            CancelAim();
+            _comboPending = false;
+            _inventory.Open();
+            Hint(HudText.InventoryHint);
+        }
+
+        private void HandleInventory(Unit player, Keyboard keyboard, Mouse mouse)
+        {
+            if (keyboard != null)
+            {
+                if (keyboard[Key.I].wasPressedThisFrame)
+                {
+                    CloseInventory();
+                    return;
+                }
+                if (keyboard[Key.Escape].wasPressedThisFrame)
+                {
+                    _inventory.Cancel();
+                    if (!_inventory.IsOpen) Hint(string.Empty);
+                    return;
+                }
+                int slot = PressedSlotKey(keyboard, player.QuickSlots.Length);
+                if (slot >= 0)
+                {
+                    Apply(player, _inventory.PressQuickSlot(_world, player, slot));
+                    return;
+                }
+                foreach (var key in CastKeys)
+                {
+                    if (!keyboard[key].wasPressedThisFrame) continue;
+                    Apply(player, _inventory.Confirm(_world, player));
+                    return;
+                }
+                var dir = ReadHeldDirection(keyboard, out bool pressedNow);
+                if (dir != default && (pressedNow || Time.time >= _nextRepeatTime))
+                {
+                    _inventory.Move(dir.X, dir.Y, player.InventorySlots.Length);
+                    _nextRepeatTime = Time.time + (pressedNow ? _keyRepeatDelay : _keyRepeatInterval);
+                    return;
+                }
+            }
+
+            if (mouse == null || _inventoryView == null) return;
+            var screen = mouse.position.ReadValue();
+            bool moved = (screen - _lastMousePos).sqrMagnitude > 0.01f;
+            bool clicked = mouse.leftButton.wasPressedThisFrame;
+            if (!moved && !clicked) return;
+            _lastMousePos = screen;
+
+            int option = _inventoryView.MenuOptionAt(screen);
+            int cell = _inventoryView.CellAt(screen);
+            if (option >= 0) _inventory.SelectMenu(option);
+            else if (cell >= 0) _inventory.Select(cell, player.InventorySlots.Length);
+            if (!clicked) return;
+
+            int quick = _hud != null ? _hud.QuickSlotAt(screen) : -1;
+            if (quick >= 0) Apply(player, _inventory.PressQuickSlot(_world, player, quick));
+            else if (option >= 0 || cell >= 0) Apply(player, _inventory.Confirm(_world, player));
+            else if (!_inventoryView.Contains(screen)) _inventory.Cancel(); // 창 밖 클릭 = 한 단계 뒤로
+        }
+
+        /// <summary>인벤토리 조작 결과 처리 — 틱 밖 변경(빠른 칸 등록)은 바로 HUD에 보이게 이벤트를 비운다.</summary>
+        private void Apply(Unit player, InventoryAction action)
+        {
+            _world.Events.Flush();
+            switch (action.Kind)
+            {
+                case InventoryActionKind.CastSpell:
+                    TryStartAim(player, action.Entry.Id, Items.Inventory.QuickSlotOf(player, action.Entry));
+                    break;
+                case InventoryActionKind.UseItem:
+                    UseItem(action.Entry);
+                    break;
+                case InventoryActionKind.Assigned:
+                    Hint(Text.Assigned(action.Entry, action.Slot));
+                    break;
+                case InventoryActionKind.Unassigned:
+                    Hint(Text.Unassigned(action.Entry, action.Slot));
+                    break;
+                default:
+                    if (_inventory.State == InventoryMenuState.ChooseSlot) Hint(Text.ChooseSlotHint(_inventory.SelectedEntry(player)));
+                    else if (_inventory.IsOpen) Hint(_inventory.AssignTarget >= 0 ? HudText.AssignHint(_inventory.AssignTarget) : HudText.InventoryHint);
+                    else Hint(string.Empty);
+                    break;
+            }
+            DrawInventory();
+        }
+
+        private void CloseInventory()
+        {
+            _inventory.Close();
+            Hint(string.Empty);
+        }
+
+        private void DrawInventory()
+        {
+            if (_inventoryView == null) return;
+            Unit player = null;
+            if (_world != null) PlayerActions.TryGetPlayer(_world, out player);
+            _inventoryView.Draw(_inventory, player, Text);
+            if (_hud != null) _hud.SetHighlightSlot(_inventory.IsOpen ? _inventory.AssignTarget : _aimSlot);
+        }
+
+        private void OnInventoryChanged(InventoryChangedEvent e)
+        {
+            if (_inventory.IsOpen) DrawInventory();
+        }
+
+        private void OnQuickSlotsChanged(QuickSlotsChangedEvent e)
+        {
+            if (_inventory.IsOpen) DrawInventory();
+            // 조준 중인 칸에서 주문이 빠지면 조준을 끝낸다
+            if (_aimSlot >= 0 && PlayerActions.TryGetPlayer(_world, out var player) && player.QuickSlotSpell(_aimSlot) != _aimSpellId)
+                _aimSlot = -1;
+        }
+
+        // ── 주문 조준 (2-2) ──
+
+        /// <summary>주문으로 조준 시작. 마나가 모자라면 힌트만. slot = 빠른 칸 번호 (-1 = 인벤토리에서 바로).</summary>
+        private void TryStartAim(Unit player, string spellId, int slot)
+        {
+            if (_spells == null || !_spells.TryGet(spellId, out var spell))
+            {
+                Hint(HudText.CastBlockReason(CastBlock.UnknownSpell));
+                return;
             }
             if (player.Mana < spell.ManaCost)
             {
                 Hint(Text.NotEnoughMana(slot, spell.Id, player.Mana, spell.ManaCost));
-                return true;
+                return;
             }
 
+            _aimSpellId = spellId;
             _aimSlot = slot;
             _aimCursor = NearestVisibleEnemy(player, spell.Range) ?? player.Pos;
             if (Mouse.current != null) _lastMousePos = Mouse.current.position.ReadValue();
             _nextRepeatTime = Time.time + _keyRepeatDelay;
+            if (_hud != null) _hud.SetHighlightSlot(_aimSlot);
             RefreshAim(player);
-            return true;
         }
 
         private void HandleAim(Unit player, Keyboard keyboard, Mouse mouse)
         {
             if (keyboard != null)
             {
-                int slot = PressedSlotKey(keyboard, player.SpellSlots.Length);
-                if (keyboard[Key.Escape].wasPressedThisFrame || slot == _aimSlot)
+                int slot = PressedSlotKey(keyboard, player.QuickSlots.Length);
+                if (keyboard[Key.Escape].wasPressedThisFrame || (slot >= 0 && slot == _aimSlot))
                 {
                     CancelAim();
                     return;
                 }
                 if (slot >= 0)
                 {
-                    // 다른 주문으로 바꿔 조준
+                    // 다른 빠른 칸으로 바꿈
                     CancelAim();
-                    TryStartAim(player, keyboard);
+                    UseQuickSlot(player, slot);
                     return;
                 }
                 foreach (var key in CastKeys)
@@ -222,6 +401,16 @@ namespace ProjectM.Input
             {
                 var screen = mouse.position.ReadValue();
                 bool clicked = mouse.leftButton.wasPressedThisFrame;
+                if (clicked && _hud != null)
+                {
+                    int slot = _hud.QuickSlotAt(screen);
+                    if (slot >= 0)
+                    {
+                        CancelAim();
+                        if (slot != _aimSlot) UseQuickSlot(player, slot);
+                        return;
+                    }
+                }
                 if (clicked || (screen - _lastMousePos).sqrMagnitude > 0.01f)
                 {
                     _lastMousePos = screen;
@@ -238,10 +427,10 @@ namespace ProjectM.Input
 
         private void TryCast(Unit player)
         {
-            var block = SpellCasting.TryCreateCast(_world, _config, _spells, _targeting, _sight, _aimSlot, _aimCursor, out var command);
+            var block = SpellCasting.TryCreateCastSpell(_world, _config, _spells, _targeting, _sight, _aimSpellId, _aimCursor, out var command);
             if (block != CastBlock.None)
             {
-                Hint(AimHint(player) + "  — " + HudText.CastBlockReason(block));
+                Hint(AimHint() + "  — " + HudText.CastBlockReason(block));
                 return;
             }
             CancelAim();
@@ -250,24 +439,23 @@ namespace ProjectM.Input
 
         private void RefreshAim(Unit player)
         {
-            var block = SpellCasting.Check(_world, _spells, _targeting, _sight, player, _aimSlot, _aimCursor, out _, out var preview);
+            var block = SpellCasting.CheckSpell(_world, _spells, _targeting, _sight, player, _aimSpellId, _aimCursor, out _, out var preview);
             if (_aimPreview != null) _aimPreview.Show(_aimCursor, preview, block == CastBlock.None);
-            Hint(block == CastBlock.None ? AimHint(player) : AimHint(player) + "  — " + HudText.CastBlockReason(block));
+            Hint(block == CastBlock.None ? AimHint() : AimHint() + "  — " + HudText.CastBlockReason(block));
         }
 
         private void CancelAim()
         {
-            bool wasAiming = _aimSlot >= 0;
+            bool wasAiming = IsAiming;
+            _aimSpellId = null;
             _aimSlot = -1;
             if (_aimPreview != null) _aimPreview.Hide();
+            if (_hud != null && !_inventory.IsOpen) _hud.SetHighlightSlot(-1);
             if (wasAiming) Hint(string.Empty);
         }
 
-        private string AimHint(Unit player)
-        {
-            var id = player.SpellSlots[_aimSlot];
-            return _spells.TryGet(id, out var spell) ? Text.AimHint(_aimSlot, id, spell.ManaCost) : HudText.EmptySlot(_aimSlot);
-        }
+        private string AimHint() =>
+            _spells.TryGet(_aimSpellId, out var spell) ? Text.AimHint(_aimSlot, _aimSpellId, spell.ManaCost) : HudText.CastBlockReason(CastBlock.UnknownSpell);
 
         private void Hint(string text) => HintChanged?.Invoke(text);
 
@@ -309,7 +497,7 @@ namespace ProjectM.Input
 
         private GridPos? NextVisibleEnemy(Unit player, GridPos current)
         {
-            _spells.TryGet(player.SpellSlots[_aimSlot], out var spell);
+            _spells.TryGet(_aimSpellId, out var spell);
             var list = VisibleEnemies(player, spell != null ? spell.Range : 0);
             if (list.Count == 0) return null;
             int index = list.FindIndex(u => u.Pos == current);

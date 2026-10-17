@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using ProjectM.Core;
 using ProjectM.Data;
+using ProjectM.Items;
 using ProjectM.Magic;
 using ProjectM.Units;
 using UnityEditor;
@@ -43,7 +44,7 @@ namespace ProjectM.Tests
             world.InstallCoreSystems(new ShadowcastSightRule(), Magic, new ProjectM.Status.StatusBook(new ProjectM.Status.StatusDef[0]), ProjectM.Status.TerrainBook.Empty);
             var s = new Session { World = world, Clock = new TurnClock(world.Scheduler, world.PlayerInput) };
             world.Events.Subscribe<ManaChangedEvent>(s.ManaEvents.Add);
-            s.Player = UnitSpawner.SpawnPlayer(world, PlayerDef, new GridPos(1, 1), Magic.SpellSlotCount);
+            s.Player = UnitSpawner.SpawnPlayer(world, PlayerDef, new GridPos(1, 1), Magic.QuickSlotCount);
             var ai = new MeleeChaserAi(world, Config, new ShadowcastSightRule());
             foreach (var p in enemies) UnitSpawner.SpawnEnemy(world, EnemyDef, p, ai);
             world.Events.Flush();
@@ -56,17 +57,21 @@ namespace ProjectM.Tests
             var s = Start();
             Assert.That(s.Player.Mana, Is.EqualTo(10));
             Assert.That(s.Player.MaxMana, Is.EqualTo(10));
-            Assert.That(s.Player.SpellSlots, Is.EqualTo(StartingSpells));
+            Assert.That(s.Player.QuickSlots, Is.EqualTo(Array.ConvertAll(StartingSpells, InventoryRef.Spell)));
+            Assert.That(s.Player.InventorySlots.Length, Is.EqualTo(MagicConfig.DefaultInventorySlotCount));
         }
 
         [Test]
-        public void SpellSlots_FewerSpellsLeaveEmptySlots_TooManyThrow()
+        public void StartingSpells_FillInventoryAndQuickSlots_TooManyThrow()
         {
             var two = new UnitDef("p", 1, 1, 1, 0, new[] { "a", "b" });
-            var unit = Unit.FromDef(new EntityId(1), Faction.Player, two, new GridPos(0, 0), 4);
-            Assert.That(unit.SpellSlots, Is.EqualTo(new[] { "a", "b", null, null }));
+            var unit = Unit.FromDef(new EntityId(1), Faction.Player, two, new GridPos(0, 0), 4, 20);
+            Assert.That(unit.QuickSlots, Is.EqualTo(new[] { InventoryRef.Spell("a"), InventoryRef.Spell("b"), InventoryRef.Empty, InventoryRef.Empty }));
+            Assert.That(unit.InventorySlots[1], Is.EqualTo(InventoryRef.Spell("b")));
+            Assert.That(unit.InventorySlots[2].IsEmpty, Is.True);
 
-            Assert.Throws<ArgumentException>(() => Unit.FromDef(new EntityId(2), Faction.Player, PlayerDef, new GridPos(0, 0), 3));
+            Assert.Throws<ArgumentException>(() => Unit.FromDef(new EntityId(2), Faction.Player, PlayerDef, new GridPos(0, 0), 3, 20));
+            Assert.Throws<ArgumentException>(() => Unit.FromDef(new EntityId(3), Faction.Player, PlayerDef, new GridPos(0, 0), 6, 3));
         }
 
         [Test]
@@ -116,14 +121,15 @@ namespace ProjectM.Tests
         {
             var s = Start();
             Mana.TrySpend(s.World, s.Player, 3);
-            s.Player.SpellSlots[3] = null;
+            s.Player.QuickSlots[3] = InventoryRef.Empty;
             var bytes = WorldSnapshotCodec.Encode(s.World.Capture());
             var restored = World.Restore(WorldSnapshotCodec.Decode(bytes), (w, id) => new MeleeChaserAi(w, Config, new ShadowcastSightRule()));
 
             var p = restored.Units.Get(s.Player.Id);
             Assert.That(p.Mana, Is.EqualTo(7));
             Assert.That(p.MaxMana, Is.EqualTo(10));
-            Assert.That(p.SpellSlots, Is.EqualTo(new[] { "fire_basic", "ice_basic", "lightning_basic", null }));
+            Assert.That(p.QuickSlots, Is.EqualTo(new[] { InventoryRef.Spell("fire_basic"), InventoryRef.Spell("ice_basic"), InventoryRef.Spell("lightning_basic"), InventoryRef.Empty }));
+            Assert.That(p.InventorySlots, Is.EqualTo(s.Player.InventorySlots), "인벤토리 칸 그대로 (3-2a)");
             Assert.That(WorldSnapshotCodec.Encode(restored.Capture()), Is.EqualTo(bytes));
         }
 
@@ -135,7 +141,7 @@ namespace ProjectM.Tests
             var world = new World(Room(), 5UL);
             world.InstallCoreSystems(new ShadowcastSightRule(), MagicWithHpRegen, new ProjectM.Status.StatusBook(new ProjectM.Status.StatusDef[0]), ProjectM.Status.TerrainBook.Empty);
             var s = new Session { World = world, Clock = new TurnClock(world.Scheduler, world.PlayerInput) };
-            s.Player = UnitSpawner.SpawnPlayer(world, PlayerDef, new GridPos(1, 1), MagicWithHpRegen.SpellSlotCount);
+            s.Player = UnitSpawner.SpawnPlayer(world, PlayerDef, new GridPos(1, 1), MagicWithHpRegen.QuickSlotCount);
             foreach (var p in enemies) UnitSpawner.SpawnEnemy(world, EnemyDef, p, new WaitAi());
             world.Events.Flush();
             return s;
@@ -212,7 +218,8 @@ namespace ProjectM.Tests
             var m = magic.ToConfig();
             Assert.That(m.ManaRegenIntervalTicks, Is.EqualTo(3));
             Assert.That(m.ManaRegenAmount, Is.EqualTo(1));
-            Assert.That(m.SpellSlotCount, Is.EqualTo(4));
+            Assert.That(m.QuickSlotCount, Is.EqualTo(6), "3-2a 빠른 칸 6개");
+            Assert.That(m.InventorySlotCount, Is.EqualTo(20), "3-2a 인벤토리 20칸");
             Assert.That(m.HpRegenIntervalTicks, Is.EqualTo(10), "2-6 체력 자동 회복 주기");
             Assert.That(m.HpRegenPercent, Is.EqualTo(1));
 

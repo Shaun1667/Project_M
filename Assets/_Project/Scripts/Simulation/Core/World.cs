@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ProjectM.Items;
 using ProjectM.Magic;
 using ProjectM.Status;
 using ProjectM.Units;
@@ -128,7 +129,7 @@ namespace ProjectM.Core
                 var u = units[i];
                 var seen = u.LastSeenTargetPos;
                 states[i] = new UnitState(u.Id, u.Faction, u.VisualId, u.MaxHp, u.AttackDamage, u.SightRange, u.Pos.X, u.Pos.Y, u.Hp,
-                    seen.HasValue, seen?.X ?? 0, seen?.Y ?? 0, u.MaxMana, u.Mana, (string[])u.SpellSlots.Clone(),
+                    seen.HasValue, seen?.X ?? 0, seen?.Y ?? 0, u.MaxMana, u.Mana, (InventoryRef[])u.InventorySlots.Clone(), (InventoryRef[])u.QuickSlots.Clone(),
                     u.PreviousPos, u.WanderTarget, u.Statuses.ConvertAll(s => new UnitStatusState(s.Type, s.Remaining)).ToArray());
             }
             return states;
@@ -166,7 +167,7 @@ namespace ProjectM.Core
             {
                 GridPos? seen = u.HasLastSeen ? new GridPos(u.LastSeenX, u.LastSeenY) : (GridPos?)null;
                 var unit = new Unit(u.Id, u.Faction, u.VisualId, u.MaxHp, u.AttackDamage, u.SightRange, new GridPos(u.X, u.Y), u.Hp, seen,
-                    u.MaxMana, u.Mana, (string[])u.SpellSlots.Clone(), u.PreviousPos, u.WanderTarget);
+                    u.MaxMana, u.Mana, (InventoryRef[])u.InventorySlots.Clone(), (InventoryRef[])u.QuickSlots.Clone(), u.PreviousPos, u.WanderTarget);
                 foreach (var st in u.Statuses)
                     unit.Statuses.Add(new StatusInstance(st.Type, st.Remaining));
                 world.Units.Add(unit);

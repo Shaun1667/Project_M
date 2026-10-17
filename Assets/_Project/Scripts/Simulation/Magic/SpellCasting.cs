@@ -32,6 +32,10 @@ namespace ProjectM.Magic
         NotVisible,
         TargetIsSelf,
         Blocked,
+        /// <summary>빠른 칸에 주문이 아니라 아이템이 있다 (3-2a).</summary>
+        NotASpell,
+        /// <summary>인벤토리에 없는 주문 (3-2a).</summary>
+        NotOwned,
     }
 
     /// <summary>
@@ -91,15 +95,28 @@ namespace ProjectM.Magic
         }
 
         /// <summary>
-        /// 플레이어가 장착 칸 slot의 주문을 target에 쓸 수 있는지. 쓸 수 있으면 CastBlock.None과 주문 · 미리보기.
+        /// 플레이어가 빠른 칸 slot의 주문을 target에 쓸 수 있는지. 쓸 수 있으면 CastBlock.None과 주문 · 미리보기.
         /// </summary>
         public static CastBlock Check(World world, SpellBook book, ITargetingRule targeting, ISightRule sight,
             Unit caster, int slot, GridPos target, out SpellDef spell, out SpellPreview preview)
         {
             spell = null;
             preview = null;
-            if (caster == null || slot < 0 || slot >= caster.SpellSlots.Length || caster.SpellSlots[slot] == null) return CastBlock.EmptySlot;
-            if (!book.TryGet(caster.SpellSlots[slot], out spell)) return CastBlock.UnknownSpell;
+            if (caster == null || slot < 0 || slot >= caster.QuickSlots.Length || caster.QuickSlots[slot].IsEmpty) return CastBlock.EmptySlot;
+            var spellId = caster.QuickSlotSpell(slot);
+            if (spellId == null) return CastBlock.NotASpell;
+            return CheckSpell(world, book, targeting, sight, caster, spellId, target, out spell, out preview);
+        }
+
+        /// <summary>인벤토리에 있는 주문 spellId를 target에 쓸 수 있는지 (3-2a: 빠른 칸에 없어도 인벤토리에서 바로 쓴다).</summary>
+        public static CastBlock CheckSpell(World world, SpellBook book, ITargetingRule targeting, ISightRule sight,
+            Unit caster, string spellId, GridPos target, out SpellDef spell, out SpellPreview preview)
+        {
+            spell = null;
+            preview = null;
+            if (caster == null || spellId == null) return CastBlock.EmptySlot;
+            if (!caster.HasSpell(spellId)) return CastBlock.NotOwned;
+            if (!book.TryGet(spellId, out spell)) return CastBlock.UnknownSpell;
             if (target == caster.Pos) return CastBlock.TargetIsSelf;
             if (!targeting.InRange(caster.Pos, target, spell.Range)) return CastBlock.OutOfRange;
             if (!world.Map.InBounds(target) || !sight.CanSee(world.Map, caster.Pos, target, caster.SightRange)) return CastBlock.NotVisible;
@@ -117,6 +134,18 @@ namespace ProjectM.Magic
             command = null;
             if (!PlayerActions.TryGetPlayer(world, out var player) || !player.IsAlive) return CastBlock.EmptySlot;
             var block = Check(world, book, targeting, sight, player, slot, target, out var spell, out _);
+            if (block != CastBlock.None) return block;
+            command = new CastSpellCommand(world, book, targeting, spell.Id, target, config.DefaultActionCostTicks);
+            return CastBlock.None;
+        }
+
+        /// <summary>CheckSpell을 통과하면 시전 커맨드를 만든다 (인벤토리에서 바로 쓰기).</summary>
+        public static CastBlock TryCreateCastSpell(World world, GameConfig config, SpellBook book, ITargetingRule targeting, ISightRule sight,
+            string spellId, GridPos target, out ICommand command)
+        {
+            command = null;
+            if (!PlayerActions.TryGetPlayer(world, out var player) || !player.IsAlive) return CastBlock.EmptySlot;
+            var block = CheckSpell(world, book, targeting, sight, player, spellId, target, out var spell, out _);
             if (block != CastBlock.None) return block;
             command = new CastSpellCommand(world, book, targeting, spell.Id, target, config.DefaultActionCostTicks);
             return CastBlock.None;

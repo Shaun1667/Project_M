@@ -91,7 +91,7 @@ Assets/
 - 주문 조준 · 시전은 `SpellCasting`(`Preview` · `Check` · `TryCreateCast`) 하나 — 입력 미리보기와 실제 시전이 같은 계산을 쓴다. 주문 수치는 `SpellCatalog.asset`, 상태 · 지형 효과는 SpellDef 필드(태그)로 추가하고 조합은 반응 규칙 표에서 (규칙 9).
 - 상태 이상은 `StatusEffects`(Apply · TryApply)로만 걸고, 효과는 `StatusDef` 데이터 필드(틱당 피해 · 행동 비용 추가 · 행동 불가)로만 정한다 — 상태 종류별 분기 코드를 늘리지 않는다. 확률은 `RngStream.Combat`.
 - 지형 효과는 `TerrainEffects.Place`로만 놓고 `World.Terrain`(칸마다 여러 효과)에 둔다. 효과는 `TerrainDef` 데이터(지속 · 거는 상태)로만. MonoBehaviour 메서드 이름은 Unity 내장 메시지(`OnTerrainChanged` 등)와 겹치지 않게 한다.
-- 반응은 `ReactionEngine.Resolve` 하나에서만 일어나고, 규칙은 `ReactionCatalog.asset`(REACTIONS.md) 데이터로만 추가한다. 주문 시전 순서는 원래 피해 → 반응 → 새 상태 → 지형. 반응 결과는 다시 반응하지 않는다. 주문 장착 칸은 `SpellSlots.Assign`으로만 바꾼다.
+- 반응은 `ReactionEngine.Resolve` 하나에서만 일어나고, 규칙은 `ReactionCatalog.asset`(REACTIONS.md) 데이터로만 추가한다. 주문 시전 순서는 원래 피해 → 반응 → 새 상태 → 지형. 반응 결과는 다시 반응하지 않는다. 인벤토리 · 빠른 칸은 `Items.Inventory`(TryAdd · RemoveAt · AssignQuickSlot)로만 바꾼다 (3-2a — 주문 장착 칸을 대신함).
 - 시야는 `ISightRule`(지금 `ShadowcastSightRule` → `FieldOfView`), 사거리 · 조준선은 `ITargetingRule`(지금 `BresenhamTargetingRule`) 한 곳만 쓴다
 - 이름: 클래스 · 메서드 · 프로퍼티 PascalCase, private 필드 `_camelCase`, 지역 변수 camelCase
 - 게임 로직과 엔진 컴포넌트를 분리한다. 규칙은 순수 C#으로 쓰고, MonoBehaviour는 얇은 어댑터(이벤트 구독 · 표시 · 입력 전달)만 맡는다.

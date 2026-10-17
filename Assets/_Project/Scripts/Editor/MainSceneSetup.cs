@@ -1,6 +1,7 @@
 using ProjectM.Core;
 using ProjectM.Data;
 using ProjectM.Input;
+using ProjectM.Items;
 using ProjectM.Magic;
 using ProjectM.Status;
 using ProjectM.Presentation;
@@ -34,6 +35,7 @@ namespace ProjectM.Editor
         private const string StatusCatalogPath = "Assets/_Project/Data/Statuses/StatusCatalog.asset";
         private const string TerrainCatalogPath = "Assets/_Project/Data/Terrains/TerrainCatalog.asset";
         private const string ReactionCatalogPath = "Assets/_Project/Data/Reactions/ReactionCatalog.asset";
+        private const string ItemCatalogPath = "Assets/_Project/Data/Items/ItemCatalog.asset";
 
         /// <summary>플레이어 시작 주문 (BALANCE 4번). 3-1부터 빈 칸 — 주문은 게임 중에 얻고, 테스트는 디버그 창에서 넣는다 (REACTIONS.md D8).</summary>
         private static readonly string[] PlayerStartingSpells = new string[0];
@@ -86,12 +88,13 @@ namespace ProjectM.Editor
                 ("_enemyCount", 5), ("_enemyMinDistanceFromStart", 8));
             // 마나 · 장착 칸 — 없을 때만 BALANCE 4번 값으로 만든다
             var magicConfig = EnsureAsset<MagicConfigAsset>(MagicConfigPath,
-                ("_manaRegenIntervalTicks", 3), ("_manaRegenAmount", 1), ("_spellSlotCount", 4),
+                ("_manaRegenIntervalTicks", 3), ("_manaRegenAmount", 1), ("_spellSlotCount", 6), ("_inventorySlotCount", 20),
                 ("_hpRegenIntervalTicks", 10), ("_hpRegenPercent", 1));
             var spellCatalog = EnsureSpellCatalog();
             var statusCatalog = EnsureStatusCatalog();
             var terrainCatalog = EnsureTerrainCatalog();
             var reactionCatalog = EnsureReactionCatalog();
+            var itemCatalog = EnsureItemCatalog();
 
             var gridGo = FindOrCreate("Grid", null);
             var grid = GetOrAdd<Grid>(gridGo);
@@ -133,11 +136,12 @@ namespace ProjectM.Editor
             if (cameraGo != null) cameraController = GetOrAdd<CameraController>(cameraGo);
             else Debug.LogWarning("[MainSceneSetup] MainCamera 태그 카메라 없음");
 
-            var hud = EnsureHud();
+            var (hud, inventoryView) = EnsureHud();
 
             var rootGo = FindOrCreate("GameRoot", null);
             var input = GetOrAdd<PlayerInputController>(rootGo);
-            SetRefs(input, ("_camera", cameraGo != null ? cameraGo.GetComponent<Camera>() : null), ("_grid", grid), ("_aimPreview", aimPreview));
+            SetRefs(input, ("_camera", cameraGo != null ? cameraGo.GetComponent<Camera>() : null), ("_grid", grid), ("_aimPreview", aimPreview),
+                ("_hud", hud), ("_inventoryView", inventoryView));
 
             var root = GetOrAdd<GameRoot>(rootGo);
             SetRefs(root,
@@ -151,6 +155,7 @@ namespace ProjectM.Editor
                 ("_statusCatalog", statusCatalog),
                 ("_terrainCatalog", terrainCatalog),
                 ("_reactionCatalog", reactionCatalog),
+                ("_itemCatalog", itemCatalog),
                 ("_terrainOverlay", terrainOverlay),
                 ("_tilemapPresenter", tilemapPresenter),
                 ("_entityPresenter", entityPresenter),
@@ -330,9 +335,9 @@ namespace ProjectM.Editor
         }
 
         /// <summary>
-        /// HUD 캔버스 (2-5, 기준 1920×1080): 왼쪽 위 HP · MP 막대, 그 오른쪽 상태 아이콘 줄, 아래로 주문 칸 · 안내 줄, 왼쪽 아래 전투 로그.
+        /// HUD 캔버스 (2-5, 기준 1920×1080): 왼쪽 위 HP · MP 막대, 그 오른쪽 상태 아이콘 줄, 아래로 빠른 칸(3-2a) · 안내 줄, 왼쪽 아래 전투 로그, 가운데 인벤토리 창(3-2a).
         /// </summary>
-        private static HudPresenter EnsureHud()
+        private static (HudPresenter, InventoryPresenter) EnsureHud()
         {
             var canvasGo = FindOrCreate("HUD", null);
             var canvas = GetOrAdd<Canvas>(canvasGo);
@@ -362,21 +367,50 @@ namespace ProjectM.Editor
             row.childControlWidth = row.childControlHeight = true;
             row.childForceExpandWidth = row.childForceExpandHeight = false;
 
-            var slots = EnsureText(canvasGo.transform, "Slots", topLeft, new Vector2(24, -94), new Vector2(1600, 40), 28, font, TextAlignmentOptions.TopLeft);
-            var hint = EnsureText(canvasGo.transform, "Hint", topLeft, new Vector2(24, -134), new Vector2(1600, 40), 26, font, TextAlignmentOptions.TopLeft);
+            // 3-2a: 주문 장착 칸 글줄(Slots) → 빠른 칸 상자 줄(QuickSlots, 상자는 실행 중에 만든다)
+            var oldSlots = canvasGo.transform.Find("Slots");
+            if (oldSlots != null) Object.DestroyImmediate(oldSlots.gameObject);
+            var quickGo = FindOrCreate("QuickSlots", canvasGo.transform);
+            var quick = GetOrAdd<RectTransform>(quickGo);
+            Place(quick, topLeft, new Vector2(24, -92), new Vector2(1600, 40));
+            var quickRow = GetOrAdd<HorizontalLayoutGroup>(quickGo);
+            quickRow.spacing = 6;
+            quickRow.childAlignment = TextAnchor.UpperLeft;
+            quickRow.childControlWidth = quickRow.childControlHeight = true;
+            quickRow.childForceExpandWidth = quickRow.childForceExpandHeight = false;
+
+            var hint = EnsureText(canvasGo.transform, "Hint", topLeft, new Vector2(24, -140), new Vector2(1600, 40), 26, font, TextAlignmentOptions.TopLeft);
             // 로그 8줄: 아래쪽 기준으로 쌓인다 (새 줄이 맨 아래)
             var log = EnsureText(canvasGo.transform, "Log", bottomLeft, new Vector2(24, 24), new Vector2(1100, 300), 26, font, TextAlignmentOptions.BottomLeft);
+
+            // 3-2a 인벤토리 창: 가운데 패널 (칸 · 메뉴는 실행 중에 만든다), 다른 HUD 위에 그린다
+            var inventoryGo = FindOrCreate("Inventory", canvasGo.transform);
+            var inventoryPanel = GetOrAdd<RectTransform>(inventoryGo);
+            Place(inventoryPanel, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(960, 360));
+            GetOrAdd<Image>(inventoryGo).raycastTarget = false;
+            inventoryGo.transform.SetAsLastSibling();
+            var inventoryView = GetOrAdd<InventoryPresenter>(canvasGo);
+            SetRefs(inventoryView, ("_panel", inventoryPanel), ("_font", font));
 
             var hud = GetOrAdd<HudPresenter>(canvasGo);
             SetRefs(hud,
                 ("_hpFill", hpFill), ("_hpLabel", hpLabel),
                 ("_mpFill", mpFill), ("_mpLabel", mpLabel),
-                ("_statusIcons", icons), ("_slotsText", slots), ("_hintText", hint), ("_logText", log));
+                ("_statusIcons", icons), ("_quickSlots", quick), ("_hintText", hint), ("_logText", log));
             // 로그 줄 수 (결정 2026-10-16: 8줄). 2-4까지 씬에 저장된 6을 덮어쓴다
             var hudSo = new SerializedObject(hud);
             hudSo.FindProperty("_logLines").intValue = 8;
             hudSo.ApplyModifiedPropertiesWithoutUndo();
-            return hud;
+            return (hud, inventoryView);
+        }
+
+        /// <summary>아이템 규칙 (3-2a): 없는 ID만 BALANCE 9번 값으로 추가한다.</summary>
+        private static ItemCatalogAsset EnsureItemCatalog()
+        {
+            var catalog = LoadOrCreate<ItemCatalogAsset>(ItemCatalogPath);
+            bool changed = catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "fusion_device", DisplayName = "마법 융합기", Use = ItemUse.Fusion });
+            if (changed) EditorUtility.SetDirty(catalog);
+            return catalog;
         }
 
         /// <summary>막대 하나: 어두운 바탕 + 왼쪽부터 차는 색 칸(Fill) + 가운데 숫자(Label). 360×30.</summary>
