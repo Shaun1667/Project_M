@@ -360,6 +360,25 @@ namespace ProjectM.Editor
                 Id = "shatter", DisplayName = "파쇄", Trigger = ReactionTrigger.Status, Status = StatusType.Frozen,
                 Element = Element.Lightning, Priority = 30, ExtraDamage = 3, ConsumeTrigger = true, ExplosionStatusChancePercent = 100,
             });
+            // 3-3b: 감전 (젖음 × 번개 — 사슬, 인원 제한 없음) · 수면 감전 (물 타일 · 오염된 물 × 번개 — 8칸 · 4명). 셋 다 한 그룹, 전이 피해 50%
+            changed |= catalog.AddIfMissing(new ReactionCatalogAsset.Entry
+            {
+                Id = "shock", DisplayName = "감전", Group = "shock", Trigger = ReactionTrigger.Status, Status = StatusType.Wet,
+                Element = Element.Lightning, Priority = 20, ExtraDamage = 2, ExplosionStatusChancePercent = 100,
+                Spread = ReactionSpread.StatusChain, SpreadRange = 3, SpreadMaxTargets = 0, SpreadDamagePercent = 50,
+            });
+            changed |= catalog.AddIfMissing(new ReactionCatalogAsset.Entry
+            {
+                Id = "shock_water", DisplayName = "수면 감전", Group = "shock", Trigger = ReactionTrigger.Terrain, Terrain = TerrainEffectType.Water,
+                Element = Element.Lightning, Priority = 20, ExplosionStatusChancePercent = 100,
+                Spread = ReactionSpread.TerrainFlood, SpreadRange = 8, SpreadMaxTargets = 4, SpreadDamagePercent = 50,
+            });
+            changed |= catalog.AddIfMissing(new ReactionCatalogAsset.Entry
+            {
+                Id = "shock_contaminated", DisplayName = "수면 감전", Group = "shock", Trigger = ReactionTrigger.Terrain,
+                Terrain = TerrainEffectType.ContaminatedWater, Element = Element.Lightning, Priority = 20, ExplosionStatusChancePercent = 100,
+                Spread = ReactionSpread.TerrainFlood, SpreadRange = 8, SpreadMaxTargets = 4, SpreadDamagePercent = 50,
+            });
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }

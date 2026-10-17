@@ -59,6 +59,13 @@ namespace ProjectM.Tests
                 group: "thaw", transformTerrainTo: TerrainEffectType.Water, transformDurationTicks: 12),
             new ReactionDef("shatter", ReactionTrigger.Status, StatusType.Frozen, TerrainEffectType.None, Element.Lightning, 30,
                 extraDamage: 3, consumeTrigger: true),
+            // 3-3b: 감전 (사슬 3칸 · 인원 제한 없음) · 수면 감전 (물 칸 8방향 8칸 · 4명) — 한 그룹, 전이 피해 50%
+            new ReactionDef("shock", ReactionTrigger.Status, StatusType.Wet, TerrainEffectType.None, Element.Lightning, 20,
+                extraDamage: 2, group: "shock", spread: ReactionSpread.StatusChain, spreadRange: 3, spreadMaxTargets: 0, spreadDamagePercent: 50),
+            new ReactionDef("shock_water", ReactionTrigger.Terrain, StatusType.None, TerrainEffectType.Water, Element.Lightning, 20,
+                group: "shock", spread: ReactionSpread.TerrainFlood, spreadRange: 8, spreadMaxTargets: 4, spreadDamagePercent: 50),
+            new ReactionDef("shock_contaminated", ReactionTrigger.Terrain, StatusType.None, TerrainEffectType.ContaminatedWater, Element.Lightning, 20,
+                group: "shock", spread: ReactionSpread.TerrainFlood, spreadRange: 8, spreadMaxTargets: 4, spreadDamagePercent: 50),
         }, new ReactionConfig(4, 3, 5), statuses);
 
         // 주문 자체는 상태 · 지형 없이 (반응만 보려고). 상태 · 지형 규칙은 BALANCE 값
@@ -337,6 +344,10 @@ namespace ProjectM.Tests
                 // 3-3a: 변환 지속 · 대상 상태 (대상 상태가 없으면 확률은 보지 않음 — 이전 줄은 에셋에 0으로 저장됨)
                 Assert.That((a.TransformDurationTicks, a.TargetStatus), Is.EqualTo((e.TransformDurationTicks, e.TargetStatus)), e.Id);
                 if (e.TargetStatus != StatusType.None) Assert.That(a.TargetStatusChancePercent, Is.EqualTo(e.TargetStatusChancePercent), e.Id);
+                // 3-3b: 전이 (전이가 없으면 거리 · 수 · %는 보지 않음)
+                Assert.That(a.Spread, Is.EqualTo(e.Spread), e.Id);
+                if (e.Spread != ReactionSpread.None)
+                    Assert.That((a.SpreadRange, a.SpreadMaxTargets, a.SpreadDamagePercent), Is.EqualTo((e.SpreadRange, e.SpreadMaxTargets, e.SpreadDamagePercent)), e.Id);
             }
         }
     }

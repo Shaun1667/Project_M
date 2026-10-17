@@ -14,8 +14,20 @@ namespace ProjectM.Status
     }
 
     /// <summary>
+    /// 반응의 전이 방식 (3-3b). 전이는 트리거를 따라 퍼진다. 끝에만 추가한다 (에셋이 정수로 저장).
+    /// </summary>
+    public enum ReactionSpread
+    {
+        None = 0,
+        /// <summary>트리거 상태를 가진 유닛끼리 사슬로 (대상에서 SpreadRange칸 안 → 거기서 다시 …) — 감전.</summary>
+        StatusChain = 1,
+        /// <summary>트리거 지형 칸을 따라 8방향으로 SpreadRange칸까지, 그 칸의 유닛 — 수면 감전.</summary>
+        TerrainFlood = 2,
+    }
+
+    /// <summary>
     /// 반응 하나 = "상태/지형 × 속성 → 결과" 규칙 한 줄 (3-1, REACTIONS.md). 값은 ReactionCatalogAsset에서 온다 — BALANCE.md 8번.
-    /// 결과는 종류별 코드가 아니라 이 필드들의 조합으로만 정한다: 추가 피해 · 폭발 · 트리거 소모 · 지형 변환(3-2) · 대상 상태(3-3a).
+    /// 결과는 종류별 코드가 아니라 이 필드들의 조합으로만 정한다: 추가 피해 · 폭발 · 트리거 소모 · 지형 변환(3-2) · 대상 상태(3-3a) · 전이(3-3b).
     /// </summary>
     public sealed class ReactionDef
     {
@@ -53,14 +65,31 @@ namespace ProjectM.Status
         /// <summary>대상(상태 반응) · 그 칸 유닛(지형 반응)에 거는 상태 (None = 없음) · 확률 (3-3a 빙결 확정).</summary>
         public StatusType TargetStatus { get; }
         public int TargetStatusChancePercent { get; }
+        /// <summary>전이 (3-3b). None = 없음.</summary>
+        public ReactionSpread Spread { get; }
+        /// <summary>StatusChain: 한 번에 건너가는 거리(체비셰프) · TerrainFlood: 따라가는 최대 칸 수 (시작 칸 포함).</summary>
+        public int SpreadRange { get; }
+        /// <summary>전이로 맞는 최대 유닛 수. 0 = 제한 없음 (감전 — 결정 2026-10-18, 규칙 10 예외).</summary>
+        public int SpreadMaxTargets { get; }
+        /// <summary>전이 피해 = 첫 대상이 받은 피해(주문 + 이 반응의 추가 피해) × 이 % 내림. 1 ~ 99 (규칙 10: 전이 피해 &lt; 첫 대상 피해).</summary>
+        public int SpreadDamagePercent { get; }
 
         public ReactionDef(string id, ReactionTrigger trigger, StatusType status, TerrainEffectType terrain, Element element, int priority,
             int extraDamage = 0, bool consumeTrigger = false,
             int explosionRadius = 0, int explosionDamage = 0, bool explosionDamageFromRemaining = false,
             StatusType explosionStatus = StatusType.None, int explosionStatusChancePercent = 100, string group = null,
             TerrainEffectType transformTerrainTo = TerrainEffectType.None, int transformDurationTicks = 0,
-            StatusType targetStatus = StatusType.None, int targetStatusChancePercent = 100)
+            StatusType targetStatus = StatusType.None, int targetStatusChancePercent = 100,
+            ReactionSpread spread = ReactionSpread.None, int spreadRange = 0, int spreadMaxTargets = 0, int spreadDamagePercent = 50)
         {
+            if (spread == ReactionSpread.StatusChain && trigger != ReactionTrigger.Status)
+                throw new ArgumentException("사슬 전이는 상태 반응에서만: " + id);
+            if (spread == ReactionSpread.TerrainFlood && trigger != ReactionTrigger.Terrain)
+                throw new ArgumentException("지형 전이는 지형 반응에서만: " + id);
+            if (spread != ReactionSpread.None && (spreadRange < 1 || spreadMaxTargets < 0 || spreadDamagePercent < 1 || spreadDamagePercent > 99))
+                throw new ArgumentOutOfRangeException(nameof(spreadRange), "전이 거리 ≥ 1 · 최대 수 ≥ 0 · 피해 1 ~ 99%: " + id);
+            if (spread != ReactionSpread.None && consumeTrigger)
+                throw new ArgumentException("전이는 트리거를 따라 퍼지므로 소모와 함께 쓸 수 없다: " + id);
             if (transformDurationTicks < 0) throw new ArgumentOutOfRangeException(nameof(transformDurationTicks), "지속은 0 이상: " + id);
             if (transformDurationTicks > 0 && transformTerrainTo == TerrainEffectType.None)
                 throw new ArgumentException("변환 지속은 지형 변환과 함께만: " + id);
@@ -94,6 +123,10 @@ namespace ProjectM.Status
             TransformDurationTicks = transformDurationTicks;
             TargetStatus = targetStatus;
             TargetStatusChancePercent = targetStatusChancePercent;
+            Spread = spread;
+            SpreadRange = spreadRange;
+            SpreadMaxTargets = spreadMaxTargets;
+            SpreadDamagePercent = spreadDamagePercent;
         }
     }
 

@@ -35,6 +35,10 @@ MonoBehaviour:
     TransformDurationTicks: 0
     TargetStatus: 0
     TargetStatusChancePercent: 0
+    Spread: 0
+    SpreadRange: 0
+    SpreadMaxTargets: 0
+    SpreadDamagePercent: 0
   - Id: toxic_burst
     DisplayName: "\uC720\uB3C5\uC131 \uD3ED\uBC1C"
     Group: 
@@ -54,6 +58,10 @@ MonoBehaviour:
     TransformDurationTicks: 0
     TargetStatus: 0
     TargetStatusChancePercent: 0
+    Spread: 0
+    SpreadRange: 0
+    SpreadMaxTargets: 0
+    SpreadDamagePercent: 0
   - Id: extinguish
     DisplayName: "\uC18C\uD654"
     Group: 
@@ -73,6 +81,10 @@ MonoBehaviour:
     TransformDurationTicks: 0
     TargetStatus: 0
     TargetStatusChancePercent: 0
+    Spread: 0
+    SpreadRange: 0
+    SpreadMaxTargets: 0
+    SpreadDamagePercent: 0
   - Id: toxic_ignite_cloud
     DisplayName: "\uB3C5\uD654"
     Group: toxic_ignite
@@ -92,6 +104,10 @@ MonoBehaviour:
     TransformDurationTicks: 0
     TargetStatus: 0
     TargetStatusChancePercent: 0
+    Spread: 0
+    SpreadRange: 0
+    SpreadMaxTargets: 0
+    SpreadDamagePercent: 0
   - Id: gas_explosion
     DisplayName: "\uAC00\uC2A4 \uD3ED\uBC1C"
     Group: 
@@ -111,6 +127,10 @@ MonoBehaviour:
     TransformDurationTicks: 0
     TargetStatus: 0
     TargetStatusChancePercent: 0
+    Spread: 0
+    SpreadRange: 0
+    SpreadMaxTargets: 0
+    SpreadDamagePercent: 0
   - Id: evaporate
     DisplayName: "\uC99D\uBC1C"
     Group: evaporate
@@ -130,6 +150,10 @@ MonoBehaviour:
     TransformDurationTicks: 0
     TargetStatus: 0
     TargetStatusChancePercent: 0
+    Spread: 0
+    SpreadRange: 0
+    SpreadMaxTargets: 0
+    SpreadDamagePercent: 0
   - Id: evaporate_water
     DisplayName: "\uC99D\uBC1C"
     Group: evaporate
@@ -149,6 +173,10 @@ MonoBehaviour:
     TransformDurationTicks: 0
     TargetStatus: 0
     TargetStatusChancePercent: 0
+    Spread: 0
+    SpreadRange: 0
+    SpreadMaxTargets: 0
+    SpreadDamagePercent: 0
   - Id: evaporate_contaminated
     DisplayName: "\uC99D\uBC1C"
     Group: evaporate
@@ -168,6 +196,10 @@ MonoBehaviour:
     TransformDurationTicks: 0
     TargetStatus: 0
     TargetStatusChancePercent: 0
+    Spread: 0
+    SpreadRange: 0
+    SpreadMaxTargets: 0
+    SpreadDamagePercent: 0
   - Id: evaporate_fire_zone
     DisplayName: "\uC99D\uBC1C"
     Group: evaporate
@@ -187,6 +219,10 @@ MonoBehaviour:
     TransformDurationTicks: 0
     TargetStatus: 0
     TargetStatusChancePercent: 0
+    Spread: 0
+    SpreadRange: 0
+    SpreadMaxTargets: 0
+    SpreadDamagePercent: 0
   - Id: contaminate
     DisplayName: "\uC624\uC5FC"
     Group: 
@@ -206,6 +242,10 @@ MonoBehaviour:
     TransformDurationTicks: 0
     TargetStatus: 0
     TargetStatusChancePercent: 0
+    Spread: 0
+    SpreadRange: 0
+    SpreadMaxTargets: 0
+    SpreadDamagePercent: 0
   - Id: freeze
     DisplayName: "\uBE59\uACB0"
     Group: freeze
@@ -225,6 +265,10 @@ MonoBehaviour:
     TransformDurationTicks: 0
     TargetStatus: 6
     TargetStatusChancePercent: 100
+    Spread: 0
+    SpreadRange: 0
+    SpreadMaxTargets: 0
+    SpreadDamagePercent: 0
   - Id: freeze_water
     DisplayName: "\uACB0\uBE59"
     Group: freeze
@@ -244,6 +288,10 @@ MonoBehaviour:
     TransformDurationTicks: 8
     TargetStatus: 6
     TargetStatusChancePercent: 100
+    Spread: 0
+    SpreadRange: 0
+    SpreadMaxTargets: 0
+    SpreadDamagePercent: 0
   - Id: freeze_contaminated
     DisplayName: "\uACB0\uBE59"
     Group: freeze
@@ -263,6 +311,10 @@ MonoBehaviour:
     TransformDurationTicks: 8
     TargetStatus: 6
     TargetStatusChancePercent: 100
+    Spread: 0
+    SpreadRange: 0
+    SpreadMaxTargets: 0
+    SpreadDamagePercent: 0
   - Id: thaw
     DisplayName: "\uD574\uB3D9"
     Group: thaw
@@ -282,6 +334,10 @@ MonoBehaviour:
     TransformDurationTicks: 0
     TargetStatus: 0
     TargetStatusChancePercent: 0
+    Spread: 0
+    SpreadRange: 0
+    SpreadMaxTargets: 0
+    SpreadDamagePercent: 0
   - Id: thaw_ice
     DisplayName: "\uD574\uB3D9"
     Group: thaw
@@ -301,6 +357,10 @@ MonoBehaviour:
     TransformDurationTicks: 12
     TargetStatus: 0
     TargetStatusChancePercent: 0
+    Spread: 0
+    SpreadRange: 0
+    SpreadMaxTargets: 0
+    SpreadDamagePercent: 0
   - Id: shatter
     DisplayName: "\uD30C\uC1C4"
     Group: 
@@ -320,3 +380,76 @@ MonoBehaviour:
     TransformDurationTicks: 0
     TargetStatus: 0
     TargetStatusChancePercent: 0
+    Spread: 0
+    SpreadRange: 0
+    SpreadMaxTargets: 0
+    SpreadDamagePercent: 0
+  - Id: shock
+    DisplayName: "\uAC10\uC804"
+    Group: shock
+    Trigger: 0
+    Status: 5
+    Terrain: 0
+    Element: 2
+    Priority: 20
+    ExtraDamage: 2
+    ConsumeTrigger: 0
+    ExplosionRadius: 0
+    ExplosionDamage: 0
+    ExplosionDamageFromRemaining: 0
+    ExplosionStatus: 0
+    ExplosionStatusChancePercent: 100
+    TransformTerrainTo: 0
+    TransformDurationTicks: 0
+    TargetStatus: 0
+    TargetStatusChancePercent: 0
+    Spread: 1
+    SpreadRange: 3
+    SpreadMaxTargets: 0
+    SpreadDamagePercent: 50
+  - Id: shock_water
+    DisplayName: "\uC218\uBA74 \uAC10\uC804"
+    Group: shock
+    Trigger: 1
+    Status: 0
+    Terrain: 3
+    Element: 2
+    Priority: 20
+    ExtraDamage: 0
+    ConsumeTrigger: 0
+    ExplosionRadius: 0
+    ExplosionDamage: 0
+    ExplosionDamageFromRemaining: 0
+    ExplosionStatus: 0
+    ExplosionStatusChancePercent: 100
+    TransformTerrainTo: 0
+    TransformDurationTicks: 0
+    TargetStatus: 0
+    TargetStatusChancePercent: 0
+    Spread: 2
+    SpreadRange: 8
+    SpreadMaxTargets: 4
+    SpreadDamagePercent: 50
+  - Id: shock_contaminated
+    DisplayName: "\uC218\uBA74 \uAC10\uC804"
+    Group: shock
+    Trigger: 1
+    Status: 0
+    Terrain: 4
+    Element: 2
+    Priority: 20
+    ExtraDamage: 0
+    ConsumeTrigger: 0
+    ExplosionRadius: 0
+    ExplosionDamage: 0
+    ExplosionDamageFromRemaining: 0
+    ExplosionStatus: 0
+    ExplosionStatusChancePercent: 100
+    TransformTerrainTo: 0
+    TransformDurationTicks: 0
+    TargetStatus: 0
+    TargetStatusChancePercent: 0
+    Spread: 2
+    SpreadRange: 8
+    SpreadMaxTargets: 4
+    SpreadDamagePercent: 50

@@ -35,6 +35,10 @@ namespace ProjectM.Data
             [Tooltip("변환 뒤 지속 (틱). 0 = 남은 틱 유지 (3-3a 결빙 8 · 해동 12)")] [Min(0)] public int TransformDurationTicks;
             [Tooltip("대상 · 그 칸 유닛에 거는 상태 (3-3a 빙결)")] public StatusType TargetStatus;
             [Range(0, 100)] public int TargetStatusChancePercent;
+            [Tooltip("전이 (3-3b): 상태 사슬(감전) · 지형 칸 따라(수면 감전)")] public ReactionSpread Spread;
+            [Tooltip("사슬: 한 번에 건너가는 거리 · 지형: 따라가는 최대 칸 수")] [Min(0)] public int SpreadRange;
+            [Tooltip("전이로 맞는 최대 유닛 수. 0 = 제한 없음")] [Min(0)] public int SpreadMaxTargets;
+            [Tooltip("전이 피해 = 첫 대상이 받은 피해 × % 내림 (1 ~ 99)")] [Range(0, 99)] public int SpreadDamagePercent;
         }
 
         [Header("안전장치 (REACTIONS.md 2-5)")]
@@ -54,7 +58,7 @@ namespace ProjectM.Data
                 defs.Add(new ReactionDef(e.Id, e.Trigger, e.Status, e.Terrain, e.Element, e.Priority,
                     e.ExtraDamage, e.ConsumeTrigger, e.ExplosionRadius, e.ExplosionDamage, e.ExplosionDamageFromRemaining,
                     e.ExplosionStatus, e.ExplosionStatusChancePercent, e.Group, e.TransformTerrainTo, e.TransformDurationTicks,
-                    e.TargetStatus, e.TargetStatusChancePercent));
+                    e.TargetStatus, e.TargetStatusChancePercent, e.Spread, e.SpreadRange, e.SpreadMaxTargets, e.SpreadDamagePercent));
             }
             return new ReactionBook(defs, new ReactionConfig(_maxReactionsPerCast, _extraDamageCapMin, _explosionDamageCapMin), statuses);
         }

@@ -92,7 +92,7 @@ Assets/
 - 주문 조준 · 시전은 `SpellCasting`(`Preview` · `Check` · `TryCreateCast`) 하나 — 입력 미리보기와 실제 시전이 같은 계산을 쓴다. 주문 수치는 `SpellCatalog.asset`, 상태 · 지형 효과는 SpellDef 필드(태그)로 추가하고 조합은 반응 규칙 표에서 (규칙 9).
 - 상태 이상은 `StatusEffects`(Apply · TryApply)로만 걸고, 효과는 `StatusDef` 데이터 필드(틱당 피해 · 행동 비용 추가 · 행동 불가)로만 정한다 — 상태 종류별 분기 코드를 늘리지 않는다. 확률은 `RngStream.Combat`.
 - 지형 효과는 `TerrainEffects.Place`로만 놓고 `World.Terrain`(칸마다 여러 효과)에 둔다. 효과는 `TerrainDef` 데이터(지속 · 거는 상태)로만. MonoBehaviour 메서드 이름은 Unity 내장 메시지(`OnTerrainChanged` 등)와 겹치지 않게 한다.
-- 반응 결과는 `ReactionDef` 필드 조합(추가 피해 · 폭발 · 소모 · 지형 변환(+지속) · 대상 상태)으로만 — 반응 종류별 분기 코드를 늘리지 않는다 (3-3a 빙결도 `TargetStatus` 데이터).
+- 반응 결과는 `ReactionDef` 필드 조합(추가 피해 · 폭발 · 소모 · 지형 변환(+지속) · 대상 상태 · 전이)으로만 — 반응 종류별 분기 코드를 늘리지 않는다 (3-3a 빙결도 `TargetStatus` 데이터).
 - 반응은 `ReactionEngine.Resolve` 하나에서만 일어나고, 규칙은 `ReactionCatalog.asset`(REACTIONS.md) 데이터로만 추가한다. 주문 시전 순서는 원래 피해 → 반응 → 새 상태 → 지형. 반응 결과는 다시 반응하지 않는다. 인벤토리 · 빠른 칸은 `Items.Inventory`(TryAdd · RemoveAt · AssignQuickSlot)로만 바꾼다 (3-2a — 주문 장착 칸을 대신함).
 - 마법 융합은 `FusionCasting`(`Check` · `TryCreateCast`) 하나 — 융합 주문은 `FusionBook.Build`가 두 주문에서 만들고(마나 · 피해 합, 큰 모양, 반응 없음), 조합 · 지형 · 지속은 `FusionCatalog.asset`(BALANCE 10번) 데이터로만 추가한다 (3-2b).
 - 시야는 `ISightRule`(지금 `ShadowcastSightRule` → `FieldOfView`), 사거리 · 조준선은 `ITargetingRule`(지금 `BresenhamTargetingRule`) 한 곳만 쓴다
@@ -122,7 +122,7 @@ Assets/
 7. **시드 난수 주입.** `UnityEngine.Random`, `System.Random` 직접 생성 금지. 난수 인터페이스를 주입하고 용도별로 분리한다 (전투 ≠ 맵 생성 ≠ 연출). 구현: `IRng` / `Pcg32` / `RngSet.Get(RngStream.X)`. 새 용도는 `RngStream` 끝에 추가. **같은 시드 = 같은 층(맵 · 적 배치) 반드시** (사용자 요구 2026-10-16) — 시간 · 해시 순서 · 정렬 안 된 Dictionary 순회를 결과에 쓰지 않는다. `DungeonGeneratorTests.RecordedSeed_MatchesBalanceResult`가 지킨다.
 8. **모든 엔티티에 고유 ID.** 참조는 ID로 한다.
 9. **시너지는 규칙 표.** "A마법 + B마법"을 하드코딩하지 않는다. 마법은 속성과 상태/지형 태그를 부여하고, 반응은 `상태/지형 × 속성 → 결과` 데이터 표로 정의한다.
-10. **조합 안전장치.** 조합 추가 피해 상한, 전이 피해 < 첫 대상 피해, 주문당 발동 횟수 · 대상 수 상한, 동일 상태 중첩은 "지속 갱신" 또는 "강도 증가" 중 하나만, 플레이어도 지형 · 상태 영향을 받는다. 조합으로 인한 추가 행동은 금지 — 예외: 마법 융합기의 융합 시전(두 주문을 마나 합 · 행동 1회로, REACTIONS.md 5번 F2).
+10. **조합 안전장치.** 조합 추가 피해 상한, 전이 피해 < 첫 대상 피해, 주문당 발동 횟수 · 대상 수 상한, 동일 상태 중첩은 "지속 갱신" 또는 "강도 증가" 중 하나만, 플레이어도 지형 · 상태 영향을 받는다. 조합으로 인한 추가 행동은 금지 — 예외: 마법 융합기의 융합 시전(두 주문을 마나 합 · 행동 1회로, REACTIONS.md 5번 F2). 대상 수 상한의 예외: 감전 사슬 전이는 인원 제한 없음(사용자 결정 2026-10-18, REACTIONS.md 3번 — 전이 피해 50%는 유지).
 11. **속성은 7개.** 변형(관통 · 추적 · 연쇄 등)은 속성이 아니라 마법서 시스템이 맡는다. 비전 계열 없음.
 12. **마법 자원은 마나.**
 
