@@ -127,6 +127,66 @@ namespace ProjectM.Tests
             Assert.That(WorldSnapshotCodec.Encode(restored.Capture()), Is.EqualTo(bytes));
         }
 
+        // 2-6: 10틱마다 최대 체력의 1%(올림 · 최소 1), 플레이어만, 최대치에서 멈춤
+        private static readonly MagicConfig MagicWithHpRegen = new MagicConfig(3, 1, 4, 10, 1);
+
+        private static Session StartWithHpRegen(params GridPos[] enemies)
+        {
+            var world = new World(Room(), 5UL);
+            world.InstallCoreSystems(new ShadowcastSightRule(), MagicWithHpRegen, new ProjectM.Status.StatusBook(new ProjectM.Status.StatusDef[0]), ProjectM.Status.TerrainBook.Empty);
+            var s = new Session { World = world, Clock = new TurnClock(world.Scheduler, world.PlayerInput) };
+            s.Player = UnitSpawner.SpawnPlayer(world, PlayerDef, new GridPos(1, 1), MagicWithHpRegen.SpellSlotCount);
+            foreach (var p in enemies) UnitSpawner.SpawnEnemy(world, EnemyDef, p, new WaitAi());
+            world.Events.Flush();
+            return s;
+        }
+
+        private sealed class WaitAi : ICommandSource
+        {
+            public ICommand NextCommand(in TickContext context) => new WaitCommand(1);
+        }
+
+        [Test]
+        public void HpRegen_PlayerHealsOneEveryTenTicks_UpToMax()
+        {
+            var s = StartWithHpRegen();
+            var healed = new List<UnitHealedEvent>();
+            s.World.Events.Subscribe<UnitHealedEvent>(healed.Add);
+            Combat.ApplyDamage(s.World, EntityId.None, s.Player, 3); // 17/20
+
+            s.Wait(9); // 틱 0 ~ 8
+            Assert.That(s.Player.Hp, Is.EqualTo(17));
+            s.Wait(1); // 틱 9 → (9 + 1) % 10 == 0
+            Assert.That(s.Player.Hp, Is.EqualTo(18), "최대 체력 20의 1% = 0.2 → 올림 · 최소 1");
+
+            s.Wait(40);
+            Assert.That(s.Player.Hp, Is.EqualTo(20), "최대치에서 멈춤");
+            s.World.Events.Flush();
+            Assert.That(healed.Count, Is.EqualTo(3));
+            Assert.That(healed[0].Amount, Is.EqualTo(1));
+            Assert.That(healed[2].Hp, Is.EqualTo(20));
+        }
+
+        [Test]
+        public void HpRegen_EnemiesDoNotHeal()
+        {
+            var s = StartWithHpRegen(new GridPos(7, 2));
+            var enemy = s.World.Units.ToSortedList().Find(u => u.Faction == Faction.Enemy);
+            Combat.ApplyDamage(s.World, EntityId.None, enemy, 3);
+            s.Wait(30);
+            Assert.That(enemy.Hp, Is.EqualTo(5));
+        }
+
+        [Test]
+        public void HpRegen_AmountIsPercentRoundedUpMinimumOne()
+        {
+            Assert.That(MagicWithHpRegen.HpRegenAmount(20), Is.EqualTo(1));
+            Assert.That(MagicWithHpRegen.HpRegenAmount(100), Is.EqualTo(1));
+            Assert.That(MagicWithHpRegen.HpRegenAmount(101), Is.EqualTo(2));
+            Assert.That(new MagicConfig(3, 1, 4, 10, 5).HpRegenAmount(30), Is.EqualTo(2), "1.5 → 2");
+            Assert.That(Magic.HpRegenAmount(20), Is.EqualTo(0), "주기 0 = 회복 없음");
+        }
+
         [Test]
         public void Config_RejectsInvalidValues()
         {
@@ -134,6 +194,8 @@ namespace ProjectM.Tests
             Assert.Throws<ArgumentOutOfRangeException>(() => new MagicConfig(3, -1, 4));
             Assert.Throws<ArgumentOutOfRangeException>(() => new MagicConfig(3, 1, 0));
             Assert.Throws<ArgumentOutOfRangeException>(() => new MagicConfig(3, 1, 10));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new MagicConfig(3, 1, 4, -1, 1));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new MagicConfig(3, 1, 4, 10, 101));
             Assert.Throws<ArgumentOutOfRangeException>(() => new UnitDef("x", 1, 1, 1, -1));
             Assert.Throws<ArgumentException>(() => new UnitDef("x", 1, 1, 1, 0, new[] { "" }));
         }
@@ -151,6 +213,8 @@ namespace ProjectM.Tests
             Assert.That(m.ManaRegenIntervalTicks, Is.EqualTo(3));
             Assert.That(m.ManaRegenAmount, Is.EqualTo(1));
             Assert.That(m.SpellSlotCount, Is.EqualTo(4));
+            Assert.That(m.HpRegenIntervalTicks, Is.EqualTo(10), "2-6 체력 자동 회복 주기");
+            Assert.That(m.HpRegenPercent, Is.EqualTo(1));
 
             var p = player.ToDef();
             Assert.That(p.MaxMana, Is.EqualTo(10));

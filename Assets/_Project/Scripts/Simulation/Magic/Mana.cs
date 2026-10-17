@@ -62,6 +62,36 @@ namespace ProjectM.Magic
         }
     }
 
+    /// <summary>
+    /// ⑤ 체력 자동 회복 (2-6). 마나 회복 다음에 돈다. (틱 + 1)이 주기의 배수인 틱마다 살아 있는 플레이어만
+    /// 최대 체력의 일정 퍼센트(올림 · 최소 1)를 최대치를 넘지 않게 회복. 상태 이상 중에도 회복. 상태를 갖지 않는다.
+    /// </summary>
+    public sealed class HpRegenSystem : ITickSystem
+    {
+        private readonly World _world;
+        private readonly MagicConfig _config;
+
+        public HpRegenSystem(World world, MagicConfig config)
+        {
+            _world = world ?? throw new ArgumentNullException(nameof(world));
+            _config = config ?? throw new ArgumentNullException(nameof(config));
+        }
+
+        public void Run(in TickContext context)
+        {
+            if (_config.HpRegenIntervalTicks == 0) return;
+            if ((context.Tick + 1) % _config.HpRegenIntervalTicks != 0) return;
+            foreach (var unit in _world.Units.ToSortedList())
+            {
+                if (unit.Faction != Faction.Player || !unit.IsAlive || unit.Hp >= unit.MaxHp) continue;
+                int healed = Math.Min(_config.HpRegenAmount(unit.MaxHp), unit.MaxHp - unit.Hp);
+                if (healed <= 0) continue;
+                unit.Hp += healed;
+                _world.Events.Publish(new UnitHealedEvent(unit.Id, healed, unit.Hp, unit.MaxHp));
+            }
+        }
+    }
+
     /// <summary>유닛의 마나가 바뀌었다. 값은 바뀐 뒤.</summary>
     public sealed class ManaChangedEvent : ISimEvent
     {

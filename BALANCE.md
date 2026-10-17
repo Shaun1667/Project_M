@@ -98,10 +98,12 @@
 | 회복 주기 | `_manaRegenIntervalTicks` | **3틱** | (틱 + 1)이 3의 배수인 틱의 ⑤ 단계 |
 | 회복량 | `_manaRegenAmount` | **1** | 최대치에서 멈춤 |
 | 주문 장착 칸 | `_spellSlotCount` | **4** | 키 1 ~ 4 |
-| 시작 주문 | `Player.asset` `_startingSpells` | **fire_basic · ice_basic · lightning_basic · poison_basic** | 임시 ID, 주문 내용은 2-2 (5번) |
+| 체력 자동 회복 주기 | `_hpRegenIntervalTicks` | **10틱** | 2-6 (2026-10-17 사용자 요청). (틱 + 1)이 10의 배수인 틱의 ⑤ 단계, 마나 회복 다음. 0이면 없음 |
+| 체력 자동 회복량 | `_hpRegenPercent` | **1%** | 최대 체력의 1%를 올림 · 최소 1 → 최대 체력 20이면 10틱마다 **1** (실제 5%). 플레이어만, 상태 이상 중에도 회복, 최대치에서 멈춤 |
+| 시작 주문 | `Player.asset` `_startingSpells` | **없음 (빈 칸 4개)** | 3-1부터 주문은 게임 중 획득 (REACTIONS.md D8), 지금은 디버그 창에서 칸마다 고름. 주문 내용은 5번 |
 
 검산 (`ManaTests.ProjectAssets_MatchBalanceTable`): 에셋 값이 위 표와 같다.
-결과: 바닥(0)에서 가득(10)까지 30틱. 2-2 주문 마나 비용은 이 회복 속도를 기준으로 정한다 (예: 비용 3 = 9틱마다 한 번 꼴).
+결과: 바닥(0)에서 가득(10)까지 30틱. 체력은 1 → 20까지 190틱 (10틱마다 1). 2-2 주문 마나 비용은 이 회복 속도를 기준으로 정한다 (예: 비용 3 = 9틱마다 한 번 꼴).
 
 ---
 

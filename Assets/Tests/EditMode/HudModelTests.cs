@@ -173,6 +173,19 @@ namespace ProjectM.Tests
             Assert.That(s.Hud.MaxMana, Is.EqualTo(10));
         }
 
+        // 2-6: 자동 회복은 HP 막대만 갱신, 로그 없음
+        [Test]
+        public void Heal_UpdatesHpWithoutLog()
+        {
+            var s = Start();
+            s.World.Events.Publish(new UnitDamagedEvent(s.Player.Id, EntityId.None, 3, 17, 20));
+            s.World.Events.Publish(new UnitHealedEvent(s.Player.Id, 1, 18, 20));
+            s.World.Events.Publish(new UnitHealedEvent(s.Enemy.Id, 1, 8, 8));
+            s.World.Events.Flush();
+            Assert.That(s.Hud.Hp, Is.EqualTo(18));
+            Assert.That(s.Hud.Log.Count, Is.EqualTo(1), "피해 한 줄만");
+        }
+
         // 3-1: 반응 로그 = 데이터 이름 + "!" (+ 대상). 이름이 없으면 ID
         [Test]
         public void Reaction_LogsDisplayName()

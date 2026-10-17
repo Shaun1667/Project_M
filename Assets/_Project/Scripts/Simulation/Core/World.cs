@@ -74,6 +74,7 @@ namespace ProjectM.Core
             Scheduler.AddSystem(TickPhase.Terrain, new TerrainSystem(this, terrains, statuses));
             Scheduler.AddSystem(TickPhase.Status, new StatusSystem(this, statuses));
             Scheduler.AddSystem(TickPhase.ManaRegen, new ManaRegenSystem(this, magic));
+            Scheduler.AddSystem(TickPhase.ManaRegen, new HpRegenSystem(this, magic));
             Scheduler.AddSystem(TickPhase.DeathCheck, new DeathCheckSystem(this));
             Scheduler.AddSystem(TickPhase.DeathCheck, vision);
             Scheduler.AddSystem(TickPhase.EventFlush, new EventFlushSystem(Events));

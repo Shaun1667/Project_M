@@ -86,7 +86,8 @@ namespace ProjectM.Editor
                 ("_enemyCount", 5), ("_enemyMinDistanceFromStart", 8));
             // 마나 · 장착 칸 — 없을 때만 BALANCE 4번 값으로 만든다
             var magicConfig = EnsureAsset<MagicConfigAsset>(MagicConfigPath,
-                ("_manaRegenIntervalTicks", 3), ("_manaRegenAmount", 1), ("_spellSlotCount", 4));
+                ("_manaRegenIntervalTicks", 3), ("_manaRegenAmount", 1), ("_spellSlotCount", 4),
+                ("_hpRegenIntervalTicks", 10), ("_hpRegenPercent", 1));
             var spellCatalog = EnsureSpellCatalog();
             var statusCatalog = EnsureStatusCatalog();
             var terrainCatalog = EnsureTerrainCatalog();

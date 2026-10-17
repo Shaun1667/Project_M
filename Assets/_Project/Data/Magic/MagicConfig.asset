@@ -15,3 +15,5 @@ MonoBehaviour:
   _manaRegenIntervalTicks: 3
   _manaRegenAmount: 1
   _spellSlotCount: 4
+  _hpRegenIntervalTicks: 10
+  _hpRegenPercent: 1

@@ -69,6 +69,7 @@ namespace ProjectM.UI
             }
 
             _bus.Subscribe<UnitDamagedEvent>(OnDamaged);
+            _bus.Subscribe<UnitHealedEvent>(OnHealed);
             _bus.Subscribe<UnitDiedEvent>(OnDied);
             _bus.Subscribe<ManaChangedEvent>(OnManaChanged);
             _bus.Subscribe<SpellCastEvent>(OnSpellCast);
@@ -104,6 +105,7 @@ namespace ProjectM.UI
         {
             if (_bus == null) return;
             _bus.Unsubscribe<UnitDamagedEvent>(OnDamaged);
+            _bus.Unsubscribe<UnitHealedEvent>(OnHealed);
             _bus.Unsubscribe<UnitDiedEvent>(OnDied);
             _bus.Unsubscribe<ManaChangedEvent>(OnManaChanged);
             _bus.Unsubscribe<SpellCastEvent>(OnSpellCast);
@@ -124,6 +126,12 @@ namespace ProjectM.UI
         }
 
         private string Who(EntityId id) => id == _playerId ? "나" : HudText.Enemy(id);
+
+        // 2-6 자동 회복: HP 막대만 갱신, 로그는 남기지 않음 (10틱마다 한 줄씩 쌓이면 전투 로그가 묻힘)
+        private void OnHealed(UnitHealedEvent e)
+        {
+            if (e.Target == _playerId) Hp = e.Hp;
+        }
 
         private void OnDamaged(UnitDamagedEvent e)
         {
