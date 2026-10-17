@@ -133,5 +133,6 @@ namespace ProjectM.UI
 
         // ── 층 (3-4a) ──
         public static string FloorChanged(int from, int to) => to > from ? $"{to}층으로 내려왔다" : $"{to}층으로 올라왔다";
+        public static string StairsHint(bool down) => down ? "내려가는 계단 — Enter/이 칸 클릭으로 내려가기" : "올라가는 계단 — Enter/이 칸 클릭으로 올라가기";
     }
 }

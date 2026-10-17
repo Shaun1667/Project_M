@@ -36,6 +36,7 @@ namespace ProjectM.Tests
             public TurnClock Clock;
             public Unit Player;
             public DungeonFloor Floor1;
+            public FloorTransition Stairs;
             public readonly List<FloorChangedEvent> Changes = new List<FloorChangedEvent>();
         }
 
@@ -52,8 +53,11 @@ namespace ProjectM.Tests
             var statuses = SpellTests.BalanceStatuses();
             var vision = world.InstallCoreSystems(Sight, Magic, statuses, SpellTests.BalanceTerrains());
             world.Scheduler.AddSystem(TickPhase.ManaRegen, new EnemyRespawnSystem(world, spawn, EnemyDef, Idle, Sight, floorCount));
-            world.Scheduler.AddSystem(TickPhase.DeathCheck, new FloorTransitionSystem(world, generator, floorCount, EnemyDef, spawn, (w, id) => Idle, vision));
-            var s = new Session { World = world, Clock = new TurnClock(world.Scheduler, world.PlayerInput), Floor1 = floor };
+            var s = new Session
+            {
+                World = world, Clock = new TurnClock(world.Scheduler, world.PlayerInput), Floor1 = floor,
+                Stairs = new FloorTransition(world, generator, floorCount, EnemyDef, spawn, (w, id) => Idle, vision),
+            };
             world.Events.Subscribe<FloorChangedEvent>(s.Changes.Add);
             s.Player = FloorPopulator.Populate(world, floor.Start, PlayerDef, EnemyDef, spawn, Idle, Magic.QuickSlotCount, Magic.InventorySlotCount);
             vision.Refresh();
@@ -61,8 +65,16 @@ namespace ProjectM.Tests
             return s;
         }
 
-        /// <summary>플레이어를 그 계단 옆 빈 칸에 놓고 계단으로 한 걸음.</summary>
+        /// <summary>계단 칸으로 걸어간 뒤 계단을 쓴다 (3-4a: 걸어가기 + 한 번 더).</summary>
         private static void StepOnto(Session s, TileType stairs)
+        {
+            WalkOnto(s, stairs);
+            Assert.That(s.Stairs.TryUse(), Is.True);
+            s.World.Events.Flush();
+        }
+
+        /// <summary>플레이어를 그 계단 옆 빈 칸에 놓고 계단 칸으로 한 걸음 (층은 안 바뀜).</summary>
+        private static void WalkOnto(Session s, TileType stairs)
         {
             var target = s.World.Map.Find(stairs);
             Assert.That(target.HasValue, Is.True, stairs + " 없음");
@@ -85,6 +97,33 @@ namespace ProjectM.Tests
         {
             for (int i = 0; i < turns; i++) s.Clock.SubmitPlayerCommand(PlayerActions.Wait(Config));
             s.World.Events.Flush();
+        }
+
+        // 결정 2026-10-18: 계단 칸으로는 걸어가기만, 그 위에서 한 번 더 = 이동. 이동은 틱을 쓰지 않는다
+        [Test]
+        public void WalkOntoStairs_DoesNotChangeFloor_UseCostsNoTick()
+        {
+            var s = Start(13);
+            WalkOnto(s, TileType.StairsDown);
+            Assert.That(s.World.Floor, Is.EqualTo(1), "걸어 들어가기만");
+            Assert.That(s.Stairs.StairsDirection(), Is.EqualTo(1));
+            long tick = s.World.Scheduler.CurrentTick;
+            long ready = s.World.Scheduler.GetReadyTick(s.Player.Id);
+
+            Assert.That(s.Stairs.TryUse(), Is.True);
+            Assert.That(s.World.Floor, Is.EqualTo(2));
+            Assert.That(s.World.Scheduler.CurrentTick, Is.EqualTo(tick), "틱 안 씀");
+            Assert.That(s.World.Scheduler.GetReadyTick(s.Player.Id), Is.EqualTo(ready));
+            Assert.That(s.World.Scheduler.IsWaitingForPlayer, Is.True, "바로 다음 입력을 기다림");
+        }
+
+        [Test]
+        public void TryUse_NotOnStairs_Nothing()
+        {
+            var s = Start(13);
+            Assert.That(s.Stairs.StairsDirection(), Is.EqualTo(0));
+            Assert.That(s.Stairs.TryUse(), Is.False);
+            Assert.That(s.World.Floor, Is.EqualTo(1));
         }
 
         [Test]
@@ -217,8 +256,8 @@ namespace ProjectM.Tests
                 "#...#",
                 "#####");
             var start = new GridPos(1, 1);
-            Assert.That(FloorTransitionSystem.NearestFree(map, start, new HashSet<GridPos>()), Is.EqualTo(start));
-            var near = FloorTransitionSystem.NearestFree(map, start, new HashSet<GridPos> { start });
+            Assert.That(FloorTransition.NearestFree(map, start, new HashSet<GridPos>()), Is.EqualTo(start));
+            var near = FloorTransition.NearestFree(map, start, new HashSet<GridPos> { start });
             Assert.That(GridMovement.Chebyshev(near, start), Is.EqualTo(1));
         }
 

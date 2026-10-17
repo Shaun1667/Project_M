@@ -148,13 +148,12 @@ namespace ProjectM
             var sight = new ShadowcastSightRule();
             var vision = World.InstallCoreSystems(sight, Magic, Statuses, Terrains);
 
-            // 3-4a: 적 재생성(⑤) · 층 이동(⑥ 끝 — 사망 판정 · 시야 다음)
+            // 3-4a: 적 재생성(⑤) · 계단 사용(틱 밖 — 입력이 부른다)
             var spawn = _spawnConfig.ToConfig();
             var enemyDef = _enemyDef.ToDef();
             var enemyAi = new MeleeChaserAi(World, Config, sight);
             World.Scheduler.AddSystem(TickPhase.ManaRegen, new EnemyRespawnSystem(World, spawn, enemyDef, enemyAi, sight, dungeonConfig.FloorCount));
-            World.Scheduler.AddSystem(TickPhase.DeathCheck,
-                new FloorTransitionSystem(World, generator, dungeonConfig.FloorCount, enemyDef, spawn, (w, id) => enemyAi, vision));
+            var stairs = new FloorTransition(World, generator, dungeonConfig.FloorCount, enemyDef, spawn, (w, id) => enemyAi, vision);
 
             _tilemapPresenter.Bind(World.Events);
             _entityPresenter.Bind(World.Events);
@@ -171,7 +170,7 @@ namespace ProjectM
             vision.Refresh(); // 첫 시야 — 이후는 매 틱 ⑥ 단계에서
 
             _hud.Bind(World.Events, player, Spells, _hudText);
-            _input.Bind(World, Config, new TurnClock(World.Scheduler, World.PlayerInput), sight, Spells, new BresenhamTargetingRule(), Items, Fusions);
+            _input.Bind(World, Config, new TurnClock(World.Scheduler, World.PlayerInput), sight, Spells, new BresenhamTargetingRule(), Items, Fusions, stairs);
             World.Events.Flush();
 
             if (_camera != null)

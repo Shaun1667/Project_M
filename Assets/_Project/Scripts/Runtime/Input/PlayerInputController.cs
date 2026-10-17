@@ -22,6 +22,7 @@ namespace ProjectM.Input
     /// - 조준 (2-2): 보이는 가장 가까운 적이 자동 선택, Tab = 다음 적, 방향키 · WASD · 넘패드 = 조준 칸 한 칸씩, 마우스 = 가리킨 칸,
     ///   Space · Enter · 클릭 = 시전, Esc · 같은 숫자 키 = 취소. 미리보기는 AimPreviewPresenter. 쓸 수 없으면 이유를 힌트로 보낸다.
     /// - 인벤토리 (3-2a): I 키로 열고 닫는다. 열려 있는 동안 다른 입력은 받지 않는다 (차례도 안 감) — 규칙은 InventoryMenu.
+    /// - 계단 (3-4a): 계단 칸으로는 걸어가기만 한다. 계단 위에서 Enter · 자기 칸 클릭 = 층 이동 (틱 안 씀, FloorTransition).
     /// - 마법 융합 (3-2b): 융합기 사용(빠른 칸 · 인벤토리 "사용") → 인벤토리에서 주문 두 개 → 융합 조준. 판정 · 시전은 FusionCasting.
     /// 클릭 경로 · 조준 · 인벤토리 창 상태는 입력 상태일 뿐 World에 저장하지 않는다.
     /// </summary>
@@ -65,6 +66,10 @@ namespace ProjectM.Input
         private ITargetingRule _targeting;
         private ItemBook _items;
         private FusionBook _fusions;
+        private ProjectM.Dungeon.FloorTransition _stairs;
+        private bool _stairsHintShown;
+
+        private static readonly Key[] StairsKeys = { Key.Enter, Key.NumpadEnter };
 
         // 조준 모드: 주문 ID (null = 조준 아님) · 빠른 칸 번호 (-1 = 인벤토리에서 바로)
         // 융합 조준 (3-2b): _aimSpellId = 첫 주문, _aimFusionSecond = 둘째 주문 (null = 일반 주문)
@@ -109,7 +114,7 @@ namespace ProjectM.Input
         private void OnDestroy() => _inventory.Changed -= DrawInventory;
 
         public void Bind(World world, GameConfig config, ITickClock clock, ISightRule sight, SpellBook spells, ITargetingRule targeting,
-            ItemBook items, FusionBook fusions)
+            ItemBook items, FusionBook fusions, ProjectM.Dungeon.FloorTransition stairs = null)
         {
             Unbind();
             _world = world;
@@ -120,10 +125,13 @@ namespace ProjectM.Input
             _targeting = targeting;
             _items = items ?? ItemBook.Empty;
             _fusions = fusions ?? FusionBook.Empty;
+            _stairs = stairs;
+            _stairsHintShown = false;
             _comboPending = false;
             _world.Events.Subscribe<InventoryChangedEvent>(OnInventoryChanged);
             _world.Events.Subscribe<QuickSlotsChangedEvent>(OnQuickSlotsChanged);
             _world.Events.Subscribe<ProjectM.Dungeon.FloorChangedEvent>(OnFloorChanged);
+            _world.Events.Subscribe<EntityMovedEvent>(OnEntityMoved);
         }
 
         /// <summary>층이 바뀌면 (3-4a) 이전 층 기준의 클릭 경로 · 조준을 버린다.</summary>
@@ -131,6 +139,38 @@ namespace ProjectM.Input
         {
             CancelPath();
             CancelAim();
+            RefreshStairsHint();
+        }
+
+        private void OnEntityMoved(EntityMovedEvent e)
+        {
+            if (PlayerActions.TryGetPlayer(_world, out var player) && e.Id == player.Id) RefreshStairsHint();
+        }
+
+        // ── 계단 (3-4a, 결정 2026-10-18): 계단 칸으로는 걸어가기만, 그 위에서 한 번 더(Enter · 자기 칸 클릭) = 층 이동, 틱 안 씀 ──
+
+        /// <summary>계단 위면 안내를 띄우고, 계단에서 내려서면 그 안내만 지운다.</summary>
+        private void RefreshStairsHint()
+        {
+            int dir = _stairs != null ? _stairs.StairsDirection() : 0;
+            if (dir != 0)
+            {
+                Hint(HudText.StairsHint(dir > 0));
+                _stairsHintShown = true;
+            }
+            else if (_stairsHintShown)
+            {
+                Hint(string.Empty);
+                _stairsHintShown = false;
+            }
+        }
+
+        private bool TryUseStairs()
+        {
+            if (_stairs == null || !_stairs.TryUse()) return false;
+            CancelPath();
+            _world.Events.Flush(); // 틱 밖 변경 — 바로 화면에
+            return true;
         }
 
         public void Unbind()
@@ -143,6 +183,7 @@ namespace ProjectM.Input
                 _world.Events.Unsubscribe<InventoryChangedEvent>(OnInventoryChanged);
                 _world.Events.Unsubscribe<QuickSlotsChangedEvent>(OnQuickSlotsChanged);
                 _world.Events.Unsubscribe<ProjectM.Dungeon.FloorChangedEvent>(OnFloorChanged);
+                _world.Events.Unsubscribe<EntityMovedEvent>(OnEntityMoved);
             }
             _world = null;
             _clock = null;
@@ -606,6 +647,13 @@ namespace ProjectM.Input
         /// <returns>키 입력을 처리했으면 true.</returns>
         private bool HandleKeyboard(Keyboard keyboard)
         {
+            foreach (var key in StairsKeys)
+            {
+                if (!keyboard[key].wasPressedThisFrame) continue;
+                TryUseStairs(); // 계단 위가 아니면 아무 일 없음
+                return true;
+            }
+
             foreach (var key in WaitKeys)
             {
                 if (!keyboard[key].wasPressedThisFrame) continue;
@@ -680,7 +728,8 @@ namespace ProjectM.Input
 
             if (target == player.Pos)
             {
-                _clock.SubmitPlayerCommand(PlayerActions.Wait(_config));
+                // 계단 위에서 자기 칸 클릭 = 계단 사용 (틱 안 씀), 아니면 제자리 대기
+                if (!TryUseStairs()) _clock.SubmitPlayerCommand(PlayerActions.Wait(_config));
                 return;
             }
 

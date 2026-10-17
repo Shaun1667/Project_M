@@ -7,14 +7,14 @@ using ProjectM.Units;
 namespace ProjectM.Dungeon
 {
     /// <summary>
-    /// 층 이동 (3-4a, 결정 2026-10-18). ⑥ 단계 끝(사망 판정 · 시야 다음)에 등록한다.
-    /// 플레이어가 계단 칸에 들어간 틱(World.PendingFloorChange)에:
+    /// 계단 사용 = 층 이동 (3-4a, 결정 2026-10-18). 계단 칸으로 걸어가는 것은 보통 이동이고, 계단 칸에 선 채로 한 번 더 누르면(입력 쪽) 여기를 부른다.
+    /// 틱을 쓰지 않는다 — 틱 사이에만 부르고(빠른 칸 등록과 같은 틱 밖 변경), 부른 쪽이 이벤트를 비운다.
     /// ① 지금 층을 멈춘 채 저장(StoredFloors) ② 처음 가는 층이면 생성(맵 생성 난수 — 같은 시드 = 같은 층) · 적 배치, 떠났던 층이면 그대로 복원
     /// ③ 플레이어를 도착 계단(아래로 = 그 층의 올라가는 계단, 위로 = 내려가는 계단)에 놓는다 — 다른 유닛이 서 있으면 가장 가까운 빈 칸
     /// ④ 화면용 이벤트(MapLoaded · 지형 · 유닛 · FloorChanged)와 시야 갱신.
     /// 플레이어는 체력 · 마나 · 인벤토리 · 상태 이상을 그대로 가져간다. 상태를 갖지 않는다.
     /// </summary>
-    public sealed class FloorTransitionSystem : ITickSystem
+    public sealed class FloorTransition
     {
         private readonly World _world;
         private readonly DungeonGenerator _generator;
@@ -24,7 +24,7 @@ namespace ProjectM.Dungeon
         private readonly Func<World, EntityId, ICommandSource> _aiFactory;
         private readonly PlayerVisionSystem _vision;
 
-        public FloorTransitionSystem(World world, DungeonGenerator generator, int floorCount, UnitDef enemyDef, SpawnConfig spawn,
+        public FloorTransition(World world, DungeonGenerator generator, int floorCount, UnitDef enemyDef, SpawnConfig spawn,
             Func<World, EntityId, ICommandSource> aiFactory, PlayerVisionSystem vision)
         {
             _world = world ?? throw new ArgumentNullException(nameof(world));
@@ -37,15 +37,25 @@ namespace ProjectM.Dungeon
             _vision = vision ?? throw new ArgumentNullException(nameof(vision));
         }
 
-        public void Run(in TickContext context)
+        /// <summary>플레이어가 서 있는 칸의 계단으로 갈 수 있는 방향 (+1 아래, −1 위), 계단이 아니거나 갈 층이 없으면 0.</summary>
+        public static int StairsDirection(World world, int floorCount)
         {
-            int delta = _world.PendingFloorChange;
-            if (delta == 0) return;
-            _world.ClearFloorChange();
-            int target = _world.Floor + delta;
-            if (target < 1 || target > _floorCount) return;
-            if (!PlayerActions.TryGetPlayer(_world, out var player) || !player.IsAlive) return;
-            Change(player, target, delta);
+            if (!PlayerActions.TryGetPlayer(world, out var player) || !player.IsAlive) return 0;
+            int delta = world.Map.Get(player.Pos) == TileType.StairsDown ? 1 : world.Map.Get(player.Pos) == TileType.StairsUp ? -1 : 0;
+            int target = world.Floor + delta;
+            return delta != 0 && target >= 1 && target <= floorCount ? delta : 0;
+        }
+
+        public int StairsDirection() => StairsDirection(_world, _floorCount);
+
+        /// <summary>서 있는 계단을 쓴다. 계단 위가 아니면 false. 플레이어 입력이 처리되지 않고 남아 있으면 쓰지 않는다.</summary>
+        public bool TryUse()
+        {
+            int delta = StairsDirection();
+            if (delta == 0 || _world.PlayerInput.HasCommand) return false;
+            PlayerActions.TryGetPlayer(_world, out var player);
+            Change(player, _world.Floor + delta, delta);
+            return true;
         }
 
         private void Change(Unit player, int target, int delta)
@@ -127,7 +137,7 @@ namespace ProjectM.Dungeon
         }
     }
 
-    /// <summary>층이 바뀌었다 (3-4a) — HUD · 로그 · 카메라용.</summary>
+    /// <summary>층이 바뀌었다 (3-4a) — HUD · 로그 · 입력용.</summary>
     public sealed class FloorChangedEvent : ISimEvent
     {
         public int From { get; }

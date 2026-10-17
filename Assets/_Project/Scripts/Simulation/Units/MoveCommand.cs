@@ -30,14 +30,6 @@ namespace ProjectM.Units
             var from = unit.Pos;
             _world.Units.Move(unit.Id, To);
             _world.Events.Publish(new EntityMovedEvent(unit.Id, from, To));
-
-            // 3-4a: 플레이어가 계단 칸에 들어가면 층 이동 요청 — 같은 틱 ⑥ 끝에 FloorTransitionSystem이 처리
-            if (unit.Faction == Faction.Player)
-            {
-                var tile = _world.Map.Get(To);
-                if (tile == TileType.StairsDown) _world.RequestFloorChange(1);
-                else if (tile == TileType.StairsUp) _world.RequestFloorChange(-1);
-            }
         }
     }
 }

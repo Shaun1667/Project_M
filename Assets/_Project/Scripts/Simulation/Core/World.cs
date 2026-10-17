@@ -36,12 +36,6 @@ namespace ProjectM.Core
         /// <summary>떠난 층들, 층 번호 오름차순 (3-4a).</summary>
         public IReadOnlyList<StoredFloorState> StoredFloors => _storedFloors;
 
-        /// <summary>
-        /// 이번 틱에 요청된 층 이동 (+1 아래로, −1 위로, 0 없음). 플레이어가 계단 칸에 들어가면 MoveCommand가 넣고
-        /// 같은 틱 ⑥ 단계 끝의 FloorTransitionSystem이 처리하고 비운다 — 틱 사이에는 항상 0이라 저장하지 않는다.
-        /// </summary>
-        public int PendingFloorChange { get; private set; }
-
         /// <summary>표현 레이어로 가는 이벤트. 저장하지 않는다 (복원 후 화면은 MapLoaded 등으로 다시 그린다).</summary>
         public SimEventBus Events { get; }
 
@@ -84,7 +78,7 @@ namespace ProjectM.Core
         /// 기본 단계 시스템을 등록한다: ③ 지형 처리 → ④ 상태 처리 → ⑤ 마나 회복 → ⑥ 사망 판정 → ⑥ 끝 플레이어 시야 갱신 → ⑦ 이벤트 발행.
         /// 행동 규칙(마비 = 행동 불가, 둔화 = 비용 추가)도 스케줄러에 연결한다.
         /// 새 World · 복원한 World 모두 한 번 부른다. 돌려준 시야 시스템의 Refresh()로 층 시작 · 불러오기 직후 시야를 한 번 계산한다.
-        /// 층 이동(FloorTransitionSystem) · 적 재생성(EnemyRespawnSystem)은 생성기 · 적 데이터가 필요해 부른 쪽이 따로 등록한다 (3-4a).
+        /// 적 재생성(EnemyRespawnSystem)은 적 데이터가 필요해 부른 쪽이 따로 등록한다. 층 이동(FloorTransition)은 틱 밖 동작이라 시스템이 아니다 (3-4a).
         /// </summary>
         public PlayerVisionSystem InstallCoreSystems(ISightRule sight, MagicConfig magic, StatusBook statuses, TerrainBook terrains)
         {
@@ -105,15 +99,6 @@ namespace ProjectM.Core
 
         // ── 층 (3-4a) ──
 
-        /// <summary>층 이동 요청 (+1 아래, −1 위). 같은 틱에 여러 번 오면 마지막 것.</summary>
-        public void RequestFloorChange(int delta)
-        {
-            if (delta != 1 && delta != -1) throw new ArgumentOutOfRangeException(nameof(delta), delta, "층 이동은 +1 또는 −1.");
-            PendingFloorChange = delta;
-        }
-
-        public void ClearFloorChange() => PendingFloorChange = 0;
-
         public bool HasStoredFloor(int floor) => _storedFloors.Exists(f => f.Floor == floor);
 
         /// <summary>떠난 층 기록 (도착 칸 계산용, 바꾸지 않는다). 없으면 null.</summary>
@@ -121,7 +106,7 @@ namespace ProjectM.Core
 
         /// <summary>
         /// 지금 층을 StoredFloors에 넣고 비운다: keep(플레이어) 말고 모든 유닛 · 행위자를 빼고 EntityRemovedEvent를 낸다.
-        /// 행위자 ReadyTick은 지금 틱과의 차이로 저장한다 (돌아오면 그만큼 뒤에 다시 행동 — "멈춤").
+        /// 행위자 ReadyTick은 지금 틱과의 차이로 저장한다 (돌아오면 그만큼 뒤에 다시 행동 — "멈춤"). 틱 사이에만 부른다.
         /// </summary>
         public void StoreCurrentFloor(EntityId keep)
         {
@@ -187,7 +172,6 @@ namespace ProjectM.Core
         public WorldSnapshot Capture()
         {
             if (PlayerInput.HasCommand) throw new InvalidOperationException("처리되지 않은 플레이어 입력이 있을 때는 저장할 수 없다.");
-            if (PendingFloorChange != 0) throw new InvalidOperationException("층 이동 처리 중에는 저장할 수 없다.");
 
             var rngStates = Rng.CaptureStates();
             var streams = new List<RngStreamState>(rngStates.Count);
