@@ -13,6 +13,8 @@ namespace ProjectM.Status
         Paralyze = 4,
         /// <summary>젖음 (3-2): 그 자체 효과 없음 — 반응의 트리거 (증발, 3-3 빙결 · 감전).</summary>
         Wet = 5,
+        /// <summary>빙결 (3-3a): 행동 불가 — 젖음 × 얼음 · 결빙 · 얼음 + 물 융합으로 확정. 불(해동) · 번개(파쇄)로 풀린다. 면역 없음 (결정 2026-10-18).</summary>
+        Frozen = 6,
     }
 
     /// <summary>

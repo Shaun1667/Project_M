@@ -33,3 +33,8 @@ MonoBehaviour:
     AppliesStatus: 5
     DamagePerTick: 1
     BlockedBy: 0
+  - Type: 5
+    DurationTicks: 8
+    AppliesStatus: 2
+    DamagePerTick: 0
+    BlockedBy: 0

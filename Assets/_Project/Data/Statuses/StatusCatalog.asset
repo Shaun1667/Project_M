@@ -38,3 +38,8 @@ MonoBehaviour:
     DamagePerTick: 0
     ExtraActionCostTicks: 0
     PreventsAction: 0
+  - Type: 6
+    DurationTicks: 2
+    DamagePerTick: 0
+    ExtraActionCostTicks: 0
+    PreventsAction: 1

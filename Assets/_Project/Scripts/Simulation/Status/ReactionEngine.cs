@@ -11,7 +11,7 @@ namespace ProjectM.Status
     /// 1) 후보 모으기: 맞은 유닛의 상태 × 주문 속성, 주문이 닿은 칸의 지형 × 주문 속성.
     /// 2) 우선순위(큰 것 먼저) → 상태 반응 먼저 → 모은 순서로 정렬.
     /// 3) 같은 그룹은 대상(유닛, 유닛이 없으면 칸)당 1회, 주문당 최대 N회. 그룹 중복으로 건너뛴 줄도 트리거 소모 · 지형 변환은 한다 (3-2).
-    /// 4) 발동: 추가 피해(상한) · 트리거 소모 / 지형 변환 · 폭발 예약. 폭발은 마지막에 대상당 가장 큰 것 1회만 (피해 → 상태 확률).
+    /// 4) 발동: 추가 피해(상한) · 대상 상태(3-3a) · 트리거 소모 / 지형 변환 · 폭발 예약. 폭발은 마지막에 대상당 가장 큰 것 1회만 (피해 → 상태 확률).
     /// 반응의 피해는 다시 반응을 일으키지 않는다 (연쇄 금지). 상태를 갖지 않는다.
     /// </summary>
     public static class ReactionEngine
@@ -79,9 +79,10 @@ namespace ProjectM.Status
             foreach (var c in candidates)
             {
                 var r = c.Reaction;
-                // 지형만 바꾸는 반응(폭발 없음, 빈 칸이거나 추가 피해 없음 — 오염 · 빈 칸의 증발 · 소화)은
+                // 지형만 바꾸는 반응(폭발 없음, 빈 칸이거나 유닛에게 아무것도 안 함 — 오염 · 빈 칸의 증발 · 소화 · 빈 칸의 결빙)은
                 // 4회 상한에 세지 않고 로그는 반응당 한 줄 (3-2 ✎ — 물 3×3에 독을 쏘면 9칸이 다 오염)
-                if (r.Trigger == ReactionTrigger.Terrain && r.ExplosionRadius == 0 && (c.Unit == null || r.ExtraDamage == 0))
+                if (r.Trigger == ReactionTrigger.Terrain && r.ExplosionRadius == 0
+                    && (c.Unit == null || (r.ExtraDamage == 0 && r.TargetStatus == StatusType.None)))
                 {
                     if (cellOnlyLogged.Add(r.Id))
                         world.Events.Publish(new ReactionTriggeredEvent(r.Id, caster.Id, c.Pos, EntityId.None));
@@ -102,6 +103,10 @@ namespace ProjectM.Status
 
                 if (r.ExtraDamage > 0 && c.Unit != null && c.Unit.IsAlive)
                     Combat.ApplyDamage(world, caster.Id, c.Unit, Math.Min(r.ExtraDamage, config.ExtraDamageCap(spell.Damage)));
+
+                // 대상 상태 (3-3a 빙결): 트리거 소모보다 먼저 — 빙결 × 불(해동)처럼 같은 상태를 소모하는 반응은 이 필드를 쓰지 않는다
+                if (r.TargetStatus != StatusType.None && c.Unit != null && c.Unit.IsAlive && statuses.TryGet(r.TargetStatus, out var targetDef))
+                    StatusEffects.TryApply(world, c.Unit, targetDef, r.TargetStatusChancePercent);
 
                 if (r.ExplosionRadius > 0)
                 {
@@ -137,7 +142,7 @@ namespace ProjectM.Status
                 else if (r.Trigger == ReactionTrigger.Terrain) TerrainEffects.Remove(world, c.Pos, r.Terrain);
             }
             else if (r.TransformTerrainTo != TerrainEffectType.None)
-                TerrainEffects.Transform(world, c.Pos, r.Terrain, r.TransformTerrainTo);
+                TerrainEffects.Transform(world, c.Pos, r.Terrain, r.TransformTerrainTo, r.TransformDurationTicks);
         }
     }
 

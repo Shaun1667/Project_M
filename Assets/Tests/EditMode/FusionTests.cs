@@ -27,6 +27,7 @@ namespace ProjectM.Tests
             new FusionDef("fusion_fire_water", Element.Fire, Element.Water, TerrainEffectType.FireZone, 6),
             new FusionDef("fusion_water_poison", Element.Water, Element.Poison, TerrainEffectType.ContaminatedWater, 8),
             new FusionDef("fusion_fire_lightning", Element.Fire, Element.Lightning),
+            new FusionDef("fusion_ice_water", Element.Ice, Element.Water, TerrainEffectType.IcePatch, 8, StatusType.Frozen, 100), // 3-3a
         }, statuses, terrains);
 
         private sealed class Session
@@ -208,6 +209,23 @@ namespace ProjectM.Tests
             Assert.That(Has(s.Inner.Enemies[1], StatusType.Paralyze), Is.False, "번개의 마비는 안 걸림");
         }
 
+        // 얼음 + 물 (3-3a): 3×3 피해 3, 맞은 대상 빙결 확정 + 빙판 8틱, 젖음 · 물 타일 · 둔화(주문) 없음
+        [Test]
+        public void IceWater_FreezesTargets_LeavesIcePatch()
+        {
+            var s = Start(new GridPos(1, 2), true, new GridPos(5, 2));
+            var enemy = s.Inner.Enemies[0];
+            s.Fuse("ice_basic", "water_basic", enemy.Pos);
+
+            Assert.That(s.Player.Mana, Is.EqualTo(6), "2 + 2");
+            Assert.That(s.Inner.HitsOn(enemy), Is.EqualTo(new[] { 3 }));
+            Assert.That(s.Inner.Reactions, Is.Empty);
+            Assert.That(Has(enemy, StatusType.Frozen), Is.True);
+            Assert.That(Has(enemy, StatusType.Wet), Is.False);
+            Assert.That(RemainingAt(s.World, enemy.Pos, TerrainEffectType.IcePatch), Is.EqualTo(7));
+            Assert.That(s.World.Terrain.Has(enemy.Pos, TerrainEffectType.Water), Is.False);
+        }
+
         // 지형 지속 재정의: 0이면 지형 규칙(4틱), 아니면 그 값
         [Test]
         public void TerrainPlace_DurationOverride()
@@ -303,6 +321,7 @@ namespace ProjectM.Tests
             Assert.That(names["fusion_fire_water"], Is.EqualTo("용암 분출"));
             Assert.That(names["fusion_water_poison"], Is.EqualTo("오염 물결"));
             Assert.That(names["fusion_fire_lightning"], Is.EqualTo("폭발 마법"));
+            Assert.That(names["fusion_ice_water"], Is.EqualTo("빙결 파도"));
         }
     }
 }

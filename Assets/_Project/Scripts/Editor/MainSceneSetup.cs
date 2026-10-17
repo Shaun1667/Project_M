@@ -241,6 +241,7 @@ namespace ProjectM.Editor
             changed |= catalog.AddIfMissing(new StatusCatalogAsset.Entry { Type = StatusType.Poison, DurationTicks = 5, DamagePerTick = 1 });
             changed |= catalog.AddIfMissing(new StatusCatalogAsset.Entry { Type = StatusType.Paralyze, DurationTicks = 2, PreventsAction = true });
             changed |= catalog.AddIfMissing(new StatusCatalogAsset.Entry { Type = StatusType.Wet, DurationTicks = 3 }); // 3-2
+            changed |= catalog.AddIfMissing(new StatusCatalogAsset.Entry { Type = StatusType.Frozen, DurationTicks = 2, PreventsAction = true }); // 3-3a
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }
@@ -259,6 +260,9 @@ namespace ProjectM.Editor
                 { Type = TerrainEffectType.Water, DurationTicks = 12, AppliesStatus = StatusType.Wet, BlockedBy = TerrainEffectType.FireZone });
             changed |= catalog.AddIfMissing(new TerrainCatalogAsset.Entry
                 { Type = TerrainEffectType.ContaminatedWater, DurationTicks = 8, AppliesStatus = StatusType.Wet, DamagePerTick = 1 });
+            // 3-3a: 빙판 8틱 · 위 유닛 둔화 (D4 100%)
+            changed |= catalog.AddIfMissing(new TerrainCatalogAsset.Entry
+                { Type = TerrainEffectType.IcePatch, DurationTicks = 8, AppliesStatus = StatusType.Slow });
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }
@@ -320,6 +324,41 @@ namespace ProjectM.Editor
             {
                 Id = "contaminate", DisplayName = "오염", Trigger = ReactionTrigger.Terrain, Terrain = TerrainEffectType.Water,
                 Element = Element.Poison, Priority = 0, TransformTerrainTo = TerrainEffectType.ContaminatedWater, ExplosionStatusChancePercent = 100,
+            });
+            // 3-3a: 빙결 (젖음 · 물 타일 · 오염된 물 × 얼음 — 한 그룹) · 해동 (빙결 · 빙판 × 불 — 한 그룹) · 파쇄 (빙결 × 번개)
+            changed |= catalog.AddIfMissing(new ReactionCatalogAsset.Entry
+            {
+                Id = "freeze", DisplayName = "빙결", Group = "freeze", Trigger = ReactionTrigger.Status, Status = StatusType.Wet,
+                Element = Element.Ice, Priority = 30, ConsumeTrigger = true, TargetStatus = StatusType.Frozen, TargetStatusChancePercent = 100,
+                ExplosionStatusChancePercent = 100,
+            });
+            changed |= catalog.AddIfMissing(new ReactionCatalogAsset.Entry
+            {
+                Id = "freeze_water", DisplayName = "결빙", Group = "freeze", Trigger = ReactionTrigger.Terrain, Terrain = TerrainEffectType.Water,
+                Element = Element.Ice, Priority = 30, TransformTerrainTo = TerrainEffectType.IcePatch, TransformDurationTicks = 8,
+                TargetStatus = StatusType.Frozen, TargetStatusChancePercent = 100, ExplosionStatusChancePercent = 100,
+            });
+            changed |= catalog.AddIfMissing(new ReactionCatalogAsset.Entry
+            {
+                Id = "freeze_contaminated", DisplayName = "결빙", Group = "freeze", Trigger = ReactionTrigger.Terrain,
+                Terrain = TerrainEffectType.ContaminatedWater, Element = Element.Ice, Priority = 30, TransformTerrainTo = TerrainEffectType.IcePatch,
+                TransformDurationTicks = 8, TargetStatus = StatusType.Frozen, TargetStatusChancePercent = 100, ExplosionStatusChancePercent = 100,
+            });
+            changed |= catalog.AddIfMissing(new ReactionCatalogAsset.Entry
+            {
+                Id = "thaw", DisplayName = "해동", Group = "thaw", Trigger = ReactionTrigger.Status, Status = StatusType.Frozen,
+                Element = Element.Fire, Priority = 30, ExtraDamage = 1, ConsumeTrigger = true, ExplosionStatusChancePercent = 100,
+            });
+            changed |= catalog.AddIfMissing(new ReactionCatalogAsset.Entry
+            {
+                Id = "thaw_ice", DisplayName = "해동", Group = "thaw", Trigger = ReactionTrigger.Terrain, Terrain = TerrainEffectType.IcePatch,
+                Element = Element.Fire, Priority = 0, TransformTerrainTo = TerrainEffectType.Water, TransformDurationTicks = 12,
+                ExplosionStatusChancePercent = 100,
+            });
+            changed |= catalog.AddIfMissing(new ReactionCatalogAsset.Entry
+            {
+                Id = "shatter", DisplayName = "파쇄", Trigger = ReactionTrigger.Status, Status = StatusType.Frozen,
+                Element = Element.Lightning, Priority = 30, ExtraDamage = 3, ConsumeTrigger = true, ExplosionStatusChancePercent = 100,
             });
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
@@ -435,6 +474,12 @@ namespace ProjectM.Editor
             {
                 Id = "fusion_fire_lightning", DisplayName = "폭발 마법", ElementA = Element.Fire, ElementB = Element.Lightning,
                 StatusChancePercent = 100,
+            });
+            // 3-3a: 얼음 + 물 = 빙판 3×3 8틱 + 맞은 대상 빙결 확정
+            changed |= catalog.AddIfMissing(new FusionCatalogAsset.Entry
+            {
+                Id = "fusion_ice_water", DisplayName = "빙결 파도", ElementA = Element.Ice, ElementB = Element.Water,
+                LeavesTerrain = TerrainEffectType.IcePatch, TerrainDurationTicks = 8, AppliesStatus = StatusType.Frozen, StatusChancePercent = 100,
             });
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;

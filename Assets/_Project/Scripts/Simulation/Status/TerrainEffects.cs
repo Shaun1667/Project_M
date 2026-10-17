@@ -15,6 +15,8 @@ namespace ProjectM.Status
         Water = 3,
         /// <summary>오염된 물 (3-2): 물 타일 × 독 · 물 + 독 융합, 위 유닛 젖음 + 매 틱 피해.</summary>
         ContaminatedWater = 4,
+        /// <summary>빙판 (3-3a): 물 타일 × 얼음(결빙) · 얼음 + 물 융합, 위 유닛 둔화. 불을 맞으면 물 타일로 (해동).</summary>
+        IcePatch = 5,
     }
 
     /// <summary>
@@ -184,18 +186,20 @@ namespace ProjectM.Status
         }
 
         /// <summary>
-        /// 그 칸의 from을 to로 바꾼다 — 남은 틱 유지 (3-2 오염: 물 → 오염된 물). to가 이미 있으면 남은 틱이 긴 쪽.
-        /// from이 없으면 아무 일 없음.
+        /// 그 칸의 from을 to로 바꾼다 — durationTicks가 0이면 남은 틱 유지 (3-2 오염: 물 → 오염된 물), 아니면 그 지속
+        /// (3-3a 결빙: 물 → 빙판 8틱, 해동: 빙판 → 물 12틱). to가 이미 있으면 남은 틱이 긴 쪽. from이 없으면 아무 일 없음.
         /// </summary>
-        public static bool Transform(World world, GridPos pos, TerrainEffectType from, TerrainEffectType to)
+        public static bool Transform(World world, GridPos pos, TerrainEffectType from, TerrainEffectType to, int durationTicks = 0)
         {
             if (world == null) throw new ArgumentNullException(nameof(world));
             if (to == TerrainEffectType.None || from == to) throw new ArgumentException("바꿀 지형이 잘못됐다.", nameof(to));
+            if (durationTicks < 0) throw new ArgumentOutOfRangeException(nameof(durationTicks));
             if (!world.Map.InBounds(pos)) return false;
             int remaining = -1;
             foreach (var t in world.Terrain.At(pos))
                 if (t.Type == from) remaining = t.Remaining;
             if (remaining < 0) return false;
+            if (durationTicks > 0) remaining = durationTicks;
 
             world.Terrain.Remove(pos, from);
             world.Events.Publish(new TerrainChangedEvent(pos, from, 0));

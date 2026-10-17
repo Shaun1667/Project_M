@@ -18,6 +18,7 @@ namespace ProjectM.Presentation
         [SerializeField] private Color _poisonCloudColor = new Color(0.55f, 0.2f, 0.9f, 0.45f);
         [SerializeField] private Color _waterColor = new Color(0.15f, 0.45f, 1f, 0.45f);
         [SerializeField] private Color _contaminatedWaterColor = new Color(0.4f, 0.6f, 0.15f, 0.5f);
+        [SerializeField] private Color _icePatchColor = new Color(0.75f, 0.92f, 1f, 0.55f);
 
         private readonly Dictionary<GridPos, List<TerrainEffectType>> _cells = new Dictionary<GridPos, List<TerrainEffectType>>();
         private SimEventBus _bus;
@@ -55,6 +56,7 @@ namespace ProjectM.Presentation
                 case TerrainEffectType.PoisonCloud: return _poisonCloudColor;
                 case TerrainEffectType.Water: return _waterColor;
                 case TerrainEffectType.ContaminatedWater: return _contaminatedWaterColor;
+                case TerrainEffectType.IcePatch: return _icePatchColor;
                 default: return Color.clear;
             }
         }

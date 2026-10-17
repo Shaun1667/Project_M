@@ -15,7 +15,7 @@ namespace ProjectM.Status
 
     /// <summary>
     /// 반응 하나 = "상태/지형 × 속성 → 결과" 규칙 한 줄 (3-1, REACTIONS.md). 값은 ReactionCatalogAsset에서 온다 — BALANCE.md 8번.
-    /// 결과는 종류별 코드가 아니라 이 필드들의 조합으로만 정한다: 추가 피해 · 폭발 · 트리거 소모 · 지형 변환(3-2).
+    /// 결과는 종류별 코드가 아니라 이 필드들의 조합으로만 정한다: 추가 피해 · 폭발 · 트리거 소모 · 지형 변환(3-2) · 대상 상태(3-3a).
     /// </summary>
     public sealed class ReactionDef
     {
@@ -48,13 +48,24 @@ namespace ProjectM.Status
         public int ExplosionStatusChancePercent { get; }
         /// <summary>지형 반응: 트리거 지형을 이 지형으로 바꾼다 — 남은 틱 유지 (3-2 오염: 물 → 오염된 물). None = 없음.</summary>
         public TerrainEffectType TransformTerrainTo { get; }
+        /// <summary>지형 변환 뒤 지속 (틱). 0 = 남은 틱 유지 (3-3a 결빙: 물 → 빙판 8틱).</summary>
+        public int TransformDurationTicks { get; }
+        /// <summary>대상(상태 반응) · 그 칸 유닛(지형 반응)에 거는 상태 (None = 없음) · 확률 (3-3a 빙결 확정).</summary>
+        public StatusType TargetStatus { get; }
+        public int TargetStatusChancePercent { get; }
 
         public ReactionDef(string id, ReactionTrigger trigger, StatusType status, TerrainEffectType terrain, Element element, int priority,
             int extraDamage = 0, bool consumeTrigger = false,
             int explosionRadius = 0, int explosionDamage = 0, bool explosionDamageFromRemaining = false,
             StatusType explosionStatus = StatusType.None, int explosionStatusChancePercent = 100, string group = null,
-            TerrainEffectType transformTerrainTo = TerrainEffectType.None)
+            TerrainEffectType transformTerrainTo = TerrainEffectType.None, int transformDurationTicks = 0,
+            StatusType targetStatus = StatusType.None, int targetStatusChancePercent = 100)
         {
+            if (transformDurationTicks < 0) throw new ArgumentOutOfRangeException(nameof(transformDurationTicks), "지속은 0 이상: " + id);
+            if (transformDurationTicks > 0 && transformTerrainTo == TerrainEffectType.None)
+                throw new ArgumentException("변환 지속은 지형 변환과 함께만: " + id);
+            if (targetStatusChancePercent < 0 || targetStatusChancePercent > 100)
+                throw new ArgumentOutOfRangeException(nameof(targetStatusChancePercent), "확률은 0 ~ 100: " + id);
             if (string.IsNullOrEmpty(id)) throw new ArgumentException("반응 ID가 비어 있다.", nameof(id));
             if (trigger == ReactionTrigger.Status && status == StatusType.None) throw new ArgumentException("상태 반응에 상태가 없다: " + id);
             if (trigger == ReactionTrigger.Terrain && terrain == TerrainEffectType.None) throw new ArgumentException("지형 반응에 지형이 없다: " + id);
@@ -80,6 +91,9 @@ namespace ProjectM.Status
             ExplosionStatus = explosionStatus;
             ExplosionStatusChancePercent = explosionStatusChancePercent;
             TransformTerrainTo = transformTerrainTo;
+            TransformDurationTicks = transformDurationTicks;
+            TargetStatus = targetStatus;
+            TargetStatusChancePercent = targetStatusChancePercent;
         }
     }
 
@@ -131,6 +145,8 @@ namespace ProjectM.Status
                     throw new ArgumentException("같은 대상 · 속성 조합이 두 번: " + r.Id, nameof(reactions));
                 if (r.ExplosionStatus != StatusType.None && !statuses.TryGet(r.ExplosionStatus, out _))
                     throw new ArgumentException($"반응 {r.Id}의 상태 {r.ExplosionStatus}가 StatusBook에 없다.", nameof(reactions));
+                if (r.TargetStatus != StatusType.None && !statuses.TryGet(r.TargetStatus, out _))
+                    throw new ArgumentException($"반응 {r.Id}의 상태 {r.TargetStatus}가 StatusBook에 없다.", nameof(reactions));
                 _reactions.Add(r);
             }
         }

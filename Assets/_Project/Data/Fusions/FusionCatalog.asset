@@ -37,3 +37,11 @@ MonoBehaviour:
     TerrainDurationTicks: 0
     AppliesStatus: 0
     StatusChancePercent: 100
+  - Id: fusion_ice_water
+    DisplayName: "\uBE59\uACB0 \uD30C\uB3C4"
+    ElementA: 1
+    ElementB: 6
+    LeavesTerrain: 5
+    TerrainDurationTicks: 8
+    AppliesStatus: 6
+    StatusChancePercent: 100

@@ -46,6 +46,19 @@ namespace ProjectM.Tests
                 extraDamage: 2, group: "evaporate"),
             new ReactionDef("contaminate", ReactionTrigger.Terrain, StatusType.None, TerrainEffectType.Water, Element.Poison, 0,
                 transformTerrainTo: TerrainEffectType.ContaminatedWater),
+            // 3-3a: 빙결 (젖음 · 물 타일 · 오염된 물 × 얼음 — 한 그룹) · 해동 (빙결 · 빙판 × 불 — 한 그룹) · 파쇄 (빙결 × 번개)
+            new ReactionDef("freeze", ReactionTrigger.Status, StatusType.Wet, TerrainEffectType.None, Element.Ice, 30,
+                consumeTrigger: true, group: "freeze", targetStatus: StatusType.Frozen),
+            new ReactionDef("freeze_water", ReactionTrigger.Terrain, StatusType.None, TerrainEffectType.Water, Element.Ice, 30,
+                group: "freeze", transformTerrainTo: TerrainEffectType.IcePatch, transformDurationTicks: 8, targetStatus: StatusType.Frozen),
+            new ReactionDef("freeze_contaminated", ReactionTrigger.Terrain, StatusType.None, TerrainEffectType.ContaminatedWater, Element.Ice, 30,
+                group: "freeze", transformTerrainTo: TerrainEffectType.IcePatch, transformDurationTicks: 8, targetStatus: StatusType.Frozen),
+            new ReactionDef("thaw", ReactionTrigger.Status, StatusType.Frozen, TerrainEffectType.None, Element.Fire, 30,
+                extraDamage: 1, consumeTrigger: true, group: "thaw"),
+            new ReactionDef("thaw_ice", ReactionTrigger.Terrain, StatusType.None, TerrainEffectType.IcePatch, Element.Fire, 0,
+                group: "thaw", transformTerrainTo: TerrainEffectType.Water, transformDurationTicks: 12),
+            new ReactionDef("shatter", ReactionTrigger.Status, StatusType.Frozen, TerrainEffectType.None, Element.Lightning, 30,
+                extraDamage: 3, consumeTrigger: true),
         }, new ReactionConfig(4, 3, 5), statuses);
 
         // 주문 자체는 상태 · 지형 없이 (반응만 보려고). 상태 · 지형 규칙은 BALANCE 값
@@ -321,6 +334,9 @@ namespace ProjectM.Tests
                         a.ExplosionRadius, a.ExplosionDamage, a.ExplosionDamageFromRemaining, a.ExplosionStatus, a.ExplosionStatusChancePercent, a.TransformTerrainTo),
                     Is.EqualTo((e.Group, e.Trigger, e.Status, e.Terrain, e.Element, e.Priority, e.ExtraDamage, e.ConsumeTrigger,
                         e.ExplosionRadius, e.ExplosionDamage, e.ExplosionDamageFromRemaining, e.ExplosionStatus, e.ExplosionStatusChancePercent, e.TransformTerrainTo)), e.Id);
+                // 3-3a: 변환 지속 · 대상 상태 (대상 상태가 없으면 확률은 보지 않음 — 이전 줄은 에셋에 0으로 저장됨)
+                Assert.That((a.TransformDurationTicks, a.TargetStatus), Is.EqualTo((e.TransformDurationTicks, e.TargetStatus)), e.Id);
+                if (e.TargetStatus != StatusType.None) Assert.That(a.TargetStatusChancePercent, Is.EqualTo(e.TargetStatusChancePercent), e.Id);
             }
         }
     }

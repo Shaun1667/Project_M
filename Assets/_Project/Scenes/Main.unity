@@ -1599,6 +1599,7 @@ MonoBehaviour:
   _poisonCloudColor: {r: 0.55, g: 0.2, b: 0.9, a: 0.45}
   _waterColor: {r: 0.15, g: 0.45, b: 1, a: 0.45}
   _contaminatedWaterColor: {r: 0.4, g: 0.6, b: 0.15, a: 0.5}
+  _icePatchColor: {r: 0.75, g: 0.92, b: 1, a: 0.55}
 --- !u!483693784 &1977550035
 TilemapRenderer:
   serializedVersion: 2

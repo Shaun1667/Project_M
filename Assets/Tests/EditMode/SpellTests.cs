@@ -29,6 +29,7 @@ namespace ProjectM.Tests
             new ProjectM.Status.StatusDef(ProjectM.Status.StatusType.Poison, 5, damagePerTick: 1),
             new ProjectM.Status.StatusDef(ProjectM.Status.StatusType.Paralyze, 2, preventsAction: true),
             new ProjectM.Status.StatusDef(ProjectM.Status.StatusType.Wet, 3), // 3-2
+            new ProjectM.Status.StatusDef(ProjectM.Status.StatusType.Frozen, 2, preventsAction: true), // 3-3a
         });
 
         // 상태 동작 시험용: 확률 100%로 고정 (실제 수치는 BalanceBookFull — 3-1부터 70%)
@@ -49,6 +50,8 @@ namespace ProjectM.Tests
             new ProjectM.Status.TerrainDef(ProjectM.Status.TerrainEffectType.Water, 12, ProjectM.Status.StatusType.Wet,
                 blockedBy: ProjectM.Status.TerrainEffectType.FireZone),
             new ProjectM.Status.TerrainDef(ProjectM.Status.TerrainEffectType.ContaminatedWater, 8, ProjectM.Status.StatusType.Wet, damagePerTick: 1),
+            // 3-3a: 빙판 8틱 · 둔화
+            new ProjectM.Status.TerrainDef(ProjectM.Status.TerrainEffectType.IcePatch, 8, ProjectM.Status.StatusType.Slow),
         }, BalanceStatuses());
 
         // BALANCE.md 5 · 6 · 7번 전체 (상태 + 지형) — 에셋 검산 · 지형 · 반응 테스트용. reactions = 반응 표 (없으면 반응 없음)

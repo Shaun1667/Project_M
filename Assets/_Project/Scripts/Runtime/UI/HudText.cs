@@ -69,6 +69,7 @@ namespace ProjectM.UI
                 case StatusType.Poison: return "중독";
                 case StatusType.Paralyze: return "마비";
                 case StatusType.Wet: return "젖음";
+                case StatusType.Frozen: return "빙결";
                 default: return type.ToString();
             }
         }
