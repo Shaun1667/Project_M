@@ -17,8 +17,4 @@ MonoBehaviour:
   _attackDamage: 3
   _sightRange: 8
   _maxMana: 10
-  _startingSpells:
-  - fire_basic
-  - ice_basic
-  - lightning_basic
-  - poison_basic
+  _startingSpells: []

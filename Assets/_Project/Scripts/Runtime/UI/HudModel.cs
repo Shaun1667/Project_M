@@ -21,6 +21,7 @@ namespace ProjectM.UI
         private EntityId _playerId;
         private string[] _spellSlots = new string[0];
         private int[] _slotCosts = new int[0];
+        private SpellBook _spellBook;
 
         public HudModel(int maxLogLines, HudText text = null)
         {
@@ -56,10 +57,8 @@ namespace ProjectM.UI
             Mana = player.Mana;
             MaxMana = player.MaxMana;
             Dead = false;
-            _spellSlots = (string[])player.SpellSlots.Clone();
-            _slotCosts = new int[_spellSlots.Length];
-            for (int i = 0; i < _spellSlots.Length; i++)
-                _slotCosts[i] = spellBook != null && _spellSlots[i] != null && spellBook.TryGet(_spellSlots[i], out var spell) ? spell.ManaCost : -1;
+            _spellBook = spellBook;
+            SetSlots(player.SpellSlots);
             _log.Clear();
             _playerStatuses.Clear();
             _activeStatuses.Clear();
@@ -74,6 +73,30 @@ namespace ProjectM.UI
             _bus.Subscribe<ManaChangedEvent>(OnManaChanged);
             _bus.Subscribe<SpellCastEvent>(OnSpellCast);
             _bus.Subscribe<StatusChangedEvent>(OnStatusChanged);
+            _bus.Subscribe<SpellSlotsChangedEvent>(OnSlotsChanged);
+            _bus.Subscribe<ReactionTriggeredEvent>(OnReaction);
+            Changed?.Invoke();
+        }
+
+        private void SetSlots(string[] slots)
+        {
+            _spellSlots = (string[])slots.Clone();
+            _slotCosts = new int[_spellSlots.Length];
+            for (int i = 0; i < _spellSlots.Length; i++)
+                _slotCosts[i] = _spellBook != null && _spellSlots[i] != null && _spellBook.TryGet(_spellSlots[i], out var spell) ? spell.ManaCost : -1;
+        }
+
+        private void OnSlotsChanged(SpellSlotsChangedEvent e)
+        {
+            if (e.Id != _playerId) return;
+            SetSlots(e.Slots);
+            Changed?.Invoke();
+        }
+
+        // 반응 로그 (3-1): "독화! 적 #3" · 빈 칸의 지형 반응은 이름만
+        private void OnReaction(ReactionTriggeredEvent e)
+        {
+            AddLog(e.Target.IsValid ? $"{Text.Reaction(e.ReactionId)}! {Who(e.Target)}" : $"{Text.Reaction(e.ReactionId)}!");
             Changed?.Invoke();
         }
 
@@ -85,6 +108,8 @@ namespace ProjectM.UI
             _bus.Unsubscribe<ManaChangedEvent>(OnManaChanged);
             _bus.Unsubscribe<SpellCastEvent>(OnSpellCast);
             _bus.Unsubscribe<StatusChangedEvent>(OnStatusChanged);
+            _bus.Unsubscribe<SpellSlotsChangedEvent>(OnSlotsChanged);
+            _bus.Unsubscribe<ReactionTriggeredEvent>(OnReaction);
             _bus = null;
         }
 

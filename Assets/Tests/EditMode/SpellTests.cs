@@ -29,6 +29,7 @@ namespace ProjectM.Tests
             new ProjectM.Status.StatusDef(ProjectM.Status.StatusType.Paralyze, 2, preventsAction: true),
         });
 
+        // 상태 동작 시험용: 확률 100%로 고정 (실제 수치는 BalanceBookFull — 3-1부터 70%)
         internal static SpellBook BalanceBookWithStatuses() => new SpellBook(new[]
         {
             new SpellDef("fire_basic", Element.Fire, SpellShape.Bolt, 6, 5, 3, 0, ProjectM.Status.StatusType.Burn, 100),
@@ -44,8 +45,8 @@ namespace ProjectM.Tests
             new ProjectM.Status.TerrainDef(ProjectM.Status.TerrainEffectType.PoisonCloud, 4, ProjectM.Status.StatusType.Poison),
         }, BalanceStatuses());
 
-        // BALANCE.md 5 · 6 · 7번 전체 (상태 + 지형) — 에셋 검산 · 지형 테스트용
-        internal static SpellBook BalanceBookFull()
+        // BALANCE.md 5 · 6 · 7번 전체 (상태 + 지형) — 에셋 검산 · 지형 · 반응 테스트용. reactions = 반응 표 (없으면 반응 없음)
+        internal static SpellBook BalanceBookFull(System.Func<ProjectM.Status.StatusBook, ProjectM.Status.ReactionBook> reactions = null)
         {
             var statuses = BalanceStatuses();
             var terrains = new ProjectM.Status.TerrainBook(new[]
@@ -55,13 +56,13 @@ namespace ProjectM.Tests
             }, statuses);
             return new SpellBook(new[]
             {
-                new SpellDef("fire_basic", Element.Fire, SpellShape.Bolt, 6, 5, 3, 0, ProjectM.Status.StatusType.Burn, 100,
-                    ProjectM.Status.TerrainEffectType.FireZone),
-                new SpellDef("ice_basic", Element.Ice, SpellShape.Bolt, 6, 3, 2, 0, ProjectM.Status.StatusType.Slow, 100),
+                // 3-1: 화상 · 둔화 · 중독 70% (REACTIONS.md D3), 불은 화염 지대를 남기지 않음 (D2)
+                new SpellDef("fire_basic", Element.Fire, SpellShape.Bolt, 6, 5, 3, 0, ProjectM.Status.StatusType.Burn, 70),
+                new SpellDef("ice_basic", Element.Ice, SpellShape.Bolt, 6, 3, 2, 0, ProjectM.Status.StatusType.Slow, 70),
                 new SpellDef("lightning_basic", Element.Lightning, SpellShape.Beam, 5, 3, 4, 0, ProjectM.Status.StatusType.Paralyze, 30),
-                new SpellDef("poison_basic", Element.Poison, SpellShape.Burst, 5, 2, 3, 1, ProjectM.Status.StatusType.Poison, 100,
+                new SpellDef("poison_basic", Element.Poison, SpellShape.Burst, 5, 2, 3, 1, ProjectM.Status.StatusType.Poison, 70,
                     ProjectM.Status.TerrainEffectType.PoisonCloud),
-            }, statuses, terrains);
+            }, statuses, terrains, reactions?.Invoke(statuses));
         }
 
         private const int Fire = 0, Ice = 1, Lightning = 2, Poison = 3;

@@ -88,11 +88,15 @@ namespace ProjectM.Magic
         /// <summary>주문이 남기는 지형 효과의 규칙. 없으면 비어 있다.</summary>
         public TerrainBook Terrains { get; }
 
-        public SpellBook(IEnumerable<SpellDef> spells, StatusBook statuses = null, TerrainBook terrains = null)
+        /// <summary>반응 규칙 표 (3-1). 없으면 비어 있다 — 반응 없음.</summary>
+        public ReactionBook Reactions { get; }
+
+        public SpellBook(IEnumerable<SpellDef> spells, StatusBook statuses = null, TerrainBook terrains = null, ReactionBook reactions = null)
         {
             if (spells == null) throw new ArgumentNullException(nameof(spells));
             Statuses = statuses ?? new StatusBook(Array.Empty<StatusDef>());
             Terrains = terrains ?? TerrainBook.Empty;
+            Reactions = reactions ?? ReactionBook.Empty;
             foreach (var spell in spells)
             {
                 if (spell == null) throw new ArgumentException("null 주문", nameof(spells));
@@ -102,10 +106,16 @@ namespace ProjectM.Magic
                 if (spell.LeavesTerrain != TerrainEffectType.None && !Terrains.TryGet(spell.LeavesTerrain, out _))
                     throw new ArgumentException($"주문 {spell.Id}의 지형 {spell.LeavesTerrain}가 TerrainBook에 없다.", nameof(spells));
                 _spells.Add(spell.Id, spell);
+                _ids.Add(spell.Id);
             }
         }
 
+        private readonly List<string> _ids = new List<string>();
+
         public int Count => _spells.Count;
+
+        /// <summary>주문 ID, 데이터에 적힌 순서.</summary>
+        public IReadOnlyList<string> Ids => _ids;
 
         public bool TryGet(string id, out SpellDef spell)
         {

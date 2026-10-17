@@ -32,13 +32,13 @@ namespace ProjectM.Data
         [SerializeField] private List<Entry> _spells = new List<Entry>();
 
         /// <summary>statuses · terrains = 주문이 거는 상태 · 남기는 지형 규칙 (StatusCatalogAsset · TerrainCatalogAsset).</summary>
-        public SpellBook ToBook(StatusBook statuses = null, TerrainBook terrains = null)
+        public SpellBook ToBook(StatusBook statuses = null, TerrainBook terrains = null, ReactionBook reactions = null)
         {
             var defs = new List<SpellDef>(_spells.Count);
             foreach (var e in _spells)
                 defs.Add(new SpellDef(e.Id, e.Element, e.Shape, e.Range, e.Damage, e.ManaCost, e.Radius, e.AppliesStatus, e.StatusChancePercent,
                     e.LeavesTerrain));
-            return new SpellBook(defs, statuses, terrains);
+            return new SpellBook(defs, statuses, terrains, reactions);
         }
 
         /// <summary>표시 이름 표 (ID → 이름). 이름이 빈 항목은 넣지 않는다 — 없으면 ID를 쓴다.</summary>

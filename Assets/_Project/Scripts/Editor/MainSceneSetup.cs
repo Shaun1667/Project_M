@@ -33,9 +33,10 @@ namespace ProjectM.Editor
         private const string SpellCatalogPath = "Assets/_Project/Data/Spells/SpellCatalog.asset";
         private const string StatusCatalogPath = "Assets/_Project/Data/Statuses/StatusCatalog.asset";
         private const string TerrainCatalogPath = "Assets/_Project/Data/Terrains/TerrainCatalog.asset";
+        private const string ReactionCatalogPath = "Assets/_Project/Data/Reactions/ReactionCatalog.asset";
 
-        /// <summary>플레이어 시작 주문 (BALANCE 4번). 주문 내용은 2-2 주문 데이터에서 같은 ID로 정의한다.</summary>
-        private static readonly string[] PlayerStartingSpells = { "fire_basic", "ice_basic", "lightning_basic", "poison_basic" };
+        /// <summary>플레이어 시작 주문 (BALANCE 4번). 3-1부터 빈 칸 — 주문은 게임 중에 얻고, 테스트는 디버그 창에서 넣는다 (REACTIONS.md D8).</summary>
+        private static readonly string[] PlayerStartingSpells = new string[0];
 
         private const string PlayerVisualId = "player";
         private const string EnemyVisualId = "enemy_melee";
@@ -89,6 +90,7 @@ namespace ProjectM.Editor
             var spellCatalog = EnsureSpellCatalog();
             var statusCatalog = EnsureStatusCatalog();
             var terrainCatalog = EnsureTerrainCatalog();
+            var reactionCatalog = EnsureReactionCatalog();
 
             var gridGo = FindOrCreate("Grid", null);
             var grid = GetOrAdd<Grid>(gridGo);
@@ -147,6 +149,7 @@ namespace ProjectM.Editor
                 ("_spellCatalog", spellCatalog),
                 ("_statusCatalog", statusCatalog),
                 ("_terrainCatalog", terrainCatalog),
+                ("_reactionCatalog", reactionCatalog),
                 ("_terrainOverlay", terrainOverlay),
                 ("_tilemapPresenter", tilemapPresenter),
                 ("_entityPresenter", entityPresenter),
@@ -197,13 +200,12 @@ namespace ProjectM.Editor
                 { Id = "lightning_basic", Element = Element.Lightning, Shape = SpellShape.Beam, Range = 5, Damage = 3, ManaCost = 4 });
             changed |= catalog.AddIfMissing(new SpellCatalogAsset.Entry
                 { Id = "poison_basic", Element = Element.Poison, Shape = SpellShape.Burst, Range = 5, Damage = 2, ManaCost = 3, Radius = 1 });
-            // BALANCE 6번: 주문 → 상태 이상 · 확률
-            changed |= catalog.SetStatusIfNone("fire_basic", StatusType.Burn, 100);
-            changed |= catalog.SetStatusIfNone("ice_basic", StatusType.Slow, 100);
+            // BALANCE 6번: 주문 → 상태 이상 · 확률 (3-1 D3: 화상 · 둔화 · 중독 70%)
+            changed |= catalog.SetStatusIfNone("fire_basic", StatusType.Burn, 70);
+            changed |= catalog.SetStatusIfNone("ice_basic", StatusType.Slow, 70);
             changed |= catalog.SetStatusIfNone("lightning_basic", StatusType.Paralyze, 30);
-            changed |= catalog.SetStatusIfNone("poison_basic", StatusType.Poison, 100);
-            // BALANCE 7번: 주문 → 지형 효과
-            changed |= catalog.SetTerrainIfNone("fire_basic", TerrainEffectType.FireZone);
+            changed |= catalog.SetStatusIfNone("poison_basic", StatusType.Poison, 70);
+            // BALANCE 7번: 주문 → 지형 효과. 불 단독 화염 지대는 3-1 D2로 없음 (불 + 물 융합으로만)
             changed |= catalog.SetTerrainIfNone("poison_basic", TerrainEffectType.PoisonCloud);
             // 2-5: HUD · 로그 표시 이름 (비어 있을 때만)
             changed |= catalog.SetDisplayNameIfEmpty("fire_basic", "불꽃 화살");
@@ -236,6 +238,41 @@ namespace ProjectM.Editor
                 { Type = TerrainEffectType.FireZone, DurationTicks = 4, AppliesStatus = StatusType.Burn });
             changed |= catalog.AddIfMissing(new TerrainCatalogAsset.Entry
                 { Type = TerrainEffectType.PoisonCloud, DurationTicks = 4, AppliesStatus = StatusType.Poison });
+            if (changed) EditorUtility.SetDirty(catalog);
+            return catalog;
+        }
+
+        /// <summary>반응 규칙 표: 없는 ID만 REACTIONS.md 3-1 표 · BALANCE 8번 값으로 추가한다.</summary>
+        private static ReactionCatalogAsset EnsureReactionCatalog()
+        {
+            var catalog = LoadOrCreate<ReactionCatalogAsset>(ReactionCatalogPath);
+            bool changed = false;
+            changed |= catalog.AddIfMissing(new ReactionCatalogAsset.Entry
+            {
+                Id = "toxic_ignite", DisplayName = "독화", Group = "toxic_ignite", Trigger = ReactionTrigger.Status, Status = StatusType.Poison,
+                Element = Element.Fire, Priority = 10, ExtraDamage = 2, ExplosionStatusChancePercent = 100,
+            });
+            changed |= catalog.AddIfMissing(new ReactionCatalogAsset.Entry
+            {
+                Id = "toxic_burst", DisplayName = "유독성 폭발", Trigger = ReactionTrigger.Status, Status = StatusType.Poison,
+                Element = Element.Lightning, Priority = 20, ExplosionRadius = 1, ExplosionDamageFromRemaining = true, ExplosionStatusChancePercent = 100,
+            });
+            changed |= catalog.AddIfMissing(new ReactionCatalogAsset.Entry
+            {
+                Id = "extinguish", DisplayName = "소화", Trigger = ReactionTrigger.Terrain, Terrain = TerrainEffectType.FireZone,
+                Element = Element.Ice, Priority = 0, ExtraDamage = 2, ConsumeTrigger = true, ExplosionStatusChancePercent = 100,
+            });
+            changed |= catalog.AddIfMissing(new ReactionCatalogAsset.Entry
+            {
+                Id = "toxic_ignite_cloud", DisplayName = "독화", Group = "toxic_ignite", Trigger = ReactionTrigger.Terrain,
+                Terrain = TerrainEffectType.PoisonCloud, Element = Element.Fire, Priority = 10, ExtraDamage = 2, ExplosionStatusChancePercent = 100,
+            });
+            changed |= catalog.AddIfMissing(new ReactionCatalogAsset.Entry
+            {
+                Id = "gas_explosion", DisplayName = "가스 폭발", Trigger = ReactionTrigger.Terrain, Terrain = TerrainEffectType.PoisonCloud,
+                Element = Element.Lightning, Priority = 20, ConsumeTrigger = true, ExplosionRadius = 1, ExplosionDamage = 2,
+                ExplosionStatus = StatusType.Poison, ExplosionStatusChancePercent = 70,
+            });
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }

@@ -154,7 +154,7 @@ namespace ProjectM.Tests
 
             var p = player.ToDef();
             Assert.That(p.MaxMana, Is.EqualTo(10));
-            Assert.That(p.StartingSpells, Is.EqualTo(StartingSpells));
+            Assert.That(p.StartingSpells, Is.Empty, "3-1부터 시작 칸은 빈 칸 — 주문은 게임 중에 얻음 (REACTIONS.md D8)");
             Assert.That(enemy.ToDef().MaxMana, Is.EqualTo(0));
         }
     }

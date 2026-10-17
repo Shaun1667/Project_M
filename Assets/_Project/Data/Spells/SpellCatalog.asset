@@ -21,8 +21,8 @@ MonoBehaviour:
     ManaCost: 3
     Radius: 0
     AppliesStatus: 1
-    StatusChancePercent: 100
-    LeavesTerrain: 1
+    StatusChancePercent: 70
+    LeavesTerrain: 0
     DisplayName: "\uBD88\uAF43 \uD654\uC0B4"
   - Id: ice_basic
     Element: 1
@@ -32,7 +32,7 @@ MonoBehaviour:
     ManaCost: 2
     Radius: 0
     AppliesStatus: 2
-    StatusChancePercent: 100
+    StatusChancePercent: 70
     LeavesTerrain: 0
     DisplayName: "\uC5BC\uC74C \uD654\uC0B4"
   - Id: lightning_basic
@@ -54,6 +54,6 @@ MonoBehaviour:
     ManaCost: 3
     Radius: 1
     AppliesStatus: 3
-    StatusChancePercent: 100
+    StatusChancePercent: 70
     LeavesTerrain: 2
     DisplayName: "\uB3C5 \uD3ED\uBC1C"

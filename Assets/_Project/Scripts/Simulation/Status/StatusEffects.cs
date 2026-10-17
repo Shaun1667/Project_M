@@ -32,6 +32,18 @@ namespace ProjectM.Status
             world.Events.Publish(new StatusChangedEvent(unit.Id, def.Type, instance.Remaining, true));
         }
 
+        /// <summary>상태를 푼다 (반응의 트리거 소모 등). 없으면 아무 일 없음. 풀렸으면 true.</summary>
+        public static bool Remove(World world, Unit unit, StatusType type)
+        {
+            if (world == null) throw new ArgumentNullException(nameof(world));
+            if (unit == null) throw new ArgumentNullException(nameof(unit));
+            int index = unit.Statuses.FindIndex(s => s.Type == type);
+            if (index < 0) return false;
+            unit.Statuses.RemoveAt(index);
+            world.Events.Publish(new StatusChangedEvent(unit.Id, type, 0, false));
+            return true;
+        }
+
         /// <summary>chancePercent(0~100) 확률로 건다. 100 미만이면 전투 난수(RngStream.Combat)를 한 번 굴린다. 걸렸으면 true.</summary>
         public static bool TryApply(World world, Unit unit, StatusDef def, int chancePercent)
         {

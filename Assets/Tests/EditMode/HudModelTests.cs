@@ -172,5 +172,31 @@ namespace ProjectM.Tests
             Assert.That(s.Hud.Mana, Is.EqualTo(7));
             Assert.That(s.Hud.MaxMana, Is.EqualTo(10));
         }
+
+        // 3-1: 반응 로그 = 데이터 이름 + "!" (+ 대상). 이름이 없으면 ID
+        [Test]
+        public void Reaction_LogsDisplayName()
+        {
+            var s = Start();
+            var hud = new HudModel(8, new HudText(null, new Dictionary<string, string> { { "toxic_ignite", "독화" } }));
+            hud.Bind(s.World.Events, s.Player, s.Book);
+            s.World.Events.Publish(new ReactionTriggeredEvent("toxic_ignite", s.Player.Id, s.Enemy.Pos, s.Enemy.Id));
+            s.World.Events.Publish(new ReactionTriggeredEvent("gas_explosion", s.Player.Id, new GridPos(3, 2), EntityId.None));
+            s.World.Events.Flush();
+            Assert.That(hud.Log, Is.EqualTo(new[] { $"독화! 적 {s.Enemy.Id}", "gas_explosion!" }));
+        }
+
+        // 3-1: 디버그 창에서 장착 칸을 바꾸면 HUD 칸 · 비용이 따라 바뀐다
+        [Test]
+        public void SpellSlotsChange_UpdatesSlotsAndCosts()
+        {
+            var s = Start();
+            SpellSlots.Assign(s.World, s.Book, s.Player, 0, null);
+            SpellSlots.Assign(s.World, s.Book, s.Player, 3, "fire_basic");
+            s.World.Events.Flush();
+            Assert.That(s.Hud.SpellSlots, Is.EqualTo(new[] { null, "ice_basic", "lightning_basic", "fire_basic" }));
+            Assert.That(s.Hud.SlotCosts, Is.EqualTo(new[] { -1, 2, 4, 3 }));
+            Assert.Throws<System.ArgumentException>(() => SpellSlots.Assign(s.World, s.Book, s.Player, 0, "no_such_spell"));
+        }
     }
 }

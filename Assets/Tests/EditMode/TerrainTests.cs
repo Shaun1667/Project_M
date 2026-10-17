@@ -79,13 +79,13 @@ namespace ProjectM.Tests
             return s;
         }
 
+        // 3-1 (REACTIONS.md D2): 불 단독으로는 화염 지대가 생기지 않는다 — 불 + 물 융합으로만
         [Test]
-        public void Fire_LeavesFireZoneOnImpactCell()
+        public void Fire_AloneLeavesNoFireZone()
         {
             var s = Start(new GridPos(1, 2), new GridPos(9, 2), new GridPos(10, 3));
-            s.Cast(Fire, new GridPos(5, 2)); // 빈 칸에 쏘면 그 칸에 화염 지대
-            Assert.That(s.Remaining(new GridPos(5, 2), TerrainEffectType.FireZone), Is.EqualTo(3), "놓인 틱의 ③에서 4 → 3");
-            Assert.That(s.World.Terrain.CellCount, Is.EqualTo(1));
+            s.Cast(Fire, new GridPos(5, 2));
+            Assert.That(s.World.Terrain.CellCount, Is.EqualTo(0));
         }
 
         // 화염 지대 위에 서 있으면 매 틱 화상이 갱신되고, 지대가 사라진 뒤에도 화상이 남은 만큼 탄다

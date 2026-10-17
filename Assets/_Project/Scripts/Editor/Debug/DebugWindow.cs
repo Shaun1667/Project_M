@@ -47,7 +47,44 @@ namespace ProjectM.Editor.Debugging
             DrawInfo(root);
             EditorGUILayout.Space();
             DrawView(root);
+            EditorGUILayout.Space();
+            DrawSpellSlots(root);
             EditorGUILayout.EndScrollView();
+        }
+
+        /// <summary>
+        /// [상태 변경] 주문 장착 칸 (3-1, REACTIONS.md D8): 시작 칸은 비어 있고, 테스트용으로 칸마다 주문을 고른다.
+        /// 게임 상태(World)를 바꾸므로 시드 재현 · 저장에 영향이 있다.
+        /// </summary>
+        private static void DrawSpellSlots(GameRoot root)
+        {
+            EditorGUILayout.LabelField("[상태 변경] 주문 장착 칸", EditorStyles.boldLabel);
+            if (!root.World.Units.TryGet(root.PlayerId, out var player) || root.Spells == null)
+            {
+                EditorGUILayout.HelpBox("플레이어가 없다.", MessageType.None);
+                return;
+            }
+
+            var ids = root.Spells.Ids;
+            var options = new string[ids.Count + 1];
+            options[0] = "(빈 칸)";
+            for (int i = 0; i < ids.Count; i++) options[i + 1] = ids[i];
+
+            using (new EditorGUI.IndentLevelScope())
+            {
+                for (int slot = 0; slot < player.SpellSlots.Length; slot++)
+                {
+                    var current = player.SpellSlots[slot];
+                    int index = 0;
+                    for (int i = 0; i < ids.Count; i++)
+                        if (ids[i] == current) index = i + 1;
+
+                    int picked = EditorGUILayout.Popup($"칸 {slot + 1}", index, options);
+                    if (picked == index) continue;
+                    ProjectM.Magic.SpellSlots.Assign(root.World, root.Spells, player, slot, picked == 0 ? null : ids[picked - 1]);
+                    root.World.Events.Flush(); // 틱 밖 변경 → HUD에 바로 보이게
+                }
+            }
         }
 
         private static void DrawInfo(GameRoot root)

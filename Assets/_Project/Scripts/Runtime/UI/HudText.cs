@@ -12,16 +12,25 @@ namespace ProjectM.UI
     public sealed class HudText
     {
         private readonly IReadOnlyDictionary<string, string> _spellNames;
+        private readonly IReadOnlyDictionary<string, string> _reactionNames;
 
-        public HudText(IReadOnlyDictionary<string, string> spellNames = null)
+        /// <param name="reactionNames">반응 ID → 로그 이름 (ReactionCatalog의 DisplayName, 3-1). 없으면 ID.</param>
+        public HudText(IReadOnlyDictionary<string, string> spellNames = null, IReadOnlyDictionary<string, string> reactionNames = null)
         {
             _spellNames = spellNames ?? new Dictionary<string, string>();
+            _reactionNames = reactionNames ?? new Dictionary<string, string>();
         }
 
         public string Spell(string id)
         {
             if (string.IsNullOrEmpty(id)) return "-";
             return _spellNames.TryGetValue(id, out var name) ? name : id;
+        }
+
+        public string Reaction(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return "-";
+            return _reactionNames.TryGetValue(id, out var name) ? name : id;
         }
 
         public static string Status(StatusType type)

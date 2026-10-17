@@ -163,19 +163,27 @@ namespace ProjectM.Magic
             {
                 if (_world.Units.TryGetAt(cell, out var unit) && unit.IsAlive) victims.Add(unit);
             }
-            // 피해 → (살아 있으면) 상태 이상. 확률은 맞은 유닛마다 전투 난수로 따로 (같은 시드 = 같은 결과)
-            _book.Statuses.TryGet(spell.AppliesStatus, out var status);
+            // 순서 (REACTIONS.md 2-1): 원래 피해 → 반응 → 새 상태 → 지형
             foreach (var victim in victims)
-            {
                 Combat.ApplyDamage(_world, caster.Id, victim, spell.Damage);
-                if (status != null && victim.IsAlive)
-                    StatusEffects.TryApply(_world, victim, status, spell.StatusChancePercent);
+
+            // 반응 (3-1): 맞은 유닛의 기존 상태 · 주문이 닿은 칸의 지형 × 주문 속성
+            var cells = TerrainCells(spell, preview);
+            ReactionEngine.Resolve(_world, _book.Reactions, _book.Statuses, caster, spell, victims, cells);
+
+            // 새 상태 이상 (살아 있으면). 확률은 맞은 유닛마다 전투 난수로 따로 (같은 시드 = 같은 결과)
+            if (_book.Statuses.TryGet(spell.AppliesStatus, out var status))
+            {
+                foreach (var victim in victims)
+                {
+                    if (victim.IsAlive) StatusEffects.TryApply(_world, victim, status, spell.StatusChancePercent);
+                }
             }
 
             // 지형 효과 (2-4): 놓인 틱의 ③에서 바로 그 칸 유닛에게 상태를 건다
             if (_book.Terrains.TryGet(spell.LeavesTerrain, out var terrain))
             {
-                foreach (var cell in TerrainCells(spell, preview))
+                foreach (var cell in cells)
                     TerrainEffects.Place(_world, cell, terrain);
             }
         }

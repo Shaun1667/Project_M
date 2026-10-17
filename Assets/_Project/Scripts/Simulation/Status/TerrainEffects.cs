@@ -129,6 +129,18 @@ namespace ProjectM.Status
         /// <summary>칸 인덱스 순 목록 (복사본 — 순회 중 바꿔도 안전).</summary>
         public List<KeyValuePair<int, List<TerrainInstance>>> ToSortedList() => new List<KeyValuePair<int, List<TerrainInstance>>>(_cells);
 
+        /// <summary>그 칸의 그 종류를 없앤다. 없앴으면 true.</summary>
+        internal bool Remove(GridPos pos, TerrainEffectType type)
+        {
+            int index = Index(pos);
+            if (!_cells.TryGetValue(index, out var list)) return false;
+            int at = list.FindIndex(t => t.Type == type);
+            if (at < 0) return false;
+            list.RemoveAt(at);
+            RemoveEmpty(index);
+            return true;
+        }
+
         internal void RemoveEmpty(int index)
         {
             if (_cells.TryGetValue(index, out var list) && list.Count == 0) _cells.Remove(index);
@@ -154,6 +166,15 @@ namespace ProjectM.Status
             if (!world.Map.IsWalkable(pos)) return;
             int remaining = world.Terrain.Place(pos, def.Type, def.DurationTicks);
             world.Events.Publish(new TerrainChangedEvent(pos, def.Type, remaining));
+        }
+
+        /// <summary>지형 효과를 없앤다 (반응의 트리거 소모 등). 없으면 아무 일 없음.</summary>
+        public static bool Remove(World world, GridPos pos, TerrainEffectType type)
+        {
+            if (world == null) throw new ArgumentNullException(nameof(world));
+            if (!world.Map.InBounds(pos) || !world.Terrain.Remove(pos, type)) return false;
+            world.Events.Publish(new TerrainChangedEvent(pos, type, 0));
+            return true;
         }
     }
 
