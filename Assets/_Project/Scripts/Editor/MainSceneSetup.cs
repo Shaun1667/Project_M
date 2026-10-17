@@ -29,6 +29,8 @@ namespace ProjectM.Editor
         private const string DungeonConfigPath = "Assets/_Project/Data/Dungeon/DungeonGenConfig.asset";
         private const string PlayerDefPath = "Assets/_Project/Data/Units/Player.asset";
         private const string EnemyDefPath = "Assets/_Project/Data/Units/MeleeEnemy.asset";
+        private const string BossDefPath = "Assets/_Project/Data/Units/Boss.asset";
+        private const string BossVisualId = "boss";
         private const string SpawnConfigPath = "Assets/_Project/Data/Units/SpawnConfig.asset";
         private const string MagicConfigPath = "Assets/_Project/Data/Magic/MagicConfig.asset";
         private const string SpellCatalogPath = "Assets/_Project/Data/Spells/SpellCatalog.asset";
@@ -139,7 +141,10 @@ namespace ProjectM.Editor
             if (cameraGo != null) cameraController = GetOrAdd<CameraController>(cameraGo);
             else Debug.LogWarning("[MainSceneSetup] MainCamera 태그 카메라 없음");
 
-            var (hud, inventoryView) = EnsureHud();
+            var (hud, inventoryView, result) = EnsureHud();
+            // 임시 보스 (3-4b) — 없을 때만 BALANCE 3번 값으로
+            var bossDef = EnsureAsset<UnitDefAsset>(BossDefPath,
+                ("_visualId", BossVisualId), ("_maxHp", 60), ("_attackDamage", 5), ("_sightRange", 10));
 
             var rootGo = FindOrCreate("GameRoot", null);
             var input = GetOrAdd<PlayerInputController>(rootGo);
@@ -152,6 +157,8 @@ namespace ProjectM.Editor
                 ("_dungeonConfig", dungeonConfig),
                 ("_playerDef", playerDef),
                 ("_enemyDef", enemyDef),
+                ("_bossDef", bossDef),
+                ("_result", result),
                 ("_spawnConfig", spawnConfig),
                 ("_magicConfig", magicConfig),
                 ("_spellCatalog", spellCatalog),
@@ -203,6 +210,8 @@ namespace ProjectM.Editor
             catalog.Set(PlayerVisualId, AssetDatabase.LoadAssetAtPath<Sprite>(PlayerSpritePath), Color.white);
             // 그레이박스: 흰 원(player.png와 같은 모양)을 빨갛게
             catalog.Set(EnemyVisualId, AssetDatabase.LoadAssetAtPath<Sprite>(UnitCircleSpritePath), new Color(0.9f, 0.25f, 0.2f));
+            // 3-4b 임시 보스: 같은 원을 짙은 자주색으로
+            catalog.Set(BossVisualId, AssetDatabase.LoadAssetAtPath<Sprite>(UnitCircleSpritePath), new Color(0.55f, 0.1f, 0.45f));
             EditorUtility.SetDirty(catalog);
             return catalog;
         }
@@ -412,7 +421,7 @@ namespace ProjectM.Editor
         /// <summary>
         /// HUD 캔버스 (2-5, 기준 1920×1080): 왼쪽 위 HP · MP 막대, 그 오른쪽 상태 아이콘 줄, 아래로 빠른 칸(3-2a) · 안내 줄, 왼쪽 아래 전투 로그, 가운데 인벤토리 창(3-2a).
         /// </summary>
-        private static (HudPresenter, InventoryPresenter) EnsureHud()
+        private static (HudPresenter, InventoryPresenter, ResultPresenter) EnsureHud()
         {
             var canvasGo = FindOrCreate("HUD", null);
             var canvas = GetOrAdd<Canvas>(canvasGo);
@@ -476,7 +485,37 @@ namespace ProjectM.Editor
             var hudSo = new SerializedObject(hud);
             hudSo.FindProperty("_logLines").intValue = 8;
             hudSo.ApplyModifiedPropertiesWithoutUndo();
-            return (hud, inventoryView);
+            var result = EnsureResult(canvasGo, font);
+            return (hud, inventoryView, result);
+        }
+
+        /// <summary>결과 화면 (3-4b): 화면 전체 어두운 덮개 + 가운데 상자(제목 · 본문). 맨 위에 그린다. 실행 중에는 판이 끝날 때만 켜진다.</summary>
+        private static ResultPresenter EnsureResult(GameObject canvasGo, TMP_FontAsset font)
+        {
+            var panelGo = FindOrCreate("Result", canvasGo.transform);
+            var panel = GetOrAdd<RectTransform>(panelGo);
+            panel.anchorMin = Vector2.zero;
+            panel.anchorMax = Vector2.one;
+            panel.offsetMin = panel.offsetMax = Vector2.zero;
+            var dim = GetOrAdd<Image>(panelGo);
+            dim.color = new Color(0f, 0f, 0f, 0.7f);
+            dim.raycastTarget = false;
+
+            var boxGo = FindOrCreate("Box", panelGo.transform);
+            var box = GetOrAdd<RectTransform>(boxGo);
+            Place(box, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1000, 600));
+            var boxBg = GetOrAdd<Image>(boxGo);
+            boxBg.color = new Color(0.08f, 0.08f, 0.1f, 0.95f);
+            boxBg.raycastTarget = false;
+
+            var title = EnsureText(boxGo.transform, "Title", new Vector2(0.5f, 1), new Vector2(0, -32), new Vector2(940, 60), 44, font, TextAlignmentOptions.Top);
+            var body = EnsureText(boxGo.transform, "Body", new Vector2(0.5f, 1), new Vector2(0, -120), new Vector2(900, 450), 30, font, TextAlignmentOptions.TopLeft);
+            body.textWrappingMode = TextWrappingModes.Normal;
+            panelGo.transform.SetAsLastSibling();
+
+            var result = GetOrAdd<ResultPresenter>(canvasGo);
+            SetRefs(result, ("_panel", panel), ("_title", title), ("_body", body));
+            return result;
         }
 
         /// <summary>아이템 규칙 (3-2a): 없는 ID만 BALANCE 9번 값으로 추가한다.</summary>

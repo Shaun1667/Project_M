@@ -10,9 +10,12 @@ namespace ProjectM.Units
         public int Amount { get; }
         public int Hp { get; }
         public int MaxHp { get; }
+        /// <summary>피해 출처 (3-4b).</summary>
+        public DamageCause Cause { get; }
 
-        public UnitDamagedEvent(EntityId target, EntityId attacker, int amount, int hp, int maxHp)
+        public UnitDamagedEvent(EntityId target, EntityId attacker, int amount, int hp, int maxHp, DamageCause cause = default)
         {
+            Cause = cause;
             Target = target;
             Attacker = attacker;
             Amount = amount;
@@ -35,6 +38,17 @@ namespace ProjectM.Units
             Amount = amount;
             Hp = hp;
             MaxHp = maxHp;
+        }
+    }
+
+    /// <summary>한 판이 끝났다 (3-4b): 보스 처치 = 승리, 플레이어 사망 = 패배. ⑥ 사망 판정에서 한 번.</summary>
+    public sealed class RunEndedEvent : ISimEvent
+    {
+        public RunOutcome Outcome { get; }
+
+        public RunEndedEvent(RunOutcome outcome)
+        {
+            Outcome = outcome;
         }
     }
 

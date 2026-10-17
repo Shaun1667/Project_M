@@ -24,3 +24,5 @@ MonoBehaviour:
   _placementAttemptLimit: 1000
   _deadEndLoopMinWalkDistance: 10
   _floorCount: 5
+  _bossRoomWidth: 21
+  _bossRoomHeight: 15

@@ -249,7 +249,7 @@ namespace ProjectM.Status
                         if (def.AppliesStatus != StatusType.None && _statuses.TryGet(def.AppliesStatus, out var status))
                             StatusEffects.Apply(_world, unit, status);
                         if (def.DamagePerTick > 0)
-                            Combat.ApplyDamage(_world, EntityId.None, unit, def.DamagePerTick);
+                            Combat.ApplyDamage(_world, EntityId.None, unit, def.DamagePerTick, DamageCause.FromTerrain(effect.Type));
                     }
 
                     effect.Remaining--;

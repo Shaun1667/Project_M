@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ProjectM.Core;
 using ProjectM.Items;
 using ProjectM.Magic;
 using ProjectM.Status;
@@ -133,6 +134,38 @@ namespace ProjectM.UI
 
         // ── 층 (3-4a) ──
         public static string FloorChanged(int from, int to) => to > from ? $"{to}층으로 내려왔다" : $"{to}층으로 올라왔다";
+        // ── 결과 화면 (3-4b) ──
+        public static string ResultTitle(RunOutcome outcome) => outcome == RunOutcome.Victory ? "승리 — 보스를 쓰러뜨렸다" : "패배 — 쓰러졌다";
+        public const string ResultRestart = "R 키로 새 판";
+        public const string NoEquipment = "없음";
+
+        public static string Terrain(TerrainEffectType type)
+        {
+            switch (type)
+            {
+                case TerrainEffectType.FireZone: return "화염 지대";
+                case TerrainEffectType.PoisonCloud: return "독구름";
+                case TerrainEffectType.Water: return "물 웅덩이";
+                case TerrainEffectType.ContaminatedWater: return "오염된 물";
+                case TerrainEffectType.IcePatch: return "빙판";
+                default: return type.ToString();
+            }
+        }
+
+        /// <summary>사망 원인 한 줄: 마지막으로 받은 피해의 출처.</summary>
+        public string DeathCause(DamageCause cause, EntityId attacker, EntityId bossId, EntityId playerId)
+        {
+            switch (cause.Kind)
+            {
+                case DamageKind.Attack: return bossId.IsValid && attacker == bossId ? "보스의 공격" : $"{Enemy(attacker)}의 공격";
+                case DamageKind.Spell: return attacker == playerId ? $"내 {Spell(cause.Id)}" : Spell(cause.Id);
+                case DamageKind.Reaction: return attacker == playerId ? $"{Reaction(cause.Id)} (내 주문의 반응)" : Reaction(cause.Id);
+                case DamageKind.Status: return Status(cause.Status);
+                case DamageKind.Terrain: return Terrain(cause.Terrain);
+                default: return "알 수 없음";
+            }
+        }
+
         public static string StairsHint(bool down) => down ? "내려가는 계단 — Enter/이 칸 클릭으로 내려가기" : "올라가는 계단 — Enter/이 칸 클릭으로 올라가기";
     }
 }

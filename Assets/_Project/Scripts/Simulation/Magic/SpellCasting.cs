@@ -218,7 +218,7 @@ namespace ProjectM.Magic
             // 순서 (REACTIONS.md 2-1): 원래 피해 → 반응 → 새 상태 → 지형
             if (spell.Damage > 0) // 피해 0 주문(3-2 물)은 "피해 0" 이벤트를 내지 않는다
                 foreach (var victim in victims)
-                    Combat.ApplyDamage(_world, caster.Id, victim, spell.Damage);
+                    Combat.ApplyDamage(_world, caster.Id, victim, spell.Damage, DamageCause.Spell(spell.Id));
 
             // 반응 (3-1): 맞은 유닛의 기존 상태 · 주문이 닿은 칸의 지형 × 주문 속성
             var cells = TerrainCells(spell, preview);

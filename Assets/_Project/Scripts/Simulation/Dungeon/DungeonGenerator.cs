@@ -102,6 +102,37 @@ namespace ProjectM.Dungeon
             return new DungeonFloor(map, start, exit);
         }
 
+        /// <summary>
+        /// 보스 층 (3-4b, 결정 2026-10-18 "큰 방 하나"): 맵 가운데 BossRoomWidth × BossRoomHeight 방 하나, 나머지는 벽.
+        /// 왼쪽 끝 가운데 = 올라가는 계단(Start), 오른쪽 끝 가운데 = 보스 자리(Exit, 바닥). 기둥 4개 — 방을 가로 · 세로로 4등분한 점 ✎.
+        /// 난수를 쓰지 않는다 (맵 생성 수열을 건드리지 않음).
+        /// </summary>
+        public DungeonFloor GenerateBossRoom()
+        {
+            var c = _config;
+            var map = new GridMap(c.Width, c.Height);
+            for (int y = 0; y < map.Height; y++)
+                for (int x = 0; x < map.Width; x++)
+                    map.Set(new GridPos(x, y), TileType.Wall);
+
+            int left = (c.Width - c.BossRoomWidth) / 2, bottom = (c.Height - c.BossRoomHeight) / 2;
+            int right = left + c.BossRoomWidth - 1, top = bottom + c.BossRoomHeight - 1;
+            for (int y = bottom; y <= top; y++)
+                for (int x = left; x <= right; x++)
+                    map.Set(new GridPos(x, y), TileType.Floor);
+
+            int qx = c.BossRoomWidth / 4, qy = c.BossRoomHeight / 4;
+            foreach (var p in new[] { new GridPos(left + qx, bottom + qy), new GridPos(right - qx, bottom + qy),
+                         new GridPos(left + qx, top - qy), new GridPos(right - qx, top - qy) })
+                map.Set(p, TileType.Wall);
+
+            int midY = bottom + c.BossRoomHeight / 2;
+            var start = new GridPos(left, midY);
+            var boss = new GridPos(right, midY);
+            map.Set(start, TileType.StairsUp);
+            return new DungeonFloor(map, start, boss);
+        }
+
         /// <summary>크기 뽑기: [0, roll)에서 뽑고 min 미만이면 min을 더한다 (이전 MapGenerator 규칙).</summary>
         public static int RollSize(IRng rng, int roll, int min)
         {

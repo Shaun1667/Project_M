@@ -35,6 +35,9 @@ namespace ProjectM.Data
         [Header("런 (3-4a)")]
         [Tooltip("한 판의 층 수. 마지막 층 = 보스 층 (내려가는 계단 · 적 재생성 없음)")]
         [Min(1)] [SerializeField] private int _floorCount = 5;
+        [Tooltip("보스 층 방 크기 (벽 안쪽 바닥 칸, 3-4b). 맵 가운데")]
+        [Min(7)] [SerializeField] private int _bossRoomWidth = 21;
+        [Min(5)] [SerializeField] private int _bossRoomHeight = 15;
 
         public DungeonGenConfig ToConfig()
         {
@@ -43,7 +46,7 @@ namespace ProjectM.Data
                 _roomCount, _roomSizeRoll, _roomMinSize,
                 _wallBlockCount, _wallBlockSizeRoll, _wallBlockMinSize,
                 _wallTunnelCostMultiplier, _placementAttemptLimit,
-                _deadEndLoopMinWalkDistance, _floorCount);
+                _deadEndLoopMinWalkDistance, _floorCount, _bossRoomWidth, _bossRoomHeight);
         }
     }
 }

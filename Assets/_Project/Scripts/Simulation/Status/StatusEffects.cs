@@ -99,7 +99,7 @@ namespace ProjectM.Status
                 {
                     var status = unit.Statuses[i];
                     if (unit.IsAlive && _book.TryGet(status.Type, out var def) && def.DamagePerTick > 0)
-                        Combat.ApplyDamage(_world, EntityId.None, unit, def.DamagePerTick);
+                        Combat.ApplyDamage(_world, EntityId.None, unit, def.DamagePerTick, DamageCause.FromStatus(status.Type));
 
                     status.Remaining--;
                     _world.Events.Publish(new StatusChangedEvent(unit.Id, status.Type, status.Remaining, false));

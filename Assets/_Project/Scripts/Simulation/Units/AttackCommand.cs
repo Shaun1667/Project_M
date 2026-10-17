@@ -28,7 +28,7 @@ namespace ProjectM.Units
             if (!_world.Units.TryGet(Target, out var target) || !target.IsAlive) return;
             if (!GridMovement.CanStep(_world.Map, attacker.Pos, target.Pos)) return;
 
-            Combat.ApplyDamage(_world, attacker.Id, target, attacker.AttackDamage);
+            Combat.ApplyDamage(_world, attacker.Id, target, attacker.AttackDamage, DamageCause.Attack);
         }
     }
 }

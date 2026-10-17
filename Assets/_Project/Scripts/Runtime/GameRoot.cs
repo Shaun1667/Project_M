@@ -23,6 +23,7 @@ namespace ProjectM
         [SerializeField] private DungeonGenConfigAsset _dungeonConfig;
         [SerializeField] private UnitDefAsset _playerDef;
         [SerializeField] private UnitDefAsset _enemyDef;
+        [Tooltip("마지막 층(보스 층)의 임시 보스 (3-4b)")] [SerializeField] private UnitDefAsset _bossDef;
         [SerializeField] private SpawnConfigAsset _spawnConfig;
         [SerializeField] private MagicConfigAsset _magicConfig;
         [SerializeField] private SpellCatalogAsset _spellCatalog;
@@ -39,6 +40,7 @@ namespace ProjectM
         [SerializeField] private TerrainOverlayPresenter _terrainOverlay;
         [SerializeField] private PlayerInputController _input;
         [SerializeField] private HudPresenter _hud;
+        [Tooltip("결과 화면 (3-4b)")] [SerializeField] private ResultPresenter _result;
         [SerializeField] private CameraController _camera;
 
         [Header("시드 — 0이면 매번 새로 정한다. 같은 맵을 다시 보려면 콘솔에 찍힌 시드를 넣는다")]
@@ -58,6 +60,8 @@ namespace ProjectM
         public ulong Seed { get; private set; }
         public EntityId PlayerId => _playerId;
         public bool PlayerDead => _playerDead;
+        /// <summary>판이 끝났다 (승리 · 패배, 3-4b) — R로 새 판.</summary>
+        public bool RunEnded => _runEnded;
 
         /// <summary>
         /// 디버그: 맵 전체 밝히기 (안개 숨김 + 모든 엔티티 표시). 표시만 바꾸며 게임 상태 · 시드 재현에는 영향이 없다.
@@ -74,12 +78,14 @@ namespace ProjectM
         }
 
         private EntityId _playerId;
+        private Unit _player;
         private bool _playerDead;
+        private bool _runEnded;
         private HudText _hudText;
 
         private void Awake()
         {
-            if (_config == null || _dungeonConfig == null || _playerDef == null || _enemyDef == null || _spawnConfig == null || _magicConfig == null
+            if (_config == null || _dungeonConfig == null || _playerDef == null || _enemyDef == null || _bossDef == null || _result == null || _spawnConfig == null || _magicConfig == null
                 || _spellCatalog == null || _statusCatalog == null || _terrainCatalog == null || _reactionCatalog == null || _itemCatalog == null || _fusionCatalog == null || _tilemapPresenter == null || _entityPresenter == null || _input == null || _hud == null)
             {
                 Debug.LogError("[GameRoot] 참조가 비어 있다. 메뉴 ProjectM/Setup/Main Scene을 실행한다.", this);
@@ -120,7 +126,7 @@ namespace ProjectM
         {
             // 입력만 읽는다 — 규칙은 틱으로만 진행한다.
             var keyboard = Keyboard.current;
-            if (_playerDead && keyboard != null && keyboard.rKey.wasPressedThisFrame)
+            if (_runEnded && keyboard != null && keyboard.rKey.wasPressedThisFrame)
                 StartNewRun();
         }
 
@@ -134,7 +140,9 @@ namespace ProjectM
             {
                 World.Events.Unsubscribe<EntityMovedEvent>(OnEntityMoved);
                 World.Events.Unsubscribe<UnitDiedEvent>(OnUnitDied);
+                World.Events.Unsubscribe<RunEndedEvent>(OnRunEnded);
             }
+            _result.Hide();
 
             var dungeonConfig = _dungeonConfig.ToConfig();
             var generator = new DungeonGenerator(dungeonConfig);
@@ -153,7 +161,7 @@ namespace ProjectM
             var enemyDef = _enemyDef.ToDef();
             var enemyAi = new MeleeChaserAi(World, Config, sight);
             World.Scheduler.AddSystem(TickPhase.ManaRegen, new EnemyRespawnSystem(World, spawn, enemyDef, enemyAi, sight, dungeonConfig.FloorCount));
-            var stairs = new FloorTransition(World, generator, dungeonConfig.FloorCount, enemyDef, spawn, (w, id) => enemyAi, vision);
+            var stairs = new FloorTransition(World, generator, dungeonConfig.FloorCount, enemyDef, spawn, (w, id) => enemyAi, vision, _bossDef.ToDef());
 
             _tilemapPresenter.Bind(World.Events);
             _entityPresenter.Bind(World.Events);
@@ -161,12 +169,15 @@ namespace ProjectM
             if (_terrainOverlay != null) _terrainOverlay.Bind(World.Events);
             World.Events.Subscribe<EntityMovedEvent>(OnEntityMoved);
             World.Events.Subscribe<UnitDiedEvent>(OnUnitDied);
+            World.Events.Subscribe<RunEndedEvent>(OnRunEnded);
 
             World.Events.Publish(new MapLoadedEvent(World.Map));
             var player = FloorPopulator.Populate(World, Floor.Start, _playerDef.ToDef(), enemyDef, spawn, enemyAi,
                 Magic.QuickSlotCount, Magic.InventorySlotCount);
             _playerId = player.Id;
+            _player = player;
             _playerDead = false;
+            _runEnded = false;
             vision.Refresh(); // 첫 시야 — 이후는 매 틱 ⑥ 단계에서
 
             _hud.Bind(World.Events, player, Spells, _hudText);
@@ -187,8 +198,16 @@ namespace ProjectM
         {
             if (e.Id != _playerId) return;
             _playerDead = true;
-            _input.Unbind();
             Debug.Log("[GameRoot] 플레이어 사망 — R로 새 판");
+        }
+
+        /// <summary>판이 끝남 (3-4b): 입력을 멈추고 결과 화면. R로 새 판.</summary>
+        private void OnRunEnded(RunEndedEvent e)
+        {
+            _runEnded = true;
+            _input.Unbind();
+            _result.Show(ResultModel.From(World, Seed, _player, _hudText));
+            Debug.Log($"[GameRoot] 판 끝: {e.Outcome} — R로 새 판");
         }
     }
 }

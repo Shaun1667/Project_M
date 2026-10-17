@@ -43,8 +43,8 @@ namespace ProjectM.Core
     [Serializable]
     public sealed class WorldSnapshot
     {
-        /// <summary>1: 1-4 최초. 2: 유닛(Units) 추가 (1-6). 3: 탐험 기록(Explored) · 유닛 기억(LastSeen) 추가 (1-7). 4: 유닛 마나 · 주문 장착 칸 (2-1). 5: 유닛 발자국(PreviousPos) · 배회 목적지(WanderTarget). 6: 유닛 상태 이상 (2-3). 7: 지형 효과 레이어 (2-4). 8: 주문 장착 칸 → 인벤토리 · 빠른 칸 (3-2a). 9: 층 번호 · 떠난 층들 (3-4a).</summary>
-        public const int CurrentFormatVersion = 9;
+        /// <summary>1: 1-4 최초. 2: 유닛(Units) 추가 (1-6). 3: 탐험 기록(Explored) · 유닛 기억(LastSeen) 추가 (1-7). 4: 유닛 마나 · 주문 장착 칸 (2-1). 5: 유닛 발자국(PreviousPos) · 배회 목적지(WanderTarget). 6: 유닛 상태 이상 (2-3). 7: 지형 효과 레이어 (2-4). 8: 주문 장착 칸 → 인벤토리 · 빠른 칸 (3-2a). 9: 층 번호 · 떠난 층들 (3-4a). 10: 한 판 기록 — 처치 수 · 결과 · 보스 · 사망 원인 (3-4b).</summary>
+        public const int CurrentFormatVersion = 10;
 
         public int FormatVersion = CurrentFormatVersion;
 
@@ -75,6 +75,13 @@ namespace ProjectM.Core
         public int Floor = 1;
         /// <summary>떠난 층들 (멈춘 채 보존, 3-4a), 층 번호 오름차순.</summary>
         public StoredFloorState[] StoredFloors = Array.Empty<StoredFloorState>();
+
+        // 한 판 기록 (3-4b, RunState)
+        public int Kills;
+        public RunOutcome Outcome;
+        public EntityId BossId;
+        public DamageCause LastPlayerDamage;
+        public EntityId LastPlayerAttacker;
     }
 
     /// <summary>

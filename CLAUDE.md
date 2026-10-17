@@ -88,7 +88,7 @@ Assets/
 - 네임스페이스: `ProjectM.Core`, `ProjectM.Magic`, `ProjectM.Status`, `ProjectM.Units`, `ProjectM.Dungeon`, `ProjectM.Data`(Runtime/Data), `ProjectM.Presentation`, `ProjectM.Input`(Runtime/Input), `ProjectM.UI`, `ProjectM.Editor`
 - 그리드 이동 · 거리 · 경로는 `GridMovement`(8방향, 체비셰프, 대각선은 양옆이 모두 벽일 때만 막힘) · `GridPathfinder`(클릭 이동 `FindPath` = 곧은 길 선호, 추적 `ChaseStep` = 직선 거리가 가까워지는 칸) 한 곳만 쓴다. 입력 → 플레이어 커맨드 규칙은 `PlayerActions` 하나 (키보드 · 클릭 공용)
 - 단계 시스템 기본 등록은 `World.InstallCoreSystems(sight, magic, statuses, terrains)`(③ 지형 처리 · ④ 상태 처리 · ⑤ 마나 회복 · ⑥ 사망 판정 · 시야 · ⑦ 이벤트, 마비 · 둔화 행동 규칙) — 새 World · `World.Restore` 후 모두 부르고, 돌려받은 `PlayerVisionSystem.Refresh()`로 첫 시야를 계산한다
-- 마나는 `ProjectM.Magic.Mana.TrySpend` · `Mana.Restore`로만 바꾼다 (ManaChangedEvent 발행). 체력은 `Combat.ApplyDamage`.
+- 마나는 `ProjectM.Magic.Mana.TrySpend` · `Mana.Restore`로만 바꾼다 (ManaChangedEvent 발행). 체력은 `Combat.ApplyDamage` — 새 피해 지점은 반드시 `DamageCause`(공격 · 주문 · 반응 · 상태 · 지형)를 넘긴다 (3-4b 사망 원인). 처치 수 · 승패 · 보스 · 사망 원인은 `World.Run`(RunState), 승패 판정은 `DeathCheckSystem` → `RunEndedEvent`.
 - 주문 조준 · 시전은 `SpellCasting`(`Preview` · `Check` · `TryCreateCast`) 하나 — 입력 미리보기와 실제 시전이 같은 계산을 쓴다. 주문 수치는 `SpellCatalog.asset`, 상태 · 지형 효과는 SpellDef 필드(태그)로 추가하고 조합은 반응 규칙 표에서 (규칙 9).
 - 상태 이상은 `StatusEffects`(Apply · TryApply)로만 걸고, 효과는 `StatusDef` 데이터 필드(틱당 피해 · 행동 비용 추가 · 행동 불가)로만 정한다 — 상태 종류별 분기 코드를 늘리지 않는다. 확률은 `RngStream.Combat`.
 - 지형 효과는 `TerrainEffects.Place`로만 놓고 `World.Terrain`(칸마다 여러 효과)에 둔다. 효과는 `TerrainDef` 데이터(지속 · 거는 상태)로만. MonoBehaviour 메서드 이름은 Unity 내장 메시지(`OnTerrainChanged` 등)와 겹치지 않게 한다.
@@ -150,4 +150,5 @@ Assets/
 - Unity MCP: 파일을 바꾼 직후 첫 호출은 "Unity not detected"가 나거나 30분 무응답으로 끊기기 쉽다(컴파일 전) → 먼저 가벼운 호출(콘솔 읽기)로 깨우고, 창 제목에 Compiling이 없어질 때까지 기다린 뒤 무거운 호출(RunCommand · 테스트). `System.Reflection` 네임스페이스 사용 불가. 플레이 모드 진입은 에디터 포커스 없이 안 될 수 있다.
 - Unity MCP로 긴 작업이 시간 초과돼도 에디터에서는 계속 진행된다 → 콘솔 로그로 결과를 확인한다.
 - 테스트 실행: RunCommand 안에서 `TestRunnerApi` + `ExecutionSettings.runSynchronously = true`(EditMode)로 돌리고 콜백 결과를 `result.Log`로 받는다. 비동기 실행은 에디터 포커스 없이 진행되지 않는다. RunCommand 코드에 중첩 클래스를 쓰면 도구가 중복 생성해 컴파일 실패 → 최상위 `internal class`로.
+- Setup 메뉴 · `AssetDatabase.SaveAssets` 뒤 `Galmuri11 SDF.asset`에 동적 글자 데이터가 써진다 → 커밋 전 `git checkout -- "Assets/_Project/Art/Fonts/Galmuri11 SDF.asset"`로 되돌린다 (3-4a · 3-4b에서 반복).
 - 줄바꿈: `.gitattributes`(1-6)가 Unity YAML 에셋을 eol=lf로 고정한다 → ProjectSettings 줄바꿈 변경을 되돌릴 필요 없음.

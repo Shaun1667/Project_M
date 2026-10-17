@@ -9,7 +9,8 @@ namespace ProjectM.Dungeon
     /// <summary>
     /// 계단 사용 = 층 이동 (3-4a, 결정 2026-10-18). 계단 칸으로 걸어가는 것은 보통 이동이고, 계단 칸에 선 채로 한 번 더 누르면(입력 쪽) 여기를 부른다.
     /// 틱을 쓰지 않는다 — 틱 사이에만 부르고(빠른 칸 등록과 같은 틱 밖 변경), 부른 쪽이 이벤트를 비운다.
-    /// ① 지금 층을 멈춘 채 저장(StoredFloors) ② 처음 가는 층이면 생성(맵 생성 난수 — 같은 시드 = 같은 층) · 적 배치, 떠났던 층이면 그대로 복원
+    /// ① 지금 층을 멈춘 채 저장(StoredFloors) ② 처음 가는 층이면 생성(맵 생성 난수 — 같은 시드 = 같은 층) · 적 배치, 떠났던 층이면 그대로 복원.
+    ///    마지막 층은 보스 방 + 보스 (3-4b)
     /// ③ 플레이어를 도착 계단(아래로 = 그 층의 올라가는 계단, 위로 = 내려가는 계단)에 놓는다 — 다른 유닛이 서 있으면 가장 가까운 빈 칸
     /// ④ 화면용 이벤트(MapLoaded · 지형 · 유닛 · FloorChanged)와 시야 갱신.
     /// 플레이어는 체력 · 마나 · 인벤토리 · 상태 이상을 그대로 가져간다. 상태를 갖지 않는다.
@@ -23,10 +24,13 @@ namespace ProjectM.Dungeon
         private readonly SpawnConfig _spawn;
         private readonly Func<World, EntityId, ICommandSource> _aiFactory;
         private readonly PlayerVisionSystem _vision;
+        private readonly UnitDef _bossDef;
 
+        /// <param name="bossDef">마지막 층(보스 층)의 보스 (3-4b). null이면 마지막 층도 일반 층처럼 만든다 (테스트용).</param>
         public FloorTransition(World world, DungeonGenerator generator, int floorCount, UnitDef enemyDef, SpawnConfig spawn,
-            Func<World, EntityId, ICommandSource> aiFactory, PlayerVisionSystem vision)
+            Func<World, EntityId, ICommandSource> aiFactory, PlayerVisionSystem vision, UnitDef bossDef = null)
         {
+            _bossDef = bossDef;
             _world = world ?? throw new ArgumentNullException(nameof(world));
             _generator = generator ?? throw new ArgumentNullException(nameof(generator));
             if (floorCount < 1) throw new ArgumentOutOfRangeException(nameof(floorCount));
@@ -74,6 +78,15 @@ namespace ProjectM.Dungeon
                 var arrival = NearestFree(map, map.Find(arrivalTile) ?? FirstWalkable(map), occupied);
                 _world.Units.Teleport(player.Id, arrival);
                 _world.RestoreStoredFloor(target, _aiFactory);
+            }
+            else if (target == _floorCount && _bossDef != null)
+            {
+                // 보스 층 (3-4b): 큰 방 하나 + 보스만 (일반 적 · 재생성 없음). 보스가 죽으면 승리 (DeathCheckSystem)
+                var floor = _generator.GenerateBossRoom();
+                _world.EnterNewFloor(target, floor.Map);
+                _world.Units.Teleport(player.Id, floor.Start);
+                var boss = UnitSpawner.SpawnEnemy(_world, _bossDef, floor.Exit, _aiFactory(_world, EntityId.None));
+                _world.Run.SetBoss(boss.Id);
             }
             else
             {

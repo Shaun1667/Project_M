@@ -64,6 +64,16 @@ namespace ProjectM.Core
                     WriteUnits(w, f.Units);
                 }
 
+                // 10 (3-4b): 한 판 기록
+                w.Write(snapshot.Kills);
+                w.Write((int)snapshot.Outcome);
+                w.Write(snapshot.BossId.Value);
+                w.Write((int)snapshot.LastPlayerDamage.Kind);
+                w.Write(snapshot.LastPlayerDamage.Id ?? string.Empty);
+                w.Write((int)snapshot.LastPlayerDamage.Status);
+                w.Write((int)snapshot.LastPlayerDamage.Terrain);
+                w.Write(snapshot.LastPlayerAttacker.Value);
+
                 w.Flush();
                 return stream.ToArray();
             }
@@ -122,6 +132,16 @@ namespace ProjectM.Core
                     f.Units = ReadUnits(r);
                     s.StoredFloors[i] = f;
                 }
+
+                s.Kills = r.ReadInt32();
+                s.Outcome = (RunOutcome)r.ReadInt32();
+                s.BossId = new EntityId(r.ReadInt32());
+                var kind = (DamageKind)r.ReadInt32();
+                var causeId = r.ReadString();
+                var causeStatus = (ProjectM.Status.StatusType)r.ReadInt32();
+                var causeTerrain = (ProjectM.Status.TerrainEffectType)r.ReadInt32();
+                s.LastPlayerDamage = new DamageCause(kind, causeId, causeStatus, causeTerrain);
+                s.LastPlayerAttacker = new EntityId(r.ReadInt32());
 
                 if (stream.Position != stream.Length)
                     throw new InvalidDataException("스냅샷 끝에 남는 데이터가 있다.");

@@ -28,6 +28,7 @@ namespace ProjectM.Status
 
         private sealed class ExplosionHit
         {
+            public string ReactionId;
             public int Damage;
             public StatusType Status;
             public int ChancePercent;
@@ -76,7 +77,7 @@ namespace ProjectM.Status
             var done = new HashSet<string>();
             var explosions = new SortedDictionary<int, ExplosionHit>(); // 유닛 ID → 가장 큰 폭발
             var cellOnlyLogged = new HashSet<string>();
-            var spreads = new SortedDictionary<int, int>(); // 유닛 ID → 가장 큰 전이 피해 (3-3b)
+            var spreads = new SortedDictionary<int, (int damage, string id)>(); // 유닛 ID → 가장 큰 전이 피해 · 반응 ID (3-3b)
             var flooded = new HashSet<string>();             // 그룹 | 칸 — 이미 전이가 지나간 지형 칸 (같은 물웅덩이에서 한 번만)
             var victimIds = new HashSet<int>();              // 주문에 직접 맞은 유닛은 전이 피해를 받지 않는다
             foreach (var v in victims) victimIds.Add(v.Id.Value);
@@ -108,7 +109,7 @@ namespace ProjectM.Status
                 world.Events.Publish(new ReactionTriggeredEvent(r.Id, caster.Id, c.Pos, c.Unit != null ? c.Unit.Id : EntityId.None));
 
                 int extra = r.ExtraDamage > 0 && c.Unit != null && c.Unit.IsAlive ? Math.Min(r.ExtraDamage, config.ExtraDamageCap(spell.Damage)) : 0;
-                if (extra > 0) Combat.ApplyDamage(world, caster.Id, c.Unit, extra);
+                if (extra > 0) Combat.ApplyDamage(world, caster.Id, c.Unit, extra, DamageCause.Reaction(r.Id));
 
                 // 대상 상태 (3-3a 빙결): 트리거 소모보다 먼저 — 빙결 × 불(해동)처럼 같은 상태를 소모하는 반응은 이 필드를 쓰지 않는다
                 if (r.TargetStatus != StatusType.None && c.Unit != null && c.Unit.IsAlive && statuses.TryGet(r.TargetStatus, out var targetDef))
@@ -123,7 +124,7 @@ namespace ProjectM.Status
                         : FloodTargets(world, r, c.Pos, victimIds, flooded);
                     if (damage > 0)
                         foreach (var unit in targets)
-                            if (!spreads.TryGetValue(unit.Id.Value, out var had) || damage > had) spreads[unit.Id.Value] = damage;
+                            if (!spreads.TryGetValue(unit.Id.Value, out var had) || damage > had.damage) spreads[unit.Id.Value] = (damage, r.Id);
                 }
 
                 if (r.ExplosionRadius > 0)
@@ -133,7 +134,7 @@ namespace ProjectM.Status
                     {
                         if (!unit.IsAlive || GridMovement.Chebyshev(unit.Pos, c.Pos) > r.ExplosionRadius) continue;
                         if (!explosions.TryGetValue(unit.Id.Value, out var hit) || damage > hit.Damage)
-                            explosions[unit.Id.Value] = new ExplosionHit { Damage = damage, Status = r.ExplosionStatus, ChancePercent = r.ExplosionStatusChancePercent };
+                            explosions[unit.Id.Value] = new ExplosionHit { ReactionId = r.Id, Damage = damage, Status = r.ExplosionStatus, ChancePercent = r.ExplosionStatusChancePercent };
                     }
                 }
 
@@ -144,7 +145,7 @@ namespace ProjectM.Status
             foreach (var pair in explosions)
             {
                 if (!world.Units.TryGet(new EntityId(pair.Key), out var unit) || !unit.IsAlive) continue;
-                Combat.ApplyDamage(world, caster.Id, unit, pair.Value.Damage);
+                Combat.ApplyDamage(world, caster.Id, unit, pair.Value.Damage, DamageCause.Reaction(pair.Value.ReactionId));
                 if (pair.Value.Status != StatusType.None && unit.IsAlive && statuses.TryGet(pair.Value.Status, out var def))
                     StatusEffects.TryApply(world, unit, def, pair.Value.ChancePercent);
             }
@@ -152,7 +153,7 @@ namespace ProjectM.Status
             foreach (var pair in spreads)
             {
                 if (!world.Units.TryGet(new EntityId(pair.Key), out var unit) || !unit.IsAlive) continue;
-                Combat.ApplyDamage(world, caster.Id, unit, pair.Value);
+                Combat.ApplyDamage(world, caster.Id, unit, pair.Value.damage, DamageCause.Reaction(pair.Value.id));
             }
             return fired;
         }

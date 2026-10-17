@@ -35,15 +35,23 @@ namespace ProjectM.Dungeon
         /// <summary>한 판의 층 수 (3-4a). 마지막 층 = 보스 층 — 내려가는 계단 없음 · 적 재생성 없음 (보스는 3-4b).</summary>
         public int FloorCount { get; }
 
+        /// <summary>보스 층(마지막 층)의 방 크기 — 벽 안쪽 바닥 칸 수 (3-4b). 맵 가운데에 놓인다.</summary>
+        public int BossRoomWidth { get; }
+        public int BossRoomHeight { get; }
+
         public DungeonGenConfig(
             int width, int height,
             int roomCount, int roomSizeRoll, int roomMinSize,
             int wallBlockCount, int wallBlockSizeRoll, int wallBlockMinSize,
             int wallTunnelCostMultiplier, int placementAttemptLimit,
-            int deadEndLoopMinWalkDistance, int floorCount = 5)
+            int deadEndLoopMinWalkDistance, int floorCount = 5, int bossRoomWidth = 21, int bossRoomHeight = 15)
         {
             Require(floorCount >= 1, nameof(floorCount), "층 수는 1 이상");
+            Require(bossRoomWidth >= 7 && bossRoomWidth <= width - 2, nameof(bossRoomWidth), "보스 방 너비는 7 ~ 맵 너비 − 2");
+            Require(bossRoomHeight >= 5 && bossRoomHeight <= height - 2, nameof(bossRoomHeight), "보스 방 높이는 5 ~ 맵 높이 − 2");
             FloorCount = floorCount;
+            BossRoomWidth = bossRoomWidth;
+            BossRoomHeight = bossRoomHeight;
             Require(deadEndLoopMinWalkDistance >= 2, nameof(deadEndLoopMinWalkDistance), "막다른 길 잇기 최소 걸음 수는 2 이상");
             Require(roomMinSize >= 1, nameof(roomMinSize), "방 최소 크기는 1 이상");
             Require(roomSizeRoll > roomMinSize, nameof(roomSizeRoll), "방 크기 뽑기 범위는 최소 크기보다 커야 한다");

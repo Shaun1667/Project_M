@@ -19,3 +19,6 @@ MonoBehaviour:
   - Id: enemy_melee
     Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
     Tint: {r: 0.9, g: 0.25, b: 0.2, a: 1}
+  - Id: boss
+    Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
+    Tint: {r: 0.55, g: 0.1, b: 0.45, a: 1}

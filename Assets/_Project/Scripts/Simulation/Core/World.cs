@@ -32,6 +32,20 @@ namespace ProjectM.Core
         /// <summary>지금 층 번호 (1부터, 3-4a).</summary>
         public int Floor { get; private set; } = 1;
 
+        /// <summary>한 판 기록 (3-4b): 처치 수 · 결과 · 보스 · 사망 원인.</summary>
+        public RunState Run { get; } = new RunState();
+
+        /// <summary>지금까지 가 본 가장 깊은 층 (3-4b 결과 화면).</summary>
+        public int DeepestFloor
+        {
+            get
+            {
+                int deepest = Floor;
+                foreach (var f in _storedFloors) deepest = Math.Max(deepest, f.Floor);
+                return deepest;
+            }
+        }
+
         private readonly List<StoredFloorState> _storedFloors = new List<StoredFloorState>();
         /// <summary>떠난 층들, 층 번호 오름차순 (3-4a).</summary>
         public IReadOnlyList<StoredFloorState> StoredFloors => _storedFloors;
@@ -195,6 +209,11 @@ namespace ProjectM.Core
                 Units = units.ConvertAll(ToState).ToArray(),
                 Floor = Floor,
                 StoredFloors = _storedFloors.ToArray(),
+                Kills = Run.Kills,
+                Outcome = Run.Outcome,
+                BossId = Run.BossId,
+                LastPlayerDamage = Run.LastPlayerDamage,
+                LastPlayerAttacker = Run.LastPlayerAttacker,
             };
         }
 
@@ -263,6 +282,11 @@ namespace ProjectM.Core
             LoadFloorData(world, snapshot.MapWidth, snapshot.MapHeight, snapshot.Cells, snapshot.Explored, snapshot.Terrain, snapshot.Units);
             world.Floor = snapshot.Floor;
             world._storedFloors.AddRange(snapshot.StoredFloors);
+            world.Run.Kills = snapshot.Kills;
+            world.Run.Outcome = snapshot.Outcome;
+            world.Run.BossId = snapshot.BossId;
+            world.Run.LastPlayerDamage = snapshot.LastPlayerDamage;
+            world.Run.LastPlayerAttacker = snapshot.LastPlayerAttacker;
 
             foreach (var actor in snapshot.Actors)
             {

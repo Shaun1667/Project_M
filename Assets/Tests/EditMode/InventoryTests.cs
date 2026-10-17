@@ -136,7 +136,7 @@ namespace ProjectM.Tests
             Assert.That(p.InventorySlots, Is.EqualTo(s.Player.InventorySlots));
             Assert.That(p.QuickSlots, Is.EqualTo(s.Player.QuickSlots));
             Assert.That(WorldSnapshotCodec.Encode(restored.Capture()), Is.EqualTo(bytes));
-            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.EqualTo(9), "3-4a: 층");
+            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.EqualTo(10), "3-4b: 한 판 기록");
         }
 
         // 결정 2026-10-17: 빠른 칸에 없는 주문도 인벤토리에서 바로 쓴다. 빠른 칸에 아이템이 있으면 주문 시전은 막힘
