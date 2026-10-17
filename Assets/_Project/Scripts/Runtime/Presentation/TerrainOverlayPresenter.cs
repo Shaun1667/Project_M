@@ -7,7 +7,7 @@ using UnityEngine.Tilemaps;
 namespace ProjectM.Presentation
 {
     /// <summary>
-    /// 지형 효과 오버레이 (2-4): 바닥 위 · 유닛 아래 Tilemap 한 장에 칸 색을 칠한다 (화염 지대 주황 · 독구름 보라).
+    /// 지형 효과 오버레이 (2-4): 바닥 위 · 유닛 아래 Tilemap 한 장에 칸 색을 칠한다 (화염 지대 주황 · 독구름 보라 · 물 파랑 · 오염된 물 탁한 초록).
     /// 한 칸에 여러 효과가 있으면 색을 섞는다. TerrainChangedEvent만 보고 그린다. 안개(정렬 20)가 덮으므로 안 보이는 칸은 가려진다.
     /// </summary>
     public sealed class TerrainOverlayPresenter : MonoBehaviour
@@ -16,6 +16,8 @@ namespace ProjectM.Presentation
         [SerializeField] private TileBase _tile;
         [SerializeField] private Color _fireZoneColor = new Color(1f, 0.4f, 0.05f, 0.5f);
         [SerializeField] private Color _poisonCloudColor = new Color(0.55f, 0.2f, 0.9f, 0.45f);
+        [SerializeField] private Color _waterColor = new Color(0.15f, 0.45f, 1f, 0.45f);
+        [SerializeField] private Color _contaminatedWaterColor = new Color(0.4f, 0.6f, 0.15f, 0.5f);
 
         private readonly Dictionary<GridPos, List<TerrainEffectType>> _cells = new Dictionary<GridPos, List<TerrainEffectType>>();
         private SimEventBus _bus;
@@ -51,6 +53,8 @@ namespace ProjectM.Presentation
             {
                 case TerrainEffectType.FireZone: return _fireZoneColor;
                 case TerrainEffectType.PoisonCloud: return _poisonCloudColor;
+                case TerrainEffectType.Water: return _waterColor;
+                case TerrainEffectType.ContaminatedWater: return _contaminatedWaterColor;
                 default: return Color.clear;
             }
         }

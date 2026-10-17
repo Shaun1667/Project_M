@@ -15,7 +15,7 @@ namespace ProjectM.Status
 
     /// <summary>
     /// 반응 하나 = "상태/지형 × 속성 → 결과" 규칙 한 줄 (3-1, REACTIONS.md). 값은 ReactionCatalogAsset에서 온다 — BALANCE.md 8번.
-    /// 결과는 종류별 코드가 아니라 이 필드들의 조합으로만 정한다: 추가 피해 · 폭발 · 트리거 소모.
+    /// 결과는 종류별 코드가 아니라 이 필드들의 조합으로만 정한다: 추가 피해 · 폭발 · 트리거 소모 · 지형 변환(3-2).
     /// </summary>
     public sealed class ReactionDef
     {
@@ -46,11 +46,14 @@ namespace ProjectM.Status
         /// <summary>폭발에 맞은 유닛에 거는 상태 (None = 없음) · 확률.</summary>
         public StatusType ExplosionStatus { get; }
         public int ExplosionStatusChancePercent { get; }
+        /// <summary>지형 반응: 트리거 지형을 이 지형으로 바꾼다 — 남은 틱 유지 (3-2 오염: 물 → 오염된 물). None = 없음.</summary>
+        public TerrainEffectType TransformTerrainTo { get; }
 
         public ReactionDef(string id, ReactionTrigger trigger, StatusType status, TerrainEffectType terrain, Element element, int priority,
             int extraDamage = 0, bool consumeTrigger = false,
             int explosionRadius = 0, int explosionDamage = 0, bool explosionDamageFromRemaining = false,
-            StatusType explosionStatus = StatusType.None, int explosionStatusChancePercent = 100, string group = null)
+            StatusType explosionStatus = StatusType.None, int explosionStatusChancePercent = 100, string group = null,
+            TerrainEffectType transformTerrainTo = TerrainEffectType.None)
         {
             if (string.IsNullOrEmpty(id)) throw new ArgumentException("반응 ID가 비어 있다.", nameof(id));
             if (trigger == ReactionTrigger.Status && status == StatusType.None) throw new ArgumentException("상태 반응에 상태가 없다: " + id);
@@ -59,6 +62,8 @@ namespace ProjectM.Status
                 throw new ArgumentOutOfRangeException(nameof(extraDamage), "피해 · 반지름은 0 이상: " + id);
             if (explosionStatusChancePercent < 0 || explosionStatusChancePercent > 100)
                 throw new ArgumentOutOfRangeException(nameof(explosionStatusChancePercent), "확률은 0 ~ 100: " + id);
+            if (transformTerrainTo != TerrainEffectType.None && (trigger != ReactionTrigger.Terrain || consumeTrigger || transformTerrainTo == terrain))
+                throw new ArgumentException("지형 변환은 지형 반응에서만, 소모와 함께 쓸 수 없고, 다른 지형으로만: " + id);
 
             Id = id;
             Group = string.IsNullOrEmpty(group) ? id : group;
@@ -74,6 +79,7 @@ namespace ProjectM.Status
             ExplosionDamageFromRemaining = explosionDamageFromRemaining;
             ExplosionStatus = explosionStatus;
             ExplosionStatusChancePercent = explosionStatusChancePercent;
+            TransformTerrainTo = transformTerrainTo;
         }
     }
 

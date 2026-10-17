@@ -57,3 +57,14 @@ MonoBehaviour:
     StatusChancePercent: 70
     LeavesTerrain: 2
     DisplayName: "\uB3C5 \uD3ED\uBC1C"
+  - Id: water_basic
+    Element: 6
+    Shape: 2
+    Range: 5
+    Damage: 0
+    ManaCost: 2
+    Radius: 1
+    AppliesStatus: 5
+    StatusChancePercent: 100
+    LeavesTerrain: 3
+    DisplayName: "\uBB3C\uBCF4\uB77C"

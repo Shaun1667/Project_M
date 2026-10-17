@@ -31,6 +31,7 @@ MonoBehaviour:
     ExplosionDamageFromRemaining: 0
     ExplosionStatus: 0
     ExplosionStatusChancePercent: 100
+    TransformTerrainTo: 0
   - Id: toxic_burst
     DisplayName: "\uC720\uB3C5\uC131 \uD3ED\uBC1C"
     Group: 
@@ -46,6 +47,7 @@ MonoBehaviour:
     ExplosionDamageFromRemaining: 1
     ExplosionStatus: 0
     ExplosionStatusChancePercent: 100
+    TransformTerrainTo: 0
   - Id: extinguish
     DisplayName: "\uC18C\uD654"
     Group: 
@@ -61,6 +63,7 @@ MonoBehaviour:
     ExplosionDamageFromRemaining: 0
     ExplosionStatus: 0
     ExplosionStatusChancePercent: 100
+    TransformTerrainTo: 0
   - Id: toxic_ignite_cloud
     DisplayName: "\uB3C5\uD654"
     Group: toxic_ignite
@@ -76,6 +79,7 @@ MonoBehaviour:
     ExplosionDamageFromRemaining: 0
     ExplosionStatus: 0
     ExplosionStatusChancePercent: 100
+    TransformTerrainTo: 0
   - Id: gas_explosion
     DisplayName: "\uAC00\uC2A4 \uD3ED\uBC1C"
     Group: 
@@ -91,3 +95,84 @@ MonoBehaviour:
     ExplosionDamageFromRemaining: 0
     ExplosionStatus: 3
     ExplosionStatusChancePercent: 70
+    TransformTerrainTo: 0
+  - Id: evaporate
+    DisplayName: "\uC99D\uBC1C"
+    Group: evaporate
+    Trigger: 0
+    Status: 5
+    Terrain: 0
+    Element: 0
+    Priority: 10
+    ExtraDamage: 2
+    ConsumeTrigger: 1
+    ExplosionRadius: 0
+    ExplosionDamage: 0
+    ExplosionDamageFromRemaining: 0
+    ExplosionStatus: 0
+    ExplosionStatusChancePercent: 100
+    TransformTerrainTo: 0
+  - Id: evaporate_water
+    DisplayName: "\uC99D\uBC1C"
+    Group: evaporate
+    Trigger: 1
+    Status: 0
+    Terrain: 3
+    Element: 0
+    Priority: 10
+    ExtraDamage: 2
+    ConsumeTrigger: 1
+    ExplosionRadius: 0
+    ExplosionDamage: 0
+    ExplosionDamageFromRemaining: 0
+    ExplosionStatus: 0
+    ExplosionStatusChancePercent: 100
+    TransformTerrainTo: 0
+  - Id: evaporate_contaminated
+    DisplayName: "\uC99D\uBC1C"
+    Group: evaporate
+    Trigger: 1
+    Status: 0
+    Terrain: 4
+    Element: 0
+    Priority: 10
+    ExtraDamage: 2
+    ConsumeTrigger: 1
+    ExplosionRadius: 0
+    ExplosionDamage: 0
+    ExplosionDamageFromRemaining: 0
+    ExplosionStatus: 0
+    ExplosionStatusChancePercent: 100
+    TransformTerrainTo: 0
+  - Id: evaporate_fire_zone
+    DisplayName: "\uC99D\uBC1C"
+    Group: evaporate
+    Trigger: 1
+    Status: 0
+    Terrain: 1
+    Element: 6
+    Priority: 10
+    ExtraDamage: 2
+    ConsumeTrigger: 0
+    ExplosionRadius: 0
+    ExplosionDamage: 0
+    ExplosionDamageFromRemaining: 0
+    ExplosionStatus: 0
+    ExplosionStatusChancePercent: 100
+    TransformTerrainTo: 0
+  - Id: contaminate
+    DisplayName: "\uC624\uC5FC"
+    Group: 
+    Trigger: 1
+    Status: 0
+    Terrain: 3
+    Element: 3
+    Priority: 0
+    ExtraDamage: 0
+    ConsumeTrigger: 0
+    ExplosionRadius: 0
+    ExplosionDamage: 0
+    ExplosionDamageFromRemaining: 0
+    ExplosionStatus: 0
+    ExplosionStatusChancePercent: 100
+    TransformTerrainTo: 4

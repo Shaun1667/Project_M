@@ -22,7 +22,7 @@ namespace ProjectM.Tests
 
         private const int Fire = 0, Ice = 1, Lightning = 2, Poison = 3;
 
-        // REACTIONS.md 3-1 표 · BALANCE.md 8번
+        // REACTIONS.md 3번 표 (3-1 · 3-2) · BALANCE.md 8번
         internal static ReactionBook BalanceReactions(StatusBook statuses) => new ReactionBook(new[]
         {
             new ReactionDef("toxic_ignite", ReactionTrigger.Status, StatusType.Poison, TerrainEffectType.None, Element.Fire, 10,
@@ -35,17 +35,24 @@ namespace ProjectM.Tests
                 extraDamage: 2, group: "toxic_ignite"),
             new ReactionDef("gas_explosion", ReactionTrigger.Terrain, StatusType.None, TerrainEffectType.PoisonCloud, Element.Lightning, 20,
                 consumeTrigger: true, explosionRadius: 1, explosionDamage: 2, explosionStatus: StatusType.Poison, explosionStatusChancePercent: 70),
+            // 3-2: 증발 (젖음 · 물 타일 · 오염된 물 × 불, 화염 지대 × 물 — 한 그룹) · 오염 (물 타일 × 독)
+            new ReactionDef("evaporate", ReactionTrigger.Status, StatusType.Wet, TerrainEffectType.None, Element.Fire, 10,
+                extraDamage: 2, consumeTrigger: true, group: "evaporate"),
+            new ReactionDef("evaporate_water", ReactionTrigger.Terrain, StatusType.None, TerrainEffectType.Water, Element.Fire, 10,
+                extraDamage: 2, consumeTrigger: true, group: "evaporate"),
+            new ReactionDef("evaporate_contaminated", ReactionTrigger.Terrain, StatusType.None, TerrainEffectType.ContaminatedWater, Element.Fire, 10,
+                extraDamage: 2, consumeTrigger: true, group: "evaporate"),
+            new ReactionDef("evaporate_fire_zone", ReactionTrigger.Terrain, StatusType.None, TerrainEffectType.FireZone, Element.Water, 10,
+                extraDamage: 2, group: "evaporate"),
+            new ReactionDef("contaminate", ReactionTrigger.Terrain, StatusType.None, TerrainEffectType.Water, Element.Poison, 0,
+                transformTerrainTo: TerrainEffectType.ContaminatedWater),
         }, new ReactionConfig(4, 3, 5), statuses);
 
         // 주문 자체는 상태 · 지형 없이 (반응만 보려고). 상태 · 지형 규칙은 BALANCE 값
-        private static SpellBook Book(params SpellDef[] extra)
+        internal static SpellBook Book(params SpellDef[] extra)
         {
             var statuses = SpellTests.BalanceStatuses();
-            var terrains = new TerrainBook(new[]
-            {
-                new TerrainDef(TerrainEffectType.FireZone, 4, StatusType.Burn),
-                new TerrainDef(TerrainEffectType.PoisonCloud, 4, StatusType.Poison),
-            }, statuses);
+            var terrains = SpellTests.BalanceTerrains();
             var spells = new List<SpellDef>
             {
                 new SpellDef("fire_basic", Element.Fire, SpellShape.Bolt, 6, 5, 3),
@@ -69,7 +76,7 @@ namespace ProjectM.Tests
             public ICommand NextCommand(in TickContext context) => new WaitCommand(1);
         }
 
-        private sealed class Session
+        internal sealed class Session
         {
             public World World;
             public SpellBook Book;
@@ -105,7 +112,7 @@ namespace ProjectM.Tests
             }
         }
 
-        private static Session Start(SpellBook book, GridPos player, params GridPos[] enemies)
+        internal static Session Start(SpellBook book, GridPos player, params GridPos[] enemies)
         {
             var world = new World(Room(), 5UL);
             var s = new Session { World = world, Book = book, Clock = new TurnClock(world.Scheduler, world.PlayerInput) };
@@ -311,9 +318,9 @@ namespace ProjectM.Tests
                 var a = ((List<ReactionDef>)new List<ReactionDef>(book.All)).Find(r => r.Id == e.Id);
                 Assert.That(a, Is.Not.Null, e.Id);
                 Assert.That((a.Group, a.Trigger, a.Status, a.Terrain, a.Element, a.Priority, a.ExtraDamage, a.ConsumeTrigger,
-                        a.ExplosionRadius, a.ExplosionDamage, a.ExplosionDamageFromRemaining, a.ExplosionStatus, a.ExplosionStatusChancePercent),
+                        a.ExplosionRadius, a.ExplosionDamage, a.ExplosionDamageFromRemaining, a.ExplosionStatus, a.ExplosionStatusChancePercent, a.TransformTerrainTo),
                     Is.EqualTo((e.Group, e.Trigger, e.Status, e.Terrain, e.Element, e.Priority, e.ExtraDamage, e.ConsumeTrigger,
-                        e.ExplosionRadius, e.ExplosionDamage, e.ExplosionDamageFromRemaining, e.ExplosionStatus, e.ExplosionStatusChancePercent)), e.Id);
+                        e.ExplosionRadius, e.ExplosionDamage, e.ExplosionDamageFromRemaining, e.ExplosionStatus, e.ExplosionStatusChancePercent, e.TransformTerrainTo)), e.Id);
             }
         }
     }

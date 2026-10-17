@@ -41,6 +41,7 @@ namespace ProjectM.UI
                 case StatusType.Slow: return "둔화";
                 case StatusType.Poison: return "중독";
                 case StatusType.Paralyze: return "마비";
+                case StatusType.Wet: return "젖음";
                 default: return type.ToString();
             }
         }

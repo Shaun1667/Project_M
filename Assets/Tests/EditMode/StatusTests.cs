@@ -240,7 +240,7 @@ namespace ProjectM.Tests
             var book = asset.ToBook();
             var expected = SpellTests.BalanceStatuses();
             Assert.That(book.Count, Is.EqualTo(expected.Count));
-            foreach (StatusType type in new[] { StatusType.Burn, StatusType.Slow, StatusType.Poison, StatusType.Paralyze })
+            foreach (StatusType type in new[] { StatusType.Burn, StatusType.Slow, StatusType.Poison, StatusType.Paralyze, StatusType.Wet })
             {
                 Assert.That(book.TryGet(type, out var a), Is.True, type.ToString());
                 expected.TryGet(type, out var e);

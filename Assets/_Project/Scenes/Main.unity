@@ -1593,6 +1593,8 @@ MonoBehaviour:
   _tile: {fileID: 11400000, guid: 0615d873595cfdc408b2f905f6398230, type: 2}
   _fireZoneColor: {r: 1, g: 0.4, b: 0.05, a: 0.5}
   _poisonCloudColor: {r: 0.55, g: 0.2, b: 0.9, a: 0.45}
+  _waterColor: {r: 0.15, g: 0.45, b: 1, a: 0.45}
+  _contaminatedWaterColor: {r: 0.4, g: 0.6, b: 0.15, a: 0.5}
 --- !u!483693784 &1977550035
 TilemapRenderer:
   serializedVersion: 2

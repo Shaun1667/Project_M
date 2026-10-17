@@ -11,6 +11,8 @@ namespace ProjectM.Status
         Slow = 2,
         Poison = 3,
         Paralyze = 4,
+        /// <summary>젖음 (3-2): 그 자체 효과 없음 — 반응의 트리거 (증발, 3-3 빙결 · 감전).</summary>
+        Wet = 5,
     }
 
     /// <summary>

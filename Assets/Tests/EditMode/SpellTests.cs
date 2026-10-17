@@ -27,6 +27,7 @@ namespace ProjectM.Tests
             new ProjectM.Status.StatusDef(ProjectM.Status.StatusType.Slow, 3, extraActionCostTicks: 1),
             new ProjectM.Status.StatusDef(ProjectM.Status.StatusType.Poison, 5, damagePerTick: 1),
             new ProjectM.Status.StatusDef(ProjectM.Status.StatusType.Paralyze, 2, preventsAction: true),
+            new ProjectM.Status.StatusDef(ProjectM.Status.StatusType.Wet, 3), // 3-2
         });
 
         // 상태 동작 시험용: 확률 100%로 고정 (실제 수치는 BalanceBookFull — 3-1부터 70%)
@@ -43,17 +44,17 @@ namespace ProjectM.Tests
         {
             new ProjectM.Status.TerrainDef(ProjectM.Status.TerrainEffectType.FireZone, 4, ProjectM.Status.StatusType.Burn),
             new ProjectM.Status.TerrainDef(ProjectM.Status.TerrainEffectType.PoisonCloud, 4, ProjectM.Status.StatusType.Poison),
+            // 3-2: 물 타일 12틱 · 화염 지대 위 안 깔림, 오염된 물 8틱 · 젖음 + 피해 1
+            new ProjectM.Status.TerrainDef(ProjectM.Status.TerrainEffectType.Water, 12, ProjectM.Status.StatusType.Wet,
+                blockedBy: ProjectM.Status.TerrainEffectType.FireZone),
+            new ProjectM.Status.TerrainDef(ProjectM.Status.TerrainEffectType.ContaminatedWater, 8, ProjectM.Status.StatusType.Wet, damagePerTick: 1),
         }, BalanceStatuses());
 
         // BALANCE.md 5 · 6 · 7번 전체 (상태 + 지형) — 에셋 검산 · 지형 · 반응 테스트용. reactions = 반응 표 (없으면 반응 없음)
         internal static SpellBook BalanceBookFull(System.Func<ProjectM.Status.StatusBook, ProjectM.Status.ReactionBook> reactions = null)
         {
             var statuses = BalanceStatuses();
-            var terrains = new ProjectM.Status.TerrainBook(new[]
-            {
-                new ProjectM.Status.TerrainDef(ProjectM.Status.TerrainEffectType.FireZone, 4, ProjectM.Status.StatusType.Burn),
-                new ProjectM.Status.TerrainDef(ProjectM.Status.TerrainEffectType.PoisonCloud, 4, ProjectM.Status.StatusType.Poison),
-            }, statuses);
+            var terrains = BalanceTerrains();
             return new SpellBook(new[]
             {
                 // 3-1: 화상 · 둔화 · 중독 70% (REACTIONS.md D3), 불은 화염 지대를 남기지 않음 (D2)
@@ -62,6 +63,9 @@ namespace ProjectM.Tests
                 new SpellDef("lightning_basic", Element.Lightning, SpellShape.Beam, 5, 3, 4, 0, ProjectM.Status.StatusType.Paralyze, 30),
                 new SpellDef("poison_basic", Element.Poison, SpellShape.Burst, 5, 2, 3, 1, ProjectM.Status.StatusType.Poison, 70,
                     ProjectM.Status.TerrainEffectType.PoisonCloud),
+                // 3-2 물 (원본 6-1): 3×3, 피해 0, 마나 2, 사거리 5, 젖음 100%, 물 타일
+                new SpellDef("water_basic", Element.Water, SpellShape.Burst, 5, 0, 2, 1, ProjectM.Status.StatusType.Wet, 100,
+                    ProjectM.Status.TerrainEffectType.Water),
             }, statuses, terrains, reactions?.Invoke(statuses));
         }
 
@@ -226,7 +230,7 @@ namespace ProjectM.Tests
             var book = asset.ToBook(statuses, terrainAsset.ToBook(statuses));
             var expected = BalanceBookFull();
             Assert.That(book.Count, Is.EqualTo(expected.Count));
-            foreach (var id in new[] { "fire_basic", "ice_basic", "lightning_basic", "poison_basic" })
+            foreach (var id in new[] { "fire_basic", "ice_basic", "lightning_basic", "poison_basic", "water_basic" })
             {
                 Assert.That(book.TryGet(id, out var a), Is.True, id);
                 expected.TryGet(id, out var e);

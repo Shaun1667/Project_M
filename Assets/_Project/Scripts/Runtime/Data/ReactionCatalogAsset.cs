@@ -31,6 +31,7 @@ namespace ProjectM.Data
             [Tooltip("폭발 피해 = 트리거의 남은 틱 × 1")] public bool ExplosionDamageFromRemaining;
             public StatusType ExplosionStatus;
             [Range(0, 100)] public int ExplosionStatusChancePercent;
+            [Tooltip("지형 반응: 트리거 지형을 이 지형으로 바꾼다, 남은 틱 유지 (3-2 오염)")] public TerrainEffectType TransformTerrainTo;
         }
 
         [Header("안전장치 (REACTIONS.md 2-5)")]
@@ -49,7 +50,7 @@ namespace ProjectM.Data
             {
                 defs.Add(new ReactionDef(e.Id, e.Trigger, e.Status, e.Terrain, e.Element, e.Priority,
                     e.ExtraDamage, e.ConsumeTrigger, e.ExplosionRadius, e.ExplosionDamage, e.ExplosionDamageFromRemaining,
-                    e.ExplosionStatus, e.ExplosionStatusChancePercent, e.Group));
+                    e.ExplosionStatus, e.ExplosionStatusChancePercent, e.Group, e.TransformTerrainTo));
             }
             return new ReactionBook(defs, new ReactionConfig(_maxReactionsPerCast, _extraDamageCapMin, _explosionDamageCapMin), statuses);
         }

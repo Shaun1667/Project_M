@@ -17,6 +17,8 @@ namespace ProjectM.Data
             public TerrainEffectType Type;
             [Tooltip("지속 (틱)")] [Min(1)] public int DurationTicks;
             [Tooltip("그 칸에 있는 유닛에게 매 틱 거는 상태 (StatusCatalog)")] public StatusType AppliesStatus;
+            [Tooltip("그 칸에 있는 유닛이 매 틱 받는 피해 (3-2 오염된 물)")] [Min(0)] public int DamagePerTick;
+            [Tooltip("이 지형이 있는 칸에는 놓이지 않는다 (3-2: 물 타일은 화염 지대 위에 안 깔림)")] public TerrainEffectType BlockedBy;
         }
 
         [SerializeField] private List<Entry> _terrains = new List<Entry>();
@@ -25,7 +27,7 @@ namespace ProjectM.Data
         {
             var defs = new List<TerrainDef>(_terrains.Count);
             foreach (var e in _terrains)
-                defs.Add(new TerrainDef(e.Type, e.DurationTicks, e.AppliesStatus));
+                defs.Add(new TerrainDef(e.Type, e.DurationTicks, e.AppliesStatus, e.DamagePerTick, e.BlockedBy));
             return new TerrainBook(defs, statuses);
         }
 

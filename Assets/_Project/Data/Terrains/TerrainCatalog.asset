@@ -16,6 +16,20 @@ MonoBehaviour:
   - Type: 1
     DurationTicks: 4
     AppliesStatus: 1
+    DamagePerTick: 0
+    BlockedBy: 0
   - Type: 2
     DurationTicks: 4
     AppliesStatus: 3
+    DamagePerTick: 0
+    BlockedBy: 0
+  - Type: 3
+    DurationTicks: 12
+    AppliesStatus: 5
+    DamagePerTick: 0
+    BlockedBy: 1
+  - Type: 4
+    DurationTicks: 8
+    AppliesStatus: 5
+    DamagePerTick: 1
+    BlockedBy: 0

@@ -11,11 +11,15 @@ namespace ProjectM.Status
         None = 0,
         FireZone = 1,
         PoisonCloud = 2,
+        /// <summary>물 타일 (3-2): 물 주문 3×3, 위 유닛 젖음.</summary>
+        Water = 3,
+        /// <summary>오염된 물 (3-2): 물 타일 × 독 · 물 + 독 융합, 위 유닛 젖음 + 매 틱 피해.</summary>
+        ContaminatedWater = 4,
     }
 
     /// <summary>
     /// 지형 효과 하나의 규칙 데이터 (2-4, Q8 임시값). 값은 TerrainCatalogAsset에서 온다 — 기준은 BALANCE.md 7번.
-    /// 효과는 데이터 필드로만: 그 칸에 있는 유닛에게 ③ 단계마다 상태 이상을 건다.
+    /// 효과는 데이터 필드로만: 그 칸에 있는 유닛에게 ③ 단계마다 상태 이상을 걸고 피해를 준다.
     /// </summary>
     public sealed class TerrainDef
     {
@@ -24,14 +28,23 @@ namespace ProjectM.Status
         public int DurationTicks { get; }
         /// <summary>그 칸에 있는 유닛에게 매 틱 거는 상태 (StatusBook). None이면 없음.</summary>
         public StatusType AppliesStatus { get; }
+        /// <summary>그 칸에 있는 유닛이 매 틱 받는 피해 (3-2 오염된 물). 상태를 건 뒤에 준다.</summary>
+        public int DamagePerTick { get; }
+        /// <summary>이 지형이 있는 칸에는 놓이지 않는다 (3-2: 화염 지대 위에는 물 타일이 깔리지 않음). None이면 없음.</summary>
+        public TerrainEffectType BlockedBy { get; }
 
-        public TerrainDef(TerrainEffectType type, int durationTicks, StatusType appliesStatus = StatusType.None)
+        public TerrainDef(TerrainEffectType type, int durationTicks, StatusType appliesStatus = StatusType.None,
+            int damagePerTick = 0, TerrainEffectType blockedBy = TerrainEffectType.None)
         {
             if (type == TerrainEffectType.None) throw new ArgumentException("None은 지형 효과가 아니다.", nameof(type));
             if (durationTicks < 1) throw new ArgumentOutOfRangeException(nameof(durationTicks), durationTicks, "지속은 1틱 이상이어야 한다.");
+            if (damagePerTick < 0) throw new ArgumentOutOfRangeException(nameof(damagePerTick), damagePerTick, "틱당 피해는 0 이상이어야 한다.");
+            if (blockedBy == type) throw new ArgumentException("자기 자신에게 막힐 수 없다.", nameof(blockedBy));
             Type = type;
             DurationTicks = durationTicks;
             AppliesStatus = appliesStatus;
+            DamagePerTick = damagePerTick;
+            BlockedBy = blockedBy;
         }
     }
 
@@ -164,8 +177,30 @@ namespace ProjectM.Status
             if (world == null) throw new ArgumentNullException(nameof(world));
             if (def == null) throw new ArgumentNullException(nameof(def));
             if (!world.Map.IsWalkable(pos)) return;
+            if (def.BlockedBy != TerrainEffectType.None && world.Terrain.Has(pos, def.BlockedBy)) return;
             int remaining = world.Terrain.Place(pos, def.Type, def.DurationTicks);
             world.Events.Publish(new TerrainChangedEvent(pos, def.Type, remaining));
+        }
+
+        /// <summary>
+        /// 그 칸의 from을 to로 바꾼다 — 남은 틱 유지 (3-2 오염: 물 → 오염된 물). to가 이미 있으면 남은 틱이 긴 쪽.
+        /// from이 없으면 아무 일 없음.
+        /// </summary>
+        public static bool Transform(World world, GridPos pos, TerrainEffectType from, TerrainEffectType to)
+        {
+            if (world == null) throw new ArgumentNullException(nameof(world));
+            if (to == TerrainEffectType.None || from == to) throw new ArgumentException("바꿀 지형이 잘못됐다.", nameof(to));
+            if (!world.Map.InBounds(pos)) return false;
+            int remaining = -1;
+            foreach (var t in world.Terrain.At(pos))
+                if (t.Type == from) remaining = t.Remaining;
+            if (remaining < 0) return false;
+
+            world.Terrain.Remove(pos, from);
+            world.Events.Publish(new TerrainChangedEvent(pos, from, 0));
+            int placed = world.Terrain.Place(pos, to, remaining);
+            world.Events.Publish(new TerrainChangedEvent(pos, to, placed));
+            return true;
         }
 
         /// <summary>지형 효과를 없앤다 (반응의 트리거 소모 등). 없으면 아무 일 없음.</summary>
@@ -179,7 +214,7 @@ namespace ProjectM.Status
     }
 
     /// <summary>
-    /// ③ 지형 처리 (GDD 3-3): 칸 인덱스 순 · 종류 순으로, 그 칸 유닛에게 상태를 걸고(지속 갱신) → 남은 틱 1 감소 → 0이면 사라짐.
+    /// ③ 지형 처리 (GDD 3-3): 칸 인덱스 순 · 종류 순으로, 그 칸 유닛에게 상태를 걸고(지속 갱신) → 틱당 피해(3-2) → 남은 틱 1 감소 → 0이면 사라짐.
     /// 확산은 없다 (2-4). 상태를 갖지 않는다.
     /// </summary>
     public sealed class TerrainSystem : ITickSystem
@@ -204,9 +239,13 @@ namespace ProjectM.Status
                 for (int i = 0; i < list.Count; i++)
                 {
                     var effect = list[i];
-                    if (_terrains.TryGet(effect.Type, out var def) && def.AppliesStatus != StatusType.None
-                        && _world.Units.TryGetAt(pos, out var unit) && unit.IsAlive && _statuses.TryGet(def.AppliesStatus, out var status))
-                        StatusEffects.Apply(_world, unit, status);
+                    if (_terrains.TryGet(effect.Type, out var def) && _world.Units.TryGetAt(pos, out var unit) && unit.IsAlive)
+                    {
+                        if (def.AppliesStatus != StatusType.None && _statuses.TryGet(def.AppliesStatus, out var status))
+                            StatusEffects.Apply(_world, unit, status);
+                        if (def.DamagePerTick > 0)
+                            Combat.ApplyDamage(_world, EntityId.None, unit, def.DamagePerTick);
+                    }
 
                     effect.Remaining--;
                     _world.Events.Publish(new TerrainChangedEvent(pos, effect.Type, effect.Remaining));

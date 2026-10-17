@@ -155,13 +155,14 @@ namespace ProjectM.Presentation
 
         // ── 상태 이상 틴트 (2-3, 그레이박스 표시 — 아이콘은 2-5) ──
 
-        /// <summary>틴트 우선순위: 마비 > 화상 > 중독 > 둔화. 여러 개면 앞의 것 하나만.</summary>
+        /// <summary>틴트 우선순위: 마비 > 화상 > 중독 > 둔화 > 젖음(3-2). 여러 개면 앞의 것 하나만.</summary>
         private static readonly (StatusType type, Color color)[] StatusTints =
         {
             (StatusType.Paralyze, new Color(1f, 0.95f, 0.25f)),
             (StatusType.Burn, new Color(1f, 0.5f, 0.1f)),
             (StatusType.Poison, new Color(0.7f, 0.3f, 1f)),
             (StatusType.Slow, new Color(0.35f, 0.85f, 1f)),
+            (StatusType.Wet, new Color(0.25f, 0.45f, 1f)),
         };
 
         private const float StatusTintStrength = 0.65f;

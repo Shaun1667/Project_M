@@ -201,18 +201,24 @@ namespace ProjectM.Editor
                 { Id = "lightning_basic", Element = Element.Lightning, Shape = SpellShape.Beam, Range = 5, Damage = 3, ManaCost = 4 });
             changed |= catalog.AddIfMissing(new SpellCatalogAsset.Entry
                 { Id = "poison_basic", Element = Element.Poison, Shape = SpellShape.Burst, Range = 5, Damage = 2, ManaCost = 3, Radius = 1 });
-            // BALANCE 6번: 주문 → 상태 이상 · 확률 (3-1 D3: 화상 · 둔화 · 중독 70%)
+            // 3-2 물 주문 (원본 6-1): 게임 중 획득 — 지금은 디버그 창에서 장착
+            changed |= catalog.AddIfMissing(new SpellCatalogAsset.Entry
+                { Id = "water_basic", Element = Element.Water, Shape = SpellShape.Burst, Range = 5, Damage = 0, ManaCost = 2, Radius = 1 });
+            // BALANCE 6번: 주문 → 상태 이상 · 확률 (3-1 D3: 화상 · 둔화 · 중독 70%, 3-2 젖음 100%)
             changed |= catalog.SetStatusIfNone("fire_basic", StatusType.Burn, 70);
             changed |= catalog.SetStatusIfNone("ice_basic", StatusType.Slow, 70);
             changed |= catalog.SetStatusIfNone("lightning_basic", StatusType.Paralyze, 30);
             changed |= catalog.SetStatusIfNone("poison_basic", StatusType.Poison, 70);
+            changed |= catalog.SetStatusIfNone("water_basic", StatusType.Wet, 100);
             // BALANCE 7번: 주문 → 지형 효과. 불 단독 화염 지대는 3-1 D2로 없음 (불 + 물 융합으로만)
             changed |= catalog.SetTerrainIfNone("poison_basic", TerrainEffectType.PoisonCloud);
+            changed |= catalog.SetTerrainIfNone("water_basic", TerrainEffectType.Water);
             // 2-5: HUD · 로그 표시 이름 (비어 있을 때만)
             changed |= catalog.SetDisplayNameIfEmpty("fire_basic", "불꽃 화살");
             changed |= catalog.SetDisplayNameIfEmpty("ice_basic", "얼음 화살");
             changed |= catalog.SetDisplayNameIfEmpty("lightning_basic", "번개 줄기");
             changed |= catalog.SetDisplayNameIfEmpty("poison_basic", "독 폭발");
+            changed |= catalog.SetDisplayNameIfEmpty("water_basic", "물보라");
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }
@@ -226,6 +232,7 @@ namespace ProjectM.Editor
             changed |= catalog.AddIfMissing(new StatusCatalogAsset.Entry { Type = StatusType.Slow, DurationTicks = 3, ExtraActionCostTicks = 1 });
             changed |= catalog.AddIfMissing(new StatusCatalogAsset.Entry { Type = StatusType.Poison, DurationTicks = 5, DamagePerTick = 1 });
             changed |= catalog.AddIfMissing(new StatusCatalogAsset.Entry { Type = StatusType.Paralyze, DurationTicks = 2, PreventsAction = true });
+            changed |= catalog.AddIfMissing(new StatusCatalogAsset.Entry { Type = StatusType.Wet, DurationTicks = 3 }); // 3-2
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }
@@ -239,6 +246,11 @@ namespace ProjectM.Editor
                 { Type = TerrainEffectType.FireZone, DurationTicks = 4, AppliesStatus = StatusType.Burn });
             changed |= catalog.AddIfMissing(new TerrainCatalogAsset.Entry
                 { Type = TerrainEffectType.PoisonCloud, DurationTicks = 4, AppliesStatus = StatusType.Poison });
+            // 3-2: 물 타일 12틱 · 화염 지대 위에는 안 깔림, 오염된 물 8틱 · 젖음 + 매 틱 피해 1 (D7)
+            changed |= catalog.AddIfMissing(new TerrainCatalogAsset.Entry
+                { Type = TerrainEffectType.Water, DurationTicks = 12, AppliesStatus = StatusType.Wet, BlockedBy = TerrainEffectType.FireZone });
+            changed |= catalog.AddIfMissing(new TerrainCatalogAsset.Entry
+                { Type = TerrainEffectType.ContaminatedWater, DurationTicks = 8, AppliesStatus = StatusType.Wet, DamagePerTick = 1 });
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }
@@ -273,6 +285,33 @@ namespace ProjectM.Editor
                 Id = "gas_explosion", DisplayName = "가스 폭발", Trigger = ReactionTrigger.Terrain, Terrain = TerrainEffectType.PoisonCloud,
                 Element = Element.Lightning, Priority = 20, ConsumeTrigger = true, ExplosionRadius = 1, ExplosionDamage = 2,
                 ExplosionStatus = StatusType.Poison, ExplosionStatusChancePercent = 70,
+            });
+            // 3-2: 증발 (젖음 · 물 타일 · 오염된 물 × 불, 화염 지대 × 물 — 한 그룹) · 오염 (물 타일 × 독)
+            changed |= catalog.AddIfMissing(new ReactionCatalogAsset.Entry
+            {
+                Id = "evaporate", DisplayName = "증발", Group = "evaporate", Trigger = ReactionTrigger.Status, Status = StatusType.Wet,
+                Element = Element.Fire, Priority = 10, ExtraDamage = 2, ConsumeTrigger = true, ExplosionStatusChancePercent = 100,
+            });
+            changed |= catalog.AddIfMissing(new ReactionCatalogAsset.Entry
+            {
+                Id = "evaporate_water", DisplayName = "증발", Group = "evaporate", Trigger = ReactionTrigger.Terrain, Terrain = TerrainEffectType.Water,
+                Element = Element.Fire, Priority = 10, ExtraDamage = 2, ConsumeTrigger = true, ExplosionStatusChancePercent = 100,
+            });
+            changed |= catalog.AddIfMissing(new ReactionCatalogAsset.Entry
+            {
+                Id = "evaporate_contaminated", DisplayName = "증발", Group = "evaporate", Trigger = ReactionTrigger.Terrain,
+                Terrain = TerrainEffectType.ContaminatedWater, Element = Element.Fire, Priority = 10, ExtraDamage = 2, ConsumeTrigger = true,
+                ExplosionStatusChancePercent = 100,
+            });
+            changed |= catalog.AddIfMissing(new ReactionCatalogAsset.Entry
+            {
+                Id = "evaporate_fire_zone", DisplayName = "증발", Group = "evaporate", Trigger = ReactionTrigger.Terrain, Terrain = TerrainEffectType.FireZone,
+                Element = Element.Water, Priority = 10, ExtraDamage = 2, ExplosionStatusChancePercent = 100,
+            });
+            changed |= catalog.AddIfMissing(new ReactionCatalogAsset.Entry
+            {
+                Id = "contaminate", DisplayName = "오염", Trigger = ReactionTrigger.Terrain, Terrain = TerrainEffectType.Water,
+                Element = Element.Poison, Priority = 0, TransformTerrainTo = TerrainEffectType.ContaminatedWater, ExplosionStatusChancePercent = 100,
             });
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
