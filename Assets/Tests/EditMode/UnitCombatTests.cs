@@ -412,6 +412,8 @@ namespace ProjectM.Tests
             var s = spawn.ToConfig();
             Assert.That(s.EnemyCount, Is.EqualTo(5));
             Assert.That(s.EnemyMinDistanceFromStart, Is.EqualTo(8));
+            Assert.That(s.RespawnIntervalTicks, Is.EqualTo(30), "3-4a 재생성 주기");
+            Assert.That(s.RespawnMaxEnemies, Is.EqualTo(5), "3-4a 재생성 상한");
         }
 
         private static void AssertDef(UnitDef actual, UnitDef expected)

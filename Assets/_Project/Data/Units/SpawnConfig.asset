@@ -14,3 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: ProjectM.Runtime::ProjectM.Data.SpawnConfigAsset
   _enemyCount: 5
   _enemyMinDistanceFromStart: 8
+  _respawnIntervalTicks: 30
+  _respawnMaxEnemies: 5

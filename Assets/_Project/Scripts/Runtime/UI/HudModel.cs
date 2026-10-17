@@ -78,6 +78,14 @@ namespace ProjectM.UI
             _bus.Subscribe<StatusChangedEvent>(OnStatusChanged);
             _bus.Subscribe<QuickSlotsChangedEvent>(OnSlotsChanged);
             _bus.Subscribe<ReactionTriggeredEvent>(OnReaction);
+            _bus.Subscribe<ProjectM.Dungeon.FloorChangedEvent>(OnFloorChanged);
+            Changed?.Invoke();
+        }
+
+        // 층 이동 로그 (3-4a): "2층으로 내려왔다" · "1층으로 올라왔다"
+        private void OnFloorChanged(ProjectM.Dungeon.FloorChangedEvent e)
+        {
+            AddLog(HudText.FloorChanged(e.From, e.To));
             Changed?.Invoke();
         }
 
@@ -114,6 +122,7 @@ namespace ProjectM.UI
             _bus.Unsubscribe<StatusChangedEvent>(OnStatusChanged);
             _bus.Unsubscribe<QuickSlotsChangedEvent>(OnSlotsChanged);
             _bus.Unsubscribe<ReactionTriggeredEvent>(OnReaction);
+            _bus.Unsubscribe<ProjectM.Dungeon.FloorChangedEvent>(OnFloorChanged);
             _bus = null;
         }
 

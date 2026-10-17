@@ -11,5 +11,7 @@ namespace ProjectM.Core
         Combat = 1,
         Ai = 2,
         Loot = 3,
+        /// <summary>적 재생성 칸 고르기 (3-4a). 맵 생성(MapGen)과 따로 — 재생성이 다음 층 모양을 바꾸지 않게.</summary>
+        Spawn = 4,
     }
 }

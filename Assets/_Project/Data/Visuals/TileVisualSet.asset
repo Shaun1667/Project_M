@@ -19,3 +19,5 @@ MonoBehaviour:
     Tile: {fileID: 11400000, guid: 161d4987bb7184f458f1197afd483fd4, type: 2}
   - Type: 3
     Tile: {fileID: 11400000, guid: de1fde42d35d9204db1d8f4401f81781, type: 2}
+  - Type: 4
+    Tile: {fileID: 11400000, guid: cd3947ab928dca04d99930baa82eb9c0, type: 2}

@@ -63,6 +63,17 @@ namespace ProjectM.Units
             unit.Pos = to;
         }
 
+        /// <summary>층 이동 (3-4a): 유닛을 다른 칸에 놓는다. 걸어간 것이 아니므로 발자국(PreviousPos)은 지운다. 도착 칸이 비어 있어야 한다.</summary>
+        public void Teleport(EntityId id, GridPos to)
+        {
+            var unit = Get(id);
+            if (unit.Pos != to && _byPos.ContainsKey(to)) throw new InvalidOperationException($"{to}에 이미 유닛이 있다.");
+            _byPos.Remove(unit.Pos);
+            _byPos[to] = id;
+            unit.Pos = to;
+            unit.PreviousPos = null;
+        }
+
         /// <summary>EntityId 오름차순 목록 (복사본 — 순회 중 제거해도 안전).</summary>
         public List<Unit> ToSortedList()
         {

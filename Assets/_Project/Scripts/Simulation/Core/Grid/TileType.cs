@@ -9,7 +9,9 @@ namespace ProjectM.Core
         Empty = 0,
         Floor = 1,
         Wall = 2,
-        /// <summary>내려가는 계단 — 층의 도착점. 걸을 수 있다 (밟았을 때 동작은 3-4).</summary>
+        /// <summary>내려가는 계단 — 층의 도착점. 걸을 수 있다. 플레이어가 들어가면 다음 층 (3-4a).</summary>
         StairsDown = 3,
+        /// <summary>올라가는 계단 (3-4a) — 2층부터 시작 칸. 플레이어가 들어가면 이전 층 (떠날 때 그대로 남아 있음).</summary>
+        StairsUp = 4,
     }
 }

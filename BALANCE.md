@@ -57,6 +57,9 @@
 | 벽 뚫기 비용 배수 | `_wallTunnelCostMultiplier` | **5** | — | 1-5 신규. 복도가 벽 1칸 뚫기 = 바닥 5칸 돌아가기 |
 | 배치 재시도 상한 | `_placementAttemptLimit` | **1000** | — | 1-5 신규 안전장치 (이전 코드는 무한 반복 가능) |
 | 막다른 길 잇기 최소 걸음 | `_deadEndLoopMinWalkDistance` | **10** | — | 2026-10-16 신규. 막다른 칸에서 벽을 뚫어 이을 상대는 걸어서 10걸음 이상 떨어진 칸 (자기 길 옆에 붙이지 않고 순환로를 만듦) |
+| 한 판 층 수 | `_floorCount` | **5** | — | 3-4a (사용자 결정 2026-10-18): 5층 단위로 던전 테마가 바뀌는 구조의 첫 5층. 1~4층 일반, **5층 = 보스 층**(내려가는 계단 · 적 재생성 없음, 보스는 3-4b). 2층부터 시작 칸 = 올라가는 계단 |
+
+층 생성 순서 (3-4a): 1층 생성 → (내려갈 때마다) 다음 층 생성 — 모두 같은 맵 생성 수열(MapGen)을 이어 쓴다 → **같은 시드 = 같은 층들**. 계단 놓기는 난수를 쓰지 않아 1층 결과는 3-4a 전과 같다.
 
 검산 (`DungeonGeneratorTests.ProjectAsset_MatchesBalanceTable`): 에셋 값이 위 표와 같다.
 분포 (`DungeonGeneratorTests.RollSize_KeepsIntendedDistribution`): 7~13 칸당 빈도 / 14~19 칸당 빈도 = 1.8~2.2.
@@ -79,9 +82,12 @@
 |---|---|---|---|
 | 층당 적 수 | `_enemyCount` | **5** | 놓을 칸이 모자라면 있는 만큼 |
 | 시작 칸과 최소 거리 | `_enemyMinDistanceFromStart` | **8** | 체비셰프 거리, 바닥 칸만(계단 제외) |
+| 적 재생성 주기 | `_respawnIntervalTicks` | **30틱** | 3-4a (사용자 결정 2026-10-18). (틱 + 1)이 30의 배수인 틱의 ⑤ 단계에 1마리 — 플레이어 시야 밖 바닥 칸(빈 칸, 계단 제외) 중 무작위(재생성 난수 `RngStream.Spawn`). 지금 층에서만, 보스 층 제외 |
+| 재생성 상한 | `_respawnMaxEnemies` | **5** | 지금 층에 살아 있는 적이 5 이상이면 만들지 않음 (처음 배치 수와 같게 — 잡은 만큼만 다시 채워짐) |
 
 검산 (`UnitCombatTests.ProjectAssets_MatchBalanceTable`): 에셋 값이 위 표와 같다.
 결과:
+- 재생성 (3-4a): 마나가 바닥에서 가득 차는 30틱마다 적 1마리 — 한 층에 오래 머물며 쉬면 잡은 적이 다시 채워진다 (상한 5) — `FloorTests.Respawn_*`
 - 플레이어가 적을 잡는 데 **3대** (3 × 3 = 9 ≥ 8) — `UnitCombatTests.PlayerKillsEnemyInThreeHits_EnemyRemoved`
 - 적 한 마리가 플레이어를 잡는 데 **10대** (2 × 10 = 20) — `UnitCombatTests.PlayerDiesAfterTenHits_ClockStops`
 - 1:1로 붙어 싸우면 플레이어가 적 하나에 4 잃음 (적이 2번 반격). 회복이 없으므로 1:1을 4번 하면 체력 4, 5번째 1:1에서 같이 죽는다 (층의 적 5마리 = 회복 없이는 빠듯함)

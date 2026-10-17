@@ -130,5 +130,8 @@ namespace ProjectM.UI
         public const string MenuClose = "닫기";
 
         public const string DeadHint = "쓰러졌다 — R 키로 새 판";
+
+        // ── 층 (3-4a) ──
+        public static string FloorChanged(int from, int to) => to > from ? $"{to}층으로 내려왔다" : $"{to}층으로 올라왔다";
     }
 }

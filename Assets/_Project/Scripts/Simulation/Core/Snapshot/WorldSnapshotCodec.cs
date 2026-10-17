@@ -30,16 +30,8 @@ namespace ProjectM.Core
                 w.Write(snapshot.Cells.Length);
                 foreach (var cell in snapshot.Cells)
                     w.Write((int)cell);
-                w.Write(snapshot.Explored.Length);
-                foreach (var seen in snapshot.Explored)
-                    w.Write(seen);
-                w.Write(snapshot.Terrain.Length);
-                foreach (var t in snapshot.Terrain)
-                {
-                    w.Write(t.CellIndex);
-                    w.Write((int)t.Type);
-                    w.Write(t.Remaining);
-                }
+                WriteExplored(w, snapshot.Explored);
+                WriteTerrain(w, snapshot.Terrain);
 
                 w.Write(snapshot.NextEntityId);
 
@@ -52,41 +44,24 @@ namespace ProjectM.Core
                     w.Write(s.State.Increment);
                 }
 
-                w.Write(snapshot.Actors.Length);
-                foreach (var a in snapshot.Actors)
-                {
-                    w.Write(a.Id.Value);
-                    w.Write(a.ReadyTick);
-                    w.Write(a.IsPlayer);
-                }
+                WriteActors(w, snapshot.Actors);
+                WriteUnits(w, snapshot.Units);
 
-                w.Write(snapshot.Units.Length);
-                foreach (var u in snapshot.Units)
+                // 9 (3-4a): 층
+                w.Write(snapshot.Floor);
+                w.Write(snapshot.StoredFloors.Length);
+                foreach (var f in snapshot.StoredFloors)
                 {
-                    w.Write(u.Id.Value);
-                    w.Write((int)u.Faction);
-                    w.Write(u.VisualId);
-                    w.Write(u.MaxHp);
-                    w.Write(u.AttackDamage);
-                    w.Write(u.SightRange);
-                    w.Write(u.X);
-                    w.Write(u.Y);
-                    w.Write(u.Hp);
-                    w.Write(u.HasLastSeen);
-                    w.Write(u.LastSeenX);
-                    w.Write(u.LastSeenY);
-                    w.Write(u.MaxMana);
-                    w.Write(u.Mana);
-                    WriteRefs(w, u.InventorySlots);
-                    WriteRefs(w, u.QuickSlots);
-                    WriteOptionalPos(w, u.PreviousPos);
-                    WriteOptionalPos(w, u.WanderTarget);
-                    w.Write(u.Statuses.Length);
-                    foreach (var st in u.Statuses)
-                    {
-                        w.Write((int)st.Type);
-                        w.Write(st.Remaining);
-                    }
+                    w.Write(f.Floor);
+                    w.Write(f.MapWidth);
+                    w.Write(f.MapHeight);
+                    w.Write(f.Cells.Length);
+                    foreach (var cell in f.Cells)
+                        w.Write((int)cell);
+                    WriteExplored(w, f.Explored);
+                    WriteTerrain(w, f.Terrain);
+                    WriteActors(w, f.Actors);
+                    WriteUnits(w, f.Units);
                 }
 
                 w.Flush();
@@ -116,19 +91,9 @@ namespace ProjectM.Core
 
                 s.MapWidth = r.ReadInt32();
                 s.MapHeight = r.ReadInt32();
-                s.Cells = new TileType[ReadCount(r)];
-                for (int i = 0; i < s.Cells.Length; i++)
-                    s.Cells[i] = (TileType)r.ReadInt32();
-                s.Explored = new bool[ReadCount(r)];
-                for (int i = 0; i < s.Explored.Length; i++)
-                    s.Explored[i] = r.ReadBoolean();
-                s.Terrain = new TerrainCellState[ReadCount(r)];
-                for (int i = 0; i < s.Terrain.Length; i++)
-                {
-                    int cell = r.ReadInt32();
-                    var type = (ProjectM.Status.TerrainEffectType)r.ReadInt32();
-                    s.Terrain[i] = new TerrainCellState(cell, type, r.ReadInt32());
-                }
+                s.Cells = ReadCells(r);
+                s.Explored = ReadExplored(r);
+                s.Terrain = ReadTerrain(r);
 
                 s.NextEntityId = r.ReadInt32();
 
@@ -142,50 +107,165 @@ namespace ProjectM.Core
                     s.RngStreams[i] = new RngStreamState(rngStream, new Pcg32State(state, increment));
                 }
 
-                s.Actors = new ActorState[ReadCount(r)];
-                for (int i = 0; i < s.Actors.Length; i++)
-                {
-                    var id = new EntityId(r.ReadInt32());
-                    var readyTick = r.ReadInt64();
-                    var isPlayer = r.ReadBoolean();
-                    s.Actors[i] = new ActorState(id, readyTick, isPlayer);
-                }
+                s.Actors = ReadActors(r);
+                s.Units = ReadUnits(r);
 
-                s.Units = new UnitState[ReadCount(r)];
-                for (int i = 0; i < s.Units.Length; i++)
+                s.Floor = r.ReadInt32();
+                s.StoredFloors = new StoredFloorState[ReadCount(r)];
+                for (int i = 0; i < s.StoredFloors.Length; i++)
                 {
-                    var id = new EntityId(r.ReadInt32());
-                    var faction = (Faction)r.ReadInt32();
-                    var visualId = r.ReadString();
-                    var maxHp = r.ReadInt32();
-                    var attackDamage = r.ReadInt32();
-                    var sightRange = r.ReadInt32();
-                    var x = r.ReadInt32();
-                    var y = r.ReadInt32();
-                    var hp = r.ReadInt32();
-                    var hasLastSeen = r.ReadBoolean();
-                    var lastSeenX = r.ReadInt32();
-                    var lastSeenY = r.ReadInt32();
-                    var maxMana = r.ReadInt32();
-                    var mana = r.ReadInt32();
-                    var inventory = ReadRefs(r);
-                    var quick = ReadRefs(r);
-                    var previousPos = ReadOptionalPos(r);
-                    var wanderTarget = ReadOptionalPos(r);
-                    var statuses = new UnitStatusState[ReadCount(r)];
-                    for (int k = 0; k < statuses.Length; k++)
-                    {
-                        var type = (ProjectM.Status.StatusType)r.ReadInt32();
-                        statuses[k] = new UnitStatusState(type, r.ReadInt32());
-                    }
-                    s.Units[i] = new UnitState(id, faction, visualId, maxHp, attackDamage, sightRange, x, y, hp, hasLastSeen, lastSeenX, lastSeenY,
-                        maxMana, mana, inventory, quick, previousPos, wanderTarget, statuses);
+                    var f = new StoredFloorState { Floor = r.ReadInt32(), MapWidth = r.ReadInt32(), MapHeight = r.ReadInt32() };
+                    f.Cells = ReadCells(r);
+                    f.Explored = ReadExplored(r);
+                    f.Terrain = ReadTerrain(r);
+                    f.Actors = ReadActors(r);
+                    f.Units = ReadUnits(r);
+                    s.StoredFloors[i] = f;
                 }
 
                 if (stream.Position != stream.Length)
                     throw new InvalidDataException("스냅샷 끝에 남는 데이터가 있다.");
                 return s;
             }
+        }
+
+        // ── 공용 조각 (지금 층 · 떠난 층이 같이 씀, 3-4a에서 나눔 — 바이트 순서는 v8과 같음) ──
+
+        private static TileType[] ReadCells(BinaryReader r)
+        {
+            var cells = new TileType[ReadCount(r)];
+            for (int i = 0; i < cells.Length; i++)
+                cells[i] = (TileType)r.ReadInt32();
+            return cells;
+        }
+
+        private static void WriteExplored(BinaryWriter w, bool[] explored)
+        {
+            w.Write(explored.Length);
+            foreach (var seen in explored)
+                w.Write(seen);
+        }
+
+        private static bool[] ReadExplored(BinaryReader r)
+        {
+            var explored = new bool[ReadCount(r)];
+            for (int i = 0; i < explored.Length; i++)
+                explored[i] = r.ReadBoolean();
+            return explored;
+        }
+
+        private static void WriteTerrain(BinaryWriter w, TerrainCellState[] terrain)
+        {
+            w.Write(terrain.Length);
+            foreach (var t in terrain)
+            {
+                w.Write(t.CellIndex);
+                w.Write((int)t.Type);
+                w.Write(t.Remaining);
+            }
+        }
+
+        private static TerrainCellState[] ReadTerrain(BinaryReader r)
+        {
+            var terrain = new TerrainCellState[ReadCount(r)];
+            for (int i = 0; i < terrain.Length; i++)
+            {
+                int cell = r.ReadInt32();
+                var type = (ProjectM.Status.TerrainEffectType)r.ReadInt32();
+                terrain[i] = new TerrainCellState(cell, type, r.ReadInt32());
+            }
+            return terrain;
+        }
+
+        private static void WriteActors(BinaryWriter w, ActorState[] actors)
+        {
+            w.Write(actors.Length);
+            foreach (var a in actors)
+            {
+                w.Write(a.Id.Value);
+                w.Write(a.ReadyTick);
+                w.Write(a.IsPlayer);
+            }
+        }
+
+        private static ActorState[] ReadActors(BinaryReader r)
+        {
+            var actors = new ActorState[ReadCount(r)];
+            for (int i = 0; i < actors.Length; i++)
+            {
+                var id = new EntityId(r.ReadInt32());
+                var readyTick = r.ReadInt64();
+                var isPlayer = r.ReadBoolean();
+                actors[i] = new ActorState(id, readyTick, isPlayer);
+            }
+            return actors;
+        }
+
+        private static void WriteUnits(BinaryWriter w, UnitState[] units)
+        {
+            w.Write(units.Length);
+            foreach (var u in units)
+            {
+                w.Write(u.Id.Value);
+                w.Write((int)u.Faction);
+                w.Write(u.VisualId);
+                w.Write(u.MaxHp);
+                w.Write(u.AttackDamage);
+                w.Write(u.SightRange);
+                w.Write(u.X);
+                w.Write(u.Y);
+                w.Write(u.Hp);
+                w.Write(u.HasLastSeen);
+                w.Write(u.LastSeenX);
+                w.Write(u.LastSeenY);
+                w.Write(u.MaxMana);
+                w.Write(u.Mana);
+                WriteRefs(w, u.InventorySlots);
+                WriteRefs(w, u.QuickSlots);
+                WriteOptionalPos(w, u.PreviousPos);
+                WriteOptionalPos(w, u.WanderTarget);
+                w.Write(u.Statuses.Length);
+                foreach (var st in u.Statuses)
+                {
+                    w.Write((int)st.Type);
+                    w.Write(st.Remaining);
+                }
+            }
+        }
+
+        private static UnitState[] ReadUnits(BinaryReader r)
+        {
+            var units = new UnitState[ReadCount(r)];
+            for (int i = 0; i < units.Length; i++)
+            {
+                var id = new EntityId(r.ReadInt32());
+                var faction = (Faction)r.ReadInt32();
+                var visualId = r.ReadString();
+                var maxHp = r.ReadInt32();
+                var attackDamage = r.ReadInt32();
+                var sightRange = r.ReadInt32();
+                var x = r.ReadInt32();
+                var y = r.ReadInt32();
+                var hp = r.ReadInt32();
+                var hasLastSeen = r.ReadBoolean();
+                var lastSeenX = r.ReadInt32();
+                var lastSeenY = r.ReadInt32();
+                var maxMana = r.ReadInt32();
+                var mana = r.ReadInt32();
+                var inventory = ReadRefs(r);
+                var quick = ReadRefs(r);
+                var previousPos = ReadOptionalPos(r);
+                var wanderTarget = ReadOptionalPos(r);
+                var statuses = new UnitStatusState[ReadCount(r)];
+                for (int k = 0; k < statuses.Length; k++)
+                {
+                    var type = (ProjectM.Status.StatusType)r.ReadInt32();
+                    statuses[k] = new UnitStatusState(type, r.ReadInt32());
+                }
+                units[i] = new UnitState(id, faction, visualId, maxHp, attackDamage, sightRange, x, y, hp, hasLastSeen, lastSeenX, lastSeenY,
+                    maxMana, mana, inventory, quick, previousPos, wanderTarget, statuses);
+            }
+            return units;
         }
 
         // 인벤토리 · 빠른 칸 (3-2a): 개수 + 칸마다 종류(int) · ID(빈 칸 = 빈 문자열)

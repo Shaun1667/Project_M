@@ -25,7 +25,11 @@ namespace ProjectM.Dungeon
             _config = config ?? throw new ArgumentNullException(nameof(config));
         }
 
-        public DungeonFloor Generate(IRng rng)
+        /// <summary>
+        /// 층 하나를 만든다. stairsUp = 시작 칸에 올라가는 계단 (2층부터), stairsDown = 도착점에 내려가는 계단 (마지막 층은 없음) — 3-4a.
+        /// 1층(기본값)은 3-4a 전과 같은 결과다 (DungeonGeneratorTests.RecordedSeed_MatchesBalanceResult).
+        /// </summary>
+        public DungeonFloor Generate(IRng rng, bool stairsUp = false, bool stairsDown = true)
         {
             if (rng == null) throw new ArgumentNullException(nameof(rng));
             var c = _config;
@@ -92,8 +96,9 @@ namespace ProjectM.Dungeon
             // ⑦-2 막다른 길 잇기 (2026-10-16): 벽 덩어리와 겹친 방이 한 칸 폭 띠로 남아 생기는 막다른 길을 없앤다
             ConnectDeadEnds(map);
 
-            // ⑧ 도착점
-            map.Set(exit, TileType.StairsDown);
+            // ⑧ 도착점 · 시작점 계단 (난수를 쓰지 않으므로 계단 유무가 맵 모양을 바꾸지 않는다)
+            if (stairsDown) map.Set(exit, TileType.StairsDown);
+            if (stairsUp) map.Set(start, TileType.StairsUp);
             return new DungeonFloor(map, start, exit);
         }
 

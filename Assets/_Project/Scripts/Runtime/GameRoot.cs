@@ -136,16 +136,25 @@ namespace ProjectM
                 World.Events.Unsubscribe<UnitDiedEvent>(OnUnitDied);
             }
 
-            var generator = new DungeonGenerator(_dungeonConfig.ToConfig());
+            var dungeonConfig = _dungeonConfig.ToConfig();
+            var generator = new DungeonGenerator(dungeonConfig);
             DungeonFloor floor = null;
             World = World.Create(seed, rng =>
             {
-                floor = generator.Generate(rng);
+                floor = generator.Generate(rng, stairsUp: false, stairsDown: dungeonConfig.FloorCount > 1);
                 return floor.Map;
             });
             Floor = floor;
             var sight = new ShadowcastSightRule();
             var vision = World.InstallCoreSystems(sight, Magic, Statuses, Terrains);
+
+            // 3-4a: 적 재생성(⑤) · 층 이동(⑥ 끝 — 사망 판정 · 시야 다음)
+            var spawn = _spawnConfig.ToConfig();
+            var enemyDef = _enemyDef.ToDef();
+            var enemyAi = new MeleeChaserAi(World, Config, sight);
+            World.Scheduler.AddSystem(TickPhase.ManaRegen, new EnemyRespawnSystem(World, spawn, enemyDef, enemyAi, sight, dungeonConfig.FloorCount));
+            World.Scheduler.AddSystem(TickPhase.DeathCheck,
+                new FloorTransitionSystem(World, generator, dungeonConfig.FloorCount, enemyDef, spawn, (w, id) => enemyAi, vision));
 
             _tilemapPresenter.Bind(World.Events);
             _entityPresenter.Bind(World.Events);
@@ -154,9 +163,8 @@ namespace ProjectM
             World.Events.Subscribe<EntityMovedEvent>(OnEntityMoved);
             World.Events.Subscribe<UnitDiedEvent>(OnUnitDied);
 
-            var enemyAi = new MeleeChaserAi(World, Config, sight);
             World.Events.Publish(new MapLoadedEvent(World.Map));
-            var player = FloorPopulator.Populate(World, Floor.Start, _playerDef.ToDef(), _enemyDef.ToDef(), _spawnConfig.ToConfig(), enemyAi,
+            var player = FloorPopulator.Populate(World, Floor.Start, _playerDef.ToDef(), enemyDef, spawn, enemyAi,
                 Magic.QuickSlotCount, Magic.InventorySlotCount);
             _playerId = player.Id;
             _playerDead = false;

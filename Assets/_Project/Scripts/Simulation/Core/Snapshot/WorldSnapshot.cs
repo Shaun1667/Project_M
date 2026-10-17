@@ -43,8 +43,8 @@ namespace ProjectM.Core
     [Serializable]
     public sealed class WorldSnapshot
     {
-        /// <summary>1: 1-4 최초. 2: 유닛(Units) 추가 (1-6). 3: 탐험 기록(Explored) · 유닛 기억(LastSeen) 추가 (1-7). 4: 유닛 마나 · 주문 장착 칸 (2-1). 5: 유닛 발자국(PreviousPos) · 배회 목적지(WanderTarget). 6: 유닛 상태 이상 (2-3). 7: 지형 효과 레이어 (2-4). 8: 주문 장착 칸 → 인벤토리 · 빠른 칸 (3-2a).</summary>
-        public const int CurrentFormatVersion = 8;
+        /// <summary>1: 1-4 최초. 2: 유닛(Units) 추가 (1-6). 3: 탐험 기록(Explored) · 유닛 기억(LastSeen) 추가 (1-7). 4: 유닛 마나 · 주문 장착 칸 (2-1). 5: 유닛 발자국(PreviousPos) · 배회 목적지(WanderTarget). 6: 유닛 상태 이상 (2-3). 7: 지형 효과 레이어 (2-4). 8: 주문 장착 칸 → 인벤토리 · 빠른 칸 (3-2a). 9: 층 번호 · 떠난 층들 (3-4a).</summary>
+        public const int CurrentFormatVersion = 9;
 
         public int FormatVersion = CurrentFormatVersion;
 
@@ -70,6 +70,30 @@ namespace ProjectM.Core
 
         /// <summary>맵 위 유닛, EntityId 오름차순.</summary>
         public UnitState[] Units = Array.Empty<UnitState>();
+
+        /// <summary>지금 층 번호 (1부터, 3-4a).</summary>
+        public int Floor = 1;
+        /// <summary>떠난 층들 (멈춘 채 보존, 3-4a), 층 번호 오름차순.</summary>
+        public StoredFloorState[] StoredFloors = Array.Empty<StoredFloorState>();
+    }
+
+    /// <summary>
+    /// 떠난 층 하나 (3-4a). 떠난 순간 그대로 멈춰 있다가 돌아오면 이어서 진행한다 (결정 2026-10-18).
+    /// 행위자의 ReadyTick은 떠날 때의 현재 틱 기준 차이(ReadyTick − CurrentTick)로 저장한다.
+    /// </summary>
+    [Serializable]
+    public sealed class StoredFloorState
+    {
+        public int Floor;
+        public int MapWidth;
+        public int MapHeight;
+        public TileType[] Cells = Array.Empty<TileType>();
+        public bool[] Explored = Array.Empty<bool>();
+        public TerrainCellState[] Terrain = Array.Empty<TerrainCellState>();
+        /// <summary>그 층의 유닛 (플레이어 제외), EntityId 오름차순.</summary>
+        public UnitState[] Units = Array.Empty<UnitState>();
+        /// <summary>그 층의 행위자, ReadyTick = 떠날 때 현재 틱과의 차이. EntityId 오름차순.</summary>
+        public ActorState[] Actors = Array.Empty<ActorState>();
     }
 
     /// <summary>유닛 하나의 저장 가능한 상태 (ProjectM.Units.Unit과 같은 필드).</summary>

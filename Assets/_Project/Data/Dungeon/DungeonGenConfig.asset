@@ -23,3 +23,4 @@ MonoBehaviour:
   _wallTunnelCostMultiplier: 5
   _placementAttemptLimit: 1000
   _deadEndLoopMinWalkDistance: 10
+  _floorCount: 5

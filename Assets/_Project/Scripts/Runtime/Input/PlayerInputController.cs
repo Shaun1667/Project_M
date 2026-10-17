@@ -123,6 +123,14 @@ namespace ProjectM.Input
             _comboPending = false;
             _world.Events.Subscribe<InventoryChangedEvent>(OnInventoryChanged);
             _world.Events.Subscribe<QuickSlotsChangedEvent>(OnQuickSlotsChanged);
+            _world.Events.Subscribe<ProjectM.Dungeon.FloorChangedEvent>(OnFloorChanged);
+        }
+
+        /// <summary>층이 바뀌면 (3-4a) 이전 층 기준의 클릭 경로 · 조준을 버린다.</summary>
+        private void OnFloorChanged(ProjectM.Dungeon.FloorChangedEvent e)
+        {
+            CancelPath();
+            CancelAim();
         }
 
         public void Unbind()
@@ -134,6 +142,7 @@ namespace ProjectM.Input
             {
                 _world.Events.Unsubscribe<InventoryChangedEvent>(OnInventoryChanged);
                 _world.Events.Unsubscribe<QuickSlotsChangedEvent>(OnQuickSlotsChanged);
+                _world.Events.Unsubscribe<ProjectM.Dungeon.FloorChangedEvent>(OnFloorChanged);
             }
             _world = null;
             _clock = null;

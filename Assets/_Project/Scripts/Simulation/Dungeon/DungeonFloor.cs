@@ -2,7 +2,7 @@ using ProjectM.Core;
 
 namespace ProjectM.Dungeon
 {
-    /// <summary>생성된 층 하나. Exit 칸은 Map에 StairsDown으로 들어 있다.</summary>
+    /// <summary>생성된 층 하나. Exit 칸은 Map에 StairsDown으로 (마지막 층은 바닥), 2층부터 Start 칸은 StairsUp으로 들어 있다 (3-4a).</summary>
     public sealed class DungeonFloor
     {
         public GridMap Map { get; }

@@ -95,6 +95,7 @@ Assets/
 - 반응 결과는 `ReactionDef` 필드 조합(추가 피해 · 폭발 · 소모 · 지형 변환(+지속) · 대상 상태 · 전이)으로만 — 반응 종류별 분기 코드를 늘리지 않는다 (3-3a 빙결도 `TargetStatus` 데이터).
 - 반응은 `ReactionEngine.Resolve` 하나에서만 일어나고, 규칙은 `ReactionCatalog.asset`(REACTIONS.md) 데이터로만 추가한다. 주문 시전 순서는 원래 피해 → 반응 → 새 상태 → 지형. 반응 결과는 다시 반응하지 않는다. 인벤토리 · 빠른 칸은 `Items.Inventory`(TryAdd · RemoveAt · AssignQuickSlot)로만 바꾼다 (3-2a — 주문 장착 칸을 대신함).
 - 마법 융합은 `FusionCasting`(`Check` · `TryCreateCast`) 하나 — 융합 주문은 `FusionBook.Build`가 두 주문에서 만들고(마나 · 피해 합, 큰 모양, 반응 없음), 조합 · 지형 · 지속은 `FusionCatalog.asset`(BALANCE 10번) 데이터로만 추가한다 (3-2b).
+- 층 (3-4a): `World.Map` · `Explored` · `Terrain` · 유닛은 **지금 층**의 것이고 층이 바뀌면 통째로 바뀐다 — 시스템 · AI는 참조를 필드에 담아 두지 말고 매번 `world.Map`으로 읽는다. 떠난 층은 `World.StoredFloors`(스냅샷 v9)에 멈춘 채 저장. 층 이동은 `FloorTransitionSystem` 하나(⑥ 끝), 적 재생성은 `EnemyRespawnSystem`(⑤). ID 발급기 · 난수 · 틱은 한 판 공용.
 - 시야는 `ISightRule`(지금 `ShadowcastSightRule` → `FieldOfView`), 사거리 · 조준선은 `ITargetingRule`(지금 `BresenhamTargetingRule`) 한 곳만 쓴다
 - 이름: 클래스 · 메서드 · 프로퍼티 PascalCase, private 필드 `_camelCase`, 지역 변수 camelCase
 - 게임 로직과 엔진 컴포넌트를 분리한다. 규칙은 순수 C#으로 쓰고, MonoBehaviour는 얇은 어댑터(이벤트 구독 · 표시 · 입력 전달)만 맡는다.

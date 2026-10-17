@@ -52,6 +52,7 @@ namespace ProjectM.Editor
         private const string UnitCircleSpritePath = "Assets/_Project/Art/Greybox/unit_circle.png";
         private const string WhiteSquareSpritePath = "Assets/_Project/Art/Greybox/white_square.png";
         private const string FogTilePath = VisualsDir + "/FogTile.asset";
+        private const string StairsUpTilePath = VisualsDir + "/StairsUpTile.asset";
 
         // HUD 한글 폰트 (2-5): Galmuri11 — SIL OFL 1.1, 배포 가능. 원본 ttf에서 TMP 동적 SDF 에셋을 만든다
         private const string HudFontSourcePath = "Assets/_Project/Art/Fonts/Galmuri11.ttf";
@@ -179,8 +180,21 @@ namespace ProjectM.Editor
             set.Set(TileType.Floor, AssetDatabase.LoadAssetAtPath<TileBase>(FloorTilePath));
             set.Set(TileType.Wall, AssetDatabase.LoadAssetAtPath<TileBase>(WallTilePath));
             set.Set(TileType.StairsDown, AssetDatabase.LoadAssetAtPath<TileBase>(StairsTilePath));
+            set.Set(TileType.StairsUp, EnsureStairsUpTile()); // 3-4a
             EditorUtility.SetDirty(set);
             return set;
+        }
+
+        /// <summary>올라가는 계단 타일 (3-4a, 그레이박스): 흰 사각형을 청록색으로 — 내려가는 계단(파랑)과 구분.</summary>
+        private static Tile EnsureStairsUpTile()
+        {
+            var tile = LoadOrCreate<Tile>(StairsUpTilePath);
+            tile.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(WhiteSquareSpritePath);
+            tile.color = new Color(0.25f, 0.85f, 0.75f);
+            tile.flags = TileFlags.LockColor;
+            tile.colliderType = Tile.ColliderType.None;
+            EditorUtility.SetDirty(tile);
+            return tile;
         }
 
         private static EntityVisualCatalog EnsureEntityCatalog()

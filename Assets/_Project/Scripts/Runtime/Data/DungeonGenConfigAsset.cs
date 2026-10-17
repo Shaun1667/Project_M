@@ -32,6 +32,10 @@ namespace ProjectM.Data
         [Tooltip("막다른 길을 이을 상대 칸까지의 최소 걸음 수. 클수록 크게 돌아가는 순환로가 생긴다")]
         [Min(2)] [SerializeField] private int _deadEndLoopMinWalkDistance = 10;
 
+        [Header("런 (3-4a)")]
+        [Tooltip("한 판의 층 수. 마지막 층 = 보스 층 (내려가는 계단 · 적 재생성 없음)")]
+        [Min(1)] [SerializeField] private int _floorCount = 5;
+
         public DungeonGenConfig ToConfig()
         {
             return new DungeonGenConfig(
@@ -39,7 +43,7 @@ namespace ProjectM.Data
                 _roomCount, _roomSizeRoll, _roomMinSize,
                 _wallBlockCount, _wallBlockSizeRoll, _wallBlockMinSize,
                 _wallTunnelCostMultiplier, _placementAttemptLimit,
-                _deadEndLoopMinWalkDistance);
+                _deadEndLoopMinWalkDistance, _floorCount);
         }
     }
 }
