@@ -9,6 +9,7 @@ namespace ProjectM.UI
 {
     /// <summary>
     /// 인벤토리 창 (3-2a, 그레이박스): 화면 가운데 제목 + 칸 격자(InventoryMenu.Columns칸씩) + 고른 항목의 메뉴.
+    /// 마법 융합 고르기(3-2b)에서는 제목이 "마법 융합 — …", 첫 주문 칸은 파랑, 주문이 아닌 칸은 어둡게.
     /// 상태는 InventoryMenu, 내용은 플레이어 인벤토리 · 빠른 칸에서 읽어 그리기만 한다. 칸 · 메뉴 상자는 처음 그릴 때 만든다.
     /// 클릭 판정은 CellAt · MenuOptionAt (EventSystem 없이 화면 좌표로).
     /// </summary>
@@ -26,6 +27,7 @@ namespace ProjectM.UI
         private static readonly Color SelectedColor = new Color(0.55f, 0.45f, 0.12f, 1f);
         private static readonly Color MenuColor = new Color(0.22f, 0.22f, 0.26f, 1f);
         private static readonly Color MenuSelectedColor = new Color(0.65f, 0.52f, 0.14f, 1f);
+        private static readonly Color FusionFirstColor = new Color(0.2f, 0.38f, 0.72f, 1f);
 
         private const float Padding = 20, TitleHeight = 44;
 
@@ -65,15 +67,19 @@ namespace ProjectM.UI
             var slots = player.InventorySlots;
             EnsureLayout(slots.Length);
 
-            _title.text = menu.AssignTarget >= 0
-                ? HudText.AssignHint(menu.AssignTarget)
-                : menu.State == InventoryMenuState.ChooseSlot ? text.ChooseSlotHint(menu.SelectedEntry(player)) : "인벤토리";
+            bool fusion = menu.State == InventoryMenuState.FusionPick;
+            if (fusion) _title.text = text.FusionPickTitle(menu.FusionFirst >= 0 ? slots[menu.FusionFirst] : InventoryRef.Empty);
+            else if (menu.AssignTarget >= 0) _title.text = HudText.AssignHint(menu.AssignTarget);
+            else _title.text = menu.State == InventoryMenuState.ChooseSlot ? text.ChooseSlotHint(menu.SelectedEntry(player)) : "인벤토리";
 
             for (int i = 0; i < _cells.Count; i++)
             {
                 var (box, label) = _cells[i];
                 var entry = slots[i];
-                box.color = i == menu.Selected ? SelectedColor : entry.IsEmpty ? CellEmptyColor : CellColor;
+                // 융합 고르기: 첫 주문 칸은 파랑으로 남기고, 주문이 아닌 칸은 빈 칸처럼 어둡게
+                if (i == menu.Selected) box.color = SelectedColor;
+                else if (fusion && i == menu.FusionFirst) box.color = FusionFirstColor;
+                else box.color = entry.IsEmpty || (fusion && entry.Kind != InventoryKind.Spell) ? CellEmptyColor : CellColor;
                 if (entry.IsEmpty)
                 {
                     label.text = string.Empty;

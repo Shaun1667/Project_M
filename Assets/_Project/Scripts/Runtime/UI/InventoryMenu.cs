@@ -32,7 +32,7 @@ namespace ProjectM.UI
         None,
         /// <summary>주문 사용 → 입력이 조준 모드로 (창은 닫힘).</summary>
         CastSpell,
-        /// <summary>아이템 사용 (창은 닫힘). 마법 융합기는 3-2b.</summary>
+        /// <summary>아이템 사용 (창은 닫힘). 마법 융합기면 입력 쪽이 OpenForFusion으로 다시 연다 (3-2b).</summary>
         UseItem,
         Assigned,
         Unassigned,
@@ -64,6 +64,7 @@ namespace ProjectM.UI
     /// - 열기: I 키 (Open) 또는 빈 빠른 칸을 누름 (OpenForAssign — 고른 항목이 바로 그 칸에 등록되고 닫힘).
     /// - 칸 고르기: 방향키 · 마우스, 한 줄 Columns칸. Enter · 클릭 = 메뉴 (사용 · 등록하기 · 등록 해제 · 닫기). 숫자 키 = 그 빠른 칸에 바로 등록.
     /// - "등록하기" → 숫자 키 · 빠른 칸 클릭을 기다림. Esc = 한 단계 뒤로 (메뉴 → 칸 고르기 → 닫기).
+    /// - 마법 융합 (3-2b, OpenForFusion): 주문 칸만 고를 수 있고, 첫째 → 둘째를 고르면 닫히며 FuseSpells. 같은 칸 다시 · Esc = 첫째 취소.
     /// 빠른 칸 등록은 차례를 쓰지 않는다 (틱 밖에서 Items.Inventory로 바꾸고, 부른 쪽이 이벤트를 비운다).
     /// </summary>
     public sealed class InventoryMenu
@@ -119,13 +120,18 @@ namespace ProjectM.UI
             Changed?.Invoke();
         }
 
-        /// <summary>Esc: 메뉴 · 칸 번호 기다림 → 칸 고르기, 칸 고르기 → 닫기.</summary>
+        /// <summary>Esc: 메뉴 · 칸 번호 기다림 → 칸 고르기, 융합 첫 주문 고름 → 고르기 취소, 그 밖 → 닫기.</summary>
         public void Cancel()
         {
             if (State == InventoryMenuState.Menu || State == InventoryMenuState.ChooseSlot)
             {
                 State = InventoryMenuState.Browse;
                 _options.Clear();
+                Changed?.Invoke();
+            }
+            else if (State == InventoryMenuState.FusionPick && FusionFirst >= 0)
+            {
+                FusionFirst = -1;
                 Changed?.Invoke();
             }
             else Close();

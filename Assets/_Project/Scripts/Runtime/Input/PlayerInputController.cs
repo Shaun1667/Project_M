@@ -22,6 +22,7 @@ namespace ProjectM.Input
     /// - 조준 (2-2): 보이는 가장 가까운 적이 자동 선택, Tab = 다음 적, 방향키 · WASD · 넘패드 = 조준 칸 한 칸씩, 마우스 = 가리킨 칸,
     ///   Space · Enter · 클릭 = 시전, Esc · 같은 숫자 키 = 취소. 미리보기는 AimPreviewPresenter. 쓸 수 없으면 이유를 힌트로 보낸다.
     /// - 인벤토리 (3-2a): I 키로 열고 닫는다. 열려 있는 동안 다른 입력은 받지 않는다 (차례도 안 감) — 규칙은 InventoryMenu.
+    /// - 마법 융합 (3-2b): 융합기 사용(빠른 칸 · 인벤토리 "사용") → 인벤토리에서 주문 두 개 → 융합 조준. 판정 · 시전은 FusionCasting.
     /// 클릭 경로 · 조준 · 인벤토리 창 상태는 입력 상태일 뿐 World에 저장하지 않는다.
     /// </summary>
     public sealed class PlayerInputController : MonoBehaviour
@@ -62,9 +63,13 @@ namespace ProjectM.Input
         private ISightRule _sight;
         private SpellBook _spells;
         private ITargetingRule _targeting;
+        private ItemBook _items;
+        private FusionBook _fusions;
 
         // 조준 모드: 주문 ID (null = 조준 아님) · 빠른 칸 번호 (-1 = 인벤토리에서 바로)
+        // 융합 조준 (3-2b): _aimSpellId = 첫 주문, _aimFusionSecond = 둘째 주문 (null = 일반 주문)
         private string _aimSpellId;
+        private string _aimFusionSecond;
         private int _aimSlot = -1;
         private GridPos _aimCursor;
         private Vector2 _lastMousePos;
@@ -103,7 +108,8 @@ namespace ProjectM.Input
 
         private void OnDestroy() => _inventory.Changed -= DrawInventory;
 
-        public void Bind(World world, GameConfig config, ITickClock clock, ISightRule sight, SpellBook spells, ITargetingRule targeting)
+        public void Bind(World world, GameConfig config, ITickClock clock, ISightRule sight, SpellBook spells, ITargetingRule targeting,
+            ItemBook items, FusionBook fusions)
         {
             Unbind();
             _world = world;
@@ -112,6 +118,8 @@ namespace ProjectM.Input
             _sight = sight;
             _spells = spells;
             _targeting = targeting;
+            _items = items ?? ItemBook.Empty;
+            _fusions = fusions ?? FusionBook.Empty;
             _comboPending = false;
             _world.Events.Subscribe<InventoryChangedEvent>(OnInventoryChanged);
             _world.Events.Subscribe<QuickSlotsChangedEvent>(OnQuickSlotsChanged);
@@ -201,10 +209,17 @@ namespace ProjectM.Input
             else UseItem(entry);
         }
 
-        /// <summary>아이템 사용 — 마법 융합기는 3-2b에서. 지금은 안내만.</summary>
+        /// <summary>아이템 사용 — 마법 융합기(3-2b)는 인벤토리를 "주문 두 개 고르기"로 연다. 차례는 쓰지 않는다 (시전할 때 1회).</summary>
         private void UseItem(InventoryRef entry)
         {
-            Hint(Text.ItemNotUsableYet(entry));
+            if (_items.TryGet(entry.Id, out var item) && item.Use == ItemUse.Fusion)
+            {
+                CancelAim();
+                _inventory.OpenForFusion();
+                Hint(HudText.FusionPickHint);
+                return;
+            }
+            Hint(Text.ItemNotUsable(entry));
         }
 
         // ── 인벤토리 (3-2a) ──
@@ -230,7 +245,7 @@ namespace ProjectM.Input
                 if (keyboard[Key.Escape].wasPressedThisFrame)
                 {
                     _inventory.Cancel();
-                    if (!_inventory.IsOpen) Hint(string.Empty);
+                    Hint(InventoryHint(player));
                     return;
                 }
                 int slot = PressedSlotKey(keyboard, player.QuickSlots.Length);
@@ -270,7 +285,11 @@ namespace ProjectM.Input
             int quick = _hud != null ? _hud.QuickSlotAt(screen) : -1;
             if (quick >= 0) Apply(player, _inventory.PressQuickSlot(_world, player, quick));
             else if (option >= 0 || cell >= 0) Apply(player, _inventory.Confirm(_world, player));
-            else if (!_inventoryView.Contains(screen)) _inventory.Cancel(); // 창 밖 클릭 = 한 단계 뒤로
+            else if (!_inventoryView.Contains(screen))
+            {
+                _inventory.Cancel(); // 창 밖 클릭 = 한 단계 뒤로
+                Hint(InventoryHint(player));
+            }
         }
 
         /// <summary>인벤토리 조작 결과 처리 — 틱 밖 변경(빠른 칸 등록)은 바로 HUD에 보이게 이벤트를 비운다.</summary>
@@ -291,13 +310,30 @@ namespace ProjectM.Input
                 case InventoryActionKind.Unassigned:
                     Hint(Text.Unassigned(action.Entry, action.Slot));
                     break;
+                case InventoryActionKind.FuseSpells:
+                    TryStartFusionAim(player, action.Entry.Id, action.Second.Id);
+                    break;
                 default:
-                    if (_inventory.State == InventoryMenuState.ChooseSlot) Hint(Text.ChooseSlotHint(_inventory.SelectedEntry(player)));
-                    else if (_inventory.IsOpen) Hint(_inventory.AssignTarget >= 0 ? HudText.AssignHint(_inventory.AssignTarget) : HudText.InventoryHint);
-                    else Hint(string.Empty);
+                    Hint(InventoryHint(player));
                     break;
             }
             DrawInventory();
+        }
+
+        /// <summary>인벤토리 창의 지금 상태에 맞는 안내 한 줄 (닫혀 있으면 빈 문자열).</summary>
+        private string InventoryHint(Unit player)
+        {
+            switch (_inventory.State)
+            {
+                case InventoryMenuState.Closed:
+                    return string.Empty;
+                case InventoryMenuState.ChooseSlot:
+                    return Text.ChooseSlotHint(_inventory.SelectedEntry(player));
+                case InventoryMenuState.FusionPick:
+                    return _inventory.FusionFirst >= 0 ? Text.FusionSecondHint(player.InventorySlots[_inventory.FusionFirst]) : HudText.FusionPickHint;
+                default:
+                    return _inventory.AssignTarget >= 0 ? HudText.AssignHint(_inventory.AssignTarget) : HudText.InventoryHint;
+            }
         }
 
         private void CloseInventory()
@@ -344,9 +380,35 @@ namespace ProjectM.Input
                 return;
             }
 
+            BeginAim(player, spellId, null, slot, spell.Range);
+        }
+
+        /// <summary>
+        /// 마법 융합 조준 시작 (3-2b): 대상과 무관한 판정(융합기 · 같은 주문 · 가진 주문 · 조합 · 마나)을 먼저 보고, 막히면 힌트만.
+        /// 대상 · 사거리 · 시야는 조준 중에 FusionCasting.Check가 매번 본다 (시전과 같은 계산).
+        /// </summary>
+        private void TryStartFusionAim(Unit player, string firstId, string secondId)
+        {
+            var block = FusionCasting.Check(_world, _spells, _fusions, _items, _targeting, _sight, player, firstId, secondId, player.Pos, out var fused, out _);
+            if (fused == null)
+            {
+                Hint(Text.FusionBlocked(firstId, secondId, block));
+                return;
+            }
+            if (player.Mana < fused.ManaCost)
+            {
+                Hint(Text.NotEnoughMana(-1, fused.Id, player.Mana, fused.ManaCost));
+                return;
+            }
+            BeginAim(player, firstId, secondId, -1, fused.Range);
+        }
+
+        private void BeginAim(Unit player, string spellId, string fusionSecondId, int slot, int range)
+        {
             _aimSpellId = spellId;
+            _aimFusionSecond = fusionSecondId;
             _aimSlot = slot;
-            _aimCursor = NearestVisibleEnemy(player, spell.Range) ?? player.Pos;
+            _aimCursor = NearestVisibleEnemy(player, range) ?? player.Pos;
             if (Mouse.current != null) _lastMousePos = Mouse.current.position.ReadValue();
             _nextRepeatTime = Time.time + _keyRepeatDelay;
             if (_hud != null) _hud.SetHighlightSlot(_aimSlot);
@@ -427,7 +489,10 @@ namespace ProjectM.Input
 
         private void TryCast(Unit player)
         {
-            var block = SpellCasting.TryCreateCastSpell(_world, _config, _spells, _targeting, _sight, _aimSpellId, _aimCursor, out var command);
+            ICommand command;
+            var block = _aimFusionSecond != null
+                ? FusionCasting.TryCreateCast(_world, _config, _spells, _fusions, _items, _targeting, _sight, _aimSpellId, _aimFusionSecond, _aimCursor, out command)
+                : SpellCasting.TryCreateCastSpell(_world, _config, _spells, _targeting, _sight, _aimSpellId, _aimCursor, out command);
             if (block != CastBlock.None)
             {
                 Hint(AimHint() + "  — " + HudText.CastBlockReason(block));
@@ -439,7 +504,10 @@ namespace ProjectM.Input
 
         private void RefreshAim(Unit player)
         {
-            var block = SpellCasting.CheckSpell(_world, _spells, _targeting, _sight, player, _aimSpellId, _aimCursor, out _, out var preview);
+            SpellPreview preview;
+            var block = _aimFusionSecond != null
+                ? FusionCasting.Check(_world, _spells, _fusions, _items, _targeting, _sight, player, _aimSpellId, _aimFusionSecond, _aimCursor, out _, out preview)
+                : SpellCasting.CheckSpell(_world, _spells, _targeting, _sight, player, _aimSpellId, _aimCursor, out _, out preview);
             if (_aimPreview != null) _aimPreview.Show(_aimCursor, preview, block == CastBlock.None);
             Hint(block == CastBlock.None ? AimHint() : AimHint() + "  — " + HudText.CastBlockReason(block));
         }
@@ -448,14 +516,29 @@ namespace ProjectM.Input
         {
             bool wasAiming = IsAiming;
             _aimSpellId = null;
+            _aimFusionSecond = null;
             _aimSlot = -1;
             if (_aimPreview != null) _aimPreview.Hide();
             if (_hud != null && !_inventory.IsOpen) _hud.SetHighlightSlot(-1);
             if (wasAiming) Hint(string.Empty);
         }
 
-        private string AimHint() =>
-            _spells.TryGet(_aimSpellId, out var spell) ? Text.AimHint(_aimSlot, _aimSpellId, spell.ManaCost) : HudText.CastBlockReason(CastBlock.UnknownSpell);
+        /// <summary>조준 중인 주문 — 융합이면 FusionBook이 만든 융합 주문 (사거리 · 마나 표시용). 없으면 null.</summary>
+        private SpellDef AimSpell()
+        {
+            if (_aimSpellId == null || !_spells.TryGet(_aimSpellId, out var first)) return null;
+            if (_aimFusionSecond == null) return first;
+            return _spells.TryGet(_aimFusionSecond, out var second) ? _fusions.Build(first, second) : null;
+        }
+
+        private string AimHint()
+        {
+            var spell = AimSpell();
+            if (spell == null) return HudText.CastBlockReason(CastBlock.UnknownSpell);
+            return _aimFusionSecond != null
+                ? Text.FusionAimHint(_aimSpellId, _aimFusionSecond, spell.Id, spell.ManaCost)
+                : Text.AimHint(_aimSlot, _aimSpellId, spell.ManaCost);
+        }
 
         private void Hint(string text) => HintChanged?.Invoke(text);
 
@@ -497,7 +580,7 @@ namespace ProjectM.Input
 
         private GridPos? NextVisibleEnemy(Unit player, GridPos current)
         {
-            _spells.TryGet(_aimSpellId, out var spell);
+            var spell = AimSpell();
             var list = VisibleEnemies(player, spell != null ? spell.Range : 0);
             if (list.Count == 0) return null;
             int index = list.FindIndex(u => u.Pos == current);

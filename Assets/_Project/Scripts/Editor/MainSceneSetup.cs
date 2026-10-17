@@ -36,6 +36,7 @@ namespace ProjectM.Editor
         private const string TerrainCatalogPath = "Assets/_Project/Data/Terrains/TerrainCatalog.asset";
         private const string ReactionCatalogPath = "Assets/_Project/Data/Reactions/ReactionCatalog.asset";
         private const string ItemCatalogPath = "Assets/_Project/Data/Items/ItemCatalog.asset";
+        private const string FusionCatalogPath = "Assets/_Project/Data/Fusions/FusionCatalog.asset";
 
         /// <summary>플레이어 시작 주문 (BALANCE 4번). 3-1부터 빈 칸 — 주문은 게임 중에 얻고, 테스트는 디버그 창에서 넣는다 (REACTIONS.md D8).</summary>
         private static readonly string[] PlayerStartingSpells = new string[0];
@@ -95,6 +96,7 @@ namespace ProjectM.Editor
             var terrainCatalog = EnsureTerrainCatalog();
             var reactionCatalog = EnsureReactionCatalog();
             var itemCatalog = EnsureItemCatalog();
+            var fusionCatalog = EnsureFusionCatalog();
 
             var gridGo = FindOrCreate("Grid", null);
             var grid = GetOrAdd<Grid>(gridGo);
@@ -156,6 +158,7 @@ namespace ProjectM.Editor
                 ("_terrainCatalog", terrainCatalog),
                 ("_reactionCatalog", reactionCatalog),
                 ("_itemCatalog", itemCatalog),
+                ("_fusionCatalog", fusionCatalog),
                 ("_terrainOverlay", terrainOverlay),
                 ("_tilemapPresenter", tilemapPresenter),
                 ("_entityPresenter", entityPresenter),
@@ -409,6 +412,30 @@ namespace ProjectM.Editor
         {
             var catalog = LoadOrCreate<ItemCatalogAsset>(ItemCatalogPath);
             bool changed = catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "fusion_device", DisplayName = "마법 융합기", Use = ItemUse.Fusion });
+            if (changed) EditorUtility.SetDirty(catalog);
+            return catalog;
+        }
+
+        /// <summary>융합 규칙 (3-2b, REACTIONS.md 5번): 없는 ID만 BALANCE 10번 값으로 추가한다. 상태를 거는 융합이 생기면 확률을 꼭 적는다.</summary>
+        private static FusionCatalogAsset EnsureFusionCatalog()
+        {
+            var catalog = LoadOrCreate<FusionCatalogAsset>(FusionCatalogPath);
+            bool changed = false;
+            changed |= catalog.AddIfMissing(new FusionCatalogAsset.Entry
+            {
+                Id = "fusion_fire_water", DisplayName = "용암 분출", ElementA = Element.Fire, ElementB = Element.Water,
+                LeavesTerrain = TerrainEffectType.FireZone, TerrainDurationTicks = 6, StatusChancePercent = 100,
+            });
+            changed |= catalog.AddIfMissing(new FusionCatalogAsset.Entry
+            {
+                Id = "fusion_water_poison", DisplayName = "오염 물결", ElementA = Element.Water, ElementB = Element.Poison,
+                LeavesTerrain = TerrainEffectType.ContaminatedWater, TerrainDurationTicks = 8, StatusChancePercent = 100,
+            });
+            changed |= catalog.AddIfMissing(new FusionCatalogAsset.Entry
+            {
+                Id = "fusion_fire_lightning", DisplayName = "폭발 마법", ElementA = Element.Fire, ElementB = Element.Lightning,
+                StatusChancePercent = 100,
+            });
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }

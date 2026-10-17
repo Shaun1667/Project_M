@@ -18,6 +18,8 @@
 | 6 | 상태 이상 | `Assets/_Project/Data/Statuses/StatusCatalog.asset` (`StatusCatalogAsset`) | `ProjectM.Status.StatusDef` · `StatusBook` | 사용 중 |
 | 7 | 지형 효과 | `Assets/_Project/Data/Terrains/TerrainCatalog.asset` (`TerrainCatalogAsset`) | `ProjectM.Status.TerrainDef` · `TerrainBook` | 사용 중 |
 | 8 | 반응 규칙 표 | `Assets/_Project/Data/Reactions/ReactionCatalog.asset` (`ReactionCatalogAsset`) | `ProjectM.Status.ReactionDef` · `ReactionBook` · `ReactionConfig` | 사용 중 |
+| 9 | 아이템 | `Assets/_Project/Data/Items/ItemCatalog.asset` (`ItemCatalogAsset`) | `ProjectM.Items.ItemDef` · `ItemBook` | 사용 중 |
+| 10 | 융합 규칙 표 | `Assets/_Project/Data/Fusions/FusionCatalog.asset` (`FusionCatalogAsset`) | `ProjectM.Magic.FusionDef` · `FusionBook` | 사용 중 (3-2b) |
 
 **데이터 구조 규칙 (0-4 결정)**
 - 에셋은 `ScriptableObject`(어셈블리 `ProjectM.Runtime`, 네임스페이스 `ProjectM.Data`)이고, `ToXxx()`로 순수 C# 객체를 만들어 Simulation에 넘긴다. Simulation은 ScriptableObject를 모른다 (CLAUDE.md 핵심 설계 규칙 1).
@@ -164,10 +166,10 @@
 
 | 지형 효과 | 남기는 주문 · 칸 | 지속 `DurationTicks` | 거는 상태 `AppliesStatus` |
 |---|---|---|---|
-| FireZone 화염 지대 | ~~불 — 투사체가 멈춘 칸 1개~~ → 3-1부터 불 + 물 융합으로만 (지금은 생기지 않음) | **4** | Burn 화상 |
+| FireZone 화염 지대 | ~~불 — 투사체가 멈춘 칸 1개~~ → 3-1부터 불 + 물 융합으로만 (3-2b부터 용암 분출 — 3×3, 지속은 융합 표의 **6**, 10번) | **4** | Burn 화상 |
 | PoisonCloud 독구름 | 독 — 폭발 3×3 | **4** | Poison 중독 |
 | Water 물 타일 | 물 — 폭발 3×3 (3-2). **화염 지대 칸에는 안 깔림** (`BlockedBy` FireZone) | **12** | Wet 젖음 |
-| ContaminatedWater 오염된 물 | 물 타일 × 독 = 오염 (남은 틱 유지) · 물 + 독 융합(3-2b) | **8** (융합으로 생길 때) | Wet 젖음 + **매 틱 피해 1** (`DamagePerTick`, D7) |
+| ContaminatedWater 오염된 물 | 물 타일 × 독 = 오염 (남은 틱 유지) · 물 + 독 융합(3-2b, 10번) | **8** (융합으로 생길 때) | Wet 젖음 + **매 틱 피해 1** (`DamagePerTick`, D7) |
 
 필드 `SpellCatalog` 항목의 `LeavesTerrain`: `poison_basic` → PoisonCloud, `water_basic` → Water (3-2). (`fire_basic` → FireZone은 2026-10-17 3-1 D2로 삭제)
 지형이 매 턴 거는 상태는 **100%** (2026-10-17 사용자 확인 — 요청표의 50%는 쓰지 않음).
@@ -229,9 +231,43 @@
 
 | ID | 이름 `DisplayName` | 사용 `Use` | 비고 |
 |---|---|---|---|
-| `fusion_device` | 마법 융합기 | Fusion | 사용 → 주문 두 개를 골라 융합 시전 (3-2b, REACTIONS.md 5번). 3-2a에서는 "아직 쓸 수 없다" 안내만 |
+| `fusion_device` | 마법 융합기 | Fusion | 사용 → 주문 두 개를 골라 융합 시전 (3-2b, REACTIONS.md 5번 · 이 문서 10번). 사용 자체는 차례를 쓰지 않고, 시전할 때 행동 1회 |
 
 검산 (`InventoryTests.ProjectAsset_MatchesBalanceTable`): 에셋 값이 위 표와 같다.
+
+---
+
+## 10. 융합 — `Data/Fusions/FusionCatalog.asset`
+
+결정 (2026-10-17, REACTIONS.md 5번 F1~F5 · 3-2b 결정): 융합 주문은 두 주문에서 계산하고, 표에는 결과(지형 · 상태)만 둔다. 얼음 + 물(빙판 · 빙결)은 3-3.
+
+**계산 규칙** (`FusionBook.Build`)
+
+| 항목 | 규칙 | 근거 |
+|---|---|---|
+| 마나 | 두 주문 합 | F2 |
+| 행동 비용 | 기본 1회 (`GameConfig._defaultActionCostTicks`) — 규칙 10의 예외 | F2 |
+| 피해 | 두 주문 합 | 3-2b 결정 |
+| 모양 · 사거리 · 반지름 · 속성 | 두 주문 중 큰 모양(Bolt < Beam < Burst)의 주문 것, 같으면 첫 주문 | F3 · 3-2b 결정 |
+| 상태 · 지형 | 표의 것만 (두 주문의 상태 · 지형은 안 걸림) | 3-2b 결정 |
+| 반응 | 일으키지 않음 (`TriggersReactions = false`) | F4 |
+| 적 사용 | 없음 (플레이어만) | F5 |
+
+**융합 3종**
+
+| ID | 이름 `DisplayName` ✎ | 조합 | 지형 `LeavesTerrain` | 지속 `TerrainDurationTicks` | 상태 | 결과 (BALANCE 5번 주문 기준) |
+|---|---|---|---|---|---|---|
+| `fusion_fire_water` | 용암 분출 | 불 + 물 | FireZone 화염 지대 | **6** (지형 규칙 4를 덮어씀) | 없음 | Burst 3×3 · 사거리 5 · 피해 5 + 0 = **5** · 마나 3 + 2 = **5**. 지대 위 매 턴 화상 100% |
+| `fusion_water_poison` | 오염 물결 | 물 + 독 | ContaminatedWater 오염된 물 | **8** | 없음 | Burst 3×3 · 사거리 5 · 피해 0 + 2 = **2** · 마나 2 + 3 = **5**. 위 매 턴 피해 1 + 젖음 |
+| `fusion_fire_lightning` | 폭발 마법 | 불 + 번개 | 없음 | — | 없음 | Beam 직선 관통 · 사거리 5 · 피해 5 + 3 = **8** · 마나 3 + 4 = **7** |
+
+이름은 표시 전용(✎ Claude가 정함). 상태를 거는 융합을 추가할 때는 `StatusChancePercent`를 꼭 적는다 — 인스펙터 새 줄은 0%로 시작한다 (0%면 `OnValidate`가 경고).
+
+검산 (`FusionTests.ProjectAsset_MatchesBalanceTable`): 에셋 값이 위 표와 같다. 계산은 `FusionTests.Build_SumsManaAndDamage_TakesLargerShape`.
+결과:
+- 용암 분출 = 즉시 5 + 지대 위 화상(1/턴)이 지대 6턴 동안 계속 갱신 → 머물면 최대 5 + 6 + 2 = 13. 물 → 불 콤보(마나 5 · 행동 2회 · 7 + 화상 70%)와 마나는 같고 행동이 1회 적다 — `FusionTests.FireWater_LeavesFireZoneSixTicks_NoSpellStatusOrWater`
+- 폭발 마법 = 일렬 대상마다 8 → 적(체력 8) 한 방, 마나 7이라 가득 찬 마나로 1번. 중독된 적이나 독구름 위여도 반응이 없다 — `FusionTests.FireLightning_BeamEight_DoesNotReact`
+- 오염 물결 = 즉시 2 + 위에 있으면 매 턴 1 (8턴) — `FusionTests.WaterPoison_LeavesContaminatedWaterEightTicks`
 
 ---
 

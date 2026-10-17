@@ -7,7 +7,7 @@ using EntityId = ProjectM.Core.EntityId;
 namespace ProjectM.UI
 {
     /// <summary>
-    /// HUD · 로그 · 조준 · 인벤토리 안내의 한글 문구를 한곳에 모은다 (2-5, 3-2a). 규칙에는 쓰지 않는다.
+    /// HUD · 로그 · 조준 · 인벤토리 · 융합 안내의 한글 문구를 한곳에 모은다 (2-5, 3-2a, 3-2b). 규칙에는 쓰지 않는다.
     /// 주문 · 반응 · 아이템 이름은 각 Catalog의 DisplayName(데이터)에서 받고, 없으면 ID를 그대로 보인다.
     /// </summary>
     public sealed class HudText
@@ -15,21 +15,26 @@ namespace ProjectM.UI
         private readonly IReadOnlyDictionary<string, string> _spellNames;
         private readonly IReadOnlyDictionary<string, string> _reactionNames;
         private readonly IReadOnlyDictionary<string, string> _itemNames;
+        private readonly IReadOnlyDictionary<string, string> _fusionNames;
 
         /// <param name="reactionNames">반응 ID → 로그 이름 (ReactionCatalog의 DisplayName, 3-1). 없으면 ID.</param>
         /// <param name="itemNames">아이템 ID → 이름 (ItemCatalog의 DisplayName, 3-2a). 없으면 ID.</param>
+        /// <param name="fusionNames">융합 ID → 이름 (FusionCatalog의 DisplayName, 3-2b). 융합 주문의 ID가 곧 융합 ID라 Spell()에서 함께 찾는다.</param>
         public HudText(IReadOnlyDictionary<string, string> spellNames = null, IReadOnlyDictionary<string, string> reactionNames = null,
-            IReadOnlyDictionary<string, string> itemNames = null)
+            IReadOnlyDictionary<string, string> itemNames = null, IReadOnlyDictionary<string, string> fusionNames = null)
         {
             _spellNames = spellNames ?? new Dictionary<string, string>();
             _reactionNames = reactionNames ?? new Dictionary<string, string>();
             _itemNames = itemNames ?? new Dictionary<string, string>();
+            _fusionNames = fusionNames ?? new Dictionary<string, string>();
         }
 
+        /// <summary>주문 이름 — 융합 주문(3-2b)도 여기서 (로그 "용암 분출 시전").</summary>
         public string Spell(string id)
         {
             if (string.IsNullOrEmpty(id)) return "-";
-            return _spellNames.TryGetValue(id, out var name) ? name : id;
+            if (_spellNames.TryGetValue(id, out var name)) return name;
+            return _fusionNames.TryGetValue(id, out var fusion) ? fusion : id;
         }
 
         public string Reaction(string id)
@@ -83,6 +88,9 @@ namespace ProjectM.UI
                 case CastBlock.UnknownSpell: return "알 수 없는 주문";
                 case CastBlock.NotASpell: return "주문이 아님";
                 case CastBlock.NotOwned: return "가지고 있지 않은 주문";
+                case CastBlock.NoFusionDevice: return "마법 융합기가 없다";
+                case CastBlock.NoFusionRecipe: return "융합할 수 없는 조합";
+                case CastBlock.SameSpell: return "같은 주문끼리는 융합하지 않는다";
                 default: return block.ToString();
             }
         }
@@ -104,7 +112,16 @@ namespace ProjectM.UI
         public string ChooseSlotHint(InventoryRef entry) => $"{Entry(entry)}: 등록할 빠른 칸 번호(1~)를 누르거나 칸을 클릭 (Esc 취소)";
         public string Assigned(InventoryRef entry, int slot) => $"{Entry(entry)} → [{slot + 1}] 등록";
         public string Unassigned(InventoryRef entry, int slot) => $"{Entry(entry)}: [{slot + 1}] 등록 해제";
-        public string ItemNotUsableYet(InventoryRef entry) => $"{Entry(entry)}: 아직 쓸 수 없다 (3-2b 마법 융합)";
+        public string ItemNotUsable(InventoryRef entry) => $"{Entry(entry)}: 쓸 수 없는 아이템";
+
+        // ── 마법 융합 (3-2b) ──
+        public const string FusionPickHint = "마법 융합: 주문 두 개를 고르세요 (Enter/클릭 · 같은 칸 다시 = 취소 · Esc 뒤로)";
+        public string FusionSecondHint(InventoryRef first) => $"마법 융합: {Entry(first)} + ? — 두 번째 주문을 고르세요 (같은 칸 다시 = 취소 · Esc 뒤로)";
+        /// <summary>인벤토리 창 제목. first가 비면 아직 하나도 안 고름.</summary>
+        public string FusionPickTitle(InventoryRef first) => first.IsEmpty ? "마법 융합 — 주문 두 개 고르기" : $"마법 융합 — {Entry(first)} + ?";
+        public string FusionAimHint(string firstId, string secondId, string fusionId, int manaCost) =>
+            $"{Spell(fusionId)} ({Spell(firstId)} + {Spell(secondId)}, {manaCost} MP): Space/클릭 시전 · Tab 다음 대상 · Esc 취소";
+        public string FusionBlocked(string firstId, string secondId, CastBlock block) => $"{Spell(firstId)} + {Spell(secondId)}: {CastBlockReason(block)}";
 
         public const string MenuUse = "사용";
         public const string MenuAssign = "등록하기";

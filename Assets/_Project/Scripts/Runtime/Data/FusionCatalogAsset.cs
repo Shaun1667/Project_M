@@ -45,6 +45,14 @@ namespace ProjectM.Data
             return names;
         }
 
+        // 인스펙터에서 새 줄을 넣으면 확률이 0으로 시작한다 — 상태를 고르고 확률을 비워 두면 조용히 안 걸리므로 알린다
+        private void OnValidate()
+        {
+            foreach (var e in _fusions)
+                if (e.AppliesStatus != StatusType.None && e.StatusChancePercent == 0)
+                    Debug.LogWarning($"[FusionCatalog] {e.Id}: 상태 {e.AppliesStatus}를 거는데 확률이 0%다.", this);
+        }
+
         /// <summary>에디터 Setup용: 같은 ID가 없을 때만 추가한다.</summary>
         public bool AddIfMissing(Entry entry)
         {

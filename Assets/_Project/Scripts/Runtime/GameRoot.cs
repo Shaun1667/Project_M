@@ -30,6 +30,7 @@ namespace ProjectM
         [SerializeField] private TerrainCatalogAsset _terrainCatalog;
         [SerializeField] private ReactionCatalogAsset _reactionCatalog;
         [SerializeField] private ItemCatalogAsset _itemCatalog;
+        [SerializeField] private FusionCatalogAsset _fusionCatalog;
         [SerializeField] private TilemapPresenter _tilemapPresenter;
         [SerializeField] private EntityPresenter _entityPresenter;
         [Tooltip("시야 안개. 비우면 안개 없이 전부 보인다")]
@@ -50,6 +51,7 @@ namespace ProjectM
         public TerrainBook Terrains { get; private set; }
         public ReactionBook Reactions { get; private set; }
         public ItemBook Items { get; private set; }
+        public FusionBook Fusions { get; private set; }
         public World World { get; private set; }
         public DungeonFloor Floor { get; private set; }
         /// <summary>이번 판의 시드 (디버그 창 · 콘솔 표시용).</summary>
@@ -78,7 +80,7 @@ namespace ProjectM
         private void Awake()
         {
             if (_config == null || _dungeonConfig == null || _playerDef == null || _enemyDef == null || _spawnConfig == null || _magicConfig == null
-                || _spellCatalog == null || _statusCatalog == null || _terrainCatalog == null || _reactionCatalog == null || _itemCatalog == null || _tilemapPresenter == null || _entityPresenter == null || _input == null || _hud == null)
+                || _spellCatalog == null || _statusCatalog == null || _terrainCatalog == null || _reactionCatalog == null || _itemCatalog == null || _fusionCatalog == null || _tilemapPresenter == null || _entityPresenter == null || _input == null || _hud == null)
             {
                 Debug.LogError("[GameRoot] 참조가 비어 있다. 메뉴 ProjectM/Setup/Main Scene을 실행한다.", this);
                 enabled = false;
@@ -92,12 +94,13 @@ namespace ProjectM
             Reactions = _reactionCatalog.ToBook(Statuses);
             Spells = _spellCatalog.ToBook(Statuses, Terrains, Reactions);
             Items = _itemCatalog.ToBook();
+            Fusions = _fusionCatalog.ToBook(Statuses, Terrains);
             foreach (var id in _playerDef.ToDef().StartingSpells)
             {
                 if (!Spells.TryGet(id, out _))
                     Debug.LogWarning($"[GameRoot] 시작 주문 '{id}'가 SpellCatalog에 없다 — 쓸 수 없다.", this);
             }
-            _hudText = new HudText(_spellCatalog.DisplayNames(), _reactionCatalog.DisplayNames(), _itemCatalog.DisplayNames());
+            _hudText = new HudText(_spellCatalog.DisplayNames(), _reactionCatalog.DisplayNames(), _itemCatalog.DisplayNames(), _fusionCatalog.DisplayNames());
             _input.Text = _hudText;
             _input.HintChanged += _hud.SetHint;
         }
@@ -160,7 +163,7 @@ namespace ProjectM
             vision.Refresh(); // 첫 시야 — 이후는 매 틱 ⑥ 단계에서
 
             _hud.Bind(World.Events, player, Spells, _hudText);
-            _input.Bind(World, Config, new TurnClock(World.Scheduler, World.PlayerInput), sight, Spells, new BresenhamTargetingRule());
+            _input.Bind(World, Config, new TurnClock(World.Scheduler, World.PlayerInput), sight, Spells, new BresenhamTargetingRule(), Items, Fusions);
             World.Events.Flush();
 
             if (_camera != null)
