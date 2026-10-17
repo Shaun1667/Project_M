@@ -36,6 +36,12 @@ namespace ProjectM.Magic
         NotASpell,
         /// <summary>인벤토리에 없는 주문 (3-2a).</summary>
         NotOwned,
+        /// <summary>마법 융합기가 인벤토리에 없다 (3-2b).</summary>
+        NoFusionDevice,
+        /// <summary>두 주문의 속성 조합에 융합이 없다 (3-2b).</summary>
+        NoFusionRecipe,
+        /// <summary>같은 주문 두 개로는 융합하지 않는다 (3-2b).</summary>
+        SameSpell,
     }
 
     /// <summary>
@@ -117,6 +123,14 @@ namespace ProjectM.Magic
             if (caster == null || spellId == null) return CastBlock.EmptySlot;
             if (!caster.HasSpell(spellId)) return CastBlock.NotOwned;
             if (!book.TryGet(spellId, out spell)) return CastBlock.UnknownSpell;
+            return CheckDef(world, targeting, sight, caster, spell, target, out preview);
+        }
+
+        /// <summary>주문 데이터 하나를 target에 쓸 수 있는지 — 대상 · 사거리 · 시야 · 마나 · 막힘 (데이터에 없는 융합 주문도 같은 판정, 3-2b).</summary>
+        public static CastBlock CheckDef(World world, ITargetingRule targeting, ISightRule sight, Unit caster, SpellDef spell, GridPos target,
+            out SpellPreview preview)
+        {
+            preview = null;
             if (target == caster.Pos) return CastBlock.TargetIsSelf;
             if (!targeting.InRange(caster.Pos, target, spell.Range)) return CastBlock.OutOfRange;
             if (!world.Map.InBounds(target) || !sight.CanSee(world.Map, caster.Pos, target, caster.SightRange)) return CastBlock.NotVisible;
@@ -161,6 +175,7 @@ namespace ProjectM.Magic
         private readonly World _world;
         private readonly SpellBook _book;
         private readonly ITargetingRule _targeting;
+        private readonly SpellDef _spell; // null이면 SpellId로 SpellBook에서 찾는다
 
         public string SpellId { get; }
         public GridPos Target { get; }
@@ -177,10 +192,18 @@ namespace ProjectM.Magic
             CostTicks = costTicks;
         }
 
+        /// <summary>데이터에 없는 주문(3-2b 융합 — FusionBook이 만든 SpellDef)을 그대로 시전한다.</summary>
+        public CastSpellCommand(World world, SpellBook book, ITargetingRule targeting, SpellDef spell, GridPos target, int costTicks)
+            : this(world, book, targeting, spell?.Id, target, costTicks)
+        {
+            _spell = spell ?? throw new ArgumentNullException(nameof(spell));
+        }
+
         public void Execute(in TickContext context)
         {
             if (!_world.Units.TryGet(context.Actor, out var caster) || !caster.IsAlive) return;
-            if (!_book.TryGet(SpellId, out var spell)) return;
+            var spell = _spell;
+            if (spell == null && !_book.TryGet(SpellId, out spell)) return;
             if (!Mana.TrySpend(_world, caster, spell.ManaCost)) return;
 
             var preview = SpellCasting.Preview(_world, _targeting, caster.Pos, spell, Target);
@@ -199,7 +222,8 @@ namespace ProjectM.Magic
 
             // 반응 (3-1): 맞은 유닛의 기존 상태 · 주문이 닿은 칸의 지형 × 주문 속성
             var cells = TerrainCells(spell, preview);
-            ReactionEngine.Resolve(_world, _book.Reactions, _book.Statuses, caster, spell, victims, cells);
+            if (spell.TriggersReactions)
+                ReactionEngine.Resolve(_world, _book.Reactions, _book.Statuses, caster, spell, victims, cells);
 
             // 새 상태 이상 (살아 있으면). 확률은 맞은 유닛마다 전투 난수로 따로 (같은 시드 = 같은 결과)
             if (_book.Statuses.TryGet(spell.AppliesStatus, out var status))
@@ -214,7 +238,7 @@ namespace ProjectM.Magic
             if (_book.Terrains.TryGet(spell.LeavesTerrain, out var terrain))
             {
                 foreach (var cell in cells)
-                    TerrainEffects.Place(_world, cell, terrain);
+                    TerrainEffects.Place(_world, cell, terrain, spell.TerrainDurationTicks);
             }
         }
 

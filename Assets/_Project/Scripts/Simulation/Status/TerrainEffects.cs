@@ -172,13 +172,14 @@ namespace ProjectM.Status
     /// <summary>지형 효과를 놓는 곳은 여기 하나. 걸을 수 없는 칸(벽)에는 놓지 않는다.</summary>
     public static class TerrainEffects
     {
-        public static void Place(World world, GridPos pos, TerrainDef def)
+        /// <param name="durationTicks">0이면 규칙의 지속(def.DurationTicks). 3-2b 융합은 자기 지속을 넘긴다.</param>
+        public static void Place(World world, GridPos pos, TerrainDef def, int durationTicks = 0)
         {
             if (world == null) throw new ArgumentNullException(nameof(world));
             if (def == null) throw new ArgumentNullException(nameof(def));
             if (!world.Map.IsWalkable(pos)) return;
             if (def.BlockedBy != TerrainEffectType.None && world.Terrain.Has(pos, def.BlockedBy)) return;
-            int remaining = world.Terrain.Place(pos, def.Type, def.DurationTicks);
+            int remaining = world.Terrain.Place(pos, def.Type, durationTicks > 0 ? durationTicks : def.DurationTicks);
             world.Events.Publish(new TerrainChangedEvent(pos, def.Type, remaining));
         }
 

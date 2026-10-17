@@ -49,15 +49,23 @@ namespace ProjectM.Magic
         public int StatusChancePercent { get; }
         /// <summary>남기는 지형 효과 (2-4). Bolt = 멈춘 칸, Beam = 지나간 칸, Burst = 폭발 범위. None이면 없음. 규칙은 TerrainBook.</summary>
         public TerrainEffectType LeavesTerrain { get; }
+        /// <summary>남기는 지형의 지속 (틱). 0이면 지형 규칙(TerrainDef)의 지속 (3-2b 융합: 불 + 물 화염 지대 6틱).</summary>
+        public int TerrainDurationTicks { get; }
+        /// <summary>맞으면 반응을 일으키는지. 융합 시전은 false (3-2b F4).</summary>
+        public bool TriggersReactions { get; }
 
         public SpellDef(string id, Element element, SpellShape shape, int range, int damage, int manaCost, int radius = 0,
-            StatusType appliesStatus = StatusType.None, int statusChancePercent = 100, TerrainEffectType leavesTerrain = TerrainEffectType.None)
+            StatusType appliesStatus = StatusType.None, int statusChancePercent = 100, TerrainEffectType leavesTerrain = TerrainEffectType.None,
+            int terrainDurationTicks = 0, bool triggersReactions = true)
         {
             if (statusChancePercent < 0 || statusChancePercent > 100)
                 throw new ArgumentOutOfRangeException(nameof(statusChancePercent), statusChancePercent, "상태 확률은 0 ~ 100.");
             AppliesStatus = appliesStatus;
             StatusChancePercent = statusChancePercent;
             LeavesTerrain = leavesTerrain;
+            if (terrainDurationTicks < 0) throw new ArgumentOutOfRangeException(nameof(terrainDurationTicks), terrainDurationTicks, "지형 지속은 0(기본) 이상.");
+            TerrainDurationTicks = terrainDurationTicks;
+            TriggersReactions = triggersReactions;
             if (string.IsNullOrEmpty(id)) throw new ArgumentException("주문 ID가 비어 있다.", nameof(id));
             if (range < 1) throw new ArgumentOutOfRangeException(nameof(range), range, "사거리는 1 이상이어야 한다.");
             if (damage < 0) throw new ArgumentOutOfRangeException(nameof(damage), damage, "피해는 0 이상이어야 한다.");
