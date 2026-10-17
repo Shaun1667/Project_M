@@ -49,7 +49,28 @@ namespace ProjectM.Editor.Debugging
             DrawView(root);
             EditorGUILayout.Space();
             DrawSpellSlots(root);
+            EditorGUILayout.Space();
+            DrawMana(root);
             EditorGUILayout.EndScrollView();
+        }
+
+        /// <summary>[상태 변경] 마나 (T-2): 버튼 하나로 플레이어 마나를 최대치까지 채운다 (Mana.Restore — HUD · 로그는 평소 경로 그대로).</summary>
+        private static void DrawMana(GameRoot root)
+        {
+            EditorGUILayout.LabelField("[상태 변경] 마나", EditorStyles.boldLabel);
+            if (!root.World.Units.TryGet(root.PlayerId, out var player))
+            {
+                EditorGUILayout.HelpBox("플레이어가 없다.", MessageType.None);
+                return;
+            }
+
+            using (new EditorGUI.IndentLevelScope())
+            using (new EditorGUI.DisabledScope(player.Mana >= player.MaxMana))
+            {
+                if (!GUILayout.Button($"마나 최대로 채우기 ({player.Mana}/{player.MaxMana})")) return;
+                ProjectM.Magic.Mana.Restore(root.World, player, player.MaxMana - player.Mana);
+                root.World.Events.Flush(); // 틱 밖 변경 → HUD에 바로 보이게
+            }
         }
 
         /// <summary>
