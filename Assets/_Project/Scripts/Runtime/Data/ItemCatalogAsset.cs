@@ -17,6 +17,7 @@ namespace ProjectM.Data
             public string Id;
             [Tooltip("인벤토리 · 빠른 칸에 보이는 이름 (표시 전용). 비면 ID")] public string DisplayName;
             [Tooltip("사용하면 하는 일")] public ItemUse Use;
+            [Tooltip("마법서(LearnSpell)만: 가르치는 주문 ID (SpellCatalog, 3-5)")] public string SpellId;
         }
 
         [SerializeField] private List<Entry> _items = new List<Entry>();
@@ -25,7 +26,7 @@ namespace ProjectM.Data
         {
             var defs = new List<ItemDef>(_items.Count);
             foreach (var e in _items)
-                defs.Add(new ItemDef(e.Id, e.Use));
+                defs.Add(new ItemDef(e.Id, e.Use, e.SpellId));
             return new ItemBook(defs);
         }
 

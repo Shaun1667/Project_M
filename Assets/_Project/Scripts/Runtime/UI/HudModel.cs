@@ -23,6 +23,7 @@ namespace ProjectM.UI
         private InventoryRef[] _quickSlots = new InventoryRef[0];
         private int[] _slotCosts = new int[0];
         private SpellBook _spellBook;
+        private string _lastPickupFail; // 3-5: 같은 칸 · 같은 아이템 "가득 참"은 한 번만
 
         public HudModel(int maxLogLines, HudText text = null)
         {
@@ -79,7 +80,43 @@ namespace ProjectM.UI
             _bus.Subscribe<QuickSlotsChangedEvent>(OnSlotsChanged);
             _bus.Subscribe<ReactionTriggeredEvent>(OnReaction);
             _bus.Subscribe<ProjectM.Dungeon.FloorChangedEvent>(OnFloorChanged);
+            _bus.Subscribe<ItemPickedUpEvent>(OnPickedUp);
+            _bus.Subscribe<ItemPickupFailedEvent>(OnPickupFailed);
+            _bus.Subscribe<SpellLearnedEvent>(OnSpellLearned);
+            _bus.Subscribe<EntityMovedEvent>(OnMoved);
+            _lastPickupFail = null;
             Changed?.Invoke();
+        }
+
+        // 마법서 (3-5): "불꽃 화살 마법서을(를) 주웠다" · "불꽃 화살을(를) 배웠다 → [1]"
+        private void OnPickedUp(ItemPickedUpEvent e)
+        {
+            if (e.Unit != _playerId) return;
+            _lastPickupFail = null;
+            AddLog(Text.PickedUp(e.ItemId));
+            Changed?.Invoke();
+        }
+
+        private void OnPickupFailed(ItemPickupFailedEvent e)
+        {
+            if (e.Unit != _playerId) return;
+            string key = $"{e.Pos}:{e.ItemId}";
+            if (key == _lastPickupFail) return; // 서 있는 동안 틱마다 오므로 한 번만
+            _lastPickupFail = key;
+            AddLog(Text.PickupFull(e.ItemId));
+            Changed?.Invoke();
+        }
+
+        private void OnSpellLearned(SpellLearnedEvent e)
+        {
+            if (e.Unit != _playerId) return;
+            AddLog(Text.Learned(e.SpellId, e.QuickSlot));
+            Changed?.Invoke();
+        }
+
+        private void OnMoved(EntityMovedEvent e)
+        {
+            if (e.Id == _playerId && e.From != e.To) _lastPickupFail = null; // 다른 칸으로 가면 다시 알릴 수 있게
         }
 
         // 층 이동 로그 (3-4a): "2층으로 내려왔다" · "1층으로 올라왔다"
@@ -123,6 +160,10 @@ namespace ProjectM.UI
             _bus.Unsubscribe<QuickSlotsChangedEvent>(OnSlotsChanged);
             _bus.Unsubscribe<ReactionTriggeredEvent>(OnReaction);
             _bus.Unsubscribe<ProjectM.Dungeon.FloorChangedEvent>(OnFloorChanged);
+            _bus.Unsubscribe<ItemPickedUpEvent>(OnPickedUp);
+            _bus.Unsubscribe<ItemPickupFailedEvent>(OnPickupFailed);
+            _bus.Unsubscribe<SpellLearnedEvent>(OnSpellLearned);
+            _bus.Unsubscribe<EntityMovedEvent>(OnMoved);
             _bus = null;
         }
 

@@ -62,6 +62,7 @@ namespace ProjectM.Core
                     WriteTerrain(w, f.Terrain);
                     WriteActors(w, f.Actors);
                     WriteUnits(w, f.Units);
+                    WriteFloorItems(w, f.FloorItems); // 11 (3-5)
                 }
 
                 // 10 (3-4b): 한 판 기록
@@ -73,6 +74,15 @@ namespace ProjectM.Core
                 w.Write((int)snapshot.LastPlayerDamage.Status);
                 w.Write((int)snapshot.LastPlayerDamage.Terrain);
                 w.Write(snapshot.LastPlayerAttacker.Value);
+
+                // 11 (3-5): 바닥 아이템 · 마법서 배치 계획
+                WriteFloorItems(w, snapshot.FloorItems);
+                w.Write(snapshot.PendingFloorItems.Length);
+                foreach (var p in snapshot.PendingFloorItems)
+                {
+                    w.Write(p.Floor);
+                    w.Write(p.ItemId ?? string.Empty);
+                }
 
                 w.Flush();
                 return stream.ToArray();
@@ -130,6 +140,7 @@ namespace ProjectM.Core
                     f.Terrain = ReadTerrain(r);
                     f.Actors = ReadActors(r);
                     f.Units = ReadUnits(r);
+                    f.FloorItems = ReadFloorItems(r);
                     s.StoredFloors[i] = f;
                 }
 
@@ -142,6 +153,14 @@ namespace ProjectM.Core
                 var causeTerrain = (ProjectM.Status.TerrainEffectType)r.ReadInt32();
                 s.LastPlayerDamage = new DamageCause(kind, causeId, causeStatus, causeTerrain);
                 s.LastPlayerAttacker = new EntityId(r.ReadInt32());
+
+                s.FloorItems = ReadFloorItems(r);
+                s.PendingFloorItems = new PendingFloorItem[ReadCount(r)];
+                for (int i = 0; i < s.PendingFloorItems.Length; i++)
+                {
+                    int floor = r.ReadInt32();
+                    s.PendingFloorItems[i] = new PendingFloorItem(floor, r.ReadString());
+                }
 
                 if (stream.Position != stream.Length)
                     throw new InvalidDataException("스냅샷 끝에 남는 데이터가 있다.");
@@ -286,6 +305,30 @@ namespace ProjectM.Core
                     maxMana, mana, inventory, quick, previousPos, wanderTarget, statuses);
             }
             return units;
+        }
+
+        // 바닥 아이템 (3-5): 개수 + x · y · 아이템 ID
+        private static void WriteFloorItems(BinaryWriter w, FloorItemState[] items)
+        {
+            w.Write(items.Length);
+            foreach (var item in items)
+            {
+                w.Write(item.X);
+                w.Write(item.Y);
+                w.Write(item.ItemId ?? string.Empty);
+            }
+        }
+
+        private static FloorItemState[] ReadFloorItems(BinaryReader r)
+        {
+            var items = new FloorItemState[ReadCount(r)];
+            for (int i = 0; i < items.Length; i++)
+            {
+                int x = r.ReadInt32();
+                int y = r.ReadInt32();
+                items[i] = new FloorItemState(x, y, r.ReadString());
+            }
+            return items;
         }
 
         // 인벤토리 · 빠른 칸 (3-2a): 개수 + 칸마다 종류(int) · ID(빈 칸 = 빈 문자열)

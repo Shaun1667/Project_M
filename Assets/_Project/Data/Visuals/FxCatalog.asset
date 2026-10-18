@@ -384,3 +384,38 @@ MonoBehaviour:
     Speed: 1
     Lifetime: 0
     Height: 0
+  - Key: item.spellbook_fire
+    Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+    Scale: 0.35
+    Tint: {r: 1, g: 0.5, b: 0.1, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0.25
+  - Key: item.spellbook_ice
+    Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+    Scale: 0.35
+    Tint: {r: 0.35, g: 0.85, b: 1, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0.25
+  - Key: item.spellbook_lightning
+    Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+    Scale: 0.35
+    Tint: {r: 1, g: 0.95, b: 0.25, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0.25
+  - Key: item.spellbook_poison
+    Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+    Scale: 0.35
+    Tint: {r: 0.7, g: 0.3, b: 1, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0.25
+  - Key: item.spellbook_water
+    Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+    Scale: 0.35
+    Tint: {r: 0.25, g: 0.5, b: 1, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0.25

@@ -35,6 +35,22 @@ namespace ProjectM.Core
         }
     }
 
+    /// <summary>바닥 아이템 하나의 저장 상태 (3-5).</summary>
+    [Serializable]
+    public readonly struct FloorItemState
+    {
+        public readonly int X;
+        public readonly int Y;
+        public readonly string ItemId;
+
+        public FloorItemState(int x, int y, string itemId)
+        {
+            X = x;
+            Y = y;
+            ItemId = itemId;
+        }
+    }
+
     /// <summary>
     /// World 전체의 저장 가능한 상태 (CLAUDE.md 핵심 설계 규칙 6). 참조 없는 값과 배열만 담는다.
     /// 시간 마법(되감기 · 기록) · 세이브 · 회귀 테스트가 같은 스냅샷을 쓴다.
@@ -43,8 +59,8 @@ namespace ProjectM.Core
     [Serializable]
     public sealed class WorldSnapshot
     {
-        /// <summary>1: 1-4 최초. 2: 유닛(Units) 추가 (1-6). 3: 탐험 기록(Explored) · 유닛 기억(LastSeen) 추가 (1-7). 4: 유닛 마나 · 주문 장착 칸 (2-1). 5: 유닛 발자국(PreviousPos) · 배회 목적지(WanderTarget). 6: 유닛 상태 이상 (2-3). 7: 지형 효과 레이어 (2-4). 8: 주문 장착 칸 → 인벤토리 · 빠른 칸 (3-2a). 9: 층 번호 · 떠난 층들 (3-4a). 10: 한 판 기록 — 처치 수 · 결과 · 보스 · 사망 원인 (3-4b).</summary>
-        public const int CurrentFormatVersion = 10;
+        /// <summary>1: 1-4 최초. 2: 유닛(Units) 추가 (1-6). 3: 탐험 기록(Explored) · 유닛 기억(LastSeen) 추가 (1-7). 4: 유닛 마나 · 주문 장착 칸 (2-1). 5: 유닛 발자국(PreviousPos) · 배회 목적지(WanderTarget). 6: 유닛 상태 이상 (2-3). 7: 지형 효과 레이어 (2-4). 8: 주문 장착 칸 → 인벤토리 · 빠른 칸 (3-2a). 9: 층 번호 · 떠난 층들 (3-4a). 10: 한 판 기록 — 처치 수 · 결과 · 보스 · 사망 원인 (3-4b). 11: 바닥 아이템(지금 층 · 떠난 층) · 마법서 배치 계획 (3-5).</summary>
+        public const int CurrentFormatVersion = 11;
 
         public int FormatVersion = CurrentFormatVersion;
 
@@ -82,6 +98,12 @@ namespace ProjectM.Core
         public EntityId BossId;
         public DamageCause LastPlayerDamage;
         public EntityId LastPlayerAttacker;
+
+        // 11 (3-5): 바닥 아이템 · 마법서 배치 계획
+        /// <summary>지금 층 바닥 아이템, 칸(y → x) → 놓은 순서.</summary>
+        public FloorItemState[] FloorItems = Array.Empty<FloorItemState>();
+        /// <summary>아직 가 보지 않은 층에 놓을 아이템 (RunState), 층 → 나눠 준 순서.</summary>
+        public PendingFloorItem[] PendingFloorItems = Array.Empty<PendingFloorItem>();
     }
 
     /// <summary>
@@ -101,6 +123,8 @@ namespace ProjectM.Core
         public UnitState[] Units = Array.Empty<UnitState>();
         /// <summary>그 층의 행위자, ReadyTick = 떠날 때 현재 틱과의 차이. EntityId 오름차순.</summary>
         public ActorState[] Actors = Array.Empty<ActorState>();
+        /// <summary>그 층 바닥 아이템 (3-5).</summary>
+        public FloorItemState[] FloorItems = Array.Empty<FloorItemState>();
     }
 
     /// <summary>유닛 하나의 저장 가능한 상태 (ProjectM.Units.Unit과 같은 필드).</summary>

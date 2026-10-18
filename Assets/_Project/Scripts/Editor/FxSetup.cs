@@ -117,6 +117,12 @@ namespace ProjectM.Editor
             new Row("reaction.shock", Hovl + "Hits and explosions/Electro hit", 0.5f, Lightning, 1.3f, 0.8f),
             new Row("reaction.shock_water", Hovl + "Hits and explosions/Electro hit", 0.5f, Lightning, 1.3f, 0.8f),
             new Row("reaction.shock_contaminated", Hovl + "Hits and explosions/Electro hit", 0.5f, Lightning, 1.3f, 0.8f),
+            // 바닥 마법서 (3-5): 틴트 = 책 색, 프리팹 = 책 주위 반짝임 루프 (FloorItemPresenter)
+            new Row("item.spellbook_fire", Hovl + "Sparks/Sparks flashing yellow", 0.35f, Fire, 1f, 0f, 0.25f),
+            new Row("item.spellbook_ice", Hovl + "Sparks/Sparks flashing yellow", 0.35f, Ice, 1f, 0f, 0.25f),
+            new Row("item.spellbook_lightning", Hovl + "Sparks/Sparks flashing yellow", 0.35f, Lightning, 1f, 0f, 0.25f),
+            new Row("item.spellbook_poison", Hovl + "Sparks/Sparks flashing yellow", 0.35f, Poison, 1f, 0f, 0.25f),
+            new Row("item.spellbook_water", Hovl + "Sparks/Sparks flashing yellow", 0.35f, Water, 1f, 0f, 0.25f),
         };
 
         [MenuItem("ProjectM/Setup/FX")]
@@ -151,6 +157,9 @@ namespace ProjectM.Editor
             var aim = UnityEngine.Object.FindAnyObjectByType<AimPreviewPresenter>();
             if (aim != null)
                 SetRefs(aim, ("_pathTile", tiles["aim_path"]), ("_affectedTile", tiles["aim_affected"]), ("_cursorTile", tiles["aim_cursor"]), ("_blockedTile", tiles["aim_blocked"]));
+
+            var floorItems = UnityEngine.Object.FindAnyObjectByType<FloorItemPresenter>(); // 3-5: 바닥 마법서 색 · 반짝임
+            if (floorItems != null) SetRefs(floorItems, ("_catalog", catalog));
 
             var root = UnityEngine.Object.FindAnyObjectByType<GameRoot>();
             if (root != null) SetRefs(root, ("_fx", fx));

@@ -20,6 +20,7 @@
 | 8 | 반응 규칙 표 | `Assets/_Project/Data/Reactions/ReactionCatalog.asset` (`ReactionCatalogAsset`) | `ProjectM.Status.ReactionDef` · `ReactionBook` · `ReactionConfig` | 사용 중 |
 | 9 | 아이템 | `Assets/_Project/Data/Items/ItemCatalog.asset` (`ItemCatalogAsset`) | `ProjectM.Items.ItemDef` · `ItemBook` | 사용 중 |
 | 10 | 융합 규칙 표 | `Assets/_Project/Data/Fusions/FusionCatalog.asset` (`FusionCatalogAsset`) | `ProjectM.Magic.FusionDef` · `FusionBook` | 사용 중 (3-2b) |
+| 11 | 바닥 아이템(마법서) 배치 | `Assets/_Project/Data/Items/LootConfig.asset` (`LootConfigAsset`) | `ProjectM.Items.LootConfig` · `Loot` | 사용 중 (3-5) |
 
 **데이터 구조 규칙 (0-4 결정)**
 - 에셋은 `ScriptableObject`(어셈블리 `ProjectM.Runtime`, 네임스페이스 `ProjectM.Data`)이고, `ToXxx()`로 순수 C# 객체를 만들어 Simulation에 넘긴다. Simulation은 ScriptableObject를 모른다 (CLAUDE.md 핵심 설계 규칙 1).
@@ -270,8 +271,15 @@
 | ID | 이름 `DisplayName` | 사용 `Use` | 비고 |
 |---|---|---|---|
 | `fusion_device` | 마법 융합기 | Fusion | 사용 → 주문 두 개를 골라 융합 시전 (3-2b, REACTIONS.md 5번 · 이 문서 10번). 사용 자체는 차례를 쓰지 않고, 시전할 때 행동 1회 |
+| `spellbook_fire` | 불꽃 화살 마법서 | LearnSpell → `fire_basic` | 3-5: 사용 → 책 소모 · 주문 배움 · 빈 빠른 칸 자동 등록, 차례 안 씀. 바닥에서 주움 (11번) |
+| `spellbook_ice` | 얼음 화살 마법서 | LearnSpell → `ice_basic` | 〃 |
+| `spellbook_lightning` | 번개 줄기 마법서 | LearnSpell → `lightning_basic` | 〃 |
+| `spellbook_poison` | 독 폭발 마법서 | LearnSpell → `poison_basic` | 〃 |
+| `spellbook_water` | 물보라 마법서 | LearnSpell → `water_basic` | 〃 |
 
-검산 (`InventoryTests.ProjectAsset_MatchesBalanceTable`): 에셋 값이 위 표와 같다.
+필드 `SpellId` = 마법서가 가르치는 주문 (LearnSpell만, 3-5).
+
+검산 (`InventoryTests.ProjectAsset_MatchesBalanceTable` — 6개, `SpellbookTests.ProjectAssets_MatchBalanceTable` — 마법서 → 주문): 에셋 값이 위 표와 같다.
 
 ---
 
@@ -307,6 +315,22 @@
 - 용암 분출 = 즉시 5 + 지대 위 화상(1/턴)이 지대 6턴 동안 계속 갱신 → 머물면 최대 5 + 6 + 2 = 13. 물 → 불 콤보(마나 5 · 행동 2회 · 7 + 화상 70%)와 마나는 같고 행동이 1회 적다 — `FusionTests.FireWater_LeavesFireZoneSixTicks_NoSpellStatusOrWater`
 - 폭발 마법 = 일렬 대상마다 8 → 적(체력 8) 한 방, 마나 7이라 가득 찬 마나로 1번. 중독된 적이나 독구름 위여도 반응이 없다 — `FusionTests.FireLightning_BeamEight_DoesNotReact`
 - 오염 물결 = 즉시 2 + 위에 있으면 매 턴 1 (8턴) — `FusionTests.WaterPoison_LeavesContaminatedWaterEightTicks`
+
+---
+
+## 11. 바닥 아이템(마법서) 배치 — `Data/Items/LootConfig.asset`
+
+결정 (2026-10-19, 3-5 사용자 결정 — 모두 추천안): 한 판에 속성별 마법서를 **한 권씩**(지금 5권) 마지막(보스) 층을 뺀 층(1~4층)에 나눠 놓는다 · 층당 1~2권 · **1층 최소 1권**(빈손 시작 보장) · 걸어 들어가면 자동으로 줍기 · 사용하면 책 소모 + 빈 빠른 칸 자동 등록.
+
+| 값 | 필드 | 값 | 비고 |
+|---|---|---|---|
+| 층당 최대 마법서 | `_maxBooksPerFloor` | **2** | 1층부터 1권씩 채우고 남는 책은 아직 2권 미만인 층에 무작위로 더 |
+| 시작 칸에서 최소 거리 | `_minDistanceFromStart` | **3** | 칸(대각선 포함). 후보가 모자라면 거리를 줄여 다시 찾음. 계단 · 벽 칸 · 다른 아이템 칸 제외 |
+
+난수: `RngStream.Loot`(판 시작에 책 순서 섞기 · 층 배정, 처음 가는 층에서 칸 고르기) — 맵 · 적 배치(MapGen)는 바뀌지 않는다. 같은 시드 + 같은 진행 = 같은 책 위치.
+지금 결과 (책 5 · 일반 층 4): 1~4층 모두 1권 + 무작위 한 층에 1권 더.
+
+검산 (`SpellbookTests.ProjectAssets_MatchBalanceTable` · `Plan_FiveBooks_OnePerSpell_FloorsOneToFour_OneOrTwoEach` — 시드 30개).
 
 ---
 

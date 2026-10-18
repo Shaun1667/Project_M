@@ -39,6 +39,7 @@ namespace ProjectM.Editor
         private const string ReactionCatalogPath = "Assets/_Project/Data/Reactions/ReactionCatalog.asset";
         private const string ItemCatalogPath = "Assets/_Project/Data/Items/ItemCatalog.asset";
         private const string FusionCatalogPath = "Assets/_Project/Data/Fusions/FusionCatalog.asset";
+        private const string LootConfigPath = "Assets/_Project/Data/Items/LootConfig.asset";
 
         /// <summary>플레이어 시작 주문 (BALANCE 4번). 3-1부터 빈 칸 — 주문은 게임 중에 얻고, 테스트는 디버그 창에서 넣는다 (REACTIONS.md D8).</summary>
         private static readonly string[] PlayerStartingSpells = new string[0];
@@ -168,6 +169,12 @@ namespace ProjectM.Editor
             else Debug.LogWarning("[MainSceneSetup] MainCamera 태그 카메라 없음");
 
             var (hud, inventoryView, result) = EnsureHud();
+
+            // 3-5: 바닥 아이템(마법서) — 배치 수치(없을 때만 BALANCE 11번 값) · 표시 (색 · 반짝임은 메뉴 ProjectM/Setup/FX가 채움)
+            var lootConfig = EnsureAsset<LootConfigAsset>(LootConfigPath, ("_maxBooksPerFloor", 2), ("_minDistanceFromStart", 3));
+            var floorItemsGo = FindOrCreate("FloorItems", null);
+            var floorItems = GetOrAdd<FloorItemPresenter>(floorItemsGo);
+            SetRefs(floorItems, ("_entities", entityPresenter));
             // 임시 보스 (3-4b) — 없을 때만 BALANCE 3번 값으로
             var bossDef = EnsureAsset<UnitDefAsset>(BossDefPath,
                 ("_visualId", BossVisualId), ("_maxHp", 60), ("_attackDamage", 5), ("_sightRange", 10));
@@ -193,6 +200,8 @@ namespace ProjectM.Editor
                 ("_reactionCatalog", reactionCatalog),
                 ("_itemCatalog", itemCatalog),
                 ("_fusionCatalog", fusionCatalog),
+                ("_lootConfig", lootConfig),
+                ("_floorItems", floorItems),
                 ("_terrainOverlay", terrainOverlay),
                 ("_tilemapPresenter", tilemapPresenter),
                 ("_entityPresenter", entityPresenter),
@@ -595,6 +604,12 @@ namespace ProjectM.Editor
         {
             var catalog = LoadOrCreate<ItemCatalogAsset>(ItemCatalogPath);
             bool changed = catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "fusion_device", DisplayName = "마법 융합기", Use = ItemUse.Fusion });
+            // 3-5 마법서 (BALANCE 9번): 쓰면 그 주문을 배운다. 한 판에 한 권씩 1~4층에 놓인다 (BALANCE 11번)
+            changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "spellbook_fire", DisplayName = "불꽃 화살 마법서", Use = ItemUse.LearnSpell, SpellId = "fire_basic" });
+            changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "spellbook_ice", DisplayName = "얼음 화살 마법서", Use = ItemUse.LearnSpell, SpellId = "ice_basic" });
+            changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "spellbook_lightning", DisplayName = "번개 줄기 마법서", Use = ItemUse.LearnSpell, SpellId = "lightning_basic" });
+            changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "spellbook_poison", DisplayName = "독 폭발 마법서", Use = ItemUse.LearnSpell, SpellId = "poison_basic" });
+            changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "spellbook_water", DisplayName = "물보라 마법서", Use = ItemUse.LearnSpell, SpellId = "water_basic" });
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }

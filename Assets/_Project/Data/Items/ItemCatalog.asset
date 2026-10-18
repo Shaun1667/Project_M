@@ -16,3 +16,24 @@ MonoBehaviour:
   - Id: fusion_device
     DisplayName: "\uB9C8\uBC95 \uC735\uD569\uAE30"
     Use: 1
+    SpellId: 
+  - Id: spellbook_fire
+    DisplayName: "\uBD88\uAF43 \uD654\uC0B4 \uB9C8\uBC95\uC11C"
+    Use: 2
+    SpellId: fire_basic
+  - Id: spellbook_ice
+    DisplayName: "\uC5BC\uC74C \uD654\uC0B4 \uB9C8\uBC95\uC11C"
+    Use: 2
+    SpellId: ice_basic
+  - Id: spellbook_lightning
+    DisplayName: "\uBC88\uAC1C \uC904\uAE30 \uB9C8\uBC95\uC11C"
+    Use: 2
+    SpellId: lightning_basic
+  - Id: spellbook_poison
+    DisplayName: "\uB3C5 \uD3ED\uBC1C \uB9C8\uBC95\uC11C"
+    Use: 2
+    SpellId: poison_basic
+  - Id: spellbook_water
+    DisplayName: "\uBB3C\uBCF4\uB77C \uB9C8\uBC95\uC11C"
+    Use: 2
+    SpellId: water_basic

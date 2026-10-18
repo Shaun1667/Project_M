@@ -32,6 +32,7 @@ namespace ProjectM
         [SerializeField] private ReactionCatalogAsset _reactionCatalog;
         [SerializeField] private ItemCatalogAsset _itemCatalog;
         [SerializeField] private FusionCatalogAsset _fusionCatalog;
+        [Tooltip("마법서 배치 수치 (3-5). 비우면 바닥에 마법서를 놓지 않는다")] [SerializeField] private LootConfigAsset _lootConfig;
         [SerializeField] private TilemapPresenter _tilemapPresenter;
         [SerializeField] private EntityPresenter _entityPresenter;
         [Tooltip("시야 안개. 비우면 안개 없이 전부 보인다")]
@@ -39,6 +40,7 @@ namespace ProjectM
         [Tooltip("지형 효과 오버레이. 비우면 지형 효과가 화면에 안 보인다")]
         [SerializeField] private TerrainOverlayPresenter _terrainOverlay;
         [Tooltip("3D 이펙트 (G-3). 비우면 이펙트 없이 색 덮개만")] [SerializeField] private FxPresenter _fx;
+        [Tooltip("바닥 아이템 · 마법서 (3-5). 비우면 바닥 아이템이 화면에 안 보인다")] [SerializeField] private FloorItemPresenter _floorItems;
         [SerializeField] private PlayerInputController _input;
         [SerializeField] private HudPresenter _hud;
         [Tooltip("결과 화면 (3-4b)")] [SerializeField] private ResultPresenter _result;
@@ -77,6 +79,7 @@ namespace ProjectM
                 if (_fogPresenter != null) _fogPresenter.RevealAll = value;
                 if (_tilemapPresenter != null) _tilemapPresenter.RevealAll = value; // G-1: 3D 벽
                 if (_fx != null) _fx.RevealAll = value; // G-3: 이펙트
+                if (_floorItems != null) _floorItems.RevealAll = value; // 3-5: 바닥 마법서
             }
         }
 
@@ -164,13 +167,16 @@ namespace ProjectM
             var enemyDef = _enemyDef.ToDef();
             var enemyAi = new MeleeChaserAi(World, Config, sight);
             World.Scheduler.AddSystem(TickPhase.ManaRegen, new EnemyRespawnSystem(World, spawn, enemyDef, enemyAi, sight, dungeonConfig.FloorCount));
-            var stairs = new FloorTransition(World, generator, dungeonConfig.FloorCount, enemyDef, spawn, (w, id) => enemyAi, vision, _bossDef.ToDef());
+            var loot = _lootConfig != null ? _lootConfig.ToConfig() : null;
+            if (loot != null) World.Scheduler.AddSystem(TickPhase.ManaRegen, new ItemPickupSystem(World, Items)); // 3-5: 걸어 들어가면 줍기
+            var stairs = new FloorTransition(World, generator, dungeonConfig.FloorCount, enemyDef, spawn, (w, id) => enemyAi, vision, _bossDef.ToDef(), loot);
 
             _tilemapPresenter.Bind(World.Events);
             _entityPresenter.Bind(World.Events);
             if (_fogPresenter != null) _fogPresenter.Bind(World.Events);
             if (_terrainOverlay != null) _terrainOverlay.Bind(World.Events);
             if (_fx != null) _fx.Bind(World.Events); // G-3: 엔티티 모습 다음에 (상태 효과가 유닛에 붙음)
+            if (_floorItems != null) _floorItems.Bind(World.Events);
             World.Events.Subscribe<EntityMovedEvent>(OnEntityMoved);
             World.Events.Subscribe<UnitDiedEvent>(OnUnitDied);
             World.Events.Subscribe<RunEndedEvent>(OnRunEnded);
@@ -182,6 +188,12 @@ namespace ProjectM
             _player = player;
             _playerDead = false;
             _runEnded = false;
+            if (loot != null)
+            {
+                // 3-5: 한 판의 마법서 배치 계획(1~마지막 전 층) → 1층 몫을 놓는다 (Loot 난수 — 맵 · 적 배치는 그대로)
+                Loot.PlanSpellbooks(World, Items, loot, dungeonConfig.FloorCount);
+                Loot.PlaceFloorItems(World, Floor.Start, loot);
+            }
             vision.Refresh(); // 첫 시야 — 이후는 매 틱 ⑥ 단계에서
 
             _hud.Bind(World.Events, player, Spells, _hudText);

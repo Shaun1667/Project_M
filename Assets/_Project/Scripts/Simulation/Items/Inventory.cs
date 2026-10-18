@@ -48,6 +48,8 @@ namespace ProjectM.Items
         None = 0,
         /// <summary>마법 융합기 (3-2b): 주문 두 개를 골라 한 번에 시전.</summary>
         Fusion = 1,
+        /// <summary>마법서 (3-5): 쓰면 책이 사라지고 SpellId 주문을 배운다 (Spellbooks.TryLearn).</summary>
+        LearnSpell = 2,
     }
 
     /// <summary>아이템 하나의 규칙 데이터 (3-2a). 값은 ItemCatalogAsset에서 온다 — BALANCE.md 9번.</summary>
@@ -55,12 +57,16 @@ namespace ProjectM.Items
     {
         public string Id { get; }
         public ItemUse Use { get; }
+        /// <summary>마법서(LearnSpell)가 가르치는 주문 ID (3-5). 그 밖에는 null.</summary>
+        public string SpellId { get; }
 
-        public ItemDef(string id, ItemUse use)
+        public ItemDef(string id, ItemUse use, string spellId = null)
         {
             if (string.IsNullOrEmpty(id)) throw new ArgumentException("아이템 ID가 비어 있다.", nameof(id));
+            if (use == ItemUse.LearnSpell && string.IsNullOrEmpty(spellId)) throw new ArgumentException("마법서에 가르칠 주문이 없다: " + id, nameof(spellId));
             Id = id;
             Use = use;
+            SpellId = use == ItemUse.LearnSpell ? spellId : null;
         }
     }
 

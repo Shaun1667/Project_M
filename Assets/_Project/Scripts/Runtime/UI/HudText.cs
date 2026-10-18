@@ -132,6 +132,22 @@ namespace ProjectM.UI
 
         public const string DeadHint = "쓰러졌다 — R 키로 새 판";
 
+        // ── 마법서 (3-5) ──
+        public string PickedUp(string itemId) => $"{Eul(Item(itemId))} 주웠다";
+        public string PickupFull(string itemId) => $"인벤토리가 가득 차 {Eul(Item(itemId))} 줍지 못했다";
+        public string Learned(string spellId, int quickSlot) =>
+            quickSlot >= 0 ? $"{Eul(Spell(spellId))} 배웠다 → [{quickSlot + 1}]" : $"{Eul(Spell(spellId))} 배웠다 (빠른 칸이 가득 차 등록 안 함)";
+
+        /// <summary>목적격 조사: 받침 있으면 "을", 없으면 "를" (한글이 아니면 "을(를)").</summary>
+        public static string Eul(string word)
+        {
+            if (string.IsNullOrEmpty(word)) return word;
+            char last = word[word.Length - 1];
+            if (last < '가' || last > '힣') return word + "을(를)";
+            return word + ((last - 0xAC00) % 28 != 0 ? "을" : "를");
+        }
+        public string AlreadyKnown(string spellId) => $"이미 알고 있는 주문: {Spell(spellId)}";
+
         // ── 층 (3-4a) ──
         public static string FloorChanged(int from, int to) => to > from ? $"{to}층으로 내려왔다" : $"{to}층으로 올라왔다";
         // ── 결과 화면 (3-4b) ──

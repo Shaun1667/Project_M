@@ -68,5 +68,42 @@ namespace ProjectM.Core
         public EntityId LastPlayerAttacker { get; internal set; }
 
         public void SetBoss(EntityId id) => BossId = id;
+
+        private readonly System.Collections.Generic.List<PendingFloorItem> _pendingFloorItems = new System.Collections.Generic.List<PendingFloorItem>();
+        /// <summary>아직 가 보지 않은 층에 놓을 아이템 (3-5 마법서 배치 계획), 층 → 나눠 준 순서. 처음 가는 층에서 꺼내 놓는다.</summary>
+        public System.Collections.Generic.IReadOnlyList<PendingFloorItem> PendingFloorItems => _pendingFloorItems;
+
+        internal void SetPendingFloorItems(System.Collections.Generic.IEnumerable<PendingFloorItem> items)
+        {
+            _pendingFloorItems.Clear();
+            _pendingFloorItems.AddRange(items);
+        }
+
+        /// <summary>그 층 몫을 꺼낸다 (계획에서 빠짐).</summary>
+        internal System.Collections.Generic.List<string> TakePendingFloorItems(int floor)
+        {
+            var taken = new System.Collections.Generic.List<string>();
+            for (int i = 0; i < _pendingFloorItems.Count; i++)
+            {
+                if (_pendingFloorItems[i].Floor != floor) continue;
+                taken.Add(_pendingFloorItems[i].ItemId);
+                _pendingFloorItems.RemoveAt(i--);
+            }
+            return taken;
+        }
+    }
+
+    /// <summary>아직 놓지 않은 층 아이템 하나 (3-5): 층 번호 + 아이템 ID. 스냅샷 v11에 저장.</summary>
+    [System.Serializable]
+    public readonly struct PendingFloorItem
+    {
+        public readonly int Floor;
+        public readonly string ItemId;
+
+        public PendingFloorItem(int floor, string itemId)
+        {
+            Floor = floor;
+            ItemId = itemId;
+        }
     }
 }

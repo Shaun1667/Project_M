@@ -259,9 +259,21 @@ namespace ProjectM.Input
             else UseItem(entry);
         }
 
-        /// <summary>아이템 사용 — 마법 융합기(3-2b)는 인벤토리를 "주문 두 개 고르기"로 연다. 차례는 쓰지 않는다 (시전할 때 1회).</summary>
+        /// <summary>
+        /// 아이템 사용 — 마법 융합기(3-2b)는 인벤토리를 "주문 두 개 고르기"로 연다. 차례는 쓰지 않는다 (시전할 때 1회).
+        /// 마법서(3-5)는 책을 쓰고 주문을 배운다 (빈 빠른 칸에 자동 등록) — 틱 밖 변경이라 이벤트를 바로 비운다.
+        /// </summary>
         private void UseItem(InventoryRef entry)
         {
+            if (_items.TryGet(entry.Id, out var book) && book.Use == ItemUse.LearnSpell && PlayerActions.TryGetPlayer(_world, out var reader))
+            {
+                var result = Spellbooks.TryLearn(_world, _spells, _items, reader, System.Array.IndexOf(reader.InventorySlots, entry));
+                _world.Events.Flush();
+                if (result == LearnResult.AlreadyKnown) Hint(Text.AlreadyKnown(book.SpellId));
+                else if (result != LearnResult.Learned) Hint(Text.ItemNotUsable(entry));
+                else Hint(string.Empty); // 배운 내용은 로그에 (SpellLearnedEvent)
+                return;
+            }
             if (_items.TryGet(entry.Id, out var item) && item.Use == ItemUse.Fusion)
             {
                 CancelAim();

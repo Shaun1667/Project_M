@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using ProjectM.Core;
+using ProjectM.Items;
 using ProjectM.Status;
 using ProjectM.Units;
 
@@ -12,7 +13,7 @@ namespace ProjectM.Dungeon
     /// ① 지금 층을 멈춘 채 저장(StoredFloors) ② 처음 가는 층이면 생성(맵 생성 난수 — 같은 시드 = 같은 층) · 적 배치, 떠났던 층이면 그대로 복원.
     ///    마지막 층은 보스 방 + 보스 (3-4b)
     /// ③ 플레이어를 도착 계단(아래로 = 그 층의 올라가는 계단, 위로 = 내려가는 계단)에 놓는다 — 다른 유닛이 서 있으면 가장 가까운 빈 칸
-    /// ④ 화면용 이벤트(MapLoaded · 지형 · 유닛 · FloorChanged)와 시야 갱신.
+    /// ④ 화면용 이벤트(MapLoaded · 지형 · 바닥 아이템 · 유닛 · FloorChanged)와 시야 갱신. 처음 가는 일반 층이면 그다음 마법서를 놓는다 (3-5).
     /// 플레이어는 체력 · 마나 · 인벤토리 · 상태 이상을 그대로 가져간다. 상태를 갖지 않는다.
     /// </summary>
     public sealed class FloorTransition
@@ -25,12 +26,15 @@ namespace ProjectM.Dungeon
         private readonly Func<World, EntityId, ICommandSource> _aiFactory;
         private readonly PlayerVisionSystem _vision;
         private readonly UnitDef _bossDef;
+        private readonly LootConfig _loot;
 
         /// <param name="bossDef">마지막 층(보스 층)의 보스 (3-4b). null이면 마지막 층도 일반 층처럼 만든다 (테스트용).</param>
+        /// <param name="loot">바닥 아이템 배치 수치 (3-5). null이면 새 층에 아이템을 놓지 않는다.</param>
         public FloorTransition(World world, DungeonGenerator generator, int floorCount, UnitDef enemyDef, SpawnConfig spawn,
-            Func<World, EntityId, ICommandSource> aiFactory, PlayerVisionSystem vision, UnitDef bossDef = null)
+            Func<World, EntityId, ICommandSource> aiFactory, PlayerVisionSystem vision, UnitDef bossDef = null, LootConfig loot = null)
         {
             _bossDef = bossDef;
+            _loot = loot;
             _world = world ?? throw new ArgumentNullException(nameof(world));
             _generator = generator ?? throw new ArgumentNullException(nameof(generator));
             if (floorCount < 1) throw new ArgumentOutOfRangeException(nameof(floorCount));
@@ -70,6 +74,7 @@ namespace ProjectM.Dungeon
             // 도착 계단: 아래로 가면 그 층의 올라가는 계단, 위로 가면 내려가는 계단
             var arrivalTile = delta > 0 ? TileType.StairsUp : TileType.StairsDown;
             var stored = _world.FindStoredFloor(target);
+            GridPos? newFloorStart = null;
             if (stored != null)
             {
                 var map = GridMap.FromCells(stored.MapWidth, stored.MapHeight, stored.Cells);
@@ -95,9 +100,11 @@ namespace ProjectM.Dungeon
                 _world.EnterNewFloor(target, floor.Map);
                 _world.Units.Teleport(player.Id, floor.Start);
                 FloorPopulator.PopulateEnemies(_world, floor.Start, _enemyDef, _spawn, _aiFactory(_world, EntityId.None));
+                newFloorStart = floor.Start;
             }
 
             Announce(player, restored: stored != null);
+            if (newFloorStart.HasValue && _loot != null) Loot.PlaceFloorItems(_world, newFloorStart.Value, _loot); // 3-5: MapLoaded 뒤에 놓아야 화면이 지우지 않는다
             _world.Events.Publish(new FloorChangedEvent(from, target));
             _vision.Refresh();
         }
@@ -113,6 +120,8 @@ namespace ProjectM.Dungeon
             foreach (var pair in _world.Terrain.ToSortedList())
                 foreach (var t in pair.Value)
                     events.Publish(new TerrainChangedEvent(_world.Terrain.PosOf(pair.Key), t.Type, t.Remaining));
+            foreach (var item in _world.FloorItems.All)
+                events.Publish(new FloorItemPlacedEvent(item.Pos, item.ItemId));
             foreach (var unit in _world.Units.ToSortedList())
             {
                 if (!restored || unit.Id == player.Id) continue;
