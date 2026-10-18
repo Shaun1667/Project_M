@@ -38,6 +38,7 @@ namespace ProjectM
         [SerializeField] private FogPresenter _fogPresenter;
         [Tooltip("지형 효과 오버레이. 비우면 지형 효과가 화면에 안 보인다")]
         [SerializeField] private TerrainOverlayPresenter _terrainOverlay;
+        [Tooltip("3D 이펙트 (G-3). 비우면 이펙트 없이 색 덮개만")] [SerializeField] private FxPresenter _fx;
         [SerializeField] private PlayerInputController _input;
         [SerializeField] private HudPresenter _hud;
         [Tooltip("결과 화면 (3-4b)")] [SerializeField] private ResultPresenter _result;
@@ -75,6 +76,7 @@ namespace ProjectM
                 if (_entityPresenter != null) _entityPresenter.RevealAll = value;
                 if (_fogPresenter != null) _fogPresenter.RevealAll = value;
                 if (_tilemapPresenter != null) _tilemapPresenter.RevealAll = value; // G-1: 3D 벽
+                if (_fx != null) _fx.RevealAll = value; // G-3: 이펙트
             }
         }
 
@@ -168,6 +170,7 @@ namespace ProjectM
             _entityPresenter.Bind(World.Events);
             if (_fogPresenter != null) _fogPresenter.Bind(World.Events);
             if (_terrainOverlay != null) _terrainOverlay.Bind(World.Events);
+            if (_fx != null) _fx.Bind(World.Events); // G-3: 엔티티 모습 다음에 (상태 효과가 유닛에 붙음)
             World.Events.Subscribe<EntityMovedEvent>(OnEntityMoved);
             World.Events.Subscribe<UnitDiedEvent>(OnUnitDied);
             World.Events.Subscribe<RunEndedEvent>(OnRunEnded);

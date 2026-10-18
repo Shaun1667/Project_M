@@ -8,6 +8,7 @@ namespace ProjectM.Presentation
     /// <summary>
     /// 주문 조준 미리보기 (2-2): 안개 위 Tilemap 한 장에 경로 · 맞는 칸 · 조준 칸을 색으로 칠한다.
     /// 규칙은 모른다 — 입력 쪽이 SpellCasting.Preview 결과를 넘긴다. 타일은 안개와 같은 흰 사각형(TileFlags.None).
+    /// G-3 조준 데칼: 경로 = 점 · 맞는 칸 = 테두리 · 조준 칸 = 모서리 괄호 · 막힘 = X 무늬 타일(Setup이 만듦, 색은 아래 색). 비면 흰 사각형.
     /// </summary>
     public sealed class AimPreviewPresenter : MonoBehaviour
     {
@@ -17,6 +18,12 @@ namespace ProjectM.Presentation
         [SerializeField] private Color _affectedColor = new Color(1f, 0.45f, 0.1f, 0.55f);
         [SerializeField] private Color _cursorColor = new Color(1f, 1f, 1f, 0.6f);
         [SerializeField] private Color _blockedColor = new Color(1f, 0.1f, 0.1f, 0.5f);
+
+        [Header("G-3 데칼 무늬 (비면 흰 사각형)")]
+        [SerializeField] private TileBase _pathTile;
+        [SerializeField] private TileBase _affectedTile;
+        [SerializeField] private TileBase _cursorTile;
+        [SerializeField] private TileBase _blockedTile;
 
         public bool IsShowing { get; private set; }
 
@@ -34,10 +41,11 @@ namespace ProjectM.Presentation
             IsShowing = true;
             if (castable && preview != null)
             {
-                foreach (var p in preview.Path) Paint(p, _pathColor);
-                foreach (var p in preview.AffectedCells) Paint(p, _affectedColor);
+                foreach (var p in preview.Path) Paint(p, _pathTile, _pathColor);
+                foreach (var p in preview.AffectedCells) Paint(p, _affectedTile, _affectedColor);
             }
-            Paint(cursor, castable ? _cursorColor : _blockedColor);
+            if (castable) Paint(cursor, _cursorTile, _cursorColor);
+            else Paint(cursor, _blockedTile, _blockedColor);
         }
 
         public void Hide()
@@ -46,10 +54,10 @@ namespace ProjectM.Presentation
             IsShowing = false;
         }
 
-        private void Paint(GridPos p, Color color)
+        private void Paint(GridPos p, TileBase tile, Color color)
         {
             var pos = new Vector3Int(p.X, p.Y, 0);
-            _tilemap.SetTile(pos, _tile);
+            _tilemap.SetTile(pos, tile != null ? tile : _tile);
             _tilemap.SetTileFlags(pos, TileFlags.None);
             _tilemap.SetColor(pos, color);
         }

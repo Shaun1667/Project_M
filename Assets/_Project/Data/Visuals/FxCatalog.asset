@@ -1,0 +1,386 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50fa2934ae209ae4ca9965fda339d772, type: 3}
+  m_Name: FxCatalog
+  m_EditorClassIdentifier: ProjectM.Runtime::ProjectM.Presentation.FxCatalog
+  _entries:
+  - Key: terrain.FireZone
+    Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+    Scale: 1.4
+    Tint: {r: 1, g: 0.5, b: 0.1, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0
+  - Key: terrain.PoisonCloud
+    Prefab: {fileID: 2886950366143268859, guid: 253510ecf8d65454aa4d811cffb5a8f8, type: 3}
+    Scale: 0.16
+    Tint: {r: 0.7, g: 0.3, b: 1, a: 1}
+    Speed: 0.8
+    Lifetime: 0
+    Height: 0
+  - Key: terrain.ContaminatedWater
+    Prefab: {fileID: 1758640513163058458, guid: 9b99dafe7fbb348489619e9393e4bcfa, type: 3}
+    Scale: 0.45
+    Tint: {r: 0.4, g: 0.6, b: 0.15, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0
+  - Key: status.Frozen
+    Prefab: {fileID: 683182934616091483, guid: 491bd2f8e55e1db45a195465b18740bd, type: 3}
+    Scale: 0.55
+    Tint: {r: 0, g: 0, b: 0, a: 0}
+    Speed: 1
+    Lifetime: 0
+    Height: 0.45
+  - Key: status.Paralyze
+    Prefab: {fileID: 7131401307255788800, guid: 4d9a3b35b3bc07649b697df7fb497b6d, type: 3}
+    Scale: 0.32
+    Tint: {r: 1, g: 0.95, b: 0.25, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0.4
+  - Key: status.Burn
+    Prefab: {fileID: 3438277244574041817, guid: 6fec832863289f04a854167bc2650d9b, type: 3}
+    Scale: 0.5
+    Tint: {r: 1, g: 0.5, b: 0.1, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0.3
+  - Key: status.Poison
+    Prefab: {fileID: 7053385775836331393, guid: 354b6251e950209409c75ab984acf000, type: 3}
+    Scale: 0.3
+    Tint: {r: 0.7, g: 0.3, b: 1, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0.4
+  - Key: status.Slow
+    Prefab: {fileID: 8860363494751517875, guid: 010733280c7cd0b4294a9867b26a13f4, type: 3}
+    Scale: 0.45
+    Tint: {r: 0.35, g: 0.85, b: 1, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0.05
+  - Key: status.Wet
+    Prefab: {fileID: 7045889733438899885, guid: 14078f8f7064d894fad9a68275c46f31, type: 3}
+    Scale: 0.4
+    Tint: {r: 0.25, g: 0.5, b: 1, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0.5
+  - Key: cast.Fire
+    Prefab: {fileID: 2944396702758532163, guid: e190bf97c041e58448af6b043116cba0, type: 3}
+    Scale: 0.14
+    Tint: {r: 1, g: 0.5, b: 0.1, a: 1}
+    Speed: 1.5
+    Lifetime: 0.6
+    Height: 0
+  - Key: cast.Ice
+    Prefab: {fileID: 2944396702758532163, guid: e190bf97c041e58448af6b043116cba0, type: 3}
+    Scale: 0.14
+    Tint: {r: 0.35, g: 0.85, b: 1, a: 1}
+    Speed: 1.5
+    Lifetime: 0.6
+    Height: 0
+  - Key: cast.Lightning
+    Prefab: {fileID: 2944396702758532163, guid: e190bf97c041e58448af6b043116cba0, type: 3}
+    Scale: 0.14
+    Tint: {r: 1, g: 0.95, b: 0.25, a: 1}
+    Speed: 1.5
+    Lifetime: 0.6
+    Height: 0
+  - Key: cast.Poison
+    Prefab: {fileID: 2944396702758532163, guid: e190bf97c041e58448af6b043116cba0, type: 3}
+    Scale: 0.14
+    Tint: {r: 0.7, g: 0.3, b: 1, a: 1}
+    Speed: 1.5
+    Lifetime: 0.6
+    Height: 0
+  - Key: cast.Water
+    Prefab: {fileID: 2944396702758532163, guid: e190bf97c041e58448af6b043116cba0, type: 3}
+    Scale: 0.14
+    Tint: {r: 0.25, g: 0.5, b: 1, a: 1}
+    Speed: 1.5
+    Lifetime: 0.6
+    Height: 0
+  - Key: projectile.Fire
+    Prefab: {fileID: 3226506910322988314, guid: eccbc655050af0b4f81d8db39f84a58e, type: 3}
+    Scale: 0.09
+    Tint: {r: 0, g: 0, b: 0, a: 0}
+    Speed: 1
+    Lifetime: 0
+    Height: 0
+  - Key: projectile.Ice
+    Prefab: {fileID: 8860363494751517875, guid: 010733280c7cd0b4294a9867b26a13f4, type: 3}
+    Scale: 1.2
+    Tint: {r: 0.35, g: 0.85, b: 1, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0
+  - Key: projectile.Poison
+    Prefab: {fileID: 919012162133337528, guid: e4a831baccba453479bb744202efc891, type: 3}
+    Scale: 1.2
+    Tint: {r: 0.7, g: 0.3, b: 1, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0
+  - Key: projectile.Water
+    Prefab: {fileID: 7045889733438899885, guid: 14078f8f7064d894fad9a68275c46f31, type: 3}
+    Scale: 1.2
+    Tint: {r: 0.25, g: 0.5, b: 1, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0
+  - Key: impact.Fire
+    Prefab: {fileID: 358637981425055526, guid: 8eb503696b886e04faff8fc0f480d473, type: 3}
+    Scale: 0.16
+    Tint: {r: 0, g: 0, b: 0, a: 0}
+    Speed: 1.5
+    Lifetime: 1
+    Height: 0
+  - Key: impact.Ice
+    Prefab: {fileID: 4924508274929071776, guid: 0edef91621bb6b34384ccc9dbb98729c, type: 3}
+    Scale: 0.35
+    Tint: {r: 0, g: 0, b: 0, a: 0}
+    Speed: 1.3
+    Lifetime: 0.9
+    Height: 0
+  - Key: impact.Lightning
+    Prefab: {fileID: 2965222256817593503, guid: a164e676dbbd6e54587237e619372c98, type: 3}
+    Scale: 0.5
+    Tint: {r: 1, g: 0.95, b: 0.25, a: 1}
+    Speed: 1.3
+    Lifetime: 0.8
+    Height: 0
+  - Key: impact.Poison
+    Prefab: {fileID: 7904898002847524615, guid: a2ccf81a1d5b163448ebdf66b5e746d6, type: 3}
+    Scale: 0.15
+    Tint: {r: 0, g: 0, b: 0, a: 0}
+    Speed: 1
+    Lifetime: 0.7
+    Height: 0
+  - Key: impact.Water
+    Prefab: {fileID: 952961124639765284, guid: 1095a5c9f65bfbe4383f63d5d1886c65, type: 3}
+    Scale: 0.25
+    Tint: {r: 0.25, g: 0.5, b: 1, a: 1}
+    Speed: 1.3
+    Lifetime: 0.9
+    Height: 0
+  - Key: burst.Fire
+    Prefab: {fileID: 4994997792314849709, guid: 3dd50886582244645be87adb42aa8528, type: 3}
+    Scale: 0.33
+    Tint: {r: 0, g: 0, b: 0, a: 0}
+    Speed: 1.6
+    Lifetime: 1
+    Height: 0.02
+  - Key: burst.Ice
+    Prefab: {fileID: 161766660727748596, guid: 05ce920d629922a4eb4795ef7494ce5c, type: 3}
+    Scale: 0.33
+    Tint: {r: 0, g: 0, b: 0, a: 0}
+    Speed: 2
+    Lifetime: 1
+    Height: 0.02
+  - Key: burst.Poison
+    Prefab: {fileID: 8378648546881499446, guid: 867c572a5be680d42a042d2349f10143, type: 3}
+    Scale: 0.4
+    Tint: {r: 0.7, g: 0.3, b: 1, a: 1}
+    Speed: 1.6
+    Lifetime: 1
+    Height: 0.02
+  - Key: burst.Water
+    Prefab: {fileID: 5034656251238326012, guid: 9de2fa19f0390d44491264d9cab8cec5, type: 3}
+    Scale: 0.33
+    Tint: {r: 0.25, g: 0.5, b: 1, a: 1}
+    Speed: 1.6
+    Lifetime: 1
+    Height: 0.02
+  - Key: burst.Lightning
+    Prefab: {fileID: 2965222256817593503, guid: a164e676dbbd6e54587237e619372c98, type: 3}
+    Scale: 1
+    Tint: {r: 1, g: 0.95, b: 0.25, a: 1}
+    Speed: 1.3
+    Lifetime: 0.8
+    Height: 0.02
+  - Key: fusion.fusion_fire_water
+    Prefab: {fileID: 7957833072274404953, guid: 3355f6bfa6db8b24281b827de929694c, type: 3}
+    Scale: 0.33
+    Tint: {r: 0, g: 0, b: 0, a: 0}
+    Speed: 2
+    Lifetime: 1
+    Height: 0.02
+  - Key: fusion.fusion_water_poison
+    Prefab: {fileID: 5034656251238326012, guid: 9de2fa19f0390d44491264d9cab8cec5, type: 3}
+    Scale: 0.33
+    Tint: {r: 0.4, g: 0.6, b: 0.15, a: 1}
+    Speed: 1.6
+    Lifetime: 1
+    Height: 0.02
+  - Key: fusion.fusion_fire_lightning
+    Prefab: {fileID: 358637981425055526, guid: 8eb503696b886e04faff8fc0f480d473, type: 3}
+    Scale: 0.22
+    Tint: {r: 0, g: 0, b: 0, a: 0}
+    Speed: 1.5
+    Lifetime: 1
+    Height: 0
+  - Key: fusion.fusion_ice_water
+    Prefab: {fileID: 4932088507883938021, guid: 0e5709a7ddb77924090c112cf73bb98a, type: 3}
+    Scale: 0.38
+    Tint: {r: 0, g: 0, b: 0, a: 0}
+    Speed: 2
+    Lifetime: 1
+    Height: 0.02
+  - Key: reaction.toxic_ignite
+    Prefab: {fileID: 7904898002847524615, guid: a2ccf81a1d5b163448ebdf66b5e746d6, type: 3}
+    Scale: 0.2
+    Tint: {r: 0, g: 0, b: 0, a: 0}
+    Speed: 1
+    Lifetime: 0.7
+    Height: 0
+  - Key: reaction.toxic_ignite_cloud
+    Prefab: {fileID: 7904898002847524615, guid: a2ccf81a1d5b163448ebdf66b5e746d6, type: 3}
+    Scale: 0.2
+    Tint: {r: 0, g: 0, b: 0, a: 0}
+    Speed: 1
+    Lifetime: 0.7
+    Height: 0
+  - Key: reaction.toxic_burst
+    Prefab: {fileID: 8378648546881499446, guid: 867c572a5be680d42a042d2349f10143, type: 3}
+    Scale: 0.4
+    Tint: {r: 0.7, g: 0.3, b: 1, a: 1}
+    Speed: 1.6
+    Lifetime: 1
+    Height: 0.02
+  - Key: reaction.gas_explosion
+    Prefab: {fileID: 4994997792314849709, guid: 3dd50886582244645be87adb42aa8528, type: 3}
+    Scale: 0.33
+    Tint: {r: 0, g: 0, b: 0, a: 0}
+    Speed: 1.6
+    Lifetime: 1
+    Height: 0.02
+  - Key: reaction.evaporate
+    Prefab: {fileID: 4809171458859421548, guid: 4e91ed1a8efe7044785b9bd97a47d87f, type: 3}
+    Scale: 0.1
+    Tint: {r: 0.92, g: 0.94, b: 0.97, a: 1}
+    Speed: 1.5
+    Lifetime: 1
+    Height: 0
+  - Key: reaction.evaporate_water
+    Prefab: {fileID: 4809171458859421548, guid: 4e91ed1a8efe7044785b9bd97a47d87f, type: 3}
+    Scale: 0.12
+    Tint: {r: 0.92, g: 0.94, b: 0.97, a: 1}
+    Speed: 1.5
+    Lifetime: 1
+    Height: 0.02
+  - Key: reaction.evaporate_contaminated
+    Prefab: {fileID: 4809171458859421548, guid: 4e91ed1a8efe7044785b9bd97a47d87f, type: 3}
+    Scale: 0.12
+    Tint: {r: 0.92, g: 0.94, b: 0.97, a: 1}
+    Speed: 1.5
+    Lifetime: 1
+    Height: 0.02
+  - Key: reaction.evaporate_fire_zone
+    Prefab: {fileID: 4809171458859421548, guid: 4e91ed1a8efe7044785b9bd97a47d87f, type: 3}
+    Scale: 0.12
+    Tint: {r: 0.92, g: 0.94, b: 0.97, a: 1}
+    Speed: 1.5
+    Lifetime: 1
+    Height: 0.02
+  - Key: reaction.extinguish
+    Prefab: {fileID: 4809171458859421548, guid: 4e91ed1a8efe7044785b9bd97a47d87f, type: 3}
+    Scale: 0.09
+    Tint: {r: 0.92, g: 0.94, b: 0.97, a: 1}
+    Speed: 1.5
+    Lifetime: 1
+    Height: 0
+  - Key: reaction.contaminate
+    Prefab: {fileID: 6361997728236094490, guid: fd25cbdb7c54fa4478d443fd2bea4ef1, type: 3}
+    Scale: 0.18
+    Tint: {r: 0, g: 0, b: 0, a: 0}
+    Speed: 1
+    Lifetime: 0.7
+    Height: 0.02
+  - Key: reaction.freeze
+    Prefab: {fileID: 4932088507883938021, guid: 0e5709a7ddb77924090c112cf73bb98a, type: 3}
+    Scale: 0.13
+    Tint: {r: 0, g: 0, b: 0, a: 0}
+    Speed: 2
+    Lifetime: 1
+    Height: 0.02
+  - Key: reaction.freeze_water
+    Prefab: {fileID: 4932088507883938021, guid: 0e5709a7ddb77924090c112cf73bb98a, type: 3}
+    Scale: 0.13
+    Tint: {r: 0, g: 0, b: 0, a: 0}
+    Speed: 2
+    Lifetime: 1
+    Height: 0.02
+  - Key: reaction.freeze_contaminated
+    Prefab: {fileID: 4932088507883938021, guid: 0e5709a7ddb77924090c112cf73bb98a, type: 3}
+    Scale: 0.13
+    Tint: {r: 0, g: 0, b: 0, a: 0}
+    Speed: 2
+    Lifetime: 1
+    Height: 0.02
+  - Key: reaction.thaw
+    Prefab: {fileID: 952961124639765284, guid: 1095a5c9f65bfbe4383f63d5d1886c65, type: 3}
+    Scale: 0.15
+    Tint: {r: 0.35, g: 0.85, b: 1, a: 1}
+    Speed: 1.3
+    Lifetime: 0.9
+    Height: 0
+  - Key: reaction.thaw_ice
+    Prefab: {fileID: 952961124639765284, guid: 1095a5c9f65bfbe4383f63d5d1886c65, type: 3}
+    Scale: 0.15
+    Tint: {r: 0.35, g: 0.85, b: 1, a: 1}
+    Speed: 1.3
+    Lifetime: 0.9
+    Height: 0.02
+  - Key: reaction.shatter
+    Prefab: {fileID: 4924508274929071776, guid: 0edef91621bb6b34384ccc9dbb98729c, type: 3}
+    Scale: 0.45
+    Tint: {r: 0, g: 0, b: 0, a: 0}
+    Speed: 1.3
+    Lifetime: 0.9
+    Height: 0
+  - Key: reaction.shock
+    Prefab: {fileID: 2965222256817593503, guid: a164e676dbbd6e54587237e619372c98, type: 3}
+    Scale: 0.5
+    Tint: {r: 1, g: 0.95, b: 0.25, a: 1}
+    Speed: 1.3
+    Lifetime: 0.8
+    Height: 0
+  - Key: reaction.shock_water
+    Prefab: {fileID: 2965222256817593503, guid: a164e676dbbd6e54587237e619372c98, type: 3}
+    Scale: 0.5
+    Tint: {r: 1, g: 0.95, b: 0.25, a: 1}
+    Speed: 1.3
+    Lifetime: 0.8
+    Height: 0
+  - Key: reaction.shock_contaminated
+    Prefab: {fileID: 2965222256817593503, guid: a164e676dbbd6e54587237e619372c98, type: 3}
+    Scale: 0.5
+    Tint: {r: 1, g: 0.95, b: 0.25, a: 1}
+    Speed: 1.3
+    Lifetime: 0.8
+    Height: 0
+  - Key: line.Lightning
+    Prefab: {fileID: 0}
+    Scale: 1
+    Tint: {r: 1, g: 0.92, b: 0.35, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0
+  - Key: line.Fire
+    Prefab: {fileID: 0}
+    Scale: 1
+    Tint: {r: 1, g: 0.55, b: 0.2, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0

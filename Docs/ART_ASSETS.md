@@ -281,3 +281,42 @@ Varco는 모든 모델을 **가장 긴 쪽 1 m**로 보내므로 크기는 프�
 | Varco (3D 모델) | 확인 필요 (Varco 지원 여부) | Unity 쪽 (파티클 · 셰이더 · 데칼) |
 |---|---|---|
 | 캐릭터 3 · 던전 모듈 · 기둥 · 계단 · 소품 · 얼음 껍질 · 얼음 창 · 융합기 | 리깅 · 애니메이션 · FBX 출력 · 폴리곤 수 조절 · 모듈 치수(1 m) 맞추기 | 지형 효과 · 상태 · 주문 · 반응 이펙트 대부분 · 안개 · 조준 · 물 표면 |
+
+---
+
+## 13. 연결된 이펙트 (G-3, 2026-10-19)
+
+에셋: 사용자가 가져온 **Hovl Studio — Magic effects pack**(H) · **Eric VFX Studio — Free Game VFX**(E), `Assets/_Project/FX` (Shuriken 프리팹, 데모 씬은 지움).
+메뉴 `ProjectM/Setup/FX`(`FxSetup`, 멱등)가 재질을 URP로 바꾸고(소프트 파티클 끔) 아래 표로 `Data/Visuals/FxCatalog.asset`을 채운다 — **이 표 = `FxSetup.Table`**. 새 효과는 표에 한 줄 추가 후 메뉴 실행.
+배율 = 팩 원본 대비 (원본이 3~12 m). 한 번 재생은 복제본의 반복을 끄고 길이(초) 뒤 지움. 높이 > 0 = 칸 바닥 기준. 색 = 시작 색에 곱(0-2 색 기준), "원래" = 팩 색 그대로.
+
+| 키 | 효과 (팩/프리팹) | 배율 | 색 | 속도 · 길이 |
+|---|---|---|---|---|
+| terrain.FireZone | H Sparks flashing yellow (불씨 루프) | 1.4 | 불 | 루프 |
+| terrain.PoisonCloud | H Smoke ground (낮은 연기 루프) | 0.16 | 독 | 0.8 · 루프 |
+| terrain.ContaminatedWater | H Sparks flashing green (거품) | 0.45 | 오염 | 루프 |
+| terrain.Water · IcePatch | 파티클 없음 — 바닥 무늬(물결 · 얼음 금) | | | |
+| status.Frozen | H Crystal effect blue (얼음 결정) | 0.55 | 원래 | 루프, 0.45 m |
+| status.Paralyze | H Lightning aura | 0.32 | 번개 | 루프 |
+| status.Burn | H Sparks flashing red | 0.5 | 불 | 루프 |
+| status.Poison | H Star aura | 0.3 | 독 | 루프 |
+| status.Slow · Wet | H Sparks white · Sparks blue | 0.45 · 0.4 | 얼음 · 물 | 루프 |
+| cast.(속성) | H Holy hit (지팡이 끝 번쩍) | 0.14 | 속성 색 | 1.5 · 0.6초 |
+| projectile.Fire | E FX_Fireball | 0.09 | 원래 | 날아가는 동안 |
+| projectile.Ice · Poison · Water | H Sparks white · pink · blue (흔적) | 1.2 | 속성 색 | 날아가는 동안 |
+| impact.Fire · Ice · Lightning · Poison · Water | H Explosion · H Snow hit · H Electro hit · E FX_Purple_Hit_02 · H Sparks explode blue | 0.16 · 0.35 · 0.5 · 0.15 · 0.25 | 원래 / 번개 · 물 | 1~1.5 · 0.7~1초 |
+| burst.Fire · Ice · Poison · Water | H Ground AOE explosion · Snow AOE · Red energy explosion · Smoke AOE explosion | 0.33~0.4 | 원래 / 독 · 물 | 1.6~2 · 1초 |
+| fusion.fusion_fire_water · water_poison · fire_lightning · ice_water | H Meteors AOE · Smoke AOE explosion · Explosion · Freeze circle | 0.33 · 0.33 · 0.22 · 0.38 | 원래 / 오염 | 1.5~2 · 1초 |
+| reaction.toxic_ignite(_cloud) · toxic_burst · gas_explosion | E FX_Purple_Hit_02 · H Red energy explosion · H Ground AOE explosion | 0.2 · 0.4 · 0.33 | 원래 / 독 | 1초 안 |
+| reaction.evaporate(4) · extinguish | H Smoke puff (증기) | 0.09~0.12 | 흰 증기 | 1.5 · 1초 |
+| reaction.contaminate | E FX_Green_Hit | 0.18 | 원래 | 0.7초 |
+| reaction.freeze(3) · thaw(2) · shatter | H Freeze circle · Sparks explode blue · Snow hit | 0.13 · 0.15 · 0.45 | 원래 / 얼음 | 1초 안 |
+| reaction.shock · shock_water · shock_contaminated | H Electro hit + **번개 선**(같은 순간 감전 대상끼리 이음) | 0.5 | 번개 | 0.8초 |
+| line.Lightning · line.Fire | 번개 선 색 (LineRenderer, 가산 재질 `Art/FX/Generated/LightningLine.mat`) | | 노랑 · 주황 | 0.25초 |
+
+코드로 만든 것 (`Art/FX/Generated` PNG 64² + `Data/Visuals/FxTiles` 타일, 흰색 + 알파 — 색은 덮개 · 조준 색):
+- 바닥 무늬: `fx_scorch`(화염 지대) · `fx_haze`(독구름) · `fx_water`(물결, 칸끼리 이어짐) · `fx_dirty_water` · `fx_ice`(금 + 반사 줄).
+- 조준 데칼: `aim_path`(점) · `aim_affected`(테두리) · `aim_cursor`(모서리 괄호) · `aim_blocked`(X).
+- 후처리: `Settings/Rendering/PostFX.asset` Bloom (threshold 1.1 · intensity 0.6 · scatter 0.6) + 씬 `PostFX` Global Volume.
+
+남은 것 (다음 다듬기 후보): 움직이는 물 셰이더 · 빙판 반사, 얼음 · 독 · 물 투사체 몸체(지금은 불꽃 튐 흔적), 화염 지대 불꽃(지금은 불씨), 융합 시전 발밑 마법진(5-1 공통, 2차), 조준 커서 위아래 움직임.
