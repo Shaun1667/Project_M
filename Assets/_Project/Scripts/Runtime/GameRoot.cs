@@ -191,8 +191,9 @@ namespace ProjectM
 
         private void OnEntityMoved(EntityMovedEvent e)
         {
-            if (e.Id == _playerId && _camera != null)
-                _camera.SnapToTarget(_entityPresenter.CellCenter(e.To));
+            if (e.Id != _playerId || _camera == null) return;
+            if (e.From == e.To) _camera.SnapToTarget(_entityPresenter.CellCenter(e.To)); // 층 이동 (3-4a: 제자리 이동 이벤트)
+            else _camera.FollowTarget(_entityPresenter.CellCenter(e.To)); // G-2b: 걸음은 부드럽게
         }
 
         private void OnUnitDied(UnitDiedEvent e)

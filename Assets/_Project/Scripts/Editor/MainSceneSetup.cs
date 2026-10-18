@@ -112,6 +112,8 @@ namespace ProjectM.Editor
             var gridGo = FindOrCreate("Grid", null);
             var grid = GetOrAdd<Grid>(gridGo);
             gridGo.transform.SetPositionAndRotation(Vector3.zero, Quaternion.Euler(90f, 0f, 0f));
+            // 칸 두께 0: 아니면 칸 중앙이 로컬 z 0.5 = 월드 y −0.5가 되어 유닛 · 모듈이 바닥 평면(y = 0, 클릭 · 덮개)보다 0.5 m 아래에 놓인다 (G-2b에서 발견)
+            grid.cellSize = new Vector3(1f, 1f, 0f);
 
             var terrainGo = FindOrCreate("Terrain", gridGo.transform);
             var tilemap = GetOrAdd<Tilemap>(terrainGo);
@@ -127,6 +129,7 @@ namespace ProjectM.Editor
             var tilemapSo = new SerializedObject(tilemapPresenter); // G-1: 벽은 3D 블록
             tilemapSo.FindProperty("_walls3D").boolValue = true;
             tilemapSo.ApplyModifiedPropertiesWithoutUndo();
+            SetRefs(entityPresenter, ("_ground", tilemapPresenter)); // G-2b: 계단 위 서는 높이
 
             // 지형 효과 오버레이: 바닥 위 1 cm · 유닛 아래
             var terrainFxGo = FindOrCreate("TerrainFx", gridGo.transform);

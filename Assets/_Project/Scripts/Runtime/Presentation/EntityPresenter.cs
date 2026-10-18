@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ProjectM.Core;
+using ProjectM.Magic;
 using ProjectM.Status;
 using ProjectM.Units;
 using UnityEngine;
@@ -7,7 +8,7 @@ using EntityId = ProjectM.Core.EntityId; // Unity 6의 UnityEngine.EntityId와 �
 
 namespace ProjectM.Presentation
 {
-    /// <summary>엔티티 하나의 3D 모습: 칸 중앙 발밑에 놓이는 루트 + 그 아래 렌더러들 (G-1).</summary>
+    /// <summary>엔티티 하나의 3D 모습: 칸 중앙 발밑에 놓이는 루트 + 그 아래 렌더러들 (G-1) + 코드 움직임 상태 (G-2b).</summary>
     public sealed class EntityView
     {
         public Transform Root { get; }
@@ -15,23 +16,57 @@ namespace ProjectM.Presentation
         /// <summary>지금 그려지는지 (시야 · 디버그 밝히기).</summary>
         public bool Visible { get; internal set; } = true;
 
+        // ── G-2b 움직임 (표시 전용 — 시뮬레이션 상태가 아님) ──
+        internal Vector3 From, To;          // 이동 보간 시작 · 끝 (발밑 월드 좌표)
+        internal float MoveT = 1f;          // 0 → 1
+        internal Vector3 LungeDir;          // 공격 찌르기 방향 (바닥 평면)
+        internal float LungeT = 1f;
+        internal float HitT = 1f;           // 피격 번쩍 · 흔들림
+        internal float CastT = 1f;          // 주문 시전 통통
+        internal float DeathT = -1f;        // 0 이상이면 사망 연출 중
+        internal float IdlePhase;
+        internal bool Flashing;
+
         public EntityView(Transform root, Renderer[] renderers)
         {
             Root = root;
             Renderers = renderers;
         }
+
+        /// <summary>움직임 연출이 모두 끝났는지 (대기 숨쉬기 제외).</summary>
+        public bool IsSettled => MoveT >= 1f && LungeT >= 1f && HitT >= 1f && CastT >= 1f && DeathT < 0f;
     }
 
     /// <summary>
-    /// 엔티티 이벤트(Spawned · Moved · Removed) → 3D 모습 (G-1, 결정 2026-10-18). 지금은 칸 중앙으로 즉시 옮기고 이동 방향을 바라본다 (이동 보간 · 애니메이션은 G-2).
+    /// 엔티티 이벤트(Spawned · Moved · Removed) → 3D 모습 (G-1, 결정 2026-10-18).
     /// VisualId의 프리팹(변형이 있으면 ID로 하나 — G-2a)이 있으면 그것, 없으면 그레이박스 캡슐(카탈로그 색 · 키). 충돌체는 붙이지 않는다 (규칙 2).
     /// 시야(VisibilityChangedEvent)를 받은 뒤로는 지금 보이는 칸에 있는 엔티티만 그린다 (1-7). 시야 이벤트가 없으면 전부 그린다.
     /// 상태 이상은 몸 색 틴트 하나 (우선순위 표) — 3D 이펙트는 G-3.
+    /// G-2b 코드 움직임 (결정 2026-10-18 — 클립 대신): 이동 = 칸 사이 보간 + 통통 튐 · 공격 = 대상 쪽으로 찌르기 · 피격 = 흰 번쩍 + 흔들림 ·
+    /// 주문 시전 = 대상 쪽을 보고 통통 · 사망 = 가라앉으며 작아진 뒤 지움 · 대기 = 숨쉬기. 로직은 기다리지 않는다 — 이벤트가 오면 바로 목표를 바꾸고
+    /// 연출이 따라간다 (모두 0.4초 안). 프레임마다 Advance(dt)가 그린다 (규칙은 돌리지 않음).
     /// </summary>
     public sealed class EntityPresenter : MonoBehaviour
     {
         [SerializeField] private Grid _grid;
         [SerializeField] private EntityVisualCatalog _catalog;
+        [Tooltip("칸마다 서는 높이 (계단 위 등, G-2b). 비면 바닥 y = 0")] [SerializeField] private TilemapPresenter _ground;
+
+        [Header("코드 움직임 (G-2b, 초 · m) — 실시간 모드 1초 안")]
+        [SerializeField] [Range(0.02f, 0.5f)] private float _moveDuration = 0.12f;
+        [SerializeField] [Range(0f, 0.5f)] private float _moveHop = 0.08f;
+        [SerializeField] [Range(0.02f, 0.5f)] private float _lungeDuration = 0.18f;
+        [SerializeField] [Range(0f, 0.6f)] private float _lungeDistance = 0.3f;
+        [SerializeField] [Range(0.02f, 0.5f)] private float _hitDuration = 0.22f;
+        [SerializeField] [Range(0f, 0.3f)] private float _hitShake = 0.06f;
+        [Tooltip("피격 순간 밝기 배율")] [SerializeField] [Range(1f, 4f)] private float _hitFlash = 2.2f;
+        [SerializeField] [Range(0.02f, 0.5f)] private float _castDuration = 0.25f;
+        [SerializeField] [Range(0f, 0.5f)] private float _castHop = 0.12f;
+        [SerializeField] [Range(0.05f, 1f)] private float _deathDuration = 0.4f;
+        [SerializeField] [Range(0f, 1f)] private float _deathSink = 0.3f;
+        [Tooltip("대기 숨쉬기 세기 (세로 배율)")] [SerializeField] [Range(0f, 0.1f)] private float _idleBreath = 0.03f;
+        [SerializeField] [Range(0.1f, 6f)] private float _idleSpeed = 2.4f;
+        [Tooltip("이보다 먼 이동(칸)은 보간 없이 옮긴다 — 층 이동 · 순간 이동")] [SerializeField] private float _teleportCells = 1.6f;
 
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
         private static readonly int ColorId = Shader.PropertyToID("_Color");
@@ -40,14 +75,19 @@ namespace ProjectM.Presentation
 
         private readonly Dictionary<EntityId, EntityView> _views = new Dictionary<EntityId, EntityView>();
         private readonly Dictionary<EntityId, GridPos> _positions = new Dictionary<EntityId, GridPos>();
+        private readonly HashSet<EntityId> _dyingIds = new HashSet<EntityId>();
+        private readonly List<EntityView> _dying = new List<EntityView>();
         private VisibilityChangedEvent _visibility;
         private SimEventBus _bus;
         private bool _revealAll;
+        private float _time;
         private readonly Dictionary<EntityId, Color> _baseTints = new Dictionary<EntityId, Color>();
         private readonly Dictionary<EntityId, List<StatusType>> _statuses = new Dictionary<EntityId, List<StatusType>>();
         private MaterialPropertyBlock _block;
 
         public int ViewCount => _views.Count;
+        /// <summary>사망 연출 중인 모습 수 (끝나면 지운다).</summary>
+        public int DyingCount => _dying.Count;
 
         /// <summary>디버그: 시야와 상관없이 모든 엔티티를 그린다. 표시만 바꾸며 게임 상태는 건드리지 않는다.</summary>
         public bool RevealAll
@@ -62,16 +102,25 @@ namespace ProjectM.Presentation
         }
 
         /// <summary>테스트 · 에디터 Setup용. 씬에서는 인스펙터로 연결한다.</summary>
-        public void Configure(Grid grid, EntityVisualCatalog catalog)
+        public void Configure(Grid grid, EntityVisualCatalog catalog, TilemapPresenter ground = null)
         {
             _grid = grid;
             _catalog = catalog;
+            _ground = ground;
         }
 
         public bool TryGetView(EntityId id, out EntityView view) => _views.TryGetValue(id, out view);
 
         /// <summary>칸 중앙의 월드 좌표 (바닥 높이). Grid가 X축 90° 돌아 있으면 바닥 평면(XZ) 위 (G-1).</summary>
         public Vector3 CellCenter(GridPos pos) => _grid.GetCellCenterWorld(new Vector3Int(pos.X, pos.Y, 0));
+
+        /// <summary>그 칸에 선 유닛의 발밑 (칸 중앙 + 서는 높이 — 계단 위 등).</summary>
+        public Vector3 StandPoint(GridPos pos)
+        {
+            var p = CellCenter(pos);
+            if (_ground != null) p.y += _ground.StandHeight(pos);
+            return p;
+        }
 
         public void Bind(SimEventBus bus)
         {
@@ -83,6 +132,9 @@ namespace ProjectM.Presentation
             _bus.Subscribe<EntityRemovedEvent>(OnRemoved);
             _bus.Subscribe<VisibilityChangedEvent>(OnVisibilityChanged);
             _bus.Subscribe<StatusChangedEvent>(OnStatusChanged);
+            _bus.Subscribe<UnitDamagedEvent>(OnDamaged);
+            _bus.Subscribe<UnitDiedEvent>(OnDied);
+            _bus.Subscribe<SpellCastEvent>(OnSpellCast);
         }
 
         public void Unbind()
@@ -93,17 +145,26 @@ namespace ProjectM.Presentation
             _bus.Unsubscribe<EntityRemovedEvent>(OnRemoved);
             _bus.Unsubscribe<VisibilityChangedEvent>(OnVisibilityChanged);
             _bus.Unsubscribe<StatusChangedEvent>(OnStatusChanged);
+            _bus.Unsubscribe<UnitDamagedEvent>(OnDamaged);
+            _bus.Unsubscribe<UnitDiedEvent>(OnDied);
+            _bus.Unsubscribe<SpellCastEvent>(OnSpellCast);
             _bus = null;
         }
 
         private void OnDestroy() => Unbind();
+
+        private void Update() => Advance(Time.deltaTime);
 
         /// <summary>남은 모습을 모두 지운다 (새 판 · 새 버스에 연결할 때).</summary>
         private void ClearViews()
         {
             foreach (var view in _views.Values)
                 if (view != null && view.Root != null) DestroySafe(view.Root.gameObject);
+            foreach (var view in _dying)
+                if (view.Root != null) DestroySafe(view.Root.gameObject);
             _views.Clear();
+            _dying.Clear();
+            _dyingIds.Clear();
             _positions.Clear();
             _baseTints.Clear();
             _statuses.Clear();
@@ -137,8 +198,14 @@ namespace ProjectM.Presentation
                 CreateCapsule(root, DefaultHeight);
             }
 
-            root.position = CellCenter(e.Pos);
-            var view = new EntityView(root, root.GetComponentsInChildren<Renderer>(true));
+            var at = StandPoint(e.Pos);
+            root.position = at;
+            var view = new EntityView(root, root.GetComponentsInChildren<Renderer>(true))
+            {
+                From = at,
+                To = at,
+                IdlePhase = (e.Id.Value * 0.618f) % 1f * Mathf.PI * 2f, // 엔티티마다 숨쉬기 박자를 어긋나게
+            };
             _views.Add(e.Id, view);
             _positions[e.Id] = e.Pos;
             _baseTints[e.Id] = tint;
@@ -162,11 +229,19 @@ namespace ProjectM.Presentation
         {
             _positions[e.Id] = e.To;
             if (!_views.TryGetValue(e.Id, out var view)) return;
-            var to = CellCenter(e.To);
-            var dir = to - CellCenter(e.From);
+            var to = StandPoint(e.To);
+            var dir = CellCenter(e.To) - CellCenter(e.From);
             dir.y = 0f;
             if (dir.sqrMagnitude > 0.0001f) view.Root.rotation = Quaternion.LookRotation(dir, Vector3.up); // 이동 방향을 바라봄
-            view.Root.position = to;
+
+            var shown = BasePosition(view);
+            var flat = to - shown;
+            flat.y = 0f;
+            bool teleport = e.From == e.To || flat.magnitude > _teleportCells; // 층 이동 · 먼 이동은 바로
+            view.From = teleport ? to : shown;
+            view.To = to;
+            view.MoveT = teleport ? 1f : 0f;
+            Pose(view);
             ApplyVisibility(e.Id, view);
         }
 
@@ -177,7 +252,110 @@ namespace ProjectM.Presentation
             _positions.Remove(e.Id);
             _baseTints.Remove(e.Id);
             _statuses.Remove(e.Id);
+            if (_dyingIds.Remove(e.Id) && view.Root != null && view.Visible)
+            {
+                view.DeathT = 0f; // 죽었으면 가라앉는 연출 뒤 지운다 (보이는 것만)
+                _dying.Add(view);
+                return;
+            }
             if (view.Root != null) DestroySafe(view.Root.gameObject);
+        }
+
+        private void OnDied(UnitDiedEvent e) => _dyingIds.Add(e.Id);
+
+        private void OnDamaged(UnitDamagedEvent e)
+        {
+            if (_views.TryGetValue(e.Target, out var target))
+            {
+                target.HitT = 0f;
+                target.Flashing = true;
+            }
+            if (e.Cause.Kind != DamageKind.Attack || !e.Attacker.IsValid || !_views.TryGetValue(e.Attacker, out var attacker)) return;
+            if (!_positions.TryGetValue(e.Attacker, out var from) || !_positions.TryGetValue(e.Target, out var to)) return;
+            var dir = CellCenter(to) - CellCenter(from);
+            dir.y = 0f;
+            if (dir.sqrMagnitude < 0.0001f) return;
+            attacker.LungeDir = dir.normalized;
+            attacker.LungeT = 0f;
+            attacker.Root.rotation = Quaternion.LookRotation(attacker.LungeDir, Vector3.up); // 대상을 바라봄
+        }
+
+        private void OnSpellCast(SpellCastEvent e)
+        {
+            if (!_views.TryGetValue(e.Caster, out var caster)) return;
+            caster.CastT = 0f;
+            if (!_positions.TryGetValue(e.Caster, out var from)) return;
+            var dir = CellCenter(e.Target) - CellCenter(from);
+            dir.y = 0f;
+            if (dir.sqrMagnitude > 0.0001f) caster.Root.rotation = Quaternion.LookRotation(dir, Vector3.up);
+        }
+
+        // ── G-2b 프레임 연출 ──
+
+        /// <summary>연출을 dt초 진행한다 (Update가 부름 · 테스트는 직접). 표시만 바꾼다.</summary>
+        public void Advance(float dt)
+        {
+            if (dt < 0f) dt = 0f;
+            _time += dt;
+            foreach (var pair in _views)
+            {
+                var view = pair.Value;
+                Step(view, dt);
+                Pose(view);
+                if (view.Flashing) ApplyTint(pair.Key, view);
+            }
+            for (int i = _dying.Count - 1; i >= 0; i--)
+            {
+                var view = _dying[i];
+                Step(view, dt);
+                view.DeathT += dt / _deathDuration;
+                if (view.DeathT >= 1f || view.Root == null)
+                {
+                    if (view.Root != null) DestroySafe(view.Root.gameObject);
+                    _dying.RemoveAt(i);
+                    continue;
+                }
+                Pose(view);
+                ApplyFlash(view, Color.white);
+            }
+        }
+
+        /// <summary>연출을 모두 끝 상태로 (테스트 · 디버그).</summary>
+        public void FinishMotions() => Advance(10f);
+
+        private void Step(EntityView view, float dt)
+        {
+            view.MoveT = Mathf.Min(1f, view.MoveT + dt / _moveDuration);
+            view.LungeT = Mathf.Min(1f, view.LungeT + dt / _lungeDuration);
+            view.HitT = Mathf.Min(1f, view.HitT + dt / _hitDuration);
+            view.CastT = Mathf.Min(1f, view.CastT + dt / _castDuration);
+        }
+
+        private static Vector3 BasePosition(EntityView view) => Vector3.Lerp(view.From, view.To, Smooth(view.MoveT));
+
+        private static float Smooth(float t) => t * t * (3f - 2f * t);
+
+        /// <summary>지금 연출 상태로 루트 위치 · 크기를 정한다.</summary>
+        private void Pose(EntityView view)
+        {
+            if (view.Root == null) return;
+            var pos = BasePosition(view);
+            pos.y += _moveHop * Mathf.Sin(Mathf.PI * view.MoveT);
+            pos += view.LungeDir * (_lungeDistance * Mathf.Sin(Mathf.PI * view.LungeT));
+            pos.y += _castHop * Mathf.Sin(Mathf.PI * view.CastT);
+            if (view.HitT < 1f)
+                pos += view.Root.right * (_hitShake * (1f - view.HitT) * Mathf.Sin(view.HitT * 40f));
+
+            float breath = _idleBreath * Mathf.Sin(_time * _idleSpeed + view.IdlePhase);
+            var scale = new Vector3(1f - breath * 0.5f, 1f + breath, 1f - breath * 0.5f);
+            if (view.DeathT >= 0f)
+            {
+                float t = Smooth(Mathf.Clamp01(view.DeathT));
+                scale *= Mathf.Max(0.01f, 1f - t);
+                pos.y -= _deathSink * t;
+            }
+            view.Root.position = pos;
+            view.Root.localScale = scale;
         }
 
         private void OnVisibilityChanged(VisibilityChangedEvent e)
@@ -223,7 +401,7 @@ namespace ProjectM.Presentation
             return Color.white;
         }
 
-        /// <summary>지금 몸 색 (기본 색 + 상태 틴트) — 테스트 · 디버그용.</summary>
+        /// <summary>지금 몸 색 (기본 색 + 상태 틴트) — 테스트 · 디버그용. 피격 번쩍은 포함하지 않는다.</summary>
         public Color CurrentTint(EntityId id)
         {
             var baseTint = _baseTints.TryGetValue(id, out var b) ? b : Color.white;
@@ -246,11 +424,18 @@ namespace ProjectM.Presentation
             if (_views.TryGetValue(e.Id, out var view)) ApplyTint(e.Id, view);
         }
 
-        /// <summary>재질을 복제하지 않고 MaterialPropertyBlock으로 색만 바꾼다 (URP Lit = _BaseColor, 그 밖 = _Color).</summary>
+        /// <summary>재질을 복제하지 않고 MaterialPropertyBlock으로 색만 바꾼다 (URP Lit = _BaseColor, 그 밖 = _Color). 피격 중이면 밝게.</summary>
         private void ApplyTint(EntityId id, EntityView view)
         {
+            ApplyFlash(view, CurrentTint(id));
+            if (view.HitT >= 1f) view.Flashing = false;
+        }
+
+        private void ApplyFlash(EntityView view, Color tint)
+        {
             if (_block == null) _block = new MaterialPropertyBlock();
-            var color = CurrentTint(id);
+            float flash = view.HitT < 1f ? Mathf.Lerp(_hitFlash, 1f, view.HitT) : 1f;
+            var color = new Color(tint.r * flash, tint.g * flash, tint.b * flash, tint.a);
             foreach (var r in view.Renderers)
             {
                 if (r == null) continue;

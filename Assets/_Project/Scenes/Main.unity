@@ -355,6 +355,7 @@ MonoBehaviour:
   _pitch: 55
   _distance: 16
   _fieldOfView: 35
+  _followTime: 0.15
 --- !u!1 &215990680
 GameObject:
   m_ObjectHideFlags: 0
@@ -607,7 +608,7 @@ Grid:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 311868165}
   m_Enabled: 1
-  m_CellSize: {x: 1, y: 1, z: 1}
+  m_CellSize: {x: 1, y: 1, z: 0}
   m_CellGap: {x: 0, y: 0, z: 0}
   m_CellLayout: 0
   m_CellSwizzle: 0
@@ -1237,8 +1238,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -0.0000038146973}
-  m_SizeDelta: {x: 0, y: -0.0000076293945}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1153024589
 MonoBehaviour:
@@ -2694,6 +2695,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: ProjectM.Runtime::ProjectM.Presentation.EntityPresenter
   _grid: {fileID: 311868166}
   _catalog: {fileID: 11400000, guid: 6e59fb9562ab24444a1a13ce3f73cebd, type: 2}
+  _ground: {fileID: 2048705274}
+  _moveDuration: 0.12
+  _moveHop: 0.08
+  _lungeDuration: 0.18
+  _lungeDistance: 0.3
+  _hitDuration: 0.22
+  _hitShake: 0.06
+  _hitFlash: 2.2
+  _castDuration: 0.25
+  _castHop: 0.12
+  _deathDuration: 0.4
+  _deathSink: 0.3
+  _idleBreath: 0.03
+  _idleSpeed: 2.4
+  _teleportCells: 1.6
 --- !u!4 &2108178771
 Transform:
   m_ObjectHideFlags: 0

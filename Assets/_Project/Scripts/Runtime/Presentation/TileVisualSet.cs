@@ -22,6 +22,7 @@ namespace ProjectM.Presentation
             public TileBase Tile;
             [Tooltip("3D 모듈 프리팹 (G-2a). 비면 Tilemap 타일")] public GameObject Module;
             [Tooltip("칸마다 90° 단위로 돌려 반복 무늬를 줄인다 (위치로 정함 — 난수 안 씀)")] public bool RandomRotation;
+            [Tooltip("이 칸에 선 유닛의 발밑 높이 (m, G-2b) — 올라가는 계단 위 등. 표시만")] public float StandHeight;
         }
 
         [SerializeField] private List<Entry> _entries = new List<Entry>();
@@ -51,6 +52,28 @@ namespace ProjectM.Presentation
             module = null;
             randomRotation = false;
             return false;
+        }
+
+        /// <summary>이 타입 칸에 선 유닛의 발밑 높이 (없으면 0).</summary>
+        public float StandHeight(TileType type)
+        {
+            for (int i = 0; i < _entries.Count; i++)
+                if (_entries[i].Type == type) return _entries[i].StandHeight;
+            return 0f;
+        }
+
+        /// <summary>테스트 · 에디터 Setup용 (G-2b).</summary>
+        public void SetStandHeight(TileType type, float height)
+        {
+            for (int i = 0; i < _entries.Count; i++)
+            {
+                if (_entries[i].Type != type) continue;
+                var e = _entries[i];
+                e.StandHeight = height;
+                _entries[i] = e;
+                return;
+            }
+            _entries.Add(new Entry { Type = type, StandHeight = height });
         }
 
         /// <summary>테스트 · 에디터 Setup용. 모듈은 건드리지 않는다.</summary>

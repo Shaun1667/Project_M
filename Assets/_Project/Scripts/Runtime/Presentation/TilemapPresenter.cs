@@ -104,6 +104,13 @@ namespace ProjectM.Presentation
             return found;
         }
 
+        /// <summary>그 칸에 선 유닛의 발밑 높이 (G-2b — 3D 모듈을 쓸 때만, TileVisualSet 값).</summary>
+        public float StandHeight(GridPos pos)
+        {
+            if (!_walls3D || _visuals == null || !InBounds(pos)) return 0f;
+            return _visuals.StandHeight(TypeAt(pos));
+        }
+
         /// <summary>그 칸의 3D 모듈 (벽 · 바닥 · 계단 · 기둥).</summary>
         public bool TryGetModule(GridPos pos, out GameObject root)
         {

@@ -129,6 +129,7 @@ namespace ProjectM.Tests
 
             _bus.Publish(new EntityMovedEvent(id, new GridPos(2, 3), new GridPos(3, 3)));
             _bus.Flush();
+            presenter.FinishMotions(); // G-2b: 이동은 보간 — 끝나면 칸 중앙
             Assert.That(view.Root.position, Is.EqualTo(_grid.GetCellCenterWorld(new Vector3Int(3, 3, 0))));
 
             _bus.Publish(new EntityRemovedEvent(id));
@@ -353,6 +354,105 @@ namespace ProjectM.Tests
             presenter.TryGetModule(new GridPos(2, 1), out var after);
             Assert.That(after.name, Does.StartWith("Wall"), "이웃에 벽이 생겨 기둥 → 벽");
             Assert.That(presenter.WallCount, Is.EqualTo(2));
+        }
+
+        // ── G-2b 코드 움직임 (결정 2026-10-18) ──
+
+        // 이동은 칸 사이를 보간 (로직은 기다리지 않음 — 목표는 바로 바뀜), 제자리 이동(층 이동)은 바로 옮김
+        [Test]
+        public void Motion_MoveInterpolates_SameCellSnaps()
+        {
+            var presenter = CreateEntityPresenter();
+            var id = new EntityId(2);
+            _bus.Publish(new EntitySpawnedEvent(id, new GridPos(0, 0), "player"));
+            _bus.Publish(new EntityMovedEvent(id, new GridPos(0, 0), new GridPos(1, 0)));
+            _bus.Flush();
+            presenter.TryGetView(id, out var view);
+            var a = _grid.GetCellCenterWorld(new Vector3Int(0, 0, 0));
+            var b = _grid.GetCellCenterWorld(new Vector3Int(1, 0, 0));
+            Assert.That(view.IsSettled, Is.False);
+            presenter.Advance(0.05f);
+            Assert.That(view.Root.position.x, Is.GreaterThan(a.x).And.LessThan(b.x), "가는 중");
+            presenter.FinishMotions();
+            Assert.That(view.Root.position, Is.EqualTo(b));
+            Assert.That(view.IsSettled, Is.True);
+
+            _bus.Publish(new EntityMovedEvent(id, new GridPos(9, 9), new GridPos(9, 9)));
+            _bus.Flush();
+            Assert.That(view.Root.position, Is.EqualTo(_grid.GetCellCenterWorld(new Vector3Int(9, 9, 0))), "층 이동은 바로");
+        }
+
+        // 근접 공격 = 공격자가 대상 쪽으로 찔렀다 돌아옴, 대상은 번쩍(밝게)
+        [Test]
+        public void Motion_AttackLungesAttacker_FlashesTarget()
+        {
+            var presenter = CreateEntityPresenter();
+            var attacker = new EntityId(1);
+            var target = new EntityId(2);
+            _bus.Publish(new EntitySpawnedEvent(attacker, new GridPos(0, 0), "player"));
+            _bus.Publish(new EntitySpawnedEvent(target, new GridPos(1, 0), "player"));
+            _bus.Publish(new ProjectM.Units.UnitDamagedEvent(target, attacker, 3, 5, 8, new DamageCause(DamageKind.Attack)));
+            _bus.Flush();
+            presenter.TryGetView(attacker, out var a);
+            presenter.TryGetView(target, out var t);
+            var home = _grid.GetCellCenterWorld(new Vector3Int(0, 0, 0));
+
+            presenter.Advance(0.09f); // 찌르기 절반쯤
+            Assert.That(a.Root.position.x, Is.GreaterThan(home.x + 0.1f), "대상 쪽으로 찌름");
+            var block = new MaterialPropertyBlock();
+            t.Renderers[0].GetPropertyBlock(block);
+            Assert.That(block.GetColor("_BaseColor").r, Is.GreaterThan(1f), "피격 번쩍");
+
+            presenter.FinishMotions();
+            Assert.That(a.Root.position, Is.EqualTo(home), "돌아옴");
+            t.Renderers[0].GetPropertyBlock(block);
+            Assert.That(block.GetColor("_BaseColor").r, Is.EqualTo(1f).Within(1e-4f), "번쩍 끝");
+        }
+
+        // 죽은 유닛은 가라앉는 연출 뒤 지움 — 시뮬레이션 쪽으로는 이미 사라짐 (TryGetView false)
+        [Test]
+        public void Motion_DeathPlaysThenDestroys()
+        {
+            var presenter = CreateEntityPresenter();
+            var id = new EntityId(4);
+            _bus.Publish(new EntitySpawnedEvent(id, new GridPos(2, 2), "player"));
+            _bus.Flush();
+            presenter.TryGetView(id, out var view);
+            var root = view.Root.gameObject;
+
+            _bus.Publish(new ProjectM.Units.UnitDiedEvent(id, ProjectM.Units.Faction.Enemy));
+            _bus.Publish(new EntityRemovedEvent(id));
+            _bus.Flush();
+            Assert.That(presenter.TryGetView(id, out _), Is.False);
+            Assert.That(presenter.DyingCount, Is.EqualTo(1));
+            presenter.Advance(0.2f);
+            Assert.That(root.transform.localScale.y, Is.LessThan(1f), "작아지는 중");
+
+            presenter.FinishMotions();
+            Assert.That(presenter.DyingCount, Is.EqualTo(0));
+            Assert.That(root == null, Is.True, "연출 뒤 지움");
+        }
+
+        // 서는 높이: 올라가는 계단 위 유닛은 발밑이 올라감 (3D 모듈일 때만)
+        [Test]
+        public void Motion_StandHeightOnStairs()
+        {
+            _tileVisuals.SetModule(TileType.StairsUp, TestModule("StairsUp", 0.57f));
+            _tileVisuals.SetStandHeight(TileType.StairsUp, 0.3f);
+            var tiles = CreateTilemapPresenter();
+            tiles.ConfigureWalls(true);
+            var map = new GridMap(3, 1);
+            map.Set(new GridPos(0, 0), TileType.Floor);
+            map.Set(new GridPos(1, 0), TileType.StairsUp);
+            _bus.Publish(new MapLoadedEvent(map));
+            _bus.Flush();
+
+            var go = new GameObject("Entities");
+            go.transform.SetParent(_root.transform, false);
+            var presenter = go.AddComponent<EntityPresenter>();
+            presenter.Configure(_grid, _catalog, tiles);
+            Assert.That(presenter.StandPoint(new GridPos(1, 0)) - presenter.CellCenter(new GridPos(1, 0)), Is.EqualTo(new Vector3(0f, 0.3f, 0f)));
+            Assert.That(presenter.StandPoint(new GridPos(0, 0)), Is.EqualTo(presenter.CellCenter(new GridPos(0, 0))), "바닥은 0");
         }
 
         [Test]

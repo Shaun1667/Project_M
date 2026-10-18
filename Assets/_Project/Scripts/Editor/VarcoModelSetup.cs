@@ -53,6 +53,8 @@ namespace ProjectM.Editor
         /// <summary>지팡이를 쥐는 높이 (지팡이 길이에 대한 비율) — 손이 이 지점에 오게 붙인다.</summary>
         private const float StaffGripRatio = 0.4f;
         private const string StaffHandBone = "RightHand";
+        /// <summary>올라가는 계단 위 발밑 높이 (m) — ART_ASSETS.md 12번.</summary>
+        private const float StairsUpStandHeight = 0.3f;
 
         [MenuItem("ProjectM/Setup/Varco Models")]
         public static void Run()
@@ -87,6 +89,8 @@ namespace ProjectM.Editor
             tiles.SetModule(TileType.StairsDown, BuildPrefab(StairsDown, null));
             tiles.SetModule(TileType.StairsUp, BuildPrefab(StairsUp, null));
             tiles.SetPillarModule(BuildPrefab(Pillar, null));
+            // G-2b: 올라가는 계단(0.57 m) 위에 선 유닛은 가운데 단 높이에 — 이미 값이 있으면(사용자가 고친 값) 두고 비었을 때만
+            if (tiles.StandHeight(TileType.StairsUp) == 0f) tiles.SetStandHeight(TileType.StairsUp, StairsUpStandHeight);
             EditorUtility.SetDirty(tiles);
 
             EnableInstancing();
