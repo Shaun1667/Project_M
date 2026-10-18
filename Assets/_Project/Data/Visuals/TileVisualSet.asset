@@ -15,9 +15,18 @@ MonoBehaviour:
   _entries:
   - Type: 1
     Tile: {fileID: 11400000, guid: bad5fd109aa4e1e43a594982ca22ff6c, type: 2}
+    Module: {fileID: 3298834443940034828, guid: 5e350c89edbcb274da486f59b35affd8, type: 3}
+    RandomRotation: 1
   - Type: 2
     Tile: {fileID: 11400000, guid: 161d4987bb7184f458f1197afd483fd4, type: 2}
+    Module: {fileID: 7314881102085662017, guid: ff0ad570aa79bb04c8153141042d5baf, type: 3}
+    RandomRotation: 0
   - Type: 3
     Tile: {fileID: 11400000, guid: de1fde42d35d9204db1d8f4401f81781, type: 2}
+    Module: {fileID: 5454372798156774499, guid: 96973fe205bc00846b6d05594ab15ac6, type: 3}
+    RandomRotation: 0
   - Type: 4
     Tile: {fileID: 11400000, guid: cd3947ab928dca04d99930baa82eb9c0, type: 2}
+    Module: {fileID: 4606725624150939120, guid: c8166442d0d4cf3469791de5f6b1ceeb, type: 3}
+    RandomRotation: 0
+  _pillarModule: {fileID: 2250049114770325675, guid: 20655c15c02cde04d993f35f16442fef, type: 3}

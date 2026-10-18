@@ -24,7 +24,7 @@ namespace ProjectM.Presentation
 
     /// <summary>
     /// 엔티티 이벤트(Spawned · Moved · Removed) → 3D 모습 (G-1, 결정 2026-10-18). 지금은 칸 중앙으로 즉시 옮기고 이동 방향을 바라본다 (이동 보간 · 애니메이션은 G-2).
-    /// VisualId의 프리팹이 있으면 그것, 없으면 그레이박스 캡슐(카탈로그 색 · 키). 충돌체는 붙이지 않는다 (규칙 2).
+    /// VisualId의 프리팹(변형이 있으면 ID로 하나 — G-2a)이 있으면 그것, 없으면 그레이박스 캡슐(카탈로그 색 · 키). 충돌체는 붙이지 않는다 (규칙 2).
     /// 시야(VisibilityChangedEvent)를 받은 뒤로는 지금 보이는 칸에 있는 엔티티만 그린다 (1-7). 시야 이벤트가 없으면 전부 그린다.
     /// 상태 이상은 몸 색 틴트 하나 (우선순위 표) — 3D 이펙트는 G-3.
     /// </summary>
@@ -123,9 +123,13 @@ namespace ProjectM.Presentation
             var tint = Color.white;
             if (_catalog != null && _catalog.TryGet(e.VisualId, out var visual))
             {
-                tint = visual.Tint;
-                if (visual.Prefab != null) Instantiate(visual.Prefab, root, false);
-                else CreateCapsule(root, visual.Height > 0f ? visual.Height : DefaultHeight);
+                var prefab = EntityVisualCatalog.PickPrefab(visual, e.Id.Value);
+                if (prefab != null) Instantiate(prefab, root, false); // 텍스처 그대로 (틴트는 상태만)
+                else
+                {
+                    tint = visual.Tint;
+                    CreateCapsule(root, visual.Height > 0f ? visual.Height : DefaultHeight);
+                }
             }
             else
             {

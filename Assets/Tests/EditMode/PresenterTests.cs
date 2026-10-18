@@ -246,6 +246,115 @@ namespace ProjectM.Tests
             Assert.That(_grid.WorldToCell(ground), Is.EqualTo(new Vector3Int(4, 7, 0)));
         }
 
+        // ── G-2a Varco 모델 연결 (결정 2026-10-18) ──
+
+        /// <summary>시험용 모듈 "프리팹": 충돌체 없는 큐브 (원점 = 바닥 중앙, 키 height).</summary>
+        private GameObject TestModule(string name, float height, bool sunk = false)
+        {
+            var root = new GameObject(name);
+            root.transform.SetParent(_root.transform, false);
+            var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            Object.DestroyImmediate(cube.GetComponent<Collider>());
+            cube.transform.SetParent(root.transform, false);
+            cube.transform.localScale = new Vector3(1f, height, 1f);
+            cube.transform.localPosition = new Vector3(0f, sunk ? -height * 0.5f : height * 0.5f, 0f);
+            return root;
+        }
+
+        // 근접 적 = 토끼 · 쥐 · 슬라임 중 엔티티 ID로 고정 (표시만, 난수 안 씀). 변형이 없으면 Prefab
+        [Test]
+        public void Catalog_PickPrefab_VariantFixedById()
+        {
+            var a = TestModule("A", 1f);
+            var b = TestModule("B", 1f);
+            var single = TestModule("Single", 1f);
+            _catalog.SetPrefab("enemy", single);
+            _catalog.TryGet("enemy", out var plain);
+            Assert.That(EntityVisualCatalog.PickPrefab(plain, 4), Is.SameAs(single), "변형 없으면 Prefab");
+
+            _catalog.SetVariants("enemy", new[] { a, b });
+            _catalog.TryGet("enemy", out var entry);
+            Assert.That(EntityVisualCatalog.PickPrefab(entry, 4), Is.SameAs(a));
+            Assert.That(EntityVisualCatalog.PickPrefab(entry, 5), Is.SameAs(b));
+            Assert.That(EntityVisualCatalog.PickPrefab(entry, 5), Is.SameAs(b), "같은 ID = 늘 같은 모습");
+        }
+
+        // 프리팹 모델은 텍스처 그대로 (카탈로그 색을 곱하지 않음) — 상태 틴트만
+        [Test]
+        public void Entity_Prefab_NoCatalogTint()
+        {
+            _catalog.Set("enemy", _sprite, Color.red);
+            _catalog.SetPrefab("enemy", TestModule("EnemyModel", 0.8f));
+            var presenter = CreateEntityPresenter();
+            var id = new EntityId(9);
+            _bus.Publish(new EntitySpawnedEvent(id, new GridPos(1, 1), "enemy"));
+            _bus.Flush();
+            Assert.That(presenter.CurrentTint(id), Is.EqualTo(Color.white));
+        }
+
+        // 바닥 · 계단은 모듈이 있으면 3D (Tilemap에는 안 그림), 외톨이 벽 = 기둥 + 아래 바닥, 낮은 바닥 판은 안개 덮개가 가리므로 시야와 무관
+        [Test]
+        public void Modules3D_FloorStairsPillar_LowModulesIgnoreVisibility()
+        {
+            _tileVisuals.SetModule(TileType.Floor, TestModule("Floor", 0.06f, sunk: true), randomRotation: true);
+            _tileVisuals.SetModule(TileType.StairsDown, TestModule("Stairs", 0.4f));
+            _tileVisuals.SetModule(TileType.Wall, TestModule("WallModule", 1f));
+            _tileVisuals.SetPillarModule(TestModule("Pillar", 1f));
+            var presenter = CreateTilemapPresenter();
+            presenter.ConfigureWalls(true);
+
+            var map = new GridMap(7, 5); // 둘레 벽, 안쪽 바닥, (3,2) 외톨이 벽, (5,2) 계단
+            for (int y = 0; y < 5; y++)
+                for (int x = 0; x < 7; x++)
+                    map.Set(new GridPos(x, y), x == 0 || y == 0 || x == 6 || y == 4 ? TileType.Wall : TileType.Floor);
+            map.Set(new GridPos(3, 2), TileType.Wall);
+            map.Set(new GridPos(5, 2), TileType.StairsDown);
+            _bus.Publish(new MapLoadedEvent(map));
+            _bus.Flush();
+
+            Assert.That(_tilemap.GetTile(new Vector3Int(1, 1, 0)), Is.Null, "모듈이 있는 바닥은 Tilemap에 안 그림");
+            Assert.That(presenter.TryGetModule(new GridPos(1, 1), out var floor), Is.True);
+            Assert.That(presenter.TryGetModule(new GridPos(5, 2), out _), Is.True, "계단 모듈");
+            Assert.That(presenter.TryGetModule(new GridPos(3, 2), out var pillar), Is.True);
+            Assert.That(pillar.name, Does.StartWith("Pillar"), "외톨이 벽 = 기둥");
+            Assert.That(pillar.transform.childCount, Is.EqualTo(2), "기둥 + 아래 바닥");
+            presenter.TryGetModule(new GridPos(0, 2), out var edge);
+            Assert.That(edge.name, Does.StartWith("Wall"), "이어진 벽 = 벽 모듈");
+            Assert.That(presenter.WallCount, Is.EqualTo(7 * 2 + 3 * 2 + 1), "둘레 20 + 기둥 1");
+
+            var none = new bool[7 * 5];
+            _bus.Publish(new ProjectM.Units.VisibilityChangedEvent(7, 5, none, (bool[])none.Clone()));
+            _bus.Flush();
+            Assert.That(floor.GetComponentInChildren<Renderer>().enabled, Is.True, "낮은 바닥 판은 숨기지 않음 (안개가 가림)");
+            presenter.TryGetModule(new GridPos(5, 2), out var stairs);
+            Assert.That(stairs.GetComponentInChildren<Renderer>().enabled, Is.False, "높은 모듈(계단)은 안 본 칸이면 숨김");
+        }
+
+        // 벽이 바뀌면 이웃의 모양도 다시 고른다: 기둥 옆에 벽이 생기면 둘 다 벽 블록
+        [Test]
+        public void Modules3D_TileChanged_RebuildsNeighbours()
+        {
+            _tileVisuals.SetModule(TileType.Wall, TestModule("WallModule", 1f));
+            _tileVisuals.SetPillarModule(TestModule("Pillar", 1f));
+            var presenter = CreateTilemapPresenter();
+            presenter.ConfigureWalls(true);
+            var map = new GridMap(5, 3);
+            for (int x = 0; x < 5; x++)
+                for (int y = 0; y < 3; y++)
+                    map.Set(new GridPos(x, y), TileType.Floor);
+            map.Set(new GridPos(2, 1), TileType.Wall);
+            _bus.Publish(new MapLoadedEvent(map));
+            _bus.Flush();
+            presenter.TryGetModule(new GridPos(2, 1), out var before);
+            Assert.That(before.name, Does.StartWith("Pillar"));
+
+            _bus.Publish(new TileChangedEvent(new GridPos(3, 1), TileType.Wall));
+            _bus.Flush();
+            presenter.TryGetModule(new GridPos(2, 1), out var after);
+            Assert.That(after.name, Does.StartWith("Wall"), "이웃에 벽이 생겨 기둥 → 벽");
+            Assert.That(presenter.WallCount, Is.EqualTo(2));
+        }
+
         [Test]
         public void Fog_PaintsByVisibility_RevealAllHidesFogOnly()
         {

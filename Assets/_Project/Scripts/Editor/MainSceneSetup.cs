@@ -754,7 +754,7 @@ namespace ProjectM.Editor
             return asset;
         }
 
-        private static void EnsureFolder(string folder)
+        internal static void EnsureFolder(string folder)
         {
             if (AssetDatabase.IsValidFolder(folder)) return;
             var parent = System.IO.Path.GetDirectoryName(folder).Replace('\\', '/');
