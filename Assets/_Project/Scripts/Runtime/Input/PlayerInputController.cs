@@ -637,10 +637,11 @@ namespace ProjectM.Input
             return list[(index + 1) % list.Count].Pos;
         }
 
+        /// <summary>화면 좌표 → 칸 (G-1 3D): 카메라 광선과 바닥 평면(y = 0)의 교점을 Grid로 바꾼다 (물리 안 씀). 하늘이면 맵 밖 칸.</summary>
         private GridPos ScreenToCell(Vector2 screenPos)
         {
-            var world = _camera.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, -_camera.transform.position.z));
-            var cell = _grid.WorldToCell(world);
+            if (!ProjectM.Presentation.CameraController.ScreenToGround(_camera, screenPos, out var ground)) return new GridPos(-1, -1);
+            var cell = _grid.WorldToCell(ground);
             return new GridPos(cell.x, cell.y);
         }
 

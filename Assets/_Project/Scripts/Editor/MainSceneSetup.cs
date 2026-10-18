@@ -55,6 +55,9 @@ namespace ProjectM.Editor
         private const string WhiteSquareSpritePath = "Assets/_Project/Art/Greybox/white_square.png";
         private const string FogTilePath = VisualsDir + "/FogTile.asset";
         private const string StairsUpTilePath = VisualsDir + "/StairsUpTile.asset";
+        private const string WallMaterialPath = VisualsDir + "/Materials/WallGreybox.mat";
+        private const string Urp3DPath = "Assets/_Project/Settings/Rendering/URP3D.asset";
+        private const string Renderer3DPath = "Assets/_Project/Settings/Rendering/Renderer3D.asset";
 
         // HUD 한글 폰트 (2-5): Galmuri11 — SIL OFL 1.1, 배포 가능. 원본 ttf에서 TMP 동적 SDF 에셋을 만든다
         private const string HudFontSourcePath = "Assets/_Project/Art/Fonts/Galmuri11.ttf";
@@ -101,24 +104,35 @@ namespace ProjectM.Editor
             var itemCatalog = EnsureItemCatalog();
             var fusionCatalog = EnsureFusionCatalog();
 
+            // G-1 (3D, 결정 2026-10-18): URP Universal Renderer · 조명
+            EnsureRenderPipeline3D();
+            EnsureLight();
+
+            // Grid를 X축 90° 돌려 바닥(XZ)에 눕힌다 — 칸 (x, y) = 월드 (x + 0.5, 0, y + 0.5). Tilemap 덮개는 로컬 −Z(= 월드 위)로 조금씩 띄운다
             var gridGo = FindOrCreate("Grid", null);
             var grid = GetOrAdd<Grid>(gridGo);
+            gridGo.transform.SetPositionAndRotation(Vector3.zero, Quaternion.Euler(90f, 0f, 0f));
 
             var terrainGo = FindOrCreate("Terrain", gridGo.transform);
             var tilemap = GetOrAdd<Tilemap>(terrainGo);
             GetOrAdd<TilemapRenderer>(terrainGo).sortingOrder = 0;
+            terrainGo.transform.localPosition = Vector3.zero;
 
             var entitiesGo = FindOrCreate("Entities", null);
             var entityPresenter = GetOrAdd<EntityPresenter>(entitiesGo);
             SetRefs(entityPresenter, ("_grid", grid), ("_catalog", catalog));
 
             var tilemapPresenter = GetOrAdd<TilemapPresenter>(terrainGo);
-            SetRefs(tilemapPresenter, ("_tilemap", tilemap), ("_visuals", tileVisuals));
+            SetRefs(tilemapPresenter, ("_tilemap", tilemap), ("_visuals", tileVisuals), ("_wallMaterial", EnsureWallMaterial()));
+            var tilemapSo = new SerializedObject(tilemapPresenter); // G-1: 벽은 3D 블록
+            tilemapSo.FindProperty("_walls3D").boolValue = true;
+            tilemapSo.ApplyModifiedPropertiesWithoutUndo();
 
-            // 지형 효과 오버레이: 바닥(0) 위 · 유닛(10) 아래
+            // 지형 효과 오버레이: 바닥 위 1 cm · 유닛 아래
             var terrainFxGo = FindOrCreate("TerrainFx", gridGo.transform);
             var terrainFxTilemap = GetOrAdd<Tilemap>(terrainFxGo);
             GetOrAdd<TilemapRenderer>(terrainFxGo).sortingOrder = 5;
+            terrainFxGo.transform.localPosition = new Vector3(0f, 0f, -0.01f);
             var terrainOverlay = GetOrAdd<TerrainOverlayPresenter>(terrainFxGo);
             SetRefs(terrainOverlay, ("_tilemap", terrainFxTilemap), ("_tile", EnsureFogTile()));
 
@@ -126,6 +140,7 @@ namespace ProjectM.Editor
             var fogGo = FindOrCreate("Fog", gridGo.transform);
             var fogTilemap = GetOrAdd<Tilemap>(fogGo);
             GetOrAdd<TilemapRenderer>(fogGo).sortingOrder = 20;
+            fogGo.transform.localPosition = new Vector3(0f, 0f, -0.02f); // 바닥 · 지형 효과 위 (벽은 TilemapPresenter가 시야를 직접 따름)
             var fogPresenter = GetOrAdd<FogPresenter>(fogGo);
             SetRefs(fogPresenter, ("_tilemap", fogTilemap), ("_fogTile", EnsureFogTile()));
 
@@ -133,12 +148,20 @@ namespace ProjectM.Editor
             var aimGo = FindOrCreate("Aim", gridGo.transform);
             var aimTilemap = GetOrAdd<Tilemap>(aimGo);
             GetOrAdd<TilemapRenderer>(aimGo).sortingOrder = 30;
+            aimGo.transform.localPosition = new Vector3(0f, 0f, -0.03f);
             var aimPreview = GetOrAdd<AimPreviewPresenter>(aimGo);
             SetRefs(aimPreview, ("_tilemap", aimTilemap), ("_tile", EnsureFogTile()));
 
             var cameraGo = GameObject.FindWithTag("MainCamera");
             CameraController cameraController = null;
-            if (cameraGo != null) cameraController = GetOrAdd<CameraController>(cameraGo);
+            if (cameraGo != null)
+            {
+                cameraController = GetOrAdd<CameraController>(cameraGo);
+                cameraController.Apply(); // G-1: 원근 · 기울임
+                var cam = cameraGo.GetComponent<Camera>();
+                cam.nearClipPlane = 0.3f;
+                cam.farClipPlane = 100f;
+            }
             else Debug.LogWarning("[MainSceneSetup] MainCamera 태그 카메라 없음");
 
             var (hud, inventoryView, result) = EnsureHud();
@@ -192,6 +215,52 @@ namespace ProjectM.Editor
             return set;
         }
 
+        /// <summary>
+        /// G-1 (결정 2026-10-18): URP Universal Renderer(3D) 파이프라인 에셋을 만들고(없을 때만) 기본 파이프라인으로 지정한다.
+        /// 이전 2D 에셋(URP2D · Renderer2D)은 파일만 남고 쓰이지 않는다. 품질 단계별 재정의는 0-1부터 없음.
+        /// </summary>
+        private static void EnsureRenderPipeline3D()
+        {
+            var asset = AssetDatabase.LoadAssetAtPath<UnityEngine.Rendering.Universal.UniversalRenderPipelineAsset>(Urp3DPath);
+            if (asset == null)
+            {
+                EnsureFolder(System.IO.Path.GetDirectoryName(Urp3DPath).Replace('\\', '/'));
+                var data = ScriptableObject.CreateInstance<UnityEngine.Rendering.Universal.UniversalRendererData>();
+                AssetDatabase.CreateAsset(data, Renderer3DPath);
+                asset = UnityEngine.Rendering.Universal.UniversalRenderPipelineAsset.Create(data);
+                AssetDatabase.CreateAsset(asset, Urp3DPath);
+                AssetDatabase.SaveAssets();
+            }
+            if (UnityEngine.Rendering.GraphicsSettings.defaultRenderPipeline != asset)
+                UnityEngine.Rendering.GraphicsSettings.defaultRenderPipeline = asset;
+            if (QualitySettings.renderPipeline != null && QualitySettings.renderPipeline != asset)
+                QualitySettings.renderPipeline = null; // 지금 품질 단계의 재정의가 있으면 기본을 따르게
+        }
+
+        /// <summary>G-1: 해 (Directional Light) 하나 — 3D 모델 · 벽이 보이게. 그림자는 부드럽게.</summary>
+        private static void EnsureLight()
+        {
+            var lightGo = FindOrCreate("Sun", null);
+            var light = GetOrAdd<Light>(lightGo);
+            light.type = LightType.Directional;
+            light.color = new Color(1f, 0.96f, 0.9f);
+            light.intensity = 1.1f;
+            light.shadows = LightShadows.Soft;
+            lightGo.transform.rotation = Quaternion.Euler(55f, -35f, 0f);
+        }
+
+        /// <summary>G-1 그레이박스 벽 재질 (URP Lit, 진회색).</summary>
+        private static Material EnsureWallMaterial()
+        {
+            var material = AssetDatabase.LoadAssetAtPath<Material>(WallMaterialPath);
+            if (material != null) return material;
+            EnsureFolder(System.IO.Path.GetDirectoryName(WallMaterialPath).Replace('\\', '/'));
+            material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { name = "WallGreybox" };
+            material.SetColor("_BaseColor", new Color(0.42f, 0.42f, 0.46f));
+            AssetDatabase.CreateAsset(material, WallMaterialPath);
+            return material;
+        }
+
         /// <summary>올라가는 계단 타일 (3-4a, 그레이박스): 흰 사각형을 청록색으로 — 내려가는 계단(파랑)과 구분.</summary>
         private static Tile EnsureStairsUpTile()
         {
@@ -207,11 +276,11 @@ namespace ProjectM.Editor
         private static EntityVisualCatalog EnsureEntityCatalog()
         {
             var catalog = LoadOrCreate<EntityVisualCatalog>(EntityCatalogPath);
-            catalog.Set(PlayerVisualId, AssetDatabase.LoadAssetAtPath<Sprite>(PlayerSpritePath), Color.white);
-            // 그레이박스: 흰 원(player.png와 같은 모양)을 빨갛게
-            catalog.Set(EnemyVisualId, AssetDatabase.LoadAssetAtPath<Sprite>(UnitCircleSpritePath), new Color(0.9f, 0.25f, 0.2f));
-            // 3-4b 임시 보스: 같은 원을 짙은 자주색으로
-            catalog.Set(BossVisualId, AssetDatabase.LoadAssetAtPath<Sprite>(UnitCircleSpritePath), new Color(0.55f, 0.1f, 0.45f));
+            // G-1 3D 그레이박스: 프리팹이 없으면 캡슐 (색 · 키). Varco 모델은 G-2에서 Prefab에 넣는다 — Setup은 Prefab을 건드리지 않는다
+            catalog.Set(PlayerVisualId, AssetDatabase.LoadAssetAtPath<Sprite>(PlayerSpritePath), new Color(0.3f, 0.85f, 0.4f), 0.9f);
+            catalog.Set(EnemyVisualId, AssetDatabase.LoadAssetAtPath<Sprite>(UnitCircleSpritePath), new Color(0.9f, 0.25f, 0.2f), 0.8f);
+            // 3-4b 임시 보스: 짙은 자주색, 두 배 키 (판정은 1칸)
+            catalog.Set(BossVisualId, AssetDatabase.LoadAssetAtPath<Sprite>(UnitCircleSpritePath), new Color(0.55f, 0.1f, 0.45f), 1.8f);
             EditorUtility.SetDirty(catalog);
             return catalog;
         }

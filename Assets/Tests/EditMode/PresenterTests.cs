@@ -123,12 +123,13 @@ namespace ProjectM.Tests
             _bus.Publish(new EntitySpawnedEvent(id, new GridPos(2, 3), "player"));
             _bus.Flush();
             Assert.That(presenter.TryGetView(id, out var view), Is.True);
-            Assert.That(view.sprite, Is.SameAs(_sprite));
-            Assert.That(view.transform.position, Is.EqualTo(_grid.GetCellCenterWorld(new Vector3Int(2, 3, 0))));
+            Assert.That(view.Renderers.Length, Is.GreaterThan(0), "프리팹이 없으면 그레이박스 캡슐 (G-1)");
+            Assert.That(view.Root.GetComponentInChildren<Collider>(), Is.Null, "충돌체 없음 (규칙 2)");
+            Assert.That(view.Root.position, Is.EqualTo(_grid.GetCellCenterWorld(new Vector3Int(2, 3, 0))));
 
             _bus.Publish(new EntityMovedEvent(id, new GridPos(2, 3), new GridPos(3, 3)));
             _bus.Flush();
-            Assert.That(view.transform.position, Is.EqualTo(_grid.GetCellCenterWorld(new Vector3Int(3, 3, 0))));
+            Assert.That(view.Root.position, Is.EqualTo(_grid.GetCellCenterWorld(new Vector3Int(3, 3, 0))));
 
             _bus.Publish(new EntityRemovedEvent(id));
             _bus.Flush();
@@ -165,12 +166,84 @@ namespace ProjectM.Tests
             _bus.Publish(Visibility(5, 1, new GridPos(0, 0)));
             _bus.Flush();
             presenter.TryGetView(id, out var view);
-            Assert.That(view.enabled, Is.False, "시야 밖이면 숨김");
+            Assert.That(view.Visible, Is.False, "시야 밖이면 숨김");
+            Assert.That(view.Renderers[0].enabled, Is.False);
 
             presenter.RevealAll = true;
-            Assert.That(view.enabled, Is.True, "디버그 밝히기");
+            Assert.That(view.Visible, Is.True, "디버그 밝히기");
             presenter.RevealAll = false;
-            Assert.That(view.enabled, Is.False, "끄면 시야대로");
+            Assert.That(view.Visible, Is.False, "끄면 시야대로");
+        }
+
+        // ── G-1 3D (결정 2026-10-18) ──
+
+        // 벽은 3D 블록: 걸을 수 있는 칸과 이웃한 벽만, Tilemap에는 안 그림. 안 본 벽 = 숨김, 본 적 있는 벽 = 보이되 어둡게, 밝히기 = 전부
+        [Test]
+        public void Walls3D_OnlyEdgeWalls_FollowVisibility()
+        {
+            var presenter = CreateTilemapPresenter();
+            presenter.ConfigureWalls(true);
+            var wide = new GridMap(7, 3); // 바닥 (1,1) ~ (3,1), 나머지 벽
+            for (int y = 0; y < 3; y++)
+                for (int x = 0; x < 7; x++)
+                    wide.Set(new GridPos(x, y), x >= 1 && x <= 3 && y == 1 ? TileType.Floor : TileType.Wall);
+            _bus.Publish(new MapLoadedEvent(wide));
+            _bus.Flush();
+
+            Assert.That(_tilemap.GetTile(new Vector3Int(0, 0, 0)), Is.Null, "벽은 Tilemap에 안 그림");
+            Assert.That(_tilemap.GetTile(new Vector3Int(2, 1, 0)), Is.SameAs(_floorTile));
+            Assert.That(presenter.TryGetWall(new GridPos(0, 1), out _), Is.True, "바닥 옆 벽");
+            Assert.That(presenter.TryGetWall(new GridPos(6, 1), out _), Is.False, "안쪽 벽(바닥과 안 닿음)은 생략");
+            Assert.That(presenter.WallCount, Is.EqualTo(5 * 2 + 2), "바닥 3칸을 둘러싼 벽 12");
+            presenter.TryGetWall(new GridPos(0, 1), out var renderers);
+            Assert.That(renderers[0].GetComponent<Collider>(), Is.Null, "충돌체 없음");
+
+            var visible = new bool[7 * 3];
+            var explored = new bool[7 * 3];
+            explored[1 * 7 + 0] = true; // (0,1)은 본 적만 있음
+            _bus.Publish(new ProjectM.Units.VisibilityChangedEvent(7, 3, visible, explored));
+            _bus.Flush();
+            Assert.That(renderers[0].enabled, Is.True, "본 적 있는 벽은 보임 (어둡게)");
+            presenter.TryGetWall(new GridPos(4, 1), out var unseen);
+            Assert.That(unseen[0].enabled, Is.False, "안 본 벽은 숨김");
+            presenter.RevealAll = true;
+            Assert.That(unseen[0].enabled, Is.True, "디버그 밝히기");
+        }
+
+        [Test]
+        public void Entity_FacesMoveDirection_TintFromStatus()
+        {
+            var presenter = CreateEntityPresenter();
+            var id = new EntityId(5);
+            _bus.Publish(new EntitySpawnedEvent(id, new GridPos(2, 2), "player"));
+            _bus.Publish(new EntityMovedEvent(id, new GridPos(2, 2), new GridPos(3, 2)));
+            _bus.Flush();
+            presenter.TryGetView(id, out var view);
+            var to = _grid.GetCellCenterWorld(new Vector3Int(3, 2, 0)) - _grid.GetCellCenterWorld(new Vector3Int(2, 2, 0));
+            Assert.That(Vector3.Angle(view.Root.forward, new Vector3(to.x, 0f, to.z)), Is.LessThan(1f), "이동 방향을 바라봄");
+
+            _bus.Publish(new ProjectM.Status.StatusChangedEvent(id, ProjectM.Status.StatusType.Burn, 3, true));
+            _bus.Flush();
+            Assert.That(presenter.CurrentTint(id), Is.Not.EqualTo(Color.white), "화상 틴트");
+        }
+
+        // 화면 → 바닥 평면 교점 → 칸: X축 90° 돈 Grid에서 칸 중앙을 바로 위에서 보면 그 칸
+        [Test]
+        public void ScreenToGround_ThroughRotatedGrid_GivesCell()
+        {
+            _root.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+            var center = _grid.GetCellCenterWorld(new Vector3Int(4, 7, 0));
+            Assert.That(center.y, Is.EqualTo(0f).Within(1e-4f), "칸은 바닥(y = 0)에");
+            Assert.That(new Vector2(center.x, center.z), Is.EqualTo(new Vector2(4.5f, 7.5f)));
+
+            var camGo = new GameObject("Cam");
+            camGo.transform.SetParent(_root.transform, false);
+            var cam = camGo.AddComponent<Camera>();
+            cam.orthographic = false;
+            camGo.transform.SetPositionAndRotation(center + new Vector3(0f, 10f, 0f), Quaternion.Euler(90f, 0f, 0f));
+            var screen = cam.WorldToScreenPoint(center);
+            Assert.That(CameraController.ScreenToGround(cam, new Vector2(screen.x, screen.y), out var ground), Is.True);
+            Assert.That(_grid.WorldToCell(ground), Is.EqualTo(new Vector3Int(4, 7, 0)));
         }
 
         [Test]

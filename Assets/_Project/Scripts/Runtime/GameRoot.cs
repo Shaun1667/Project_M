@@ -74,6 +74,7 @@ namespace ProjectM
             {
                 if (_entityPresenter != null) _entityPresenter.RevealAll = value;
                 if (_fogPresenter != null) _fogPresenter.RevealAll = value;
+                if (_tilemapPresenter != null) _tilemapPresenter.RevealAll = value; // G-1: 3D 벽
             }
         }
 
