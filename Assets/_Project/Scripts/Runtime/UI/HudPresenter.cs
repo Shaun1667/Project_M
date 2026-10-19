@@ -23,6 +23,7 @@ namespace ProjectM.UI
         [SerializeField] private TMP_Text _mpLabel;
         [Tooltip("경험치 막대 (3-6) — 글자 = 레벨 · 경험치")] [SerializeField] private RectTransform _xpFill;
         [SerializeField] private TMP_Text _xpLabel;
+        [Tooltip("든 무기 한 줄 (3-7a)")] [SerializeField] private TMP_Text _weaponLabel;
         [SerializeField] private RectTransform _statusIcons;
         [Tooltip("빠른 칸 상자들이 들어갈 줄 (3-2a)")] [SerializeField] private RectTransform _quickSlots;
         [SerializeField] private TMP_Text _hintText;
@@ -99,6 +100,7 @@ namespace ProjectM.UI
             SetBar(_mpFill, _mpLabel, "MP", _model.Mana, _model.MaxMana);
             SetBar(_xpFill, _xpLabel, null, _model.ExpToNext > 0 ? _model.Exp : 1, _model.ExpToNext > 0 ? _model.ExpToNext : 1);
             if (_xpLabel != null) _xpLabel.text = HudText.ExpLabel(_model.Level, _model.Exp, _model.ExpToNext);
+            if (_weaponLabel != null) _weaponLabel.text = _model.Text.WeaponLabel(_model.Weapon, _model.UnarmedDamage);
             DrawStatusIcons();
             DrawQuickSlots();
 

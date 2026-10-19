@@ -21,6 +21,7 @@
 | 9 | 아이템 | `Assets/_Project/Data/Items/ItemCatalog.asset` (`ItemCatalogAsset`) | `ProjectM.Items.ItemDef` · `ItemBook` | 사용 중 |
 | 10 | 융합 규칙 표 | `Assets/_Project/Data/Fusions/FusionCatalog.asset` (`FusionCatalogAsset`) | `ProjectM.Magic.FusionDef` · `FusionBook` | 사용 중 (3-2b) |
 | 11 | 바닥 아이템(마법서) 배치 | `Assets/_Project/Data/Items/LootConfig.asset` (`LootConfigAsset`) | `ProjectM.Items.LootConfig` · `Loot` | 사용 중 (3-5) |
+| 13 | 무기 (3-7a) | `ItemCatalog.asset`의 무기 줄 · 공통 값 (`ItemCatalogAsset`) — 9번과 같은 에셋 | `ProjectM.Items.WeaponDef` · `WeaponRules` · `Weapons` · `ProjectM.Units.EquippedWeapon` | 사용 중 (3-7a) |
 | 12 | 경험치 · 레벨업 | `Assets/_Project/Data/Units/ProgressionConfig.asset` (`ProgressionConfigAsset`) + 유닛 에셋의 명중 · 회피 · 경험치 (3번) | `ProjectM.Units.ProgressionConfig` · `Progression` | 사용 중 (3-6) |
 
 **데이터 구조 규칙 (0-4 결정)**
@@ -337,6 +338,7 @@
 | 값 | 필드 | 값 | 비고 |
 |---|---|---|---|
 | 층당 최대 마법서 | `_maxBooksPerFloor` | **2** | 1층부터 1권씩 채우고 남는 책은 아직 2권 미만인 층에 무작위로 더 |
+| 한 판 무기 수 (3-7a) | `_weaponsPerRun` | **2** | 무기 6종을 시드로 섞어 앞에서 2개(같은 종 안 겹침), 1~4층에 무작위. 책 계획 뒤에 붙여 책 · 맵 · 적 배치는 그대로 (결정 2026-10-19) |
 | 시작 칸에서 최소 거리 | `_minDistanceFromStart` | **3** | 칸(대각선 포함). 후보가 모자라면 거리를 줄여 다시 찾음. 계단 · 벽 칸 · 다른 아이템 칸 제외 |
 
 난수: `RngStream.Loot`(판 시작에 책 순서 섞기 · 층 배정, 처음 가는 층에서 칸 고르기) — 맵 · 적 배치(MapGen)는 바뀌지 않는다. 같은 시드 + 같은 진행 = 같은 책 위치.
@@ -363,6 +365,31 @@
 결과 (근접 적만 잡을 때): 레벨 2까지 10마리, 레벨 5까지 70마리(10 + 15 + 20 + 25) — 근접 적은 레벨 5까지만 경험치를 줘서 레벨 6부터는 보스(10)뿐. 지금 한 판(층당 5마리 + 재생성) 기준으로 레벨 3~4 근처 예상 — Phase 4 재미 검증에서 적 종류 · 경험치로 조정.
 
 검산 (`ProgressionTests.ProjectAssets_MatchBalanceTable` · `ExpToNext_IsSpdFormula` · `GainExp_*`).
+
+---
+
+## 13. 무기 — `Data/Items/ItemCatalog.asset` (무기 줄 · 공통 값)
+
+결정 (2026-10-19, 3-7a — `Docs/장비_데이터.md` 4번): 사용자 값(SPD 2티어 크기)을 그대로 넣고 **나누기 3**(비율 유지)으로 게임 크기에 맞춤. 무기는 최소~최대 굴림(`RngStream.Combat`), 맨손은 `_attackDamage` 고정 3. 주문은 고정 피해 그대로.
+
+| 공통 | 필드 | 값 | 비고 |
+|---|---|---|---|
+| 피해 나누기 | `_weaponDamageDivisor` | **3** | 최대 = round((최대 피해 + 효율 × 강화) / 3), 0.5 올림 |
+| 최소 피해 기본 | `_weaponMinDamage` | **2** | 최소 = max(1, round((2 + 강화) / 3)) — SPD 2티어 |
+
+| ID | 이름 | 최대 피해 `MaxDamage` | 강화 효율 | 명중 `Accuracy` | 비용 (틱) | 거리 | 게임 피해 (+0) |
+|---|---|---|---|---|---|---|---|
+| `shortsword` | 소검 | **15** | **3** | 1.0 | 1 | 1 | 1 ~ 5 |
+| `hand_axe` | 손도끼 | **12** | **3** | **1.32** | 1 | 1 | 1 ~ 4 |
+| `spear` | 창 | **20** | **4** | 1.0 | **2** | **2** | 1 ~ 7 |
+| `quarterstaff` | 육척봉 | **12** | **3** | 1.0 | 1 | 1 | 1 ~ 4 (방어 +2는 3-7c) |
+| `dirk` | 더크 | **12** | **3** | 1.0 | 1 | 1 | 1 ~ 4 (기습은 3-7c) |
+| `sickle` | 손낫 | **20** | **3** | **0.68** | 1 | 1 | 1 ~ 7 |
+
+결과: 평균 피해 소검 3.0(맨손 3과 같음) · 손도끼 · 육척봉 · 더크 2.5 · 창 · 손낫 4.0. 근접 적(체력 8)은 소검으로 평균 2.7대. 창은 2틱이라 시간당 피해 2.0 — 대신 한 칸 떨어져 칠 수 있음. 손낫은 명중 10 × 0.68 = 6.8 vs 적 회피 2 → 약 85%.
+힘(시작 10 · 요구 12)은 3-7b부터 — 그 전에는 명중 벌점 없음.
+
+검산 (`WeaponTests.ProjectAssets_MatchBalanceTable` · `Resolve_MatchesDesignTable`).
 
 ---
 

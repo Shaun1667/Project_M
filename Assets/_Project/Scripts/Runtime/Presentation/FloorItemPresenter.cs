@@ -17,6 +17,7 @@ namespace ProjectM.Presentation
         [Tooltip("item.<아이템 ID> 키: 프리팹 = 반짝임 루프, 틴트 = 책 색 (메뉴 ProjectM/Setup/FX가 채움)")] [SerializeField] private FxCatalog _catalog;
         [Tooltip("책 상자 재질 (URP Lit, 흰색 — 색은 칸마다 덮어씀). 비면 Unity 기본 재질 — 빌드에서 마젠타로 깨진다")]
         [SerializeField] private Material _bookMaterial;
+        [Tooltip("아이템 ID → 모델 (3-7a 무기). 없는 아이템은 책 상자")] [SerializeField] private ItemVisualCatalog _models;
         [SerializeField] private Vector3 _bookSize = new Vector3(0.34f, 0.07f, 0.44f);
         [Tooltip("바닥에서 뜬 높이 · 위아래 흔들림 (m)")] [SerializeField] private float _hoverHeight = 0.35f;
         [SerializeField] private float _bobAmount = 0.06f;
@@ -55,11 +56,12 @@ namespace ProjectM.Presentation
         }
 
         /// <summary>테스트 · 에디터 Setup용.</summary>
-        public void Configure(EntityPresenter entities, FxCatalog catalog, Material bookMaterial = null)
+        public void Configure(EntityPresenter entities, FxCatalog catalog, Material bookMaterial = null, ItemVisualCatalog models = null)
         {
             _entities = entities;
             _catalog = catalog;
             _bookMaterial = bookMaterial;
+            _models = models;
         }
 
         public bool Has(GridPos pos, string itemId) => _views.Exists(v => v.Pos == pos && v.ItemId == itemId);
@@ -111,6 +113,22 @@ namespace ProjectM.Presentation
             root.SetParent(transform, false);
             root.position = CellCenter(e.Pos);
 
+            if (_models != null && _models.TryGet(e.ItemId, out var modelPrefab))
+            {
+                // 3-7a 무기: 모델을 눕혀(날이 바닥과 나란히) 떠서 돈다 — 도는 축(Book) 아래에 눕힌 모델
+                var spin = new GameObject("Book").transform;
+                spin.SetParent(root, false);
+                var model = Instantiate(modelPrefab, spin, false);
+                model.name = "Model";
+                model.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+                AddGlow(root, e.ItemId);
+                var modelView = new View { Pos = e.Pos, ItemId = e.ItemId, Root = root, Book = spin, Phase = (e.Pos.X * 0.37f + e.Pos.Y * 0.61f) % 1f * Mathf.PI * 2f };
+                _views.Add(modelView);
+                Pose(modelView);
+                ApplyVisibility(modelView);
+                return;
+            }
+
             var book = GameObject.CreatePrimitive(PrimitiveType.Cube);
             var collider = book.GetComponent<Collider>();
             if (collider != null) DestroySafe(collider); // 규칙 2: 충돌체 없음
@@ -149,6 +167,23 @@ namespace ProjectM.Presentation
             _views.Add(view);
             Pose(view);
             ApplyVisibility(view);
+        }
+
+        /// <summary>반짝임 루프만 (모델이 있는 아이템 — 색은 FxCatalog 틴트).</summary>
+        private void AddGlow(Transform root, string itemId)
+        {
+            if (_catalog == null || !TryGetTintOnly("item." + itemId, out var fx) || fx.Prefab == null) return;
+            var glow = Instantiate(fx.Prefab, root, false);
+            glow.name = "Glow";
+            glow.transform.localPosition = Vector3.up * fx.Height;
+            glow.transform.localScale = Vector3.one * (fx.Scale > 0f ? fx.Scale : 1f);
+            foreach (var ps in glow.GetComponentsInChildren<ParticleSystem>(true))
+            {
+                var main = ps.main;
+                main.scalingMode = ParticleSystemScalingMode.Hierarchy;
+                if (fx.Tint.a > 0f) main.startColor = new ParticleSystem.MinMaxGradient(fx.Tint);
+                ps.Play(false);
+            }
         }
 
         /// <summary>프리팹 없이 색만 지정한 줄도 쓴다 (FxCatalog.TryGet은 프리팹 없는 줄을 건너뜀).</summary>

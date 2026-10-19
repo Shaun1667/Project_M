@@ -41,6 +41,7 @@ namespace ProjectM.Editor
         private const string FusionCatalogPath = "Assets/_Project/Data/Fusions/FusionCatalog.asset";
         private const string LootConfigPath = "Assets/_Project/Data/Items/LootConfig.asset";
         private const string ProgressionConfigPath = "Assets/_Project/Data/Units/ProgressionConfig.asset";
+        private const string ItemVisualCatalogPath = "Assets/_Project/Data/Visuals/ItemVisualCatalog.asset";
 
         /// <summary>플레이어 시작 주문 (BALANCE 4번). 3-1부터 빈 칸 — 주문은 게임 중에 얻고, 테스트는 디버그 창에서 넣는다 (REACTIONS.md D8).</summary>
         private static readonly string[] PlayerStartingSpells = new string[0];
@@ -178,9 +179,11 @@ namespace ProjectM.Editor
 
             // 3-5: 바닥 아이템(마법서) — 배치 수치(없을 때만 BALANCE 11번 값) · 표시 (색 · 반짝임은 메뉴 ProjectM/Setup/FX가 채움)
             var lootConfig = EnsureAsset<LootConfigAsset>(LootConfigPath, ("_maxBooksPerFloor", 2), ("_minDistanceFromStart", 3));
+            FillZeroInts(lootConfig, ("_weaponsPerRun", 2)); // 3-7a: 한 판에 무기 2 (BALANCE 11번)
             var floorItemsGo = FindOrCreate("FloorItems", null);
             var floorItems = GetOrAdd<FloorItemPresenter>(floorItemsGo);
-            SetRefs(floorItems, ("_entities", entityPresenter), ("_bookMaterial", EnsureShapeMaterial()));
+            SetRefs(floorItems, ("_entities", entityPresenter), ("_bookMaterial", EnsureShapeMaterial()),
+                ("_models", LoadOrCreate<ItemVisualCatalog>(ItemVisualCatalogPath))); // 3-7a 무기 모델 (Varco Models 메뉴가 채움)
             // 임시 보스 (3-4b) — 없을 때만 BALANCE 3번 값으로
             var bossDef = EnsureAsset<UnitDefAsset>(BossDefPath,
                 ("_visualId", BossVisualId), ("_maxHp", 60), ("_attackDamage", 5), ("_sightRange", 10));
@@ -552,6 +555,8 @@ namespace ProjectM.Editor
             var (mpFill, mpLabel) = EnsureBar(canvasGo.transform, "MpBar", new Vector2(24, -54), new Color(0.25f, 0.5f, 1f), font);
             // 3-6: 경험치 막대 (레벨 · 경험치)
             var (xpFill, xpLabel) = EnsureBar(canvasGo.transform, "XpBar", new Vector2(24, -92), new Color(0.85f, 0.7f, 0.2f), font, 22f, 18f);
+            // 3-7a: 든 무기 한 줄 (경험치 막대 오른쪽)
+            var weaponLabel = EnsureText(canvasGo.transform, "Weapon", topLeft, new Vector2(404, -90), new Vector2(700, 26), 22, font, TextAlignmentOptions.TopLeft);
 
             var iconsGo = FindOrCreate("StatusIcons", canvasGo.transform);
             var icons = GetOrAdd<RectTransform>(iconsGo);
@@ -591,7 +596,7 @@ namespace ProjectM.Editor
             SetRefs(hud,
                 ("_hpFill", hpFill), ("_hpLabel", hpLabel),
                 ("_mpFill", mpFill), ("_mpLabel", mpLabel),
-                ("_xpFill", xpFill), ("_xpLabel", xpLabel),
+                ("_xpFill", xpFill), ("_xpLabel", xpLabel), ("_weaponLabel", weaponLabel),
                 ("_statusIcons", icons), ("_quickSlots", quick), ("_hintText", hint), ("_logText", log));
             // 로그 줄 수 (결정 2026-10-16: 8줄). 2-4까지 씬에 저장된 6을 덮어쓴다
             var hudSo = new SerializedObject(hud);
@@ -641,6 +646,13 @@ namespace ProjectM.Editor
             changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "spellbook_lightning", DisplayName = "번개 줄기 마법서", Use = ItemUse.LearnSpell, SpellId = "lightning_basic" });
             changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "spellbook_poison", DisplayName = "독 폭발 마법서", Use = ItemUse.LearnSpell, SpellId = "poison_basic" });
             changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "spellbook_water", DisplayName = "물보라 마법서", Use = ItemUse.LearnSpell, SpellId = "water_basic" });
+            // 3-7a 근접 무기 6종 (Docs/장비_데이터.md 1번 표 — SPD 크기, 나누기 3은 카탈로그 공통 값. BALANCE 13번)
+            changed |= catalog.AddIfMissing(Weapon("shortsword", "소검", 15, 3, 1f, 1, 1));
+            changed |= catalog.AddIfMissing(Weapon("hand_axe", "손도끼", 12, 3, 1.32f, 1, 1));
+            changed |= catalog.AddIfMissing(Weapon("spear", "창", 20, 4, 1f, 2, 2));
+            changed |= catalog.AddIfMissing(Weapon("quarterstaff", "육척봉", 12, 3, 1f, 1, 1));
+            changed |= catalog.AddIfMissing(Weapon("dirk", "더크", 12, 3, 1f, 1, 1));
+            changed |= catalog.AddIfMissing(Weapon("sickle", "손낫", 20, 3, 0.68f, 1, 1));
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }
@@ -816,6 +828,13 @@ namespace ProjectM.Editor
             so.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(asset);
         }
+
+        private static ItemCatalogAsset.Entry Weapon(string id, string name, int maxDamage, int efficiency, float accuracy, int cost, int reach) =>
+            new ItemCatalogAsset.Entry
+            {
+                Id = id, DisplayName = name, Use = ItemUse.EquipWeapon,
+                MaxDamage = maxDamage, UpgradeEfficiency = efficiency, Accuracy = accuracy, AttackCostTicks = cost, Reach = reach,
+            };
 
         private static T LoadOrCreate<T>(string path) where T : ScriptableObject
         {

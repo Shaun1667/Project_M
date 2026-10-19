@@ -79,6 +79,9 @@ namespace ProjectM.Core
             _pendingFloorItems.AddRange(items);
         }
 
+        /// <summary>계획 끝에 붙인다 (3-7a 무기 — 책 계획 뒤).</summary>
+        internal void AddPendingFloorItems(System.Collections.Generic.IEnumerable<PendingFloorItem> items) => _pendingFloorItems.AddRange(items);
+
         /// <summary>그 층 몫을 꺼낸다 (계획에서 빠짐).</summary>
         internal System.Collections.Generic.List<string> TakePendingFloorItems(int floor)
         {

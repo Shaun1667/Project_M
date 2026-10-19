@@ -22,6 +22,7 @@ namespace ProjectM.Editor
         private const string PrefabDir = "Assets/_Project/Prefabs/Varco";
         private const string TileVisualSetPath = "Assets/_Project/Data/Visuals/TileVisualSet.asset";
         private const string EntityCatalogPath = "Assets/_Project/Data/Visuals/EntityVisualCatalog.asset";
+        private const string ItemVisualCatalogPath = "Assets/_Project/Data/Visuals/ItemVisualCatalog.asset";
         private const string AnimationDir = "Assets/_Project/Animation/";
         private const string PlayerControllerPath = AnimationDir + "PlayerAnimator.controller";
         /// <summary>EntityPresenter가 이동 중에 켜는 bool 파라미터 (EntityPresenter.MovingParameter와 같아야 한다).</summary>
@@ -62,6 +63,21 @@ namespace ProjectM.Editor
         private static readonly ModelSpec StairsDown = new ModelSpec("Tile_StairsDown", "Tile_StairsDown", 1f, 0f);
         private static readonly ModelSpec StairsUp = new ModelSpec("Tile_StairsUp", "Tile_StairsUp", 1f, 0f);
 
+        /// <summary>
+        /// 무기 6종 (3-7a — Docs/무기_에셋.md 1번 표 = ART_ASSETS 12-2): 아이템 ID · 모델 · 게임 안 길이(m) · 쥐는 곳(길이 비율, 아래 끝 0 → 위 끝 1).
+        /// Tilt = 손에서 앞으로 기울이는 각도(도) — 한 손 무기는 세우면 몸에 가려 위에서 안 보여 날을 앞으로 눕힌다, 긴 무기는 세움(0).
+        /// Varco 무기 FBX는 높이 1 m · 날이 위(+Y) · 원점 가운데.
+        /// </summary>
+        private static readonly (string ItemId, string Model, float Length, float Grip, float Tilt)[] WeaponSpecs =
+        {
+            ("shortsword", "Prop_Weapon_Shortsword", 0.45f, 0.12f, 70f),
+            ("hand_axe", "Prop_Weapon_HandAxe", 0.35f, 0.25f, 70f),
+            ("spear", "Prop_Weapon_Spear", 1.10f, 0.35f, 0f),
+            ("quarterstaff", "Prop_Weapon_Quarterstaff", 1.00f, 0.45f, 0f),
+            ("dirk", "Prop_Weapon_Dirk", 0.25f, 0.15f, 70f),
+            ("sickle", "Prop_Weapon_Sickle", 0.30f, 0.15f, 70f),
+        };
+
         /// <summary>지팡이를 쥐는 높이 (지팡이 길이에 대한 비율) — 손이 이 지점에 오게 붙인다.</summary>
         private const float StaffGripRatio = 0.4f;
         private const string StaffHandBone = "RightHand";
@@ -98,6 +114,7 @@ namespace ProjectM.Editor
             {
                 SetupAnimator(sheep, controller, idle);
                 AttachStaff(sheep);
+                AttachWeapons(sheep); // 3-7a: 손에 무기 6종을 꺼 둔 채 붙임 — 들면 EntityPresenter가 켜고 지팡이를 숨김
             });
             catalog.SetPrefab("player", player);
             var variants = new GameObject[MeleeVariants.Length];
@@ -116,6 +133,7 @@ namespace ProjectM.Editor
             if (tiles.StandHeight(TileType.StairsUp) == 0f) tiles.SetStandHeight(TileType.StairsUp, StairsUpStandHeight);
             EditorUtility.SetDirty(tiles);
 
+            BuildWeaponPrefabs();
             EnableInstancing();
             AssetDatabase.SaveAssets();
             Debug.Log("[VarcoModelSetup] 완료: " + PrefabDir);
@@ -289,6 +307,50 @@ namespace ProjectM.Editor
             var upright = sheep.transform.parent; // 프리팹 루트 (Y-up)
             staff.transform.rotation = upright.rotation * Quaternion.Euler(0f, Staff.Yaw, 0f) * model.transform.localRotation; // 세워서
             staff.transform.position = hand.position - upright.up * (length * StaffGripRatio);
+        }
+
+        /// <summary>
+        /// 무기를 오른손 뼈에 붙인다 (3-7a): 지팡이와 같이 세워 들고, 손이 길이의 Grip 지점에 오게. 이름 "Weapon_&lt;아이템 ID&gt;", 처음엔 꺼 둠.
+        /// </summary>
+        private static void AttachWeapons(GameObject sheep)
+        {
+            var hand = FindDeep(sheep.transform, StaffHandBone);
+            if (hand == null) return;
+            var upright = sheep.transform.parent; // 프리팹 루트 (Y-up)
+            foreach (var spec in WeaponSpecs)
+            {
+                var model = LoadModel(spec.Model);
+                if (model == null) continue;
+                var weapon = (GameObject)PrefabUtility.InstantiatePrefab(model);
+                weapon.name = EntityPresenter.HeldWeaponPrefix + spec.ItemId;
+                StripColliders(weapon);
+                weapon.transform.SetParent(hand, true);
+                weapon.transform.localScale = model.transform.localScale * (spec.Length / Mathf.Max(1e-4f, hand.lossyScale.y));
+                var tilt = upright.rotation * Quaternion.Euler(spec.Tilt, 0f, 0f); // 날(+Y)을 앞(+Z)으로 Tilt도
+                weapon.transform.rotation = tilt * model.transform.localRotation;
+                // 원점이 가운데라 아래 끝 = 원점 − 길이/2 → 손이 아래 끝에서 길이 × Grip 지점에 오게 (날 방향 축을 따라)
+                weapon.transform.position = hand.position - (tilt * Vector3.up) * (spec.Length * (spec.Grip - 0.5f));
+                weapon.SetActive(false);
+            }
+        }
+
+        /// <summary>
+        /// 바닥에 놓을 무기 프리팹 (3-7a): Prefabs/Varco/Weapon_&lt;모델&gt; — 세운 모습, 원점 가운데, 길이 = 표 값. ItemVisualCatalog에 연결.
+        /// </summary>
+        private static void BuildWeaponPrefabs()
+        {
+            var catalog = AssetDatabase.LoadAssetAtPath<ItemVisualCatalog>(ItemVisualCatalogPath);
+            if (catalog == null)
+            {
+                catalog = ScriptableObject.CreateInstance<ItemVisualCatalog>();
+                AssetDatabase.CreateAsset(catalog, ItemVisualCatalogPath);
+            }
+            foreach (var spec in WeaponSpecs)
+            {
+                var prefab = BuildPrefab(new ModelSpec(spec.Model, "Weapon_" + spec.Model.Replace("Prop_Weapon_", ""), spec.Length, 0f), null);
+                if (prefab != null) catalog.Set(spec.ItemId, prefab);
+            }
+            EditorUtility.SetDirty(catalog);
         }
 
         /// <summary>바닥 판: 윗면이 y = 0이 되게 내린다 — 유닛 발밑 · 지형 효과 · 안개 · 조준 덮개(y 0.01~0.03)가 그대로 바닥 위에 온다.</summary>

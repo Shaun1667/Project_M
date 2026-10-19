@@ -3,6 +3,7 @@ using ProjectM.Core;
 using ProjectM.Items;
 using ProjectM.Magic;
 using ProjectM.Status;
+using ProjectM.Units;
 using EntityId = ProjectM.Core.EntityId;
 
 namespace ProjectM.UI
@@ -143,6 +144,12 @@ namespace ProjectM.UI
 
         // ── 마법서 (3-5) ──
         public string PickedUp(string itemId) => $"{Eul(Item(itemId))} 주웠다";
+        // 3-7a 무기
+        public string Equipped(string itemId) => $"{Eul(Item(itemId))} 들었다";
+        /// <summary>HUD 무기 줄: "무기: 소검 1~5" · 맨손이면 "무기: 맨손 3".</summary>
+        public string WeaponLabel(EquippedWeapon weapon, int unarmedDamage) => weapon.IsEmpty
+            ? $"무기: 맨손 {unarmedDamage}"
+            : $"무기: {Item(weapon.ItemId)} {weapon.MinDamage}~{weapon.MaxDamage}";
         public string PickupFull(string itemId) => $"인벤토리가 가득 차 {Eul(Item(itemId))} 줍지 못했다";
         public string Learned(string spellId, int quickSlot) =>
             quickSlot >= 0 ? $"{Eul(Spell(spellId))} 배웠다 → [{quickSlot + 1}]" : $"{Eul(Spell(spellId))} 배웠다 (빠른 칸이 가득 차 등록 안 함)";

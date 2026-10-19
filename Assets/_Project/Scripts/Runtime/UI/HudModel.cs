@@ -41,6 +41,9 @@ namespace ProjectM.UI
         public int Level { get; private set; } = 1;
         public int Exp { get; private set; }
         public int ExpToNext { get; private set; }
+        /// <summary>든 무기 (3-7a) — Empty = 맨손 (피해 = UnarmedDamage).</summary>
+        public EquippedWeapon Weapon { get; private set; }
+        public int UnarmedDamage { get; private set; }
         public bool Dead { get; private set; }
         /// <summary>빠른 칸 (3-2a). 빈 칸은 Empty.</summary>
         public IReadOnlyList<InventoryRef> QuickSlots => _quickSlots;
@@ -62,6 +65,8 @@ namespace ProjectM.UI
             _playerId = player.Id;
             Level = player.Level;
             Exp = player.Exp;
+            Weapon = player.Weapon;
+            UnarmedDamage = player.AttackDamage;
             ExpToNext = progression != null ? Progression.ExpToNextOrZero(player, progression) : 0;
             Hp = player.Hp;
             MaxHp = player.MaxHp;
@@ -95,6 +100,7 @@ namespace ProjectM.UI
             _bus.Subscribe<AttackMissedEvent>(OnMissed);
             _bus.Subscribe<ExpGainedEvent>(OnExpGained);
             _bus.Subscribe<LevelUpEvent>(OnLevelUp);
+            _bus.Subscribe<WeaponEquippedEvent>(OnWeaponEquipped);
             _lastPickupFail = null;
             Changed?.Invoke();
         }
@@ -157,6 +163,15 @@ namespace ProjectM.UI
             Changed?.Invoke();
         }
 
+        // 3-7a: "소검을 들었다"
+        private void OnWeaponEquipped(WeaponEquippedEvent e)
+        {
+            if (e.Unit != _playerId) return;
+            Weapon = e.Weapon;
+            AddLog(Text.Equipped(e.Weapon.ItemId));
+            Changed?.Invoke();
+        }
+
         private void OnMoved(EntityMovedEvent e)
         {
             if (e.Id == _playerId && e.From != e.To) _lastPickupFail = null; // 다른 칸으로 가면 다시 알릴 수 있게
@@ -210,6 +225,7 @@ namespace ProjectM.UI
             _bus.Unsubscribe<AttackMissedEvent>(OnMissed);
             _bus.Unsubscribe<ExpGainedEvent>(OnExpGained);
             _bus.Unsubscribe<LevelUpEvent>(OnLevelUp);
+            _bus.Unsubscribe<WeaponEquippedEvent>(OnWeaponEquipped);
             _bus = null;
         }
 

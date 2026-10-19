@@ -13,13 +13,17 @@ namespace ProjectM.Items
         public int MaxBooksPerFloor { get; }
         /// <summary>층 시작 칸(도착 계단)에서 아이템까지 최소 거리 (칸, 대각선 포함).</summary>
         public int MinDistanceFromStart { get; }
+        /// <summary>한 판에 놓는 무기 수 (3-7a) — 무기 종류 중 시드로 고름(같은 종 안 겹침), 1~마지막 전 층에 무작위.</summary>
+        public int WeaponsPerRun { get; }
 
-        public LootConfig(int maxBooksPerFloor, int minDistanceFromStart)
+        public LootConfig(int maxBooksPerFloor, int minDistanceFromStart, int weaponsPerRun = 0)
         {
             if (maxBooksPerFloor < 1) throw new ArgumentOutOfRangeException(nameof(maxBooksPerFloor));
             if (minDistanceFromStart < 0) throw new ArgumentOutOfRangeException(nameof(minDistanceFromStart));
+            if (weaponsPerRun < 0) throw new ArgumentOutOfRangeException(nameof(weaponsPerRun));
             MaxBooksPerFloor = maxBooksPerFloor;
             MinDistanceFromStart = minDistanceFromStart;
+            WeaponsPerRun = weaponsPerRun;
         }
     }
 
@@ -136,6 +140,47 @@ namespace ProjectM.Items
                 for (int k = 0; k < counts[f]; k++)
                     plan.Add(new PendingFloorItem(f + 1, books[next++]));
             world.Run.SetPendingFloorItems(plan);
+        }
+
+        /// <summary>
+        /// 무기 배치 계획 (3-7a): 무기 종류(ItemBook 순서)를 섞어(RngStream.Loot) 앞에서 WeaponsPerRun개 → 1~마지막 전 층에 무작위로, 계획 끝에 붙인다.
+        /// PlanSpellbooks 다음에 부른다 — 책 계획 · 맵 · 적 배치는 바뀌지 않는다.
+        /// </summary>
+        public static void PlanWeapons(World world, ItemBook items, LootConfig config, int floorCount)
+        {
+            if (world == null) throw new ArgumentNullException(nameof(world));
+            if (items == null) throw new ArgumentNullException(nameof(items));
+            if (config == null) throw new ArgumentNullException(nameof(config));
+            if (config.WeaponsPerRun == 0) return;
+
+            var weapons = new List<string>();
+            foreach (var id in items.Ids)
+                if (items.TryGet(id, out var def) && def.Use == ItemUse.EquipWeapon) weapons.Add(id);
+
+            var rng = world.Rng.Get(RngStream.Loot);
+            for (int i = 0; i < weapons.Count - 1; i++)
+            {
+                int j = rng.Range(i, weapons.Count);
+                (weapons[i], weapons[j]) = (weapons[j], weapons[i]);
+            }
+
+            int floors = Math.Max(1, floorCount - 1);
+            int count = Math.Min(config.WeaponsPerRun, weapons.Count);
+            var plan = new List<PendingFloorItem>(count);
+            for (int k = 0; k < count; k++)
+                plan.Add(new PendingFloorItem(1 + rng.Range(0, floors), weapons[k]));
+            world.Run.AddPendingFloorItems(StableByFloor(plan)); // 층 순, 같은 층은 뽑은 순
+        }
+
+        private static List<PendingFloorItem> StableByFloor(List<PendingFloorItem> items)
+        {
+            var sorted = new List<PendingFloorItem>(items.Count);
+            int maxFloor = 0;
+            foreach (var it in items) maxFloor = Math.Max(maxFloor, it.Floor);
+            for (int f = 1; f <= maxFloor; f++)
+                foreach (var it in items)
+                    if (it.Floor == f) sorted.Add(it);
+            return sorted;
         }
 
         /// <summary>지금 층 몫을 바닥에 놓고 FloorItemPlacedEvent를 낸다 (처음 가는 층 — 맵 · 적을 놓고 화면에 알린 뒤).</summary>

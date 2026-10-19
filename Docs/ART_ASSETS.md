@@ -285,6 +285,19 @@ Varco는 모든 모델을 **가장 긴 쪽 1 m**로 보내므로 크기는 프�
 
 ---
 
+### 12-2. 무기 (3-7a, 2026-10-19)
+
+| 아이템 | 모델 | 프리팹 (바닥) | 길이 (m) | 쥐는 곳 | 손 기울기 |
+|---|---|---|---|---|---|
+| `shortsword` | Prop_Weapon_Shortsword | Weapon_Shortsword | 0.45 | 0.12 | 앞 70° |
+| `hand_axe` | Prop_Weapon_HandAxe | Weapon_HandAxe | 0.35 | 0.25 | 앞 70° |
+| `spear` | Prop_Weapon_Spear | Weapon_Spear | 1.10 | 0.35 | 세움 |
+| `quarterstaff` | Prop_Weapon_Quarterstaff | Weapon_Quarterstaff | 1.00 | 0.45 | 세움 |
+| `dirk` | Prop_Weapon_Dirk | Weapon_Dirk | 0.25 | 0.15 | 앞 70° |
+| `sickle` | Prop_Weapon_Sickle | Weapon_Sickle | 0.30 | 0.15 | 앞 70° |
+
+값은 `VarcoModelSetup.WeaponSpecs`와 같다. 바닥 모습 = `ItemVisualCatalog`(아이템 ID → 프리팹), 손 = 플레이어 프리팹 오른손 아래 `Weapon_<아이템 ID>`(꺼 둠 — 들면 `EntityPresenter.ShowHeld`가 켜고 `Staff`를 숨김). 반짝임 = FxCatalog `item.<아이템 ID>`(은빛).
+
 ### 12-1. 애니메이션 (G-2c, 2026-10-19)
 
 | 클립 | 파일 | 적용 | 설정 |

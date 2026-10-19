@@ -40,6 +40,7 @@ namespace ProjectM.Editor
         private static readonly Color Water = new Color(0.25f, 0.5f, 1f);
         private static readonly Color Dirty = new Color(0.4f, 0.6f, 0.15f);
         private static readonly Color Steam = new Color(0.92f, 0.94f, 0.97f);
+        private static readonly Color Steel = new Color(0.85f, 0.88f, 0.95f); // 3-7a 무기 반짝임
         private static readonly Color Keep = Color.clear; // 원래 색
 
         private struct Row
@@ -123,6 +124,13 @@ namespace ProjectM.Editor
             new Row("item.spellbook_lightning", Hovl + "Sparks/Sparks flashing yellow", 0.35f, Lightning, 1f, 0f, 0.25f),
             new Row("item.spellbook_poison", Hovl + "Sparks/Sparks flashing yellow", 0.35f, Poison, 1f, 0f, 0.25f),
             new Row("item.spellbook_water", Hovl + "Sparks/Sparks flashing yellow", 0.35f, Water, 1f, 0f, 0.25f),
+            // 3-7a 무기: 은빛 반짝임 (모델은 ItemVisualCatalog — 색은 반짝임에만)
+            new Row("item.shortsword", Hovl + "Sparks/Sparks flashing yellow", 0.35f, Steel, 1f, 0f, 0.25f),
+            new Row("item.hand_axe", Hovl + "Sparks/Sparks flashing yellow", 0.35f, Steel, 1f, 0f, 0.25f),
+            new Row("item.spear", Hovl + "Sparks/Sparks flashing yellow", 0.35f, Steel, 1f, 0f, 0.25f),
+            new Row("item.quarterstaff", Hovl + "Sparks/Sparks flashing yellow", 0.35f, Steel, 1f, 0f, 0.25f),
+            new Row("item.dirk", Hovl + "Sparks/Sparks flashing yellow", 0.35f, Steel, 1f, 0f, 0.25f),
+            new Row("item.sickle", Hovl + "Sparks/Sparks flashing yellow", 0.35f, Steel, 1f, 0f, 0.25f),
         };
 
         [MenuItem("ProjectM/Setup/FX")]

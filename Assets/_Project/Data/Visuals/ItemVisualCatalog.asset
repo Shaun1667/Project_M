@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d6417cce3715b54e8b75bb25c456caa, type: 3}
+  m_Name: ItemVisualCatalog
+  m_EditorClassIdentifier: ProjectM.Runtime::ProjectM.Presentation.ItemVisualCatalog
+  _entries:
+  - ItemId: shortsword
+    Prefab: {fileID: 8192922997588066181, guid: 47984cc36b347894bb459ab632e2cf13, type: 3}
+  - ItemId: hand_axe
+    Prefab: {fileID: 5532462945212376050, guid: 619c03e136892f64b8e17c1492004db0, type: 3}
+  - ItemId: spear
+    Prefab: {fileID: 1417899640532911181, guid: 715eeebfeb389574bb384ff56f17385b, type: 3}
+  - ItemId: quarterstaff
+    Prefab: {fileID: 3214055739092215042, guid: 03bc9e49328d50748974e66ae8b621b2, type: 3}
+  - ItemId: dirk
+    Prefab: {fileID: 6921370684022954228, guid: e4c9fe7725de42d45a9ebd66d585d8cd, type: 3}
+  - ItemId: sickle
+    Prefab: {fileID: 1248244440567604610, guid: f9cd6b87868024e4998b41f10c161409, type: 3}

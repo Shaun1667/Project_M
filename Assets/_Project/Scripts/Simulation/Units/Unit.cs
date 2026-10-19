@@ -34,6 +34,8 @@ namespace ProjectM.Units
         public int Level { get; internal set; } = 1;
         /// <summary>지금 레벨에서 모은 경험치 (레벨업하면 필요량만큼 빠짐). Progression으로만 바꾼다.</summary>
         public int Exp { get; internal set; }
+        /// <summary>든 무기 (3-7a). Empty = 맨손. Items.Weapons.Equip으로만 바꾼다.</summary>
+        public EquippedWeapon Weapon { get; internal set; }
 
         public GridPos Pos { get; internal set; }
         public int Hp { get; internal set; }
@@ -75,8 +77,10 @@ namespace ProjectM.Units
         public Unit(EntityId id, Faction faction, string visualId, int maxHp, int attackDamage, int sightRange, GridPos pos, int hp,
             GridPos? lastSeenTargetPos = null, int maxMana = 0, int mana = 0, InventoryRef[] inventorySlots = null, InventoryRef[] quickSlots = null,
             GridPos? previousPos = null, GridPos? wanderTarget = null,
-            int accuracy = 0, int evasion = 0, int expReward = 0, int expMaxLevel = 0, int level = 1, int exp = 0)
+            int accuracy = 0, int evasion = 0, int expReward = 0, int expMaxLevel = 0, int level = 1, int exp = 0,
+            EquippedWeapon weapon = default)
         {
+            Weapon = weapon;
             Accuracy = accuracy;
             Evasion = evasion;
             ExpReward = expReward;

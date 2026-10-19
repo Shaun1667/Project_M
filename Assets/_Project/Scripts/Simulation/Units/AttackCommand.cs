@@ -27,14 +27,14 @@ namespace ProjectM.Units
         {
             if (!_world.Units.TryGet(context.Actor, out var attacker) || !attacker.IsAlive) return;
             if (!_world.Units.TryGet(Target, out var target) || !target.IsAlive) return;
-            if (!GridMovement.CanStep(_world.Map, attacker.Pos, target.Pos)) return;
+            if (!MeleeWeapon.CanReach(_world, attacker, target.Pos)) return; // 3-7a: 창은 2칸
 
             if (!Combat.RollHit(_world, attacker, target)) // 3-7 명중 · 회피 (SPD)
             {
                 _world.Events.Publish(new AttackMissedEvent(attacker.Id, target.Id));
                 return;
             }
-            Combat.ApplyDamage(_world, attacker.Id, target, attacker.AttackDamage, DamageCause.Attack);
+            Combat.ApplyDamage(_world, attacker.Id, target, MeleeWeapon.RollDamage(_world, attacker), DamageCause.Attack); // 3-7a: 무기면 굴림
         }
     }
 }

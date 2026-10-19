@@ -18,7 +18,7 @@ namespace ProjectM.UI
         public ulong Seed { get; }
         /// <summary>빠른 칸 이름 (빈 칸은 "-").</summary>
         public IReadOnlyList<string> QuickSlots { get; }
-        /// <summary>장착 장비 — 장비 시스템 전까지 "없음" (Phase 6).</summary>
+        /// <summary>장착 장비 — 든 무기 이름 (3-7a), 맨손이면 "없음".</summary>
         public string Equipment { get; }
         /// <summary>사망 원인 (패배일 때만, 승리면 빈 문자열).</summary>
         public string Cause { get; }
@@ -44,7 +44,8 @@ namespace ProjectM.UI
             string cause = run.Outcome == RunOutcome.Defeat
                 ? text.DeathCause(run.LastPlayerDamage, run.LastPlayerAttacker, run.BossId, player != null ? player.Id : EntityId.None)
                 : string.Empty;
-            return new ResultModel(run.Outcome, world.DeepestFloor, run.Kills, world.Scheduler.CurrentTick, seed, slots, HudText.NoEquipment, cause);
+            string equipment = player != null && !player.Weapon.IsEmpty ? text.Item(player.Weapon.ItemId) : HudText.NoEquipment;
+            return new ResultModel(run.Outcome, world.DeepestFloor, run.Kills, world.Scheduler.CurrentTick, seed, slots, equipment, cause);
         }
 
         public string Title => HudText.ResultTitle(Outcome);

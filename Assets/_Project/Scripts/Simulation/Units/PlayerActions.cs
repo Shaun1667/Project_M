@@ -28,11 +28,26 @@ namespace ProjectM.Units
             if (world.Units.TryGetAt(to, out var occupant))
             {
                 if (occupant.Faction == player.Faction || !occupant.IsAlive) return false;
-                command = new AttackCommand(world, occupant.Id, config.DefaultActionCostTicks);
+                command = new AttackCommand(world, occupant.Id, MeleeWeapon.AttackCost(player, config.DefaultActionCostTicks));
                 return true;
             }
 
             command = new MoveCommand(world, to, config.DefaultActionCostTicks);
+            return true;
+        }
+
+        /// <summary>
+        /// 칸 target의 적을 지금 자리에서 친다 (3-7a 클릭 — 창은 2칸 떨어진 적도). 적이 없거나 닿지 않으면 false (차례를 쓰지 않음).
+        /// </summary>
+        public static bool TryAttackAt(World world, GameConfig config, Unit player, GridPos target, out ICommand command)
+        {
+            if (world == null) throw new ArgumentNullException(nameof(world));
+            if (config == null) throw new ArgumentNullException(nameof(config));
+            command = null;
+            if (player == null || !player.IsAlive) return false;
+            if (!world.Units.TryGetAt(target, out var occupant) || occupant.Faction == player.Faction || !occupant.IsAlive) return false;
+            if (!MeleeWeapon.CanReach(world, player, target)) return false;
+            command = new AttackCommand(world, occupant.Id, MeleeWeapon.AttackCost(player, config.DefaultActionCostTicks));
             return true;
         }
 

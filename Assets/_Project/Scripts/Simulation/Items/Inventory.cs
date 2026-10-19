@@ -50,6 +50,8 @@ namespace ProjectM.Items
         Fusion = 1,
         /// <summary>마법서 (3-5): 쓰면 책이 사라지고 SpellId 주문을 배운다 (Spellbooks.TryLearn).</summary>
         LearnSpell = 2,
+        /// <summary>근접 무기 (3-7a): 쓰면 든다 — 차례 1 (EquipWeaponCommand), 끼던 무기는 인벤토리로.</summary>
+        EquipWeapon = 3,
     }
 
     /// <summary>아이템 하나의 규칙 데이터 (3-2a). 값은 ItemCatalogAsset에서 온다 — BALANCE.md 9번.</summary>
@@ -59,14 +61,18 @@ namespace ProjectM.Items
         public ItemUse Use { get; }
         /// <summary>마법서(LearnSpell)가 가르치는 주문 ID (3-5). 그 밖에는 null.</summary>
         public string SpellId { get; }
+        /// <summary>무기(EquipWeapon)의 수치 (3-7a). 그 밖에는 null.</summary>
+        public WeaponDef Weapon { get; }
 
-        public ItemDef(string id, ItemUse use, string spellId = null)
+        public ItemDef(string id, ItemUse use, string spellId = null, WeaponDef weapon = null)
         {
             if (string.IsNullOrEmpty(id)) throw new ArgumentException("아이템 ID가 비어 있다.", nameof(id));
             if (use == ItemUse.LearnSpell && string.IsNullOrEmpty(spellId)) throw new ArgumentException("마법서에 가르칠 주문이 없다: " + id, nameof(spellId));
+            if (use == ItemUse.EquipWeapon && weapon == null) throw new ArgumentException("무기 수치가 없다: " + id, nameof(weapon));
             Id = id;
             Use = use;
             SpellId = use == ItemUse.LearnSpell ? spellId : null;
+            Weapon = use == ItemUse.EquipWeapon ? weapon : null;
         }
     }
 
@@ -76,9 +82,13 @@ namespace ProjectM.Items
         private readonly Dictionary<string, ItemDef> _defs = new Dictionary<string, ItemDef>();
         private readonly List<string> _ids = new List<string>();
 
-        public ItemBook(IEnumerable<ItemDef> defs)
+        /// <summary>무기 공통 수치 (3-7a) — 피해 나누기 · 최소 기본.</summary>
+        public WeaponRules WeaponRules { get; }
+
+        public ItemBook(IEnumerable<ItemDef> defs, WeaponRules weaponRules = null)
         {
             if (defs == null) throw new ArgumentNullException(nameof(defs));
+            WeaponRules = weaponRules ?? WeaponRules.Identity;
             foreach (var def in defs)
             {
                 if (def == null) throw new ArgumentException("null 아이템", nameof(defs));

@@ -276,6 +276,17 @@ namespace ProjectM.Core
                 w.Write(u.ExpMaxLevel);
                 w.Write(u.Level);
                 w.Write(u.Exp);
+                // 13 (3-7a): 든 무기
+                w.Write(!u.Weapon.IsEmpty);
+                if (!u.Weapon.IsEmpty)
+                {
+                    w.Write(u.Weapon.ItemId);
+                    w.Write(u.Weapon.MinDamage);
+                    w.Write(u.Weapon.MaxDamage);
+                    w.Write(u.Weapon.AccuracyPercent);
+                    w.Write(u.Weapon.AttackCostTicks);
+                    w.Write(u.Weapon.Reach);
+                }
             }
         }
 
@@ -310,8 +321,15 @@ namespace ProjectM.Core
                 }
                 int accuracy = r.ReadInt32(), evasion = r.ReadInt32(), expReward = r.ReadInt32(), expMaxLevel = r.ReadInt32();
                 int level = r.ReadInt32(), exp = r.ReadInt32();
+                var weapon = EquippedWeapon.Empty;
+                if (r.ReadBoolean())
+                {
+                    var weaponId = r.ReadString();
+                    int wMin = r.ReadInt32(), wMax = r.ReadInt32(), wAcc = r.ReadInt32(), wCost = r.ReadInt32(), wReach = r.ReadInt32();
+                    weapon = new EquippedWeapon(weaponId, wMin, wMax, wAcc, wCost, wReach);
+                }
                 units[i] = new UnitState(id, faction, visualId, maxHp, attackDamage, sightRange, x, y, hp, hasLastSeen, lastSeenX, lastSeenY,
-                    maxMana, mana, inventory, quick, previousPos, wanderTarget, statuses, accuracy, evasion, expReward, expMaxLevel, level, exp);
+                    maxMana, mana, inventory, quick, previousPos, wanderTarget, statuses, accuracy, evasion, expReward, expMaxLevel, level, exp, weapon);
             }
             return units;
         }

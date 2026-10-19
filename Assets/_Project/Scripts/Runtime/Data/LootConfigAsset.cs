@@ -14,7 +14,9 @@ namespace ProjectM.Data
         [Min(1)] [SerializeField] private int _maxBooksPerFloor = 2;
         [Tooltip("층 시작 칸(도착 계단)에서 아이템까지 최소 거리 (칸, 대각선 포함)")]
         [Min(0)] [SerializeField] private int _minDistanceFromStart = 3;
+        [Tooltip("한 판에 놓는 무기 수 (3-7a) — 무기 종류 중 시드로 고름, 1~마지막 전 층")]
+        [Min(0)] [SerializeField] private int _weaponsPerRun = 2;
 
-        public LootConfig ToConfig() => new LootConfig(_maxBooksPerFloor, _minDistanceFromStart);
+        public LootConfig ToConfig() => new LootConfig(_maxBooksPerFloor, _minDistanceFromStart, _weaponsPerRun);
     }
 }

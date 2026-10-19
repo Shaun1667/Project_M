@@ -274,6 +274,14 @@ namespace ProjectM.Input
                 else Hint(string.Empty); // 배운 내용은 로그에 (SpellLearnedEvent)
                 return;
             }
+            if (_items.TryGet(entry.Id, out var weapon) && weapon.Use == ItemUse.EquipWeapon && PlayerActions.TryGetPlayer(_world, out var holder))
+            {
+                // 3-7a: 무기 장착 = 차례 1 (결정 2026-10-19). 인벤토리를 닫고 행동으로 넘긴다
+                int index = System.Array.IndexOf(holder.InventorySlots, entry);
+                CloseInventory();
+                _clock.SubmitPlayerCommand(new EquipWeaponCommand(_world, _items, index, entry.Id, _config.DefaultActionCostTicks));
+                return;
+            }
             if (_items.TryGet(entry.Id, out var item) && item.Use == ItemUse.Fusion)
             {
                 CancelAim();
@@ -743,6 +751,14 @@ namespace ProjectM.Input
             {
                 // 계단 위에서 자기 칸 클릭 = 계단 사용 (틱 안 씀), 아니면 제자리 대기
                 if (!TryUseStairs()) _clock.SubmitPlayerCommand(PlayerActions.Wait(_config));
+                return;
+            }
+
+            // 3-7a: 보이는 적을 클릭했고 지금 자리에서 닿으면(옆 칸 · 창은 2칸) 바로 공격
+            if (_sight.CanSee(_world.Map, player.Pos, target, player.SightRange)
+                && PlayerActions.TryAttackAt(_world, _config, player, target, out var attack))
+            {
+                _clock.SubmitPlayerCommand(attack);
                 return;
             }
 
