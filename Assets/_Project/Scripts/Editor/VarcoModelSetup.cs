@@ -65,15 +65,15 @@ namespace ProjectM.Editor
 
         /// <summary>
         /// 무기 6종 (3-7a — Docs/무기_에셋.md 1번 표 = ART_ASSETS 12-2): 아이템 ID · 모델 · 게임 안 길이(m) · 쥐는 곳(길이 비율, 아래 끝 0 → 위 끝 1).
-        /// Tilt = 손에서 앞으로 기울이는 각도(도) — 한 손 무기는 세우면 몸에 가려 위에서 안 보여 날을 앞으로 눕힌다, 긴 무기는 세움(0).
+        /// Tilt = 손에서 앞으로 기울이는 각도(도) — 모두 칼처럼 앞으로 눕혀 든다 (사용자 요청 2026-10-19 — 세워 들지 않음). 긴 무기는 쥐는 곳을 낮춰 뒤로 덜 나오게.
         /// Varco 무기 FBX는 높이 1 m · 날이 위(+Y) · 원점 가운데.
         /// </summary>
         private static readonly (string ItemId, string Model, float Length, float Grip, float Tilt)[] WeaponSpecs =
         {
             ("shortsword", "Prop_Weapon_Shortsword", 0.45f, 0.12f, 70f),
             ("hand_axe", "Prop_Weapon_HandAxe", 0.35f, 0.25f, 70f),
-            ("spear", "Prop_Weapon_Spear", 1.10f, 0.35f, 0f),
-            ("quarterstaff", "Prop_Weapon_Quarterstaff", 1.00f, 0.45f, 0f),
+            ("spear", "Prop_Weapon_Spear", 1.10f, 0.30f, 70f),
+            ("quarterstaff", "Prop_Weapon_Quarterstaff", 1.00f, 0.30f, 70f),
             ("dirk", "Prop_Weapon_Dirk", 0.25f, 0.15f, 70f),
             ("sickle", "Prop_Weapon_Sickle", 0.30f, 0.15f, 70f),
         };
