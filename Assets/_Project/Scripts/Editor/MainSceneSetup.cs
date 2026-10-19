@@ -40,6 +40,7 @@ namespace ProjectM.Editor
         private const string ItemCatalogPath = "Assets/_Project/Data/Items/ItemCatalog.asset";
         private const string FusionCatalogPath = "Assets/_Project/Data/Fusions/FusionCatalog.asset";
         private const string LootConfigPath = "Assets/_Project/Data/Items/LootConfig.asset";
+        private const string ProgressionConfigPath = "Assets/_Project/Data/Units/ProgressionConfig.asset";
 
         /// <summary>플레이어 시작 주문 (BALANCE 4번). 3-1부터 빈 칸 — 주문은 게임 중에 얻고, 테스트는 디버그 창에서 넣는다 (REACTIONS.md D8).</summary>
         private static readonly string[] PlayerStartingSpells = new string[0];
@@ -94,6 +95,9 @@ namespace ProjectM.Editor
                 ("_maxMana", 10), ("_startingSpells", PlayerStartingSpells));
             var enemyDef = EnsureAsset<UnitDefAsset>(EnemyDefPath,
                 ("_visualId", EnemyVisualId), ("_maxHp", 8), ("_attackDamage", 2), ("_sightRange", 6));
+            // 3-6 · 3-7 명중 · 회피 · 경험치 (SPD 영웅 · 쥐) — 아직 0인 칸만 BALANCE 3번 값으로 채운다
+            FillZeroInts(playerDef, ("_accuracy", 10), ("_evasion", 5));
+            FillZeroInts(enemyDef, ("_accuracy", 8), ("_evasion", 2), ("_expReward", 1), ("_expMaxLevel", 5));
             var spawnConfig = EnsureAsset<SpawnConfigAsset>(SpawnConfigPath,
                 ("_enemyCount", 5), ("_enemyMinDistanceFromStart", 8));
             // 마나 · 장착 칸 — 없을 때만 BALANCE 4번 값으로 만든다
@@ -180,6 +184,11 @@ namespace ProjectM.Editor
             // 임시 보스 (3-4b) — 없을 때만 BALANCE 3번 값으로
             var bossDef = EnsureAsset<UnitDefAsset>(BossDefPath,
                 ("_visualId", BossVisualId), ("_maxHp", 60), ("_attackDamage", 5), ("_sightRange", 10));
+            FillZeroInts(bossDef, ("_accuracy", 10), ("_evasion", 8), ("_expReward", 10), ("_expMaxLevel", 30)); // SPD 구 (Goo)
+            // 3-6 경험치 · 레벨업 (SPD) — 없을 때만 BALANCE 12번 값
+            var progressionConfig = EnsureAsset<ProgressionConfigAsset>(ProgressionConfigPath,
+                ("_maxLevel", 30), ("_expBase", 5), ("_expPerLevel", 5), ("_hpPerLevel", 5), ("_manaPerLevel", 1),
+                ("_accuracyPerLevel", 1), ("_evasionPerLevel", 1));
 
             var rootGo = FindOrCreate("GameRoot", null);
             var input = GetOrAdd<PlayerInputController>(rootGo);
@@ -203,6 +212,7 @@ namespace ProjectM.Editor
                 ("_itemCatalog", itemCatalog),
                 ("_fusionCatalog", fusionCatalog),
                 ("_lootConfig", lootConfig),
+                ("_progressionConfig", progressionConfig),
                 ("_floorItems", floorItems),
                 ("_terrainOverlay", terrainOverlay),
                 ("_tilemapPresenter", tilemapPresenter),
@@ -540,6 +550,8 @@ namespace ProjectM.Editor
 
             var (hpFill, hpLabel) = EnsureBar(canvasGo.transform, "HpBar", new Vector2(24, -16), new Color(0.85f, 0.22f, 0.2f), font);
             var (mpFill, mpLabel) = EnsureBar(canvasGo.transform, "MpBar", new Vector2(24, -54), new Color(0.25f, 0.5f, 1f), font);
+            // 3-6: 경험치 막대 (레벨 · 경험치)
+            var (xpFill, xpLabel) = EnsureBar(canvasGo.transform, "XpBar", new Vector2(24, -92), new Color(0.85f, 0.7f, 0.2f), font, 22f, 18f);
 
             var iconsGo = FindOrCreate("StatusIcons", canvasGo.transform);
             var icons = GetOrAdd<RectTransform>(iconsGo);
@@ -555,14 +567,14 @@ namespace ProjectM.Editor
             if (oldSlots != null) Object.DestroyImmediate(oldSlots.gameObject);
             var quickGo = FindOrCreate("QuickSlots", canvasGo.transform);
             var quick = GetOrAdd<RectTransform>(quickGo);
-            Place(quick, topLeft, new Vector2(24, -92), new Vector2(1600, 40));
+            Place(quick, topLeft, new Vector2(24, -124), new Vector2(1600, 40));
             var quickRow = GetOrAdd<HorizontalLayoutGroup>(quickGo);
             quickRow.spacing = 6;
             quickRow.childAlignment = TextAnchor.UpperLeft;
             quickRow.childControlWidth = quickRow.childControlHeight = true;
             quickRow.childForceExpandWidth = quickRow.childForceExpandHeight = false;
 
-            var hint = EnsureText(canvasGo.transform, "Hint", topLeft, new Vector2(24, -140), new Vector2(1600, 40), 26, font, TextAlignmentOptions.TopLeft);
+            var hint = EnsureText(canvasGo.transform, "Hint", topLeft, new Vector2(24, -172), new Vector2(1600, 40), 26, font, TextAlignmentOptions.TopLeft);
             // 로그 8줄: 아래쪽 기준으로 쌓인다 (새 줄이 맨 아래)
             var log = EnsureText(canvasGo.transform, "Log", bottomLeft, new Vector2(24, 24), new Vector2(1100, 300), 26, font, TextAlignmentOptions.BottomLeft);
 
@@ -579,6 +591,7 @@ namespace ProjectM.Editor
             SetRefs(hud,
                 ("_hpFill", hpFill), ("_hpLabel", hpLabel),
                 ("_mpFill", mpFill), ("_mpLabel", mpLabel),
+                ("_xpFill", xpFill), ("_xpLabel", xpLabel),
                 ("_statusIcons", icons), ("_quickSlots", quick), ("_hintText", hint), ("_logText", log));
             // 로그 줄 수 (결정 2026-10-16: 8줄). 2-4까지 씬에 저장된 6을 덮어쓴다
             var hudSo = new SerializedObject(hud);
@@ -663,10 +676,11 @@ namespace ProjectM.Editor
         }
 
         /// <summary>막대 하나: 어두운 바탕 + 왼쪽부터 차는 색 칸(Fill) + 가운데 숫자(Label). 360×30.</summary>
-        private static (RectTransform fill, TextMeshProUGUI label) EnsureBar(Transform parent, string name, Vector2 topLeft, Color color, TMP_FontAsset font)
+        private static (RectTransform fill, TextMeshProUGUI label) EnsureBar(Transform parent, string name, Vector2 topLeft, Color color, TMP_FontAsset font,
+            float height = 30f, float fontSize = 24f)
         {
             var go = FindOrCreate(name, parent);
-            Place(GetOrAdd<RectTransform>(go), new Vector2(0, 1), topLeft, new Vector2(360, 30));
+            Place(GetOrAdd<RectTransform>(go), new Vector2(0, 1), topLeft, new Vector2(360, height));
             var bg = GetOrAdd<Image>(go);
             bg.color = new Color(0.12f, 0.12f, 0.12f, 0.85f);
             bg.raycastTarget = false;
@@ -680,7 +694,7 @@ namespace ProjectM.Editor
             fillImage.color = color;
             fillImage.raycastTarget = false;
 
-            var label = EnsureText(go.transform, "Label", new Vector2(0, 1), Vector2.zero, new Vector2(360, 30), 24, font, TextAlignmentOptions.Center);
+            var label = EnsureText(go.transform, "Label", new Vector2(0, 1), Vector2.zero, new Vector2(360, height), fontSize, font, TextAlignmentOptions.Center);
             label.transform.SetAsLastSibling(); // 막대 위에 그린다
             return (fill, label);
         }
@@ -777,6 +791,30 @@ namespace ProjectM.Editor
             so.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(asset);
             return asset;
+        }
+
+        /// <summary>
+        /// 이미 있는 에셋에 새로 생긴 정수 필드를 채운다: 값이 0인 필드만 (사용자가 고친 값은 그대로 — 여러 번 실행해도 같음).
+        /// </summary>
+        private static void FillZeroInts(ScriptableObject asset, params (string field, int value)[] values)
+        {
+            var so = new SerializedObject(asset);
+            bool changed = false;
+            foreach (var (field, value) in values)
+            {
+                var prop = so.FindProperty(field);
+                if (prop == null)
+                {
+                    Debug.LogError($"[MainSceneSetup] {asset.GetType().Name}.{field} 필드 없음");
+                    continue;
+                }
+                if (prop.intValue != 0) continue;
+                prop.intValue = value;
+                changed = true;
+            }
+            if (!changed) return;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(asset);
         }
 
         private static T LoadOrCreate<T>(string path) where T : ScriptableObject

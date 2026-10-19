@@ -5,6 +5,7 @@ namespace ProjectM.Units
 {
     /// <summary>
     /// 인접한 대상에게 근접 공격 (고정 피해 = 공격자의 AttackDamage). 대각선 공격도 이동과 같은 모서리 규칙을 따른다.
+    /// 3-7: 먼저 명중 판정(Combat.RollHit) — 빗나가면 피해 없이 AttackMissedEvent.
     /// 실행 시점에 대상이 없거나 · 죽었거나 · 닿지 않으면 아무 일 없이 차례만 쓴다.
     /// </summary>
     public sealed class AttackCommand : ICommand
@@ -28,6 +29,11 @@ namespace ProjectM.Units
             if (!_world.Units.TryGet(Target, out var target) || !target.IsAlive) return;
             if (!GridMovement.CanStep(_world.Map, attacker.Pos, target.Pos)) return;
 
+            if (!Combat.RollHit(_world, attacker, target)) // 3-7 명중 · 회피 (SPD)
+            {
+                _world.Events.Publish(new AttackMissedEvent(attacker.Id, target.Id));
+                return;
+            }
             Combat.ApplyDamage(_world, attacker.Id, target, attacker.AttackDamage, DamageCause.Attack);
         }
     }

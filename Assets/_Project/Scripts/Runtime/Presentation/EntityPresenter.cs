@@ -145,6 +145,7 @@ namespace ProjectM.Presentation
             _bus.Subscribe<VisibilityChangedEvent>(OnVisibilityChanged);
             _bus.Subscribe<StatusChangedEvent>(OnStatusChanged);
             _bus.Subscribe<UnitDamagedEvent>(OnDamaged);
+            _bus.Subscribe<AttackMissedEvent>(OnMissed);
             _bus.Subscribe<UnitDiedEvent>(OnDied);
             _bus.Subscribe<SpellCastEvent>(OnSpellCast);
         }
@@ -158,6 +159,7 @@ namespace ProjectM.Presentation
             _bus.Unsubscribe<VisibilityChangedEvent>(OnVisibilityChanged);
             _bus.Unsubscribe<StatusChangedEvent>(OnStatusChanged);
             _bus.Unsubscribe<UnitDamagedEvent>(OnDamaged);
+            _bus.Unsubscribe<AttackMissedEvent>(OnMissed);
             _bus.Unsubscribe<UnitDiedEvent>(OnDied);
             _bus.Unsubscribe<SpellCastEvent>(OnSpellCast);
             _bus = null;
@@ -297,8 +299,17 @@ namespace ProjectM.Presentation
                 target.HitT = 0f;
                 target.Flashing = true;
             }
-            if (e.Cause.Kind != DamageKind.Attack || !e.Attacker.IsValid || !_views.TryGetValue(e.Attacker, out var attacker)) return;
-            if (!_positions.TryGetValue(e.Attacker, out var from) || !_positions.TryGetValue(e.Target, out var to)) return;
+            if (e.Cause.Kind != DamageKind.Attack || !e.Attacker.IsValid) return;
+            Lunge(e.Attacker, e.Target);
+        }
+
+        /// <summary>3-7: 빗나간 공격도 찌르기는 한다 (피격 번쩍은 없음).</summary>
+        private void OnMissed(AttackMissedEvent e) => Lunge(e.Attacker, e.Target);
+
+        private void Lunge(EntityId attackerId, EntityId targetId)
+        {
+            if (!_views.TryGetValue(attackerId, out var attacker)) return;
+            if (!_positions.TryGetValue(attackerId, out var from) || !_positions.TryGetValue(targetId, out var to)) return;
             var dir = CellCenter(to) - CellCenter(from);
             dir.y = 0f;
             if (dir.sqrMagnitude < 0.0001f) return;

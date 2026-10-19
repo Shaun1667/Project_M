@@ -12,10 +12,13 @@ namespace ProjectM.Units
     public sealed class DeathCheckSystem : ITickSystem
     {
         private readonly World _world;
+        private readonly ProgressionConfig _progression;
 
-        public DeathCheckSystem(World world)
+        /// <param name="progression">3-6: 적이 죽으면 플레이어에게 경험치. null이면 주지 않는다.</param>
+        public DeathCheckSystem(World world, ProgressionConfig progression = null)
         {
             _world = world ?? throw new ArgumentNullException(nameof(world));
+            _progression = progression;
         }
 
         public void Run(in TickContext context)
@@ -29,11 +32,22 @@ namespace ProjectM.Units
                 _world.Events.Publish(new UnitDiedEvent(unit.Id, unit.Faction));
                 _world.Events.Publish(new EntityRemovedEvent(unit.Id));
 
-                if (unit.Faction == Faction.Enemy) run.Kills++;
+                if (unit.Faction == Faction.Enemy)
+                {
+                    run.Kills++;
+                    if (_progression != null) Progression.AwardKill(_world, FindPlayer(), unit, _progression);
+                }
                 if (run.Outcome != RunOutcome.None) continue;
                 if (unit.Faction == Faction.Player) End(RunOutcome.Defeat);
                 else if (run.BossId.IsValid && unit.Id == run.BossId) End(RunOutcome.Victory);
             }
+        }
+
+        private Unit FindPlayer()
+        {
+            foreach (var u in _world.Units.ToSortedList())
+                if (u.Faction == Faction.Player) return u;
+            return null;
         }
 
         private void End(RunOutcome outcome)

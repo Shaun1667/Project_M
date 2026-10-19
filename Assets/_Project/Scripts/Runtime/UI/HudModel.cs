@@ -37,6 +37,10 @@ namespace ProjectM.UI
         public int MaxHp { get; private set; }
         public int Mana { get; private set; }
         public int MaxMana { get; private set; }
+        /// <summary>레벨 · 지금 레벨 경험치 · 다음 레벨까지 필요량 (3-6). ExpToNext 0 = 최대 레벨 또는 경험치 없음.</summary>
+        public int Level { get; private set; } = 1;
+        public int Exp { get; private set; }
+        public int ExpToNext { get; private set; }
         public bool Dead { get; private set; }
         /// <summary>빠른 칸 (3-2a). 빈 칸은 Empty.</summary>
         public IReadOnlyList<InventoryRef> QuickSlots => _quickSlots;
@@ -50,11 +54,15 @@ namespace ProjectM.UI
         /// <summary>값이 바뀌면 (이벤트 하나마다) 알린다.</summary>
         public event Action Changed;
 
-        public void Bind(SimEventBus bus, Unit player, SpellBook spellBook = null)
+        /// <param name="progression">3-6: 첫 경험치 막대 (다음 레벨 필요량). null이면 막대 비움.</param>
+        public void Bind(SimEventBus bus, Unit player, SpellBook spellBook = null, ProgressionConfig progression = null)
         {
             Unbind();
             _bus = bus;
             _playerId = player.Id;
+            Level = player.Level;
+            Exp = player.Exp;
+            ExpToNext = progression != null ? Progression.ExpToNextOrZero(player, progression) : 0;
             Hp = player.Hp;
             MaxHp = player.MaxHp;
             Mana = player.Mana;
@@ -84,6 +92,9 @@ namespace ProjectM.UI
             _bus.Subscribe<ItemPickupFailedEvent>(OnPickupFailed);
             _bus.Subscribe<SpellLearnedEvent>(OnSpellLearned);
             _bus.Subscribe<EntityMovedEvent>(OnMoved);
+            _bus.Subscribe<AttackMissedEvent>(OnMissed);
+            _bus.Subscribe<ExpGainedEvent>(OnExpGained);
+            _bus.Subscribe<LevelUpEvent>(OnLevelUp);
             _lastPickupFail = null;
             Changed?.Invoke();
         }
@@ -111,6 +122,38 @@ namespace ProjectM.UI
         {
             if (e.Unit != _playerId) return;
             AddLog(Text.Learned(e.SpellId, e.QuickSlot));
+            Changed?.Invoke();
+        }
+
+        // 3-7 명중 · 회피: 플레이어가 끼인 빗나감만
+        private void OnMissed(AttackMissedEvent e)
+        {
+            if (e.Attacker == _playerId) AddLog(HudText.PlayerMissed(e.Target));
+            else if (e.Target == _playerId) AddLog(HudText.EnemyMissed(e.Attacker));
+            else return;
+            Changed?.Invoke();
+        }
+
+        // 3-6 경험치 · 레벨업: 레벨업 줄이 경험치 줄보다 먼저 온다 (레벨업 처리 뒤 경험치 이벤트)
+        private void OnExpGained(ExpGainedEvent e)
+        {
+            if (e.Unit != _playerId) return;
+            Level = e.Level;
+            Exp = e.Exp;
+            ExpToNext = e.ExpToNext;
+            AddLog(HudText.ExpGained(e.Amount));
+            Changed?.Invoke();
+        }
+
+        private void OnLevelUp(LevelUpEvent e)
+        {
+            if (e.Unit != _playerId) return;
+            Level = e.Level;
+            Hp = e.Hp;
+            MaxHp = e.MaxHp;
+            Mana = e.Mana;
+            MaxMana = e.MaxMana;
+            AddLog(HudText.LevelUp(e.Level, e.MaxHp, e.MaxMana));
             Changed?.Invoke();
         }
 
@@ -164,6 +207,9 @@ namespace ProjectM.UI
             _bus.Unsubscribe<ItemPickupFailedEvent>(OnPickupFailed);
             _bus.Unsubscribe<SpellLearnedEvent>(OnSpellLearned);
             _bus.Unsubscribe<EntityMovedEvent>(OnMoved);
+            _bus.Unsubscribe<AttackMissedEvent>(OnMissed);
+            _bus.Unsubscribe<ExpGainedEvent>(OnExpGained);
+            _bus.Unsubscribe<LevelUpEvent>(OnLevelUp);
             _bus = null;
         }
 
@@ -182,7 +228,11 @@ namespace ProjectM.UI
         // 2-6 자동 회복: HP 막대만 갱신, 로그는 남기지 않음 (10틱마다 한 줄씩 쌓이면 전투 로그가 묻힘)
         private void OnHealed(UnitHealedEvent e)
         {
-            if (e.Target == _playerId) Hp = e.Hp;
+            if (e.Target == _playerId)
+            {
+                Hp = e.Hp;
+                MaxHp = e.MaxHp;
+            }
         }
 
         private void OnDamaged(UnitDamagedEvent e)
@@ -191,6 +241,7 @@ namespace ProjectM.UI
             if (e.Target == _playerId)
             {
                 Hp = e.Hp;
+                MaxHp = e.MaxHp;
                 AddLog(fromStatus
                     ? $"나: 지속 피해 {e.Amount} (HP {e.Hp}/{e.MaxHp})"
                     : $"{HudText.Enemy(e.Attacker)}의 공격: 피해 {e.Amount} (HP {e.Hp}/{e.MaxHp})");

@@ -15,10 +15,25 @@ namespace ProjectM.Units
         public EntityId Id { get; }
         public Faction Faction { get; }
         public string VisualId { get; }
-        public int MaxHp { get; }
+        /// <summary>최대 체력. 레벨업(Progression)으로만 오른다.</summary>
+        public int MaxHp { get; internal set; }
         public int AttackDamage { get; }
         public int SightRange { get; }
-        public int MaxMana { get; }
+        /// <summary>최대 마나. 레벨업(Progression)으로만 오른다.</summary>
+        public int MaxMana { get; internal set; }
+
+        /// <summary>명중 (3-7, SPD attackSkill). 근접 공격 굴림 0~명중. 레벨업으로 오른다.</summary>
+        public int Accuracy { get; internal set; }
+        /// <summary>회피 (3-7, SPD defenseSkill). 0이면 근접 공격이 항상 맞는다. 레벨업으로 오른다.</summary>
+        public int Evasion { get; internal set; }
+        /// <summary>처치 경험치 (3-6, SPD EXP). 플레이어 레벨이 ExpMaxLevel 이하일 때만 준다.</summary>
+        public int ExpReward { get; }
+        /// <summary>이 적이 경험치를 주는 플레이어 최고 레벨 (3-6, SPD maxLvl — 반복 사냥 방지).</summary>
+        public int ExpMaxLevel { get; }
+        /// <summary>레벨 (3-6, 1부터). Progression으로만 바꾼다.</summary>
+        public int Level { get; internal set; } = 1;
+        /// <summary>지금 레벨에서 모은 경험치 (레벨업하면 필요량만큼 빠짐). Progression으로만 바꾼다.</summary>
+        public int Exp { get; internal set; }
 
         public GridPos Pos { get; internal set; }
         public int Hp { get; internal set; }
@@ -59,8 +74,15 @@ namespace ProjectM.Units
 
         public Unit(EntityId id, Faction faction, string visualId, int maxHp, int attackDamage, int sightRange, GridPos pos, int hp,
             GridPos? lastSeenTargetPos = null, int maxMana = 0, int mana = 0, InventoryRef[] inventorySlots = null, InventoryRef[] quickSlots = null,
-            GridPos? previousPos = null, GridPos? wanderTarget = null)
+            GridPos? previousPos = null, GridPos? wanderTarget = null,
+            int accuracy = 0, int evasion = 0, int expReward = 0, int expMaxLevel = 0, int level = 1, int exp = 0)
         {
+            Accuracy = accuracy;
+            Evasion = evasion;
+            ExpReward = expReward;
+            ExpMaxLevel = expMaxLevel;
+            Level = level;
+            Exp = exp;
             PreviousPos = previousPos;
             WanderTarget = wanderTarget;
             Id = id;
@@ -95,7 +117,8 @@ namespace ProjectM.Units
                 inventory[i] = quick[i] = InventoryRef.Spell(def.StartingSpells[i]);
 
             return new Unit(id, faction, def.VisualId, def.MaxHp, def.AttackDamage, def.SightRange, pos, def.MaxHp,
-                null, def.MaxMana, def.MaxMana, inventory, quick);
+                null, def.MaxMana, def.MaxMana, inventory, quick, null, null,
+                def.Accuracy, def.Evasion, def.ExpReward, def.ExpMaxLevel);
         }
     }
 }

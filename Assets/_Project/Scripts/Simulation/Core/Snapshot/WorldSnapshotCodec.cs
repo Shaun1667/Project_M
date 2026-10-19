@@ -269,6 +269,13 @@ namespace ProjectM.Core
                     w.Write((int)st.Type);
                     w.Write(st.Remaining);
                 }
+                // 12 (3-6 · 3-7)
+                w.Write(u.Accuracy);
+                w.Write(u.Evasion);
+                w.Write(u.ExpReward);
+                w.Write(u.ExpMaxLevel);
+                w.Write(u.Level);
+                w.Write(u.Exp);
             }
         }
 
@@ -301,8 +308,10 @@ namespace ProjectM.Core
                     var type = (ProjectM.Status.StatusType)r.ReadInt32();
                     statuses[k] = new UnitStatusState(type, r.ReadInt32());
                 }
+                int accuracy = r.ReadInt32(), evasion = r.ReadInt32(), expReward = r.ReadInt32(), expMaxLevel = r.ReadInt32();
+                int level = r.ReadInt32(), exp = r.ReadInt32();
                 units[i] = new UnitState(id, faction, visualId, maxHp, attackDamage, sightRange, x, y, hp, hasLastSeen, lastSeenX, lastSeenY,
-                    maxMana, mana, inventory, quick, previousPos, wanderTarget, statuses);
+                    maxMana, mana, inventory, quick, previousPos, wanderTarget, statuses, accuracy, evasion, expReward, expMaxLevel, level, exp);
             }
             return units;
         }

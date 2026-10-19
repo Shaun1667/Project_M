@@ -33,6 +33,7 @@ namespace ProjectM
         [SerializeField] private ItemCatalogAsset _itemCatalog;
         [SerializeField] private FusionCatalogAsset _fusionCatalog;
         [Tooltip("마법서 배치 수치 (3-5). 비우면 바닥에 마법서를 놓지 않는다")] [SerializeField] private LootConfigAsset _lootConfig;
+        [Tooltip("경험치 · 레벨업 수치 (3-6). 비우면 경험치를 주지 않는다")] [SerializeField] private ProgressionConfigAsset _progressionConfig;
         [SerializeField] private TilemapPresenter _tilemapPresenter;
         [SerializeField] private EntityPresenter _entityPresenter;
         [Tooltip("시야 안개. 비우면 안개 없이 전부 보인다")]
@@ -160,7 +161,8 @@ namespace ProjectM
             });
             Floor = floor;
             var sight = new ShadowcastSightRule();
-            var vision = World.InstallCoreSystems(sight, Magic, Statuses, Terrains);
+            var progression = _progressionConfig != null ? _progressionConfig.ToConfig() : null;
+            var vision = World.InstallCoreSystems(sight, Magic, Statuses, Terrains, progression);
 
             // 3-4a: 적 재생성(⑤) · 계단 사용(틱 밖 — 입력이 부른다)
             var spawn = _spawnConfig.ToConfig();
@@ -196,7 +198,7 @@ namespace ProjectM
             }
             vision.Refresh(); // 첫 시야 — 이후는 매 틱 ⑥ 단계에서
 
-            _hud.Bind(World.Events, player, Spells, _hudText);
+            _hud.Bind(World.Events, player, Spells, _hudText, progression);
             _input.Bind(World, Config, new TurnClock(World.Scheduler, World.PlayerInput), sight, Spells, new BresenhamTargetingRule(), Items, Fusions, stairs);
             World.Events.Flush();
 

@@ -212,5 +212,35 @@ namespace ProjectM.Tests
             Assert.That(s.Hud.SlotCosts, Is.EqualTo(new[] { -1, 2, 4, 3 }));
             Assert.Throws<System.ArgumentException>(() => Inventory.AssignQuickSlot(s.World, s.Player, 0, InventoryRef.Spell("no_such_spell")), "인벤토리에 없는 주문");
         }
+
+        // 3-6 · 3-7: 경험치 막대 · 레벨업 · 빗나감 로그
+        [Test]
+        public void ExpAndLevelUp_UpdateBarAndLog()
+        {
+            var s = Start();
+            var progress = new ProgressionConfig(30, 5, 5, 5, 1, 1, 1);
+            s.Hud.Bind(s.World.Events, s.Player, s.Book, progress);
+            Assert.That((s.Hud.Level, s.Hud.Exp, s.Hud.ExpToNext), Is.EqualTo((1, 0, 10)));
+
+            Progression.GainExp(s.World, s.Player, 12, progress);
+            s.World.Events.Flush();
+            Assert.That((s.Hud.Level, s.Hud.Exp, s.Hud.ExpToNext), Is.EqualTo((2, 2, 15)));
+            Assert.That((s.Hud.MaxHp, s.Hud.MaxMana), Is.EqualTo((25, 11)));
+            Assert.That(s.Hud.Log, Does.Contain("레벨 2! 최대 HP 25 · MP 11"));
+            Assert.That(s.Hud.Log.Last(), Is.EqualTo("경험치 +12"));
+            Assert.That(HudText.ExpLabel(2, 2, 15), Is.EqualTo("Lv 2  EXP 2/15"));
+            Assert.That(HudText.ExpLabel(30, 0, 0), Is.EqualTo("Lv 30 (최대)"));
+        }
+
+        [Test]
+        public void AttackMissed_LogsOnlyWhenPlayerInvolved()
+        {
+            var s = Start();
+            s.World.Events.Publish(new AttackMissedEvent(s.Player.Id, s.Enemy.Id));
+            s.World.Events.Publish(new AttackMissedEvent(s.Enemy.Id, s.Player.Id));
+            s.World.Events.Publish(new AttackMissedEvent(s.Enemy.Id, s.Enemy.Id));
+            s.World.Events.Flush();
+            Assert.That(s.Hud.Log, Is.EqualTo(new[] { $"적 {s.Enemy.Id}에게 빗나감", $"적 {s.Enemy.Id}의 공격: 빗나감" }));
+        }
     }
 }

@@ -18,3 +18,7 @@ MonoBehaviour:
   _sightRange: 10
   _maxMana: 0
   _startingSpells: []
+  _accuracy: 10
+  _evasion: 8
+  _expReward: 10
+  _expMaxLevel: 30

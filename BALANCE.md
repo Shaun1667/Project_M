@@ -21,6 +21,7 @@
 | 9 | 아이템 | `Assets/_Project/Data/Items/ItemCatalog.asset` (`ItemCatalogAsset`) | `ProjectM.Items.ItemDef` · `ItemBook` | 사용 중 |
 | 10 | 융합 규칙 표 | `Assets/_Project/Data/Fusions/FusionCatalog.asset` (`FusionCatalogAsset`) | `ProjectM.Magic.FusionDef` · `FusionBook` | 사용 중 (3-2b) |
 | 11 | 바닥 아이템(마법서) 배치 | `Assets/_Project/Data/Items/LootConfig.asset` (`LootConfigAsset`) | `ProjectM.Items.LootConfig` · `Loot` | 사용 중 (3-5) |
+| 12 | 경험치 · 레벨업 | `Assets/_Project/Data/Units/ProgressionConfig.asset` (`ProgressionConfigAsset`) + 유닛 에셋의 명중 · 회피 · 경험치 (3번) | `ProjectM.Units.ProgressionConfig` · `Progression` | 사용 중 (3-6) |
 
 **데이터 구조 규칙 (0-4 결정)**
 - 에셋은 `ScriptableObject`(어셈블리 `ProjectM.Runtime`, 네임스페이스 `ProjectM.Data`)이고, `ToXxx()`로 순수 C# 객체를 만들어 Simulation에 넘긴다. Simulation은 ScriptableObject를 모른다 (CLAUDE.md 핵심 설계 규칙 1).
@@ -82,6 +83,16 @@
 | 근접 적 | `MeleeEnemy.asset` | `enemy_melee` | **8** | **2** | **6** |
 | 임시 보스 (3-4b) | `Boss.asset` | `boss` | **60** | **5** | **10** |
 
+명중 · 회피 · 경험치 (3-6, 결정 2026-10-19 — SPD 영웅 · 쥐 · 구(Goo) 값):
+
+| 유닛 | 명중 `_accuracy` | 회피 `_evasion` | 처치 경험치 `_expReward` | 경험치 최고 레벨 `_expMaxLevel` |
+|---|---|---|---|---|
+| 플레이어 | **10** | **5** | 0 | 0 |
+| 근접 적 | **8** | **2** | **1** | **5** |
+| 임시 보스 | **10** | **8** | **10** | **30** |
+
+근접 명중 (SPD `Char.hit`): 명중 굴림 U·명중 ≥ 회피 굴림 V·회피(U, V는 0~1 균등)이면 맞음. 명중 a ≥ 회피 d이면 확률 = 1 − d / (2a), a < d이면 a / (2d). 회피 0 · 행동 불가(마비 · 빙결) 대상은 항상 맞음. 주문은 항상 명중.
+
 임시 보스 (결정 2026-10-18, 사용자): 마지막 층(5층)에 혼자, 근접 적과 같은 AI(쫓아와 공격). 처치 = 승리. 진짜 보스 패턴은 Phase 6. 검산 `BossTests.ProjectAssets_MatchBalanceTable`.
 결과: 근접만으로 20대(3 × 20 = 60), 보스는 플레이어를 4대(5 × 4 = 20)에 쓰러뜨림 — 반응 · 융합 · 지형 없이는 못 이김. 예: 폭발 마법(8) · 젖음 + 감전(5) · 빙결 + 파쇄(6)
 
@@ -94,6 +105,7 @@
 
 검산 (`UnitCombatTests.ProjectAssets_MatchBalanceTable`): 에셋 값이 위 표와 같다.
 결과:
+- 명중률 (3-6, `ProgressionTests.RollHit_SpdRatVsHero_HitRateRoughlyMatches`): 플레이어 → 근접 적 1 − 2/20 = **90%**, 근접 적 → 플레이어 1 − 5/16 ≈ **69%**, 플레이어 → 보스 1 − 8/20 = **60%**, 보스 → 플레이어 1 − 5/20 = **75%**. 아래 "3대 · 10대"는 명중했을 때 기준 — 평균은 적 3.3번 휘두름, 적은 플레이어를 약 14.5번 휘둘러야 잡음
 - 재생성 (3-4a): 마나가 바닥에서 가득 차는 30틱마다 적 1마리 — 한 층에 오래 머물며 쉬면 잡은 적이 다시 채워진다 (상한 5) — `FloorTests.Respawn_*`
 - 플레이어가 적을 잡는 데 **3대** (3 × 3 = 9 ≥ 8) — `UnitCombatTests.PlayerKillsEnemyInThreeHits_EnemyRemoved`
 - 적 한 마리가 플레이어를 잡는 데 **10대** (2 × 10 = 20) — `UnitCombatTests.PlayerDiesAfterTenHits_ClockStops`
@@ -331,6 +343,26 @@
 지금 결과 (책 5 · 일반 층 4): 1~4층 모두 1권 + 무작위 한 층에 1권 더.
 
 검산 (`SpellbookTests.ProjectAssets_MatchBalanceTable` · `Plan_FiveBooks_OnePerSpell_FloorsOneToFour_OneOrTwoEach` — 시드 30개).
+
+---
+
+## 12. 경험치 · 레벨업 — `Data/Units/ProgressionConfig.asset`
+
+결정 (2026-10-19, 3-6 사용자 결정): Shattered Pixel Dungeon 방식 — 필요 경험치 = 5 + 5 × 레벨, 레벨업마다 최대 체력 +5 · 최대 마나 +1 · 명중 +1 · 회피 +1(현재 체력 · 마나도 같은 만큼 오름). 적마다 최고 레벨이 있어 플레이어 레벨이 그보다 높으면 경험치 0 (반복 사냥 방지 — 적 재생성 때문에 필요).
+
+| 값 | 필드 | 값 | 비고 |
+|---|---|---|---|
+| 최대 레벨 | `_maxLevel` | **30** | SPD와 같음. 도달하면 남는 경험치는 버림 |
+| 필요 경험치 기본 | `_expBase` | **5** | 다음 레벨 필요량 = 기본 + 레벨 × 레벨당, 레벨마다 0부터 |
+| 필요 경험치 레벨당 | `_expPerLevel` | **5** | 1→2 = 10, 2→3 = 15, 10→11 = 55 |
+| 레벨당 최대 체력 | `_hpPerLevel` | **5** | SPD 20 + 5 × (레벨 − 1) — 플레이어 시작 20이 SPD와 같음 |
+| 레벨당 최대 마나 | `_manaPerLevel` | **1** | SPD에 없음 (사용자 결정 — A안). 레벨 10 = 최대 마나 19 |
+| 레벨당 명중 | `_accuracyPerLevel` | **1** | SPD |
+| 레벨당 회피 | `_evasionPerLevel` | **1** | SPD |
+
+결과 (근접 적만 잡을 때): 레벨 2까지 10마리, 레벨 5까지 70마리(10 + 15 + 20 + 25) — 근접 적은 레벨 5까지만 경험치를 줘서 레벨 6부터는 보스(10)뿐. 지금 한 판(층당 5마리 + 재생성) 기준으로 레벨 3~4 근처 예상 — Phase 4 재미 검증에서 적 종류 · 경험치로 조정.
+
+검산 (`ProgressionTests.ProjectAssets_MatchBalanceTable` · `ExpToNext_IsSpdFormula` · `GainExp_*`).
 
 ---
 

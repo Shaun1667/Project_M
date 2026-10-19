@@ -77,6 +77,15 @@ namespace ProjectM.UI
 
         public static string Enemy(EntityId id) => $"적 {id}";
 
+        // 3-6 · 3-7: 명중 · 경험치 · 레벨
+        public static string PlayerMissed(EntityId target) => $"{Enemy(target)}에게 빗나감";
+        public static string EnemyMissed(EntityId attacker) => $"{Enemy(attacker)}의 공격: 빗나감";
+        public static string ExpGained(int amount) => $"경험치 +{amount}";
+        public static string LevelUp(int level, int maxHp, int maxMana) => $"레벨 {level}! 최대 HP {maxHp} · MP {maxMana}";
+        /// <summary>경험치 막대 글자. expToNext 0 = 최대 레벨.</summary>
+        public static string ExpLabel(int level, int exp, int expToNext) =>
+            expToNext > 0 ? $"Lv {level}  EXP {exp}/{expToNext}" : $"Lv {level} (최대)";
+
         public static string CastBlockReason(CastBlock block)
         {
             switch (block)

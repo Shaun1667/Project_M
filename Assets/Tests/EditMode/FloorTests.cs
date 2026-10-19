@@ -237,7 +237,7 @@ namespace ProjectM.Tests
             Assert.That(restored.Floor, Is.EqualTo(2));
             Assert.That(restored.StoredFloors.Count, Is.EqualTo(1));
             Assert.That(WorldSnapshotCodec.Encode(restored.Capture()), Is.EqualTo(bytes));
-            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.EqualTo(11), "3-4b에서 10, 3-5에서 11");
+            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.EqualTo(12), "3-4b에서 10, 3-5에서 11, 3-6에서 12");
         }
 
         [Test]

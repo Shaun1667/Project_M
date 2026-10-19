@@ -98,7 +98,9 @@ namespace ProjectM.Core
         /// 새 World · 복원한 World 모두 한 번 부른다. 돌려준 시야 시스템의 Refresh()로 층 시작 · 불러오기 직후 시야를 한 번 계산한다.
         /// 적 재생성(EnemyRespawnSystem)은 적 데이터가 필요해 부른 쪽이 따로 등록한다. 층 이동(FloorTransition)은 틱 밖 동작이라 시스템이 아니다 (3-4a).
         /// </summary>
-        public PlayerVisionSystem InstallCoreSystems(ISightRule sight, MagicConfig magic, StatusBook statuses, TerrainBook terrains)
+        /// <param name="progression">경험치 · 레벨업 수치 (3-6). null이면 경험치를 주지 않는다 (테스트 기본).</param>
+        public PlayerVisionSystem InstallCoreSystems(ISightRule sight, MagicConfig magic, StatusBook statuses, TerrainBook terrains,
+            ProgressionConfig progression = null)
         {
             if (statuses == null) throw new ArgumentNullException(nameof(statuses));
             if (terrains == null) throw new ArgumentNullException(nameof(terrains));
@@ -109,7 +111,7 @@ namespace ProjectM.Core
             Scheduler.AddSystem(TickPhase.Status, new StatusSystem(this, statuses));
             Scheduler.AddSystem(TickPhase.ManaRegen, new ManaRegenSystem(this, magic));
             Scheduler.AddSystem(TickPhase.ManaRegen, new HpRegenSystem(this, magic));
-            Scheduler.AddSystem(TickPhase.DeathCheck, new DeathCheckSystem(this));
+            Scheduler.AddSystem(TickPhase.DeathCheck, new DeathCheckSystem(this, progression));
             Scheduler.AddSystem(TickPhase.DeathCheck, vision);
             Scheduler.AddSystem(TickPhase.EventFlush, new EventFlushSystem(Events));
             return vision;
@@ -246,14 +248,16 @@ namespace ProjectM.Core
             var seen = u.LastSeenTargetPos;
             return new UnitState(u.Id, u.Faction, u.VisualId, u.MaxHp, u.AttackDamage, u.SightRange, u.Pos.X, u.Pos.Y, u.Hp,
                 seen.HasValue, seen?.X ?? 0, seen?.Y ?? 0, u.MaxMana, u.Mana, (InventoryRef[])u.InventorySlots.Clone(), (InventoryRef[])u.QuickSlots.Clone(),
-                u.PreviousPos, u.WanderTarget, u.Statuses.ConvertAll(s => new UnitStatusState(s.Type, s.Remaining)).ToArray());
+                u.PreviousPos, u.WanderTarget, u.Statuses.ConvertAll(s => new UnitStatusState(s.Type, s.Remaining)).ToArray(),
+                u.Accuracy, u.Evasion, u.ExpReward, u.ExpMaxLevel, u.Level, u.Exp);
         }
 
         private static Unit ToUnit(UnitState u)
         {
             GridPos? seen = u.HasLastSeen ? new GridPos(u.LastSeenX, u.LastSeenY) : (GridPos?)null;
             var unit = new Unit(u.Id, u.Faction, u.VisualId, u.MaxHp, u.AttackDamage, u.SightRange, new GridPos(u.X, u.Y), u.Hp, seen,
-                u.MaxMana, u.Mana, (InventoryRef[])u.InventorySlots.Clone(), (InventoryRef[])u.QuickSlots.Clone(), u.PreviousPos, u.WanderTarget);
+                u.MaxMana, u.Mana, (InventoryRef[])u.InventorySlots.Clone(), (InventoryRef[])u.QuickSlots.Clone(), u.PreviousPos, u.WanderTarget,
+                u.Accuracy, u.Evasion, u.ExpReward, u.ExpMaxLevel, u.Level, u.Exp);
             foreach (var st in u.Statuses)
                 unit.Statuses.Add(new StatusInstance(st.Type, st.Remaining));
             return unit;

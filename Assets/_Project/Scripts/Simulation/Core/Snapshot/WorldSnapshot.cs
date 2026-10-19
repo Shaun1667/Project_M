@@ -59,8 +59,8 @@ namespace ProjectM.Core
     [Serializable]
     public sealed class WorldSnapshot
     {
-        /// <summary>1: 1-4 최초. 2: 유닛(Units) 추가 (1-6). 3: 탐험 기록(Explored) · 유닛 기억(LastSeen) 추가 (1-7). 4: 유닛 마나 · 주문 장착 칸 (2-1). 5: 유닛 발자국(PreviousPos) · 배회 목적지(WanderTarget). 6: 유닛 상태 이상 (2-3). 7: 지형 효과 레이어 (2-4). 8: 주문 장착 칸 → 인벤토리 · 빠른 칸 (3-2a). 9: 층 번호 · 떠난 층들 (3-4a). 10: 한 판 기록 — 처치 수 · 결과 · 보스 · 사망 원인 (3-4b). 11: 바닥 아이템(지금 층 · 떠난 층) · 마법서 배치 계획 (3-5).</summary>
-        public const int CurrentFormatVersion = 11;
+        /// <summary>1: 1-4 최초. 2: 유닛(Units) 추가 (1-6). 3: 탐험 기록(Explored) · 유닛 기억(LastSeen) 추가 (1-7). 4: 유닛 마나 · 주문 장착 칸 (2-1). 5: 유닛 발자국(PreviousPos) · 배회 목적지(WanderTarget). 6: 유닛 상태 이상 (2-3). 7: 지형 효과 레이어 (2-4). 8: 주문 장착 칸 → 인벤토리 · 빠른 칸 (3-2a). 9: 층 번호 · 떠난 층들 (3-4a). 10: 한 판 기록 — 처치 수 · 결과 · 보스 · 사망 원인 (3-4b). 11: 바닥 아이템(지금 층 · 떠난 층) · 마법서 배치 계획 (3-5). 12: 유닛 명중 · 회피 · 처치 경험치 · 경험치 최고 레벨 · 레벨 · 경험치 (3-6 · 3-7).</summary>
+        public const int CurrentFormatVersion = 12;
 
         public int FormatVersion = CurrentFormatVersion;
 
@@ -153,11 +153,25 @@ namespace ProjectM.Core
         public readonly GridPos? WanderTarget;
         /// <summary>걸린 상태 이상, 종류 순.</summary>
         public readonly UnitStatusState[] Statuses;
+        // 12 (3-6 · 3-7)
+        public readonly int Accuracy;
+        public readonly int Evasion;
+        public readonly int ExpReward;
+        public readonly int ExpMaxLevel;
+        public readonly int Level;
+        public readonly int Exp;
 
         public UnitState(EntityId id, Faction faction, string visualId, int maxHp, int attackDamage, int sightRange, int x, int y, int hp,
             bool hasLastSeen, int lastSeenX, int lastSeenY, int maxMana, int mana, InventoryRef[] inventorySlots, InventoryRef[] quickSlots,
-            GridPos? previousPos, GridPos? wanderTarget, UnitStatusState[] statuses)
+            GridPos? previousPos, GridPos? wanderTarget, UnitStatusState[] statuses,
+            int accuracy = 0, int evasion = 0, int expReward = 0, int expMaxLevel = 0, int level = 1, int exp = 0)
         {
+            Accuracy = accuracy;
+            Evasion = evasion;
+            ExpReward = expReward;
+            ExpMaxLevel = expMaxLevel;
+            Level = level;
+            Exp = exp;
             PreviousPos = previousPos;
             Statuses = statuses ?? Array.Empty<UnitStatusState>();
             WanderTarget = wanderTarget;

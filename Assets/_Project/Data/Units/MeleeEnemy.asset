@@ -16,3 +16,9 @@ MonoBehaviour:
   _maxHp: 8
   _attackDamage: 2
   _sightRange: 6
+  _maxMana: 0
+  _startingSpells: []
+  _accuracy: 8
+  _evasion: 2
+  _expReward: 1
+  _expMaxLevel: 5

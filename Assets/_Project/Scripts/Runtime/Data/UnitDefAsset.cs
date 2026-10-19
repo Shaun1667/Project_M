@@ -21,7 +21,17 @@ namespace ProjectM.Data
         [Min(0)] [SerializeField] private int _maxMana;
         [Tooltip("시작할 때 장착 칸 1번부터 채우는 주문 ID (주문 데이터는 2-2)")]
         [SerializeField] private string[] _startingSpells = new string[0];
+        [Header("명중 · 회피 (3-7, SPD) · 경험치 (3-6)")]
+        [Tooltip("명중 — 근접 공격 굴림 0~명중 (SPD attackSkill)")]
+        [Min(0)] [SerializeField] private int _accuracy;
+        [Tooltip("회피 — 막기 굴림 0~회피, 명중 굴림 ≥ 회피 굴림이면 맞음. 0이면 항상 맞음 (SPD defenseSkill)")]
+        [Min(0)] [SerializeField] private int _evasion;
+        [Tooltip("처치 경험치 (SPD EXP). 플레이어는 0")]
+        [Min(0)] [SerializeField] private int _expReward;
+        [Tooltip("플레이어 레벨이 이 값 이하일 때만 경험치를 준다 (SPD maxLvl, 반복 사냥 방지)")]
+        [Min(0)] [SerializeField] private int _expMaxLevel;
 
-        public UnitDef ToDef() => new UnitDef(_visualId, _maxHp, _attackDamage, _sightRange, _maxMana, _startingSpells);
+        public UnitDef ToDef() => new UnitDef(_visualId, _maxHp, _attackDamage, _sightRange, _maxMana, _startingSpells,
+            _accuracy, _evasion, _expReward, _expMaxLevel);
     }
 }

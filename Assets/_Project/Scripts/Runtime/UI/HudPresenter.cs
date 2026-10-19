@@ -21,6 +21,8 @@ namespace ProjectM.UI
         [SerializeField] private TMP_Text _hpLabel;
         [SerializeField] private RectTransform _mpFill;
         [SerializeField] private TMP_Text _mpLabel;
+        [Tooltip("경험치 막대 (3-6) — 글자 = 레벨 · 경험치")] [SerializeField] private RectTransform _xpFill;
+        [SerializeField] private TMP_Text _xpLabel;
         [SerializeField] private RectTransform _statusIcons;
         [Tooltip("빠른 칸 상자들이 들어갈 줄 (3-2a)")] [SerializeField] private RectTransform _quickSlots;
         [SerializeField] private TMP_Text _hintText;
@@ -44,13 +46,13 @@ namespace ProjectM.UI
         public HudModel Model => _model;
         public string LogText => _logText != null ? _logText.text : null;
 
-        public void Bind(SimEventBus bus, Unit player, SpellBook spellBook = null, HudText text = null)
+        public void Bind(SimEventBus bus, Unit player, SpellBook spellBook = null, HudText text = null, ProgressionConfig progression = null)
         {
             Unbind();
             _hint = string.Empty;
             _model = new HudModel(_logLines, text);
             _model.Changed += Redraw;
-            _model.Bind(bus, player, spellBook);
+            _model.Bind(bus, player, spellBook, progression);
         }
 
         public void Unbind()
@@ -95,6 +97,8 @@ namespace ProjectM.UI
             if (_model == null) return;
             SetBar(_hpFill, _hpLabel, "HP", _model.Hp, _model.MaxHp);
             SetBar(_mpFill, _mpLabel, "MP", _model.Mana, _model.MaxMana);
+            SetBar(_xpFill, _xpLabel, null, _model.ExpToNext > 0 ? _model.Exp : 1, _model.ExpToNext > 0 ? _model.ExpToNext : 1);
+            if (_xpLabel != null) _xpLabel.text = HudText.ExpLabel(_model.Level, _model.Exp, _model.ExpToNext);
             DrawStatusIcons();
             DrawQuickSlots();
 

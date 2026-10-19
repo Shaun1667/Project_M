@@ -115,6 +115,9 @@ namespace ProjectM.Core
 
         public bool IsRegistered(EntityId id) => _actors.ContainsKey(id);
 
+        /// <summary>행동 규칙(SetActionRules)으로 지금 행동할 수 있는지 — 마비 · 빙결이면 false. 규칙이 없으면 true. 회피 0 판정(3-7)이 쓴다.</summary>
+        public bool CanAct(EntityId id) => _canAct == null || _canAct(id);
+
         /// <summary>그 행위자가 다음으로 행동할 수 있는 틱.</summary>
         public long GetReadyTick(EntityId id) => GetEntry(id).ReadyTick;
 
