@@ -25,6 +25,8 @@ namespace ProjectM.Data
             [Tooltip("공격 한 번의 행동 비용 (틱) — 창 2, 나머지 1")] public int AttackCostTicks;
             [Tooltip("공격 거리 (칸) — 창 2, 나머지 1")] public int Reach;
             [Tooltip("강화 0 요구 힘 (3-7b) — SPD 2티어 12. 강화하면 첫 단계 −1, 그 뒤 2단계마다 −1")] public int StrengthRequirement;
+            [Tooltip("기습 최소 피해 상승 % (3-7c) — 더크 67, 나머지 0")] public int SurpriseMinPercent;
+            [Tooltip("방어 (3-7c) — 육척봉 2(근접 피해 − 0~2), 나머지 0")] public int Defense;
             [Header("힘 물약 · 강화 주문서 (3-7b)")]
             [Tooltip("힘 물약 = 힘 +, 강화 주문서 = 강화 + (둘 다 1)")] public int Amount;
         }
@@ -42,7 +44,7 @@ namespace ProjectM.Data
             foreach (var e in _items)
             {
                 var weapon = e.Use == ItemUse.EquipWeapon
-                    ? new WeaponDef(e.MaxDamage, e.UpgradeEfficiency, Mathf.RoundToInt(e.Accuracy * 100f), e.AttackCostTicks, e.Reach, e.StrengthRequirement)
+                    ? new WeaponDef(e.MaxDamage, e.UpgradeEfficiency, Mathf.RoundToInt(e.Accuracy * 100f), e.AttackCostTicks, e.Reach, e.StrengthRequirement, e.SurpriseMinPercent, e.Defense)
                     : null;
                 defs.Add(new ItemDef(e.Id, e.Use, e.SpellId, weapon, e.Amount));
             }
@@ -71,6 +73,22 @@ namespace ProjectM.Data
                 changed = true;
             }
             return changed;
+        }
+
+        /// <summary>에디터 Setup용 (3-7c): 그 ID 줄의 기습 % · 방어가 0이면 넣는다 (사용자가 고친 값은 그대로). 바뀌었으면 true.</summary>
+        public bool FillWeaponSpecials(string id, int surpriseMinPercent, int defense)
+        {
+            for (int i = 0; i < _items.Count; i++)
+            {
+                var e = _items[i];
+                if (e.Id != id) continue;
+                bool changed = false;
+                if (e.SurpriseMinPercent == 0 && surpriseMinPercent != 0) { e.SurpriseMinPercent = surpriseMinPercent; changed = true; }
+                if (e.Defense == 0 && defense != 0) { e.Defense = defense; changed = true; }
+                _items[i] = e;
+                return changed;
+            }
+            return false;
         }
 
         /// <summary>에디터 Setup용: 같은 ID가 없을 때만 추가한다.</summary>

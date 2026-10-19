@@ -193,7 +193,7 @@ namespace ProjectM.Tests
             Assert.That(restored.Run.BossId, Is.EqualTo(s.World.Run.BossId));
             Assert.That(restored.Run.LastPlayerDamage.Kind, Is.EqualTo(DamageKind.Attack));
             Assert.That(WorldSnapshotCodec.Encode(restored.Capture()), Is.EqualTo(bytes));
-            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.EqualTo(14)); // 3-5에서 11, 3-6에서 12, 3-7a에서 13, 3-7b에서 14
+            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.EqualTo(15)); // 3-5에서 11, 3-6에서 12, 3-7a에서 13, 3-7b에서 14, 3-7c에서 15
         }
 
         // 검산: Boss.asset · 보스 방 크기가 BALANCE.md와 같은지

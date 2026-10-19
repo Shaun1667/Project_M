@@ -654,6 +654,8 @@ namespace ProjectM.Editor
             changed |= catalog.AddIfMissing(Weapon("dirk", "더크", 12, 3, 1f, 1, 1));
             changed |= catalog.AddIfMissing(Weapon("sickle", "손낫", 20, 3, 0.68f, 1, 1));
             changed |= catalog.FillWeaponStrength(12); // 3-7b: 요구 힘 (SPD 2티어) — 3-7a 줄에도
+            changed |= catalog.FillWeaponSpecials("dirk", 67, 0); // 3-7c: 더크 기습 최소 피해 67%
+            changed |= catalog.FillWeaponSpecials("quarterstaff", 0, 2); // 3-7c: 육척봉 방어 0~2
             // 3-7b 힘 물약 · 강화 주문서 (BALANCE 9번) — 한 판에 2 · 3개 (BALANCE 11번)
             changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "potion_strength", DisplayName = "힘 물약", Use = ItemUse.StrengthPotion, Amount = 1 });
             changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "scroll_upgrade", DisplayName = "강화 주문서", Use = ItemUse.UpgradeScroll, Amount = 1 });

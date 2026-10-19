@@ -229,7 +229,7 @@ namespace ProjectM.Tests
             Assert.That(p.Weapon, Is.EqualTo(s.Player.Weapon));
             Assert.That(p.InventorySlots, Has.Member(InventoryRef.Item("hand_axe", 2)));
             Assert.That(WorldSnapshotCodec.Encode(restored.Capture()), Is.EqualTo(bytes));
-            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.EqualTo(14));
+            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.EqualTo(15));
         }
 
         [Test]

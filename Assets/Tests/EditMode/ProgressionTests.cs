@@ -178,6 +178,7 @@ namespace ProjectM.Tests
         {
             var s = Start(new UnitDef("player", 20, 3, 8, 10, null, accuracy: 0, evasion: 5));
             var wall = SpawnRat(s, new GridPos(2, 1), new UnitDef("enemy_melee", 8, 2, 6, 0, null, accuracy: 0, evasion: 1000));
+            wall.LastSeenTargetPos = s.Player.Pos; // 3-7c: 플레이어를 본 적 — 기습(항상 명중)이 아니게
             s.Clock.SubmitPlayerCommand(new AttackCommand(s.World, wall.Id, 1));
             s.World.Events.Flush();
             Assert.That(wall.Hp, Is.EqualTo(8), "명중 0 vs 회피 1000 → 빗나감");

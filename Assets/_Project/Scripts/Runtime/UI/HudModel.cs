@@ -106,6 +106,8 @@ namespace ProjectM.UI
             _bus.Subscribe<WeaponEquippedEvent>(OnWeaponEquipped);
             _bus.Subscribe<WeaponUpgradedEvent>(OnWeaponUpgraded);
             _bus.Subscribe<StrengthChangedEvent>(OnStrengthChanged);
+            _bus.Subscribe<SurpriseAttackEvent>(OnSurprise);
+            _bus.Subscribe<DamageBlockedEvent>(OnBlocked);
             _lastPickupFail = null;
             Changed?.Invoke();
         }
@@ -194,6 +196,21 @@ namespace ProjectM.UI
             Changed?.Invoke();
         }
 
+        // 3-7c: "기습! 적 #3" (피해 줄 앞) · "방어: 1 막음" (플레이어가 막았을 때만)
+        private void OnSurprise(SurpriseAttackEvent e)
+        {
+            if (e.Attacker != _playerId) return;
+            AddLog(HudText.Surprise(e.Target));
+            Changed?.Invoke();
+        }
+
+        private void OnBlocked(DamageBlockedEvent e)
+        {
+            if (e.Target != _playerId) return;
+            AddLog(HudText.Blocked(e.Blocked));
+            Changed?.Invoke();
+        }
+
         private void OnMoved(EntityMovedEvent e)
         {
             if (e.Id == _playerId && e.From != e.To) _lastPickupFail = null; // 다른 칸으로 가면 다시 알릴 수 있게
@@ -250,6 +267,8 @@ namespace ProjectM.UI
             _bus.Unsubscribe<WeaponEquippedEvent>(OnWeaponEquipped);
             _bus.Unsubscribe<WeaponUpgradedEvent>(OnWeaponUpgraded);
             _bus.Unsubscribe<StrengthChangedEvent>(OnStrengthChanged);
+            _bus.Unsubscribe<SurpriseAttackEvent>(OnSurprise);
+            _bus.Unsubscribe<DamageBlockedEvent>(OnBlocked);
             _bus = null;
         }
 

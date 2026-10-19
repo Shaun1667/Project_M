@@ -23,6 +23,8 @@ MonoBehaviour:
     AttackCostTicks: 0
     Reach: 0
     StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
     Amount: 0
   - Id: spellbook_fire
     DisplayName: "\uBD88\uAF43 \uD654\uC0B4 \uB9C8\uBC95\uC11C"
@@ -34,6 +36,8 @@ MonoBehaviour:
     AttackCostTicks: 0
     Reach: 0
     StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
     Amount: 0
   - Id: spellbook_ice
     DisplayName: "\uC5BC\uC74C \uD654\uC0B4 \uB9C8\uBC95\uC11C"
@@ -45,6 +49,8 @@ MonoBehaviour:
     AttackCostTicks: 0
     Reach: 0
     StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
     Amount: 0
   - Id: spellbook_lightning
     DisplayName: "\uBC88\uAC1C \uC904\uAE30 \uB9C8\uBC95\uC11C"
@@ -56,6 +62,8 @@ MonoBehaviour:
     AttackCostTicks: 0
     Reach: 0
     StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
     Amount: 0
   - Id: spellbook_poison
     DisplayName: "\uB3C5 \uD3ED\uBC1C \uB9C8\uBC95\uC11C"
@@ -67,6 +75,8 @@ MonoBehaviour:
     AttackCostTicks: 0
     Reach: 0
     StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
     Amount: 0
   - Id: spellbook_water
     DisplayName: "\uBB3C\uBCF4\uB77C \uB9C8\uBC95\uC11C"
@@ -78,6 +88,8 @@ MonoBehaviour:
     AttackCostTicks: 0
     Reach: 0
     StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
     Amount: 0
   - Id: shortsword
     DisplayName: "\uC18C\uAC80"
@@ -89,6 +101,8 @@ MonoBehaviour:
     AttackCostTicks: 1
     Reach: 1
     StrengthRequirement: 12
+    SurpriseMinPercent: 0
+    Defense: 0
     Amount: 0
   - Id: hand_axe
     DisplayName: "\uC190\uB3C4\uB07C"
@@ -100,6 +114,8 @@ MonoBehaviour:
     AttackCostTicks: 1
     Reach: 1
     StrengthRequirement: 12
+    SurpriseMinPercent: 0
+    Defense: 0
     Amount: 0
   - Id: spear
     DisplayName: "\uCC3D"
@@ -111,6 +127,8 @@ MonoBehaviour:
     AttackCostTicks: 2
     Reach: 2
     StrengthRequirement: 12
+    SurpriseMinPercent: 0
+    Defense: 0
     Amount: 0
   - Id: quarterstaff
     DisplayName: "\uC721\uCC99\uBD09"
@@ -122,6 +140,8 @@ MonoBehaviour:
     AttackCostTicks: 1
     Reach: 1
     StrengthRequirement: 12
+    SurpriseMinPercent: 0
+    Defense: 2
     Amount: 0
   - Id: dirk
     DisplayName: "\uB354\uD06C"
@@ -133,6 +153,8 @@ MonoBehaviour:
     AttackCostTicks: 1
     Reach: 1
     StrengthRequirement: 12
+    SurpriseMinPercent: 67
+    Defense: 0
     Amount: 0
   - Id: sickle
     DisplayName: "\uC190\uB0AB"
@@ -144,6 +166,8 @@ MonoBehaviour:
     AttackCostTicks: 1
     Reach: 1
     StrengthRequirement: 12
+    SurpriseMinPercent: 0
+    Defense: 0
     Amount: 0
   - Id: potion_strength
     DisplayName: "\uD798 \uBB3C\uC57D"
@@ -155,6 +179,8 @@ MonoBehaviour:
     AttackCostTicks: 0
     Reach: 0
     StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
     Amount: 1
   - Id: scroll_upgrade
     DisplayName: "\uAC15\uD654 \uC8FC\uBB38\uC11C"
@@ -166,6 +192,8 @@ MonoBehaviour:
     AttackCostTicks: 0
     Reach: 0
     StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
     Amount: 1
   _weaponDamageDivisor: 3
   _weaponMinDamage: 2

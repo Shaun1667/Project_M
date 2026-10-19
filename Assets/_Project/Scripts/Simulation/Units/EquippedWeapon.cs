@@ -22,10 +22,18 @@ namespace ProjectM.Units
         public int Upgrade { get; }
         /// <summary>요구 힘 (3-7b) — 모자라면 1당 명중 ÷ 1.5, 남으면 1당 보너스 피해 0~1. 0 = 요구 없음.</summary>
         public int StrengthRequirement { get; }
+        /// <summary>기습 때 최소 피해를 (최대 − 최소)의 이 %만큼 올림 (3-7c 더크 67). 0 = 없음.</summary>
+        public int SurpriseMinPercent { get; }
+        /// <summary>방어 (3-7c 육척봉 2) — 근접 피해를 0~방어 굴림만큼 줄인다.</summary>
+        public int Defense { get; }
 
         public EquippedWeapon(string itemId, int minDamage, int maxDamage, int accuracyPercent, int attackCostTicks, int reach,
-            int upgrade = 0, int strengthRequirement = 0)
+            int upgrade = 0, int strengthRequirement = 0, int surpriseMinPercent = 0, int defense = 0)
         {
+            if (surpriseMinPercent < 0 || surpriseMinPercent > 100) throw new ArgumentOutOfRangeException(nameof(surpriseMinPercent));
+            if (defense < 0) throw new ArgumentOutOfRangeException(nameof(defense));
+            SurpriseMinPercent = surpriseMinPercent;
+            Defense = defense;
             if (upgrade < 0) throw new ArgumentOutOfRangeException(nameof(upgrade));
             if (strengthRequirement < 0) throw new ArgumentOutOfRangeException(nameof(strengthRequirement));
             Upgrade = upgrade;
@@ -48,7 +56,8 @@ namespace ProjectM.Units
 
         public bool Equals(EquippedWeapon o) => ItemId == o.ItemId && MinDamage == o.MinDamage && MaxDamage == o.MaxDamage
             && AccuracyPercent == o.AccuracyPercent && AttackCostTicks == o.AttackCostTicks && Reach == o.Reach
-            && Upgrade == o.Upgrade && StrengthRequirement == o.StrengthRequirement;
+            && Upgrade == o.Upgrade && StrengthRequirement == o.StrengthRequirement
+            && SurpriseMinPercent == o.SurpriseMinPercent && Defense == o.Defense;
         public override bool Equals(object obj) => obj is EquippedWeapon o && Equals(o);
         public override int GetHashCode() => (ItemId?.GetHashCode() ?? 0) ^ (MaxDamage * 397);
         public override string ToString() => IsEmpty ? "(맨손)" : $"{ItemId}+{Upgrade} {MinDamage}~{MaxDamage} 힘 {StrengthRequirement}";

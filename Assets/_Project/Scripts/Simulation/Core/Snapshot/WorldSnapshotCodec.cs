@@ -288,6 +288,8 @@ namespace ProjectM.Core
                     w.Write(u.Weapon.Reach);
                     w.Write(u.Weapon.Upgrade); // 14 (3-7b)
                     w.Write(u.Weapon.StrengthRequirement);
+                    w.Write(u.Weapon.SurpriseMinPercent); // 15 (3-7c)
+                    w.Write(u.Weapon.Defense);
                 }
                 w.Write(u.Strength); // 14 (3-7b)
             }
@@ -329,8 +331,8 @@ namespace ProjectM.Core
                 {
                     var weaponId = r.ReadString();
                     int wMin = r.ReadInt32(), wMax = r.ReadInt32(), wAcc = r.ReadInt32(), wCost = r.ReadInt32(), wReach = r.ReadInt32();
-                    int wUpgrade = r.ReadInt32(), wStr = r.ReadInt32();
-                    weapon = new EquippedWeapon(weaponId, wMin, wMax, wAcc, wCost, wReach, wUpgrade, wStr);
+                    int wUpgrade = r.ReadInt32(), wStr = r.ReadInt32(), wSurprise = r.ReadInt32(), wDefense = r.ReadInt32();
+                    weapon = new EquippedWeapon(weaponId, wMin, wMax, wAcc, wCost, wReach, wUpgrade, wStr, wSurprise, wDefense);
                 }
                 int strength = r.ReadInt32();
                 units[i] = new UnitState(id, faction, visualId, maxHp, attackDamage, sightRange, x, y, hp, hasLastSeen, lastSeenX, lastSeenY,

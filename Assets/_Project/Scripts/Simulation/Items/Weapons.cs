@@ -18,9 +18,18 @@ namespace ProjectM.Items
         public int Reach { get; }
         /// <summary>강화 0일 때 요구 힘 (3-7b, SPD 2티어 12). 0 = 요구 없음.</summary>
         public int StrengthRequirement { get; }
+        /// <summary>기습 최소 피해 상승 % (3-7c 더크 67 — SPD: 최소가 최소~최대의 67% 지점으로).</summary>
+        public int SurpriseMinPercent { get; }
+        /// <summary>방어 (3-7c 육척봉 "최대 방어력 +2"). 나누기를 적용하지 않음 (결정 2026-10-19: 0~2).</summary>
+        public int Defense { get; }
 
-        public WeaponDef(int maxDamage, int upgradeEfficiency, int accuracyPercent, int attackCostTicks, int reach, int strengthRequirement = 0)
+        public WeaponDef(int maxDamage, int upgradeEfficiency, int accuracyPercent, int attackCostTicks, int reach, int strengthRequirement = 0,
+            int surpriseMinPercent = 0, int defense = 0)
         {
+            if (surpriseMinPercent < 0 || surpriseMinPercent > 100) throw new ArgumentOutOfRangeException(nameof(surpriseMinPercent));
+            if (defense < 0) throw new ArgumentOutOfRangeException(nameof(defense));
+            SurpriseMinPercent = surpriseMinPercent;
+            Defense = defense;
             if (strengthRequirement < 0) throw new ArgumentOutOfRangeException(nameof(strengthRequirement));
             StrengthRequirement = strengthRequirement;
             if (maxDamage < 1) throw new ArgumentOutOfRangeException(nameof(maxDamage), maxDamage, "최대 피해는 1 이상.");
@@ -72,7 +81,7 @@ namespace ProjectM.Items
             int max = Math.Max(1, Divide(def.MaxDamage + def.UpgradeEfficiency * upgrade, rules.DamageDivisor));
             int min = Math.Min(max, Math.Max(1, Divide(rules.MinDamageBase + upgrade, rules.DamageDivisor)));
             return new EquippedWeapon(itemId, min, max, def.AccuracyPercent, def.AttackCostTicks, def.Reach,
-                upgrade, StrengthRequirement(def, upgrade));
+                upgrade, StrengthRequirement(def, upgrade), def.SurpriseMinPercent, def.Defense);
         }
 
         /// <summary>

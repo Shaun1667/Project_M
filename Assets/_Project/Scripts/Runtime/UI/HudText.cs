@@ -156,13 +156,19 @@ namespace ProjectM.UI
         public string WeaponLabel(EquippedWeapon weapon, int unarmedDamage, int strength = 0) => weapon.IsEmpty
             ? $"무기: 맨손 {unarmedDamage}"
             : weapon.StrengthRequirement > 0
-                ? $"무기: {WeaponName(weapon)} {weapon.MinDamage}~{weapon.MaxDamage} · 힘 {strength}/{weapon.StrengthRequirement}"
-                : $"무기: {WeaponName(weapon)} {weapon.MinDamage}~{weapon.MaxDamage}";
+                ? $"무기: {WeaponName(weapon)} {weapon.MinDamage}~{weapon.MaxDamage} · 힘 {strength}/{weapon.StrengthRequirement}{DefenseSuffix(weapon)}"
+                : $"무기: {WeaponName(weapon)} {weapon.MinDamage}~{weapon.MaxDamage}{DefenseSuffix(weapon)}";
+
+        /// <summary>방어가 있으면 " · 방어 0~2" (3-7c).</summary>
+        private static string DefenseSuffix(EquippedWeapon weapon) => weapon.Defense > 0 ? $" · 방어 0~{weapon.Defense}" : string.Empty;
 
         // 3-7b 힘 · 강화
         public static string StrengthGained(int strength) => $"힘이 올랐다 (힘 {strength})";
         public string Upgraded(EquippedWeapon weapon) => $"강화: {WeaponName(weapon)} ({weapon.MinDamage}~{weapon.MaxDamage}, 요구 힘 {weapon.StrengthRequirement})";
         public const string NoWeaponToUpgrade = "든 무기가 없다 — 강화 주문서를 쓸 수 없다";
+        // 3-7c 기습 · 방어
+        public static string Surprise(EntityId target) => $"기습! {Enemy(target)}";
+        public static string Blocked(int amount) => $"방어: {amount} 막음";
         public string PickupFull(string itemId) => $"인벤토리가 가득 차 {Eul(Item(itemId))} 줍지 못했다";
         public string Learned(string spellId, int quickSlot) =>
             quickSlot >= 0 ? $"{Eul(Spell(spellId))} 배웠다 → [{quickSlot + 1}]" : $"{Eul(Spell(spellId))} 배웠다 (빠른 칸이 가득 차 등록 안 함)";
