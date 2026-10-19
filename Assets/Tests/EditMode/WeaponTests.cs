@@ -279,6 +279,7 @@ namespace ProjectM.Tests
                     weapons.Add(plan[i].ItemId);
                 }
                 Assert.That(weapons.Count, Is.EqualTo(2), "같은 종 안 겹침");
+                Assert.That(plan[books.Count].Floor, Is.EqualTo(1), "무기 하나는 반드시 1층 (사용자 요청 2026-10-19)");
 
                 Loot.PlanWeapons(b, Book(), config, 5);
                 Assert.That(b.Run.PendingFloorItems, Is.EqualTo(plan), "같은 시드 = 같은 계획");

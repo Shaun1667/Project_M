@@ -151,7 +151,8 @@ namespace ProjectM.Items
         }
 
         /// <summary>
-        /// 무기 배치 계획 (3-7a): 무기 종류(ItemBook 순서)를 섞어(RngStream.Loot) 앞에서 WeaponsPerRun개 → 1~마지막 전 층에 무작위로, 계획 끝에 붙인다.
+        /// 무기 배치 계획 (3-7a): 무기 종류(ItemBook 순서)를 섞어(RngStream.Loot) 앞에서 WeaponsPerRun개 → 첫 무기는 1층(사용자 요청 2026-10-19 —
+        /// 1층에서 무기를 만나게), 나머지는 1~마지막 전 층에 무작위로, 계획 끝에 붙인다.
         /// PlanSpellbooks 다음에 부른다 — 책 계획 · 맵 · 적 배치는 바뀌지 않는다.
         /// </summary>
         public static void PlanWeapons(World world, ItemBook items, LootConfig config, int floorCount)
@@ -176,7 +177,7 @@ namespace ProjectM.Items
             int count = Math.Min(config.WeaponsPerRun, weapons.Count);
             var plan = new List<PendingFloorItem>(count);
             for (int k = 0; k < count; k++)
-                plan.Add(new PendingFloorItem(1 + rng.Range(0, floors), weapons[k]));
+                plan.Add(new PendingFloorItem(k == 0 ? 1 : 1 + rng.Range(0, floors), weapons[k])); // 첫 무기는 1층 보장
             world.Run.AddPendingFloorItems(StableByFloor(plan)); // 층 순, 같은 층은 뽑은 순
         }
 
