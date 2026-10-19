@@ -438,6 +438,26 @@ namespace ProjectM.Tests
             Assert.That(view.Root.position, Is.EqualTo(_grid.GetCellCenterWorld(new Vector3Int(9, 9, 0))), "층 이동은 바로");
         }
 
+        // 버그 수정 (2026-10-19): 직선으로 꾹 누르다 대각선으로 꺾으면 보이는 위치가 뒤처져 있어도 순간 이동하지 않고 이어서 보간
+        [Test]
+        public void Motion_DiagonalStepWhileLagging_DoesNotSnap()
+        {
+            var presenter = CreateEntityPresenter();
+            var id = new EntityId(4);
+            _bus.Publish(new EntitySpawnedEvent(id, new GridPos(0, 0), "player"));
+            _bus.Publish(new EntityMovedEvent(id, new GridPos(0, 0), new GridPos(1, 0)));
+            _bus.Flush();
+            presenter.TryGetView(id, out var view);
+            presenter.Advance(0.02f); // 첫 걸음 보간이 거의 시작만 함 (보이는 위치 ≈ (0, 0))
+            var shown = view.Root.position;
+            _bus.Publish(new EntityMovedEvent(id, new GridPos(1, 0), new GridPos(2, 1))); // 대각선 — 보이는 곳에서 약 2.2칸
+            _bus.Flush();
+            Assert.That(view.IsSettled, Is.False, "순간 이동하지 않고 보간 중");
+            Assert.That(Vector3.Distance(view.Root.position, shown), Is.LessThan(0.3f), "보이던 자리에서 이어서 출발");
+            presenter.FinishMotions();
+            Assert.That(view.Root.position, Is.EqualTo(_grid.GetCellCenterWorld(new Vector3Int(2, 1, 0))));
+        }
+
         // 애니메이션 (2026-10-19): 걸어서 옮기면 Walk, 이동 + 유지 시간이 지나면 Idle, 제자리 이동(층 이동)은 걷지 않음
         [Test]
         public void Motion_WalkWhileMoving_IdleAfterHold_TeleportDoesNotWalk()

@@ -309,9 +309,11 @@ namespace ProjectM.Presentation
             if (dir.sqrMagnitude > 0.0001f) view.Root.rotation = Quaternion.LookRotation(dir, Vector3.up); // 이동 방향을 바라봄
 
             var shown = BasePosition(view);
-            var flat = to - shown;
-            flat.y = 0f;
-            bool teleport = e.From == e.To || flat.magnitude > _teleportCells; // 층 이동 · 먼 이동은 바로
+            // 순간 이동 판정은 칸 사이 거리(From → To)로 — 보이는 위치는 앞 걸음 보간 중이라 뒤처져 있어,
+            // 그것으로 재면 꾹 누른 직선 이동 뒤 대각선 한 걸음이 1.6칸을 넘어 툭 끊기고 순간 이동했다 (버그 수정 2026-10-19)
+            var step = CellCenter(e.To) - CellCenter(e.From);
+            step.y = 0f;
+            bool teleport = e.From == e.To || step.magnitude > _teleportCells; // 층 이동 · 먼 이동은 바로
             view.From = teleport ? to : shown;
             view.To = to;
             view.MoveT = teleport ? 1f : 0f;
