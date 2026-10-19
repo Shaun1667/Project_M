@@ -145,7 +145,7 @@ namespace ProjectM.Editor
         }
 
         /// <summary>
-        /// FBX를 Humanoid(이 모델로 아바타 생성)로 가져온다. clipName이 있으면 첫 클립을 그 이름 · 반복 · 루트 이동 굽기(제자리)로 맞추고 돌려준다.
+        /// FBX를 Humanoid(이 모델로 아바타 생성)로 가져온다. clipName이 있으면 첫 클립을 그 이름 · 반복 · 루트 회전 · 높이 굽기 · 앞뒤 이동은 루트로(제자리)로 맞추고 돌려준다.
         /// 이미 같으면 다시 가져오지 않는다 (멱등).
         /// </summary>
         private static AnimationClip EnsureHumanoid(string path, string clipName)
@@ -164,13 +164,15 @@ namespace ProjectM.Editor
                 if (clips.Length > 0)
                 {
                     var c = clips[0];
-                    if (c.name != clipName || !c.loopTime || !c.lockRootRotation || !c.lockRootHeightY || !c.lockRootPositionXZ || clips.Length != 1)
+                    if (c.name != clipName || !c.loopTime || !c.lockRootRotation || !c.lockRootHeightY || c.lockRootPositionXZ || clips.Length != 1)
                     {
                         c.name = clipName;
                         c.loopTime = true;
-                        c.lockRootRotation = true;   // 루트 회전 · 높이 · 이동을 포즈에 굽는다 (제자리 걸음 — 이동은 코드가)
+                        c.lockRootRotation = true;   // 루트 회전 · 높이는 포즈에 굽는다
                         c.lockRootHeightY = true;
-                        c.lockRootPositionXZ = true;
+                        // 앞뒤 이동(XZ)은 굽지 않는다 — 구우면 몸이 한 주기 동안 0.7 m 앞으로 밀려 나갔다가 튀어 돌아온다(G-2c 버그).
+                        // 루트로 빼고 Animator.applyRootMotion = false로 버리면 몸은 제자리에서 걷고, 이동은 EntityPresenter가 한다
+                        c.lockRootPositionXZ = false;
                         c.keepOriginalOrientation = true;
                         c.keepOriginalPositionY = true;
                         c.keepOriginalPositionXZ = true;
@@ -221,6 +223,14 @@ namespace ProjectM.Editor
 
         private static void EnsureTransition(AnimatorState from, AnimatorState to, AnimatorConditionMode mode)
         {
+            // 이미 표대로면 그대로 둔다 — 다시 만들면 컨트롤러 파일이 실행할 때마다 바뀐다
+            foreach (var t in from.transitions)
+            {
+                if (t.destinationState != to) continue;
+                var c = t.conditions;
+                if (!t.hasExitTime && Mathf.Approximately(t.duration, BlendSeconds) && c.Length == 1 && c[0].mode == mode && c[0].parameter == MovingParameter)
+                    return;
+            }
             foreach (var t in from.transitions)
                 if (t.destinationState == to) from.RemoveTransition(t); // 조건 · 시간을 표대로 다시
             var transition = from.AddTransition(to);
