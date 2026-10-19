@@ -18,9 +18,18 @@ namespace ProjectM.Units
         public int AttackCostTicks { get; }
         /// <summary>공격 거리 (칸, 체비셰프) — 창 2. 2칸은 직선 · 대각선이고 사이 칸이 비어 있어야 한다.</summary>
         public int Reach { get; }
+        /// <summary>강화 단계 (3-7b) — 내려놓으면 인벤토리 칸에 같이 남는다.</summary>
+        public int Upgrade { get; }
+        /// <summary>요구 힘 (3-7b) — 모자라면 1당 명중 ÷ 1.5, 남으면 1당 보너스 피해 0~1. 0 = 요구 없음.</summary>
+        public int StrengthRequirement { get; }
 
-        public EquippedWeapon(string itemId, int minDamage, int maxDamage, int accuracyPercent, int attackCostTicks, int reach)
+        public EquippedWeapon(string itemId, int minDamage, int maxDamage, int accuracyPercent, int attackCostTicks, int reach,
+            int upgrade = 0, int strengthRequirement = 0)
         {
+            if (upgrade < 0) throw new ArgumentOutOfRangeException(nameof(upgrade));
+            if (strengthRequirement < 0) throw new ArgumentOutOfRangeException(nameof(strengthRequirement));
+            Upgrade = upgrade;
+            StrengthRequirement = strengthRequirement;
             if (string.IsNullOrEmpty(itemId)) throw new ArgumentException("무기 ID가 비어 있다 — 맨손은 Empty.", nameof(itemId));
             if (minDamage < 0 || maxDamage < minDamage) throw new ArgumentOutOfRangeException(nameof(maxDamage), $"피해 {minDamage}~{maxDamage}");
             if (accuracyPercent < 1) throw new ArgumentOutOfRangeException(nameof(accuracyPercent));
@@ -38,9 +47,10 @@ namespace ProjectM.Units
         public bool IsEmpty => ItemId == null;
 
         public bool Equals(EquippedWeapon o) => ItemId == o.ItemId && MinDamage == o.MinDamage && MaxDamage == o.MaxDamage
-            && AccuracyPercent == o.AccuracyPercent && AttackCostTicks == o.AttackCostTicks && Reach == o.Reach;
+            && AccuracyPercent == o.AccuracyPercent && AttackCostTicks == o.AttackCostTicks && Reach == o.Reach
+            && Upgrade == o.Upgrade && StrengthRequirement == o.StrengthRequirement;
         public override bool Equals(object obj) => obj is EquippedWeapon o && Equals(o);
         public override int GetHashCode() => (ItemId?.GetHashCode() ?? 0) ^ (MaxDamage * 397);
-        public override string ToString() => IsEmpty ? "(맨손)" : $"{ItemId} {MinDamage}~{MaxDamage}";
+        public override string ToString() => IsEmpty ? "(맨손)" : $"{ItemId}+{Upgrade} {MinDamage}~{MaxDamage} 힘 {StrengthRequirement}";
     }
 }

@@ -39,7 +39,7 @@ namespace ProjectM.Units
             int evasion = world.Scheduler.CanAct(target.Id) ? target.Evasion : 0;
             if (evasion <= 0) return true;
             var rng = world.Rng.Get(RngStream.Combat);
-            float accuracyRoll = rng.NextFloat() * attacker.Accuracy * AccuracyPercent(attacker) / 100f;
+            float accuracyRoll = rng.NextFloat() * attacker.Accuracy * AccuracyPercent(attacker) / 100f * MeleeWeapon.StrengthAccuracyFactor(attacker);
             float evasionRoll = rng.NextFloat() * evasion;
             return accuracyRoll >= evasionRoll;
         }
@@ -51,12 +51,33 @@ namespace ProjectM.Units
         /// <summary>명중 배수 (%), 맨손 100.</summary>
         public static int AccuracyPercentOf(Unit attacker) => attacker.Weapon.IsEmpty ? 100 : attacker.Weapon.AccuracyPercent;
 
-        /// <summary>근접 피해: 무기면 최소~최대 굴림(RngStream.Combat), 맨손이면 AttackDamage 고정 (난수 안 씀).</summary>
+        /// <summary>
+        /// 근접 피해: 무기면 최소~최대 굴림(RngStream.Combat) + 남는 힘 1당 0~1 보너스 굴림(3-7b, SPD), 맨손이면 AttackDamage 고정 (난수 안 씀).
+        /// </summary>
         public static int RollDamage(World world, Unit attacker)
         {
             var w = attacker.Weapon;
             if (w.IsEmpty) return attacker.AttackDamage;
-            return w.MinDamage == w.MaxDamage ? w.MaxDamage : world.Rng.Get(RngStream.Combat).Range(w.MinDamage, w.MaxDamage + 1);
+            var rng = world.Rng.Get(RngStream.Combat);
+            int damage = w.MinDamage == w.MaxDamage ? w.MaxDamage : rng.Range(w.MinDamage, w.MaxDamage + 1);
+            int excess = ExcessStrength(attacker);
+            if (excess > 0) damage += rng.Range(0, excess + 1);
+            return damage;
+        }
+
+        /// <summary>남는 힘 (힘 − 요구 힘, 0 이상). 맨손 0.</summary>
+        public static int ExcessStrength(Unit attacker) =>
+            attacker.Weapon.IsEmpty ? 0 : System.Math.Max(0, attacker.Strength - attacker.Weapon.StrengthRequirement);
+
+        /// <summary>모자란 힘 (요구 힘 − 힘, 0 이상). 맨손 0.</summary>
+        public static int StrengthDeficit(Unit attacker) =>
+            attacker.Weapon.IsEmpty ? 0 : System.Math.Max(0, attacker.Weapon.StrengthRequirement - attacker.Strength);
+
+        /// <summary>힘 모자람에 따른 명중 배수 (3-7b, SPD): 모자란 1당 ÷ 1.5. 모자라지 않으면 1.</summary>
+        public static float StrengthAccuracyFactor(Unit attacker)
+        {
+            int deficit = StrengthDeficit(attacker);
+            return deficit == 0 ? 1f : (float)System.Math.Pow(1.5, -deficit);
         }
 
         /// <summary>공격 한 번의 비용 (틱): 무기 값, 맨손이면 defaultCost.</summary>

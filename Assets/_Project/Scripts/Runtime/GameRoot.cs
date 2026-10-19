@@ -195,6 +195,7 @@ namespace ProjectM
                 // 3-5: 한 판의 마법서 배치 계획(1~마지막 전 층) → 1층 몫을 놓는다 (Loot 난수 — 맵 · 적 배치는 그대로)
                 Loot.PlanSpellbooks(World, Items, loot, dungeonConfig.FloorCount);
                 Loot.PlanWeapons(World, Items, loot, dungeonConfig.FloorCount); // 3-7a: 책 계획 뒤에 붙인다
+                Loot.PlanConsumables(World, Items, loot, dungeonConfig.FloorCount); // 3-7b: 강화 주문서 · 힘 물약 (무기 계획 뒤)
                 Loot.PlaceFloorItems(World, Floor.Start, loot);
             }
             vision.Refresh(); // 첫 시야 — 이후는 매 틱 ⑥ 단계에서

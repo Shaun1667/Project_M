@@ -36,6 +36,8 @@ namespace ProjectM.Units
         public int Exp { get; internal set; }
         /// <summary>든 무기 (3-7a). Empty = 맨손. Items.Weapons.Equip으로만 바꾼다.</summary>
         public EquippedWeapon Weapon { get; internal set; }
+        /// <summary>힘 (3-7b, SPD — 플레이어 시작 10). 힘 물약으로만 오른다. 무기 요구 힘과 비교.</summary>
+        public int Strength { get; internal set; }
 
         public GridPos Pos { get; internal set; }
         public int Hp { get; internal set; }
@@ -78,9 +80,10 @@ namespace ProjectM.Units
             GridPos? lastSeenTargetPos = null, int maxMana = 0, int mana = 0, InventoryRef[] inventorySlots = null, InventoryRef[] quickSlots = null,
             GridPos? previousPos = null, GridPos? wanderTarget = null,
             int accuracy = 0, int evasion = 0, int expReward = 0, int expMaxLevel = 0, int level = 1, int exp = 0,
-            EquippedWeapon weapon = default)
+            EquippedWeapon weapon = default, int strength = 0)
         {
             Weapon = weapon;
+            Strength = strength;
             Accuracy = accuracy;
             Evasion = evasion;
             ExpReward = expReward;
@@ -122,7 +125,7 @@ namespace ProjectM.Units
 
             return new Unit(id, faction, def.VisualId, def.MaxHp, def.AttackDamage, def.SightRange, pos, def.MaxHp,
                 null, def.MaxMana, def.MaxMana, inventory, quick, null, null,
-                def.Accuracy, def.Evasion, def.ExpReward, def.ExpMaxLevel);
+                def.Accuracy, def.Evasion, def.ExpReward, def.ExpMaxLevel, 1, 0, default, def.Strength);
         }
     }
 }

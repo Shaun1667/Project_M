@@ -15,9 +15,17 @@ namespace ProjectM.Items
         public int MinDistanceFromStart { get; }
         /// <summary>한 판에 놓는 무기 수 (3-7a) — 무기 종류 중 시드로 고름(같은 종 안 겹침), 1~마지막 전 층에 무작위.</summary>
         public int WeaponsPerRun { get; }
+        /// <summary>한 판에 놓는 강화 주문서 수 (3-7b).</summary>
+        public int UpgradeScrollsPerRun { get; }
+        /// <summary>한 판에 놓는 힘 물약 수 (3-7b).</summary>
+        public int StrengthPotionsPerRun { get; }
 
-        public LootConfig(int maxBooksPerFloor, int minDistanceFromStart, int weaponsPerRun = 0)
+        public LootConfig(int maxBooksPerFloor, int minDistanceFromStart, int weaponsPerRun = 0, int upgradeScrollsPerRun = 0, int strengthPotionsPerRun = 0)
         {
+            if (upgradeScrollsPerRun < 0) throw new ArgumentOutOfRangeException(nameof(upgradeScrollsPerRun));
+            if (strengthPotionsPerRun < 0) throw new ArgumentOutOfRangeException(nameof(strengthPotionsPerRun));
+            UpgradeScrollsPerRun = upgradeScrollsPerRun;
+            StrengthPotionsPerRun = strengthPotionsPerRun;
             if (maxBooksPerFloor < 1) throw new ArgumentOutOfRangeException(nameof(maxBooksPerFloor));
             if (minDistanceFromStart < 0) throw new ArgumentOutOfRangeException(nameof(minDistanceFromStart));
             if (weaponsPerRun < 0) throw new ArgumentOutOfRangeException(nameof(weaponsPerRun));
@@ -170,6 +178,37 @@ namespace ProjectM.Items
             for (int k = 0; k < count; k++)
                 plan.Add(new PendingFloorItem(1 + rng.Range(0, floors), weapons[k]));
             world.Run.AddPendingFloorItems(StableByFloor(plan)); // 층 순, 같은 층은 뽑은 순
+        }
+
+        /// <summary>
+        /// 강화 주문서 · 힘 물약 배치 계획 (3-7b): 각각 정해진 수를 1~마지막 전 층에 무작위로(RngStream.Loot), 계획 끝에 붙인다.
+        /// PlanWeapons 다음에 부른다 — 책 · 무기 계획 · 맵 · 적 배치는 바뀌지 않는다. 아이템은 ItemBook에서 그 용도의 첫 줄.
+        /// </summary>
+        public static void PlanConsumables(World world, ItemBook items, LootConfig config, int floorCount)
+        {
+            if (world == null) throw new ArgumentNullException(nameof(world));
+            if (items == null) throw new ArgumentNullException(nameof(items));
+            if (config == null) throw new ArgumentNullException(nameof(config));
+            var plan = new List<PendingFloorItem>();
+            var rng = world.Rng.Get(RngStream.Loot);
+            int floors = Math.Max(1, floorCount - 1);
+            AddCopies(plan, rng, floors, FirstOfUse(items, ItemUse.UpgradeScroll), config.UpgradeScrollsPerRun);
+            AddCopies(plan, rng, floors, FirstOfUse(items, ItemUse.StrengthPotion), config.StrengthPotionsPerRun);
+            if (plan.Count > 0) world.Run.AddPendingFloorItems(StableByFloor(plan));
+        }
+
+        private static string FirstOfUse(ItemBook items, ItemUse use)
+        {
+            foreach (var id in items.Ids)
+                if (items.TryGet(id, out var def) && def.Use == use) return id;
+            return null;
+        }
+
+        private static void AddCopies(List<PendingFloorItem> plan, IRng rng, int floors, string itemId, int count)
+        {
+            if (itemId == null) return;
+            for (int k = 0; k < count; k++)
+                plan.Add(new PendingFloorItem(1 + rng.Range(0, floors), itemId));
         }
 
         private static List<PendingFloorItem> StableByFloor(List<PendingFloorItem> items)

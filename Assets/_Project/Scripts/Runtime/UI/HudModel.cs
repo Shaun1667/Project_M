@@ -44,6 +44,8 @@ namespace ProjectM.UI
         /// <summary>든 무기 (3-7a) — Empty = 맨손 (피해 = UnarmedDamage).</summary>
         public EquippedWeapon Weapon { get; private set; }
         public int UnarmedDamage { get; private set; }
+        /// <summary>힘 (3-7b).</summary>
+        public int Strength { get; private set; }
         public bool Dead { get; private set; }
         /// <summary>빠른 칸 (3-2a). 빈 칸은 Empty.</summary>
         public IReadOnlyList<InventoryRef> QuickSlots => _quickSlots;
@@ -67,6 +69,7 @@ namespace ProjectM.UI
             Exp = player.Exp;
             Weapon = player.Weapon;
             UnarmedDamage = player.AttackDamage;
+            Strength = player.Strength;
             ExpToNext = progression != null ? Progression.ExpToNextOrZero(player, progression) : 0;
             Hp = player.Hp;
             MaxHp = player.MaxHp;
@@ -101,6 +104,8 @@ namespace ProjectM.UI
             _bus.Subscribe<ExpGainedEvent>(OnExpGained);
             _bus.Subscribe<LevelUpEvent>(OnLevelUp);
             _bus.Subscribe<WeaponEquippedEvent>(OnWeaponEquipped);
+            _bus.Subscribe<WeaponUpgradedEvent>(OnWeaponUpgraded);
+            _bus.Subscribe<StrengthChangedEvent>(OnStrengthChanged);
             _lastPickupFail = null;
             Changed?.Invoke();
         }
@@ -172,6 +177,23 @@ namespace ProjectM.UI
             Changed?.Invoke();
         }
 
+        // 3-7b: "강화: 소검+1 (1~6, 요구 힘 11)" · "힘이 올랐다 (힘 11)"
+        private void OnWeaponUpgraded(WeaponUpgradedEvent e)
+        {
+            if (e.Unit != _playerId) return;
+            Weapon = e.Weapon;
+            AddLog(Text.Upgraded(e.Weapon));
+            Changed?.Invoke();
+        }
+
+        private void OnStrengthChanged(StrengthChangedEvent e)
+        {
+            if (e.Unit != _playerId) return;
+            Strength = e.Strength;
+            AddLog(HudText.StrengthGained(e.Strength));
+            Changed?.Invoke();
+        }
+
         private void OnMoved(EntityMovedEvent e)
         {
             if (e.Id == _playerId && e.From != e.To) _lastPickupFail = null; // 다른 칸으로 가면 다시 알릴 수 있게
@@ -226,6 +248,8 @@ namespace ProjectM.UI
             _bus.Unsubscribe<ExpGainedEvent>(OnExpGained);
             _bus.Unsubscribe<LevelUpEvent>(OnLevelUp);
             _bus.Unsubscribe<WeaponEquippedEvent>(OnWeaponEquipped);
+            _bus.Unsubscribe<WeaponUpgradedEvent>(OnWeaponUpgraded);
+            _bus.Unsubscribe<StrengthChangedEvent>(OnStrengthChanged);
             _bus = null;
         }
 

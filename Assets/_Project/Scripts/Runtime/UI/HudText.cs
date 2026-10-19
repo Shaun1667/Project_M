@@ -57,7 +57,7 @@ namespace ProjectM.UI
             switch (entry.Kind)
             {
                 case InventoryKind.Spell: return Spell(entry.Id);
-                case InventoryKind.Item: return Item(entry.Id);
+                case InventoryKind.Item: return entry.Upgrade > 0 ? $"{Item(entry.Id)}+{entry.Upgrade}" : Item(entry.Id); // 3-7b 강화
                 default: return "-";
             }
         }
@@ -146,10 +146,23 @@ namespace ProjectM.UI
         public string PickedUp(string itemId) => $"{Eul(Item(itemId))} 주웠다";
         // 3-7a 무기
         public string Equipped(string itemId) => $"{Eul(Item(itemId))} 들었다";
-        /// <summary>HUD 무기 줄: "무기: 소검 1~5" · 맨손이면 "무기: 맨손 3".</summary>
-        public string WeaponLabel(EquippedWeapon weapon, int unarmedDamage) => weapon.IsEmpty
+        /// <summary>무기 이름 + 강화 ("소검+2"), 강화 0이면 이름만.</summary>
+        public string WeaponName(EquippedWeapon weapon) =>
+            weapon.Upgrade > 0 ? $"{Item(weapon.ItemId)}+{weapon.Upgrade}" : Item(weapon.ItemId);
+
+        /// <summary>
+        /// HUD 무기 줄: "무기: 소검 1~5 · 힘 10/12" (요구 힘이 있으면 힘/요구), 맨손이면 "무기: 맨손 3".
+        /// </summary>
+        public string WeaponLabel(EquippedWeapon weapon, int unarmedDamage, int strength = 0) => weapon.IsEmpty
             ? $"무기: 맨손 {unarmedDamage}"
-            : $"무기: {Item(weapon.ItemId)} {weapon.MinDamage}~{weapon.MaxDamage}";
+            : weapon.StrengthRequirement > 0
+                ? $"무기: {WeaponName(weapon)} {weapon.MinDamage}~{weapon.MaxDamage} · 힘 {strength}/{weapon.StrengthRequirement}"
+                : $"무기: {WeaponName(weapon)} {weapon.MinDamage}~{weapon.MaxDamage}";
+
+        // 3-7b 힘 · 강화
+        public static string StrengthGained(int strength) => $"힘이 올랐다 (힘 {strength})";
+        public string Upgraded(EquippedWeapon weapon) => $"강화: {WeaponName(weapon)} ({weapon.MinDamage}~{weapon.MaxDamage}, 요구 힘 {weapon.StrengthRequirement})";
+        public const string NoWeaponToUpgrade = "든 무기가 없다 — 강화 주문서를 쓸 수 없다";
         public string PickupFull(string itemId) => $"인벤토리가 가득 차 {Eul(Item(itemId))} 줍지 못했다";
         public string Learned(string spellId, int quickSlot) =>
             quickSlot >= 0 ? $"{Eul(Spell(spellId))} 배웠다 → [{quickSlot + 1}]" : $"{Eul(Spell(spellId))} 배웠다 (빠른 칸이 가득 차 등록 안 함)";

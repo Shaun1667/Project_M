@@ -31,7 +31,10 @@ namespace ProjectM.Data
         [Tooltip("플레이어 레벨이 이 값 이하일 때만 경험치를 준다 (SPD maxLvl, 반복 사냥 방지)")]
         [Min(0)] [SerializeField] private int _expMaxLevel;
 
+        [Tooltip("힘 (3-7b, SPD — 플레이어 10). 무기 요구 힘과 비교. 적은 0")]
+        [Min(0)] [SerializeField] private int _strength;
+
         public UnitDef ToDef() => new UnitDef(_visualId, _maxHp, _attackDamage, _sightRange, _maxMana, _startingSpells,
-            _accuracy, _evasion, _expReward, _expMaxLevel);
+            _accuracy, _evasion, _expReward, _expMaxLevel, _strength);
     }
 }

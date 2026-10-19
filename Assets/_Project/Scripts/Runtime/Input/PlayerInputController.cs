@@ -279,7 +279,22 @@ namespace ProjectM.Input
                 // 3-7a: 무기 장착 = 차례 1 (결정 2026-10-19). 인벤토리를 닫고 행동으로 넘긴다
                 int index = System.Array.IndexOf(holder.InventorySlots, entry);
                 CloseInventory();
-                _clock.SubmitPlayerCommand(new EquipWeaponCommand(_world, _items, index, entry.Id, _config.DefaultActionCostTicks));
+                _clock.SubmitPlayerCommand(new EquipWeaponCommand(_world, _items, index, entry, _config.DefaultActionCostTicks));
+                return;
+            }
+            if (_items.TryGet(entry.Id, out var consumable)
+                && (consumable.Use == ItemUse.StrengthPotion || consumable.Use == ItemUse.UpgradeScroll)
+                && PlayerActions.TryGetPlayer(_world, out var user))
+            {
+                // 3-7b: 힘 물약 · 강화 주문서 = 차례 1 (결정 2026-10-19). 든 무기 없이 주문서는 차례를 쓰지 않고 안내만
+                if (Consumables.Check(_items, user, entry) == ConsumeResult.NoWeapon)
+                {
+                    Hint(HudText.NoWeaponToUpgrade);
+                    return;
+                }
+                int index = System.Array.IndexOf(user.InventorySlots, entry);
+                CloseInventory();
+                _clock.SubmitPlayerCommand(new UseConsumableCommand(_world, _items, index, entry, _config.DefaultActionCostTicks));
                 return;
             }
             if (_items.TryGet(entry.Id, out var item) && item.Use == ItemUse.Fusion)

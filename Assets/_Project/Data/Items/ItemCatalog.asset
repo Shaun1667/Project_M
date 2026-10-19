@@ -22,6 +22,8 @@ MonoBehaviour:
     Accuracy: 0
     AttackCostTicks: 0
     Reach: 0
+    StrengthRequirement: 0
+    Amount: 0
   - Id: spellbook_fire
     DisplayName: "\uBD88\uAF43 \uD654\uC0B4 \uB9C8\uBC95\uC11C"
     Use: 2
@@ -31,6 +33,8 @@ MonoBehaviour:
     Accuracy: 0
     AttackCostTicks: 0
     Reach: 0
+    StrengthRequirement: 0
+    Amount: 0
   - Id: spellbook_ice
     DisplayName: "\uC5BC\uC74C \uD654\uC0B4 \uB9C8\uBC95\uC11C"
     Use: 2
@@ -40,6 +44,8 @@ MonoBehaviour:
     Accuracy: 0
     AttackCostTicks: 0
     Reach: 0
+    StrengthRequirement: 0
+    Amount: 0
   - Id: spellbook_lightning
     DisplayName: "\uBC88\uAC1C \uC904\uAE30 \uB9C8\uBC95\uC11C"
     Use: 2
@@ -49,6 +55,8 @@ MonoBehaviour:
     Accuracy: 0
     AttackCostTicks: 0
     Reach: 0
+    StrengthRequirement: 0
+    Amount: 0
   - Id: spellbook_poison
     DisplayName: "\uB3C5 \uD3ED\uBC1C \uB9C8\uBC95\uC11C"
     Use: 2
@@ -58,6 +66,8 @@ MonoBehaviour:
     Accuracy: 0
     AttackCostTicks: 0
     Reach: 0
+    StrengthRequirement: 0
+    Amount: 0
   - Id: spellbook_water
     DisplayName: "\uBB3C\uBCF4\uB77C \uB9C8\uBC95\uC11C"
     Use: 2
@@ -67,6 +77,8 @@ MonoBehaviour:
     Accuracy: 0
     AttackCostTicks: 0
     Reach: 0
+    StrengthRequirement: 0
+    Amount: 0
   - Id: shortsword
     DisplayName: "\uC18C\uAC80"
     Use: 3
@@ -76,6 +88,8 @@ MonoBehaviour:
     Accuracy: 1
     AttackCostTicks: 1
     Reach: 1
+    StrengthRequirement: 12
+    Amount: 0
   - Id: hand_axe
     DisplayName: "\uC190\uB3C4\uB07C"
     Use: 3
@@ -85,6 +99,8 @@ MonoBehaviour:
     Accuracy: 1.32
     AttackCostTicks: 1
     Reach: 1
+    StrengthRequirement: 12
+    Amount: 0
   - Id: spear
     DisplayName: "\uCC3D"
     Use: 3
@@ -94,6 +110,8 @@ MonoBehaviour:
     Accuracy: 1
     AttackCostTicks: 2
     Reach: 2
+    StrengthRequirement: 12
+    Amount: 0
   - Id: quarterstaff
     DisplayName: "\uC721\uCC99\uBD09"
     Use: 3
@@ -103,6 +121,8 @@ MonoBehaviour:
     Accuracy: 1
     AttackCostTicks: 1
     Reach: 1
+    StrengthRequirement: 12
+    Amount: 0
   - Id: dirk
     DisplayName: "\uB354\uD06C"
     Use: 3
@@ -112,6 +132,8 @@ MonoBehaviour:
     Accuracy: 1
     AttackCostTicks: 1
     Reach: 1
+    StrengthRequirement: 12
+    Amount: 0
   - Id: sickle
     DisplayName: "\uC190\uB0AB"
     Use: 3
@@ -121,5 +143,29 @@ MonoBehaviour:
     Accuracy: 0.68
     AttackCostTicks: 1
     Reach: 1
+    StrengthRequirement: 12
+    Amount: 0
+  - Id: potion_strength
+    DisplayName: "\uD798 \uBB3C\uC57D"
+    Use: 4
+    SpellId: 
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 0
+    Amount: 1
+  - Id: scroll_upgrade
+    DisplayName: "\uAC15\uD654 \uC8FC\uBB38\uC11C"
+    Use: 5
+    SpellId: 
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 0
+    Amount: 1
   _weaponDamageDivisor: 3
   _weaponMinDamage: 2

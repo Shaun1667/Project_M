@@ -249,7 +249,7 @@ namespace ProjectM.Core
             return new UnitState(u.Id, u.Faction, u.VisualId, u.MaxHp, u.AttackDamage, u.SightRange, u.Pos.X, u.Pos.Y, u.Hp,
                 seen.HasValue, seen?.X ?? 0, seen?.Y ?? 0, u.MaxMana, u.Mana, (InventoryRef[])u.InventorySlots.Clone(), (InventoryRef[])u.QuickSlots.Clone(),
                 u.PreviousPos, u.WanderTarget, u.Statuses.ConvertAll(s => new UnitStatusState(s.Type, s.Remaining)).ToArray(),
-                u.Accuracy, u.Evasion, u.ExpReward, u.ExpMaxLevel, u.Level, u.Exp, u.Weapon);
+                u.Accuracy, u.Evasion, u.ExpReward, u.ExpMaxLevel, u.Level, u.Exp, u.Weapon, u.Strength);
         }
 
         private static Unit ToUnit(UnitState u)
@@ -257,7 +257,7 @@ namespace ProjectM.Core
             GridPos? seen = u.HasLastSeen ? new GridPos(u.LastSeenX, u.LastSeenY) : (GridPos?)null;
             var unit = new Unit(u.Id, u.Faction, u.VisualId, u.MaxHp, u.AttackDamage, u.SightRange, new GridPos(u.X, u.Y), u.Hp, seen,
                 u.MaxMana, u.Mana, (InventoryRef[])u.InventorySlots.Clone(), (InventoryRef[])u.QuickSlots.Clone(), u.PreviousPos, u.WanderTarget,
-                u.Accuracy, u.Evasion, u.ExpReward, u.ExpMaxLevel, u.Level, u.Exp, u.Weapon);
+                u.Accuracy, u.Evasion, u.ExpReward, u.ExpMaxLevel, u.Level, u.Exp, u.Weapon, u.Strength);
             foreach (var st in u.Statuses)
                 unit.Statuses.Add(new StatusInstance(st.Type, st.Remaining));
             return unit;

@@ -22,3 +22,4 @@ MonoBehaviour:
   _evasion: 5
   _expReward: 0
   _expMaxLevel: 0
+  _strength: 10

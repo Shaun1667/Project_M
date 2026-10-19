@@ -97,7 +97,7 @@ namespace ProjectM.Editor
             var enemyDef = EnsureAsset<UnitDefAsset>(EnemyDefPath,
                 ("_visualId", EnemyVisualId), ("_maxHp", 8), ("_attackDamage", 2), ("_sightRange", 6));
             // 3-6 · 3-7 명중 · 회피 · 경험치 (SPD 영웅 · 쥐) — 아직 0인 칸만 BALANCE 3번 값으로 채운다
-            FillZeroInts(playerDef, ("_accuracy", 10), ("_evasion", 5));
+            FillZeroInts(playerDef, ("_accuracy", 10), ("_evasion", 5), ("_strength", 10)); // 3-7b 힘 10 (SPD)
             FillZeroInts(enemyDef, ("_accuracy", 8), ("_evasion", 2), ("_expReward", 1), ("_expMaxLevel", 5));
             var spawnConfig = EnsureAsset<SpawnConfigAsset>(SpawnConfigPath,
                 ("_enemyCount", 5), ("_enemyMinDistanceFromStart", 8));
@@ -179,7 +179,7 @@ namespace ProjectM.Editor
 
             // 3-5: 바닥 아이템(마법서) — 배치 수치(없을 때만 BALANCE 11번 값) · 표시 (색 · 반짝임은 메뉴 ProjectM/Setup/FX가 채움)
             var lootConfig = EnsureAsset<LootConfigAsset>(LootConfigPath, ("_maxBooksPerFloor", 2), ("_minDistanceFromStart", 3));
-            FillZeroInts(lootConfig, ("_weaponsPerRun", 2)); // 3-7a: 한 판에 무기 2 (BALANCE 11번)
+            FillZeroInts(lootConfig, ("_weaponsPerRun", 2), ("_upgradeScrollsPerRun", 3), ("_strengthPotionsPerRun", 2)); // 3-7a 무기 2 · 3-7b 강화 3 · 힘 2 (BALANCE 11번)
             var floorItemsGo = FindOrCreate("FloorItems", null);
             var floorItems = GetOrAdd<FloorItemPresenter>(floorItemsGo);
             SetRefs(floorItems, ("_entities", entityPresenter), ("_bookMaterial", EnsureShapeMaterial()),
@@ -653,6 +653,10 @@ namespace ProjectM.Editor
             changed |= catalog.AddIfMissing(Weapon("quarterstaff", "육척봉", 12, 3, 1f, 1, 1));
             changed |= catalog.AddIfMissing(Weapon("dirk", "더크", 12, 3, 1f, 1, 1));
             changed |= catalog.AddIfMissing(Weapon("sickle", "손낫", 20, 3, 0.68f, 1, 1));
+            changed |= catalog.FillWeaponStrength(12); // 3-7b: 요구 힘 (SPD 2티어) — 3-7a 줄에도
+            // 3-7b 힘 물약 · 강화 주문서 (BALANCE 9번) — 한 판에 2 · 3개 (BALANCE 11번)
+            changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "potion_strength", DisplayName = "힘 물약", Use = ItemUse.StrengthPotion, Amount = 1 });
+            changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "scroll_upgrade", DisplayName = "강화 주문서", Use = ItemUse.UpgradeScroll, Amount = 1 });
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }
@@ -833,7 +837,7 @@ namespace ProjectM.Editor
             new ItemCatalogAsset.Entry
             {
                 Id = id, DisplayName = name, Use = ItemUse.EquipWeapon,
-                MaxDamage = maxDamage, UpgradeEfficiency = efficiency, Accuracy = accuracy, AttackCostTicks = cost, Reach = reach,
+                MaxDamage = maxDamage, UpgradeEfficiency = efficiency, Accuracy = accuracy, AttackCostTicks = cost, Reach = reach, StrengthRequirement = 12,
             };
 
         private static T LoadOrCreate<T>(string path) where T : ScriptableObject

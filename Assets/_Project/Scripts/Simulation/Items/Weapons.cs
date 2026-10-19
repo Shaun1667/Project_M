@@ -16,9 +16,13 @@ namespace ProjectM.Items
         public int AccuracyPercent { get; }
         public int AttackCostTicks { get; }
         public int Reach { get; }
+        /// <summary>강화 0일 때 요구 힘 (3-7b, SPD 2티어 12). 0 = 요구 없음.</summary>
+        public int StrengthRequirement { get; }
 
-        public WeaponDef(int maxDamage, int upgradeEfficiency, int accuracyPercent, int attackCostTicks, int reach)
+        public WeaponDef(int maxDamage, int upgradeEfficiency, int accuracyPercent, int attackCostTicks, int reach, int strengthRequirement = 0)
         {
+            if (strengthRequirement < 0) throw new ArgumentOutOfRangeException(nameof(strengthRequirement));
+            StrengthRequirement = strengthRequirement;
             if (maxDamage < 1) throw new ArgumentOutOfRangeException(nameof(maxDamage), maxDamage, "최대 피해는 1 이상.");
             if (upgradeEfficiency < 0) throw new ArgumentOutOfRangeException(nameof(upgradeEfficiency));
             if (accuracyPercent < 1) throw new ArgumentOutOfRangeException(nameof(accuracyPercent), accuracyPercent, "명중 배수(%)는 1 이상.");
@@ -67,8 +71,16 @@ namespace ProjectM.Items
             if (upgrade < 0) throw new ArgumentOutOfRangeException(nameof(upgrade));
             int max = Math.Max(1, Divide(def.MaxDamage + def.UpgradeEfficiency * upgrade, rules.DamageDivisor));
             int min = Math.Min(max, Math.Max(1, Divide(rules.MinDamageBase + upgrade, rules.DamageDivisor)));
-            return new EquippedWeapon(itemId, min, max, def.AccuracyPercent, def.AttackCostTicks, def.Reach);
+            return new EquippedWeapon(itemId, min, max, def.AccuracyPercent, def.AttackCostTicks, def.Reach,
+                upgrade, StrengthRequirement(def, upgrade));
         }
+
+        /// <summary>
+        /// 강화 단계의 요구 힘 (3-7b, 사용자 결정 2026-10-19): 첫 강화에 −1, 그 뒤로 2단계마다 −1 = 요구 힘 − ⌈강화 / 2⌉.
+        /// 12 → +1 11 · +2 11 · +3 10 · +4 10 · +5 9. 0 아래로는 안 내려감.
+        /// </summary>
+        public static int StrengthRequirement(WeaponDef def, int upgrade) =>
+            def.StrengthRequirement == 0 ? 0 : Math.Max(0, def.StrengthRequirement - (upgrade + 1) / 2);
 
         /// <summary>a / b를 반올림 (0.5는 위로 — 6.67 → 7, 0.67 → 1).</summary>
         private static int Divide(int a, int b) => (int)Math.Round((double)a / b, MidpointRounding.AwayFromZero);
@@ -81,10 +93,11 @@ namespace ProjectM.Items
             if (unit == null) throw new ArgumentNullException(nameof(unit));
             if (!TryGetWeaponAt(items, unit, inventoryIndex, out var itemId, out var def)) return false;
 
+            int upgrade = unit.InventorySlots[inventoryIndex].Upgrade;
             var previous = unit.Weapon;
             Inventory.RemoveAt(world, unit, inventoryIndex);
-            if (!previous.IsEmpty) Inventory.TryAdd(world, null, items, unit, InventoryRef.Item(previous.ItemId));
-            unit.Weapon = Resolve(itemId, def, items.WeaponRules);
+            if (!previous.IsEmpty) Inventory.TryAdd(world, null, items, unit, InventoryRef.Item(previous.ItemId, previous.Upgrade)); // 3-7b: 강화 단계와 함께
+            unit.Weapon = Resolve(itemId, def, items.WeaponRules, upgrade);
             world.Events.Publish(new WeaponEquippedEvent(unit.Id, unit.Weapon, previous.ItemId));
             return true;
         }
@@ -108,17 +121,23 @@ namespace ProjectM.Items
         private readonly World _world;
         private readonly ItemBook _items;
         private readonly int _inventoryIndex;
-        private readonly string _itemId;
+        private readonly InventoryRef _entry;
 
         public int CostTicks { get; }
 
         public EquipWeaponCommand(World world, ItemBook items, int inventoryIndex, string itemId, int costTicks)
+            : this(world, items, inventoryIndex, InventoryRef.Item(itemId), costTicks)
+        {
+        }
+
+        /// <param name="entry">그 칸에 있어야 하는 항목 (강화 단계 포함, 3-7b).</param>
+        public EquipWeaponCommand(World world, ItemBook items, int inventoryIndex, InventoryRef entry, int costTicks)
         {
             if (costTicks < 1) throw new ArgumentOutOfRangeException(nameof(costTicks));
             _world = world ?? throw new ArgumentNullException(nameof(world));
             _items = items ?? throw new ArgumentNullException(nameof(items));
             _inventoryIndex = inventoryIndex;
-            _itemId = itemId;
+            _entry = entry;
             CostTicks = costTicks;
         }
 
@@ -126,8 +145,116 @@ namespace ProjectM.Items
         {
             if (!_world.Units.TryGet(context.Actor, out var unit) || !unit.IsAlive) return;
             if (_inventoryIndex < 0 || _inventoryIndex >= unit.InventorySlots.Length) return;
-            if (unit.InventorySlots[_inventoryIndex] != InventoryRef.Item(_itemId)) return;
+            if (unit.InventorySlots[_inventoryIndex] != _entry) return;
             Weapons.Equip(_world, _items, unit, _inventoryIndex);
+        }
+    }
+
+    /// <summary>소모품 사용 결과 (3-7b).</summary>
+    public enum ConsumeResult
+    {
+        Used = 0,
+        NotConsumable = 1,
+        /// <summary>강화 주문서인데 든 무기가 없다 — 쓰지 않음.</summary>
+        NoWeapon = 2,
+    }
+
+    /// <summary>
+    /// 힘 물약 · 강화 주문서 (3-7b, 결정 2026-10-19 — 둘 다 차례 1). 쓰면 인벤토리에서 하나 빠진다.
+    /// 힘 물약 = 힘 + Amount. 강화 주문서 = 든 무기 강화 + Amount (최대 · 최소 피해 · 요구 힘을 다시 계산), 든 무기가 없으면 쓰지 않는다.
+    /// </summary>
+    public static class Consumables
+    {
+        /// <summary>쓸 수 있는지 미리 본다 (입력이 차례를 쓰기 전에 — 든 무기 없이 주문서를 읽으려 하면 NoWeapon).</summary>
+        public static ConsumeResult Check(ItemBook items, Unit unit, InventoryRef entry)
+        {
+            if (entry.Kind != InventoryKind.Item || !items.TryGet(entry.Id, out var def)) return ConsumeResult.NotConsumable;
+            if (def.Use == ItemUse.StrengthPotion) return ConsumeResult.Used;
+            if (def.Use != ItemUse.UpgradeScroll) return ConsumeResult.NotConsumable;
+            return unit.Weapon.IsEmpty ? ConsumeResult.NoWeapon : ConsumeResult.Used;
+        }
+
+        /// <summary>인벤토리 칸 index의 물약 · 주문서를 쓴다 (틱 안 — UseConsumableCommand가 부름).</summary>
+        public static ConsumeResult Use(World world, ItemBook items, Unit unit, int inventoryIndex)
+        {
+            if (world == null) throw new ArgumentNullException(nameof(world));
+            if (items == null) throw new ArgumentNullException(nameof(items));
+            if (unit == null) throw new ArgumentNullException(nameof(unit));
+            if (inventoryIndex < 0 || inventoryIndex >= unit.InventorySlots.Length) return ConsumeResult.NotConsumable;
+            var entry = unit.InventorySlots[inventoryIndex];
+            var result = Check(items, unit, entry);
+            if (result != ConsumeResult.Used) return result;
+
+            items.TryGet(entry.Id, out var def);
+            Inventory.RemoveAt(world, unit, inventoryIndex);
+            if (def.Use == ItemUse.StrengthPotion)
+            {
+                unit.Strength += def.Amount;
+                world.Events.Publish(new StrengthChangedEvent(unit.Id, unit.Strength, def.Amount));
+                return result;
+            }
+
+            var held = unit.Weapon;
+            items.TryGet(held.ItemId, out var weaponItem);
+            unit.Weapon = Weapons.Resolve(held.ItemId, weaponItem.Weapon, items.WeaponRules, held.Upgrade + def.Amount);
+            world.Events.Publish(new WeaponUpgradedEvent(unit.Id, unit.Weapon));
+            return result;
+        }
+    }
+
+    /// <summary>물약 · 주문서를 쓰는 행동 (3-7b, 차례 1). 실행 때 그 칸 내용이 바뀌었으면 차례만 쓴다.</summary>
+    public sealed class UseConsumableCommand : ICommand
+    {
+        private readonly World _world;
+        private readonly ItemBook _items;
+        private readonly int _inventoryIndex;
+        private readonly InventoryRef _entry;
+
+        public int CostTicks { get; }
+
+        public UseConsumableCommand(World world, ItemBook items, int inventoryIndex, InventoryRef entry, int costTicks)
+        {
+            if (costTicks < 1) throw new ArgumentOutOfRangeException(nameof(costTicks));
+            _world = world ?? throw new ArgumentNullException(nameof(world));
+            _items = items ?? throw new ArgumentNullException(nameof(items));
+            _inventoryIndex = inventoryIndex;
+            _entry = entry;
+            CostTicks = costTicks;
+        }
+
+        public void Execute(in TickContext context)
+        {
+            if (!_world.Units.TryGet(context.Actor, out var unit) || !unit.IsAlive) return;
+            if (_inventoryIndex < 0 || _inventoryIndex >= unit.InventorySlots.Length || unit.InventorySlots[_inventoryIndex] != _entry) return;
+            Consumables.Use(_world, _items, unit, _inventoryIndex);
+        }
+    }
+
+    /// <summary>힘이 바뀌었다 (3-7b 힘 물약). Strength = 바뀐 뒤, Gained = 오른 양.</summary>
+    public sealed class StrengthChangedEvent : ISimEvent
+    {
+        public EntityId Unit { get; }
+        public int Strength { get; }
+        public int Gained { get; }
+
+        public StrengthChangedEvent(EntityId unit, int strength, int gained)
+        {
+            Unit = unit;
+            Strength = strength;
+            Gained = gained;
+        }
+    }
+
+    /// <summary>든 무기가 강화됐다 (3-7b 강화 주문서). Weapon = 강화 뒤 수치.</summary>
+    public sealed class WeaponUpgradedEvent : ISimEvent
+    {
+        public EntityId Unit { get; }
+        public EquippedWeapon Weapon { get; }
+
+        public WeaponUpgradedEvent(EntityId unit, EquippedWeapon weapon)
+        {
+            Unit = unit;
+            Weapon = weapon;
         }
     }
 

@@ -92,6 +92,8 @@
 | 근접 적 | **8** | **2** | **1** | **5** |
 | 임시 보스 | **10** | **8** | **10** | **30** |
 
+힘 `_strength` (3-7b, SPD): 플레이어 **10**, 적 · 보스 0(무기를 들지 않음). 무기 요구 힘(13번)과 비교 — 모자란 1당 명중 ÷ 1.5, 남는 1당 무기 피해 + 0~1 굴림. 맨손은 힘 영향 없음.
+
 근접 명중 (SPD `Char.hit`): 명중 굴림 U·명중 ≥ 회피 굴림 V·회피(U, V는 0~1 균등)이면 맞음. 명중 a ≥ 회피 d이면 확률 = 1 − d / (2a), a < d이면 a / (2d). 회피 0 · 행동 불가(마비 · 빙결) 대상은 항상 맞음. 주문은 항상 명중.
 
 임시 보스 (결정 2026-10-18, 사용자): 마지막 층(5층)에 혼자, 근접 적과 같은 AI(쫓아와 공격). 처치 = 승리. 진짜 보스 패턴은 Phase 6. 검산 `BossTests.ProjectAssets_MatchBalanceTable`.
@@ -289,10 +291,13 @@
 | `spellbook_lightning` | 번개 줄기 마법서 | LearnSpell → `lightning_basic` | 〃 |
 | `spellbook_poison` | 독 폭발 마법서 | LearnSpell → `poison_basic` | 〃 |
 | `spellbook_water` | 물보라 마법서 | LearnSpell → `water_basic` | 〃 |
+| `shortsword` · `hand_axe` · `spear` · `quarterstaff` · `dirk` · `sickle` | 무기 6종 | EquipWeapon | 3-7a: 사용 → 든다(차례 1), 수치는 13번 |
+| `potion_strength` | 힘 물약 | StrengthPotion, `Amount` **1** | 3-7b: 사용 → 힘 +1, 물약 소모, 차례 1 (결정 2026-10-19). 바닥에서 주움 (11번) |
+| `scroll_upgrade` | 강화 주문서 | UpgradeScroll, `Amount` **1** | 3-7b: 사용 → 든 무기 강화 +1(무기 자체에 — 내려놓아도 남음), 주문서 소모, 차례 1. 든 무기가 없으면 쓰지 않음 |
 
 필드 `SpellId` = 마법서가 가르치는 주문 (LearnSpell만, 3-5).
 
-검산 (`InventoryTests.ProjectAsset_MatchesBalanceTable` — 6개, `SpellbookTests.ProjectAssets_MatchBalanceTable` — 마법서 → 주문): 에셋 값이 위 표와 같다.
+검산 (`InventoryTests.ProjectAsset_MatchesBalanceTable` — 14개, `StrengthUpgradeTests.ProjectAssets_MatchBalanceTable` — 물약 · 주문서, `SpellbookTests.ProjectAssets_MatchBalanceTable` — 마법서 → 주문): 에셋 값이 위 표와 같다.
 
 ---
 
@@ -338,6 +343,8 @@
 | 값 | 필드 | 값 | 비고 |
 |---|---|---|---|
 | 층당 최대 마법서 | `_maxBooksPerFloor` | **2** | 1층부터 1권씩 채우고 남는 책은 아직 2권 미만인 층에 무작위로 더 |
+| 한 판 강화 주문서 수 (3-7b) | `_upgradeScrollsPerRun` | **3** | 1~4층에 무작위 (같은 아이템 여러 개), 무기 계획 뒤에 붙임 |
+| 한 판 힘 물약 수 (3-7b) | `_strengthPotionsPerRun` | **2** | 〃 — 2개 다 마시면 힘 12 = 무기 요구 힘 (명중 벌점 없음) |
 | 한 판 무기 수 (3-7a) | `_weaponsPerRun` | **2** | 무기 6종을 시드로 섞어 앞에서 2개(같은 종 안 겹침), 1~4층에 무작위. 책 계획 뒤에 붙여 책 · 맵 · 적 배치는 그대로 (결정 2026-10-19) |
 | 시작 칸에서 최소 거리 | `_minDistanceFromStart` | **3** | 칸(대각선 포함). 후보가 모자라면 거리를 줄여 다시 찾음. 계단 · 벽 칸 · 다른 아이템 칸 제외 |
 
@@ -387,7 +394,10 @@
 | `sickle` | 손낫 | **20** | **3** | **0.68** | 1 | 1 | 1 ~ 7 |
 
 결과: 평균 피해 소검 3.0(맨손 3과 같음) · 손도끼 · 육척봉 · 더크 2.5 · 창 · 손낫 4.0. 근접 적(체력 8)은 소검으로 평균 2.7대. 창은 2틱이라 시간당 피해 2.0 — 대신 한 칸 떨어져 칠 수 있음. 손낫은 명중 10 × 0.68 = 6.8 vs 적 회피 2 → 약 85%.
-힘(시작 10 · 요구 12)은 3-7b부터 — 그 전에는 명중 벌점 없음.
+요구 힘 `StrengthRequirement` (3-7b): 6종 모두 **12**(SPD 2티어). 강화하면 **첫 강화에 −1, 그 뒤 2단계마다 −1** (사용자 결정 2026-10-19) = 12 − ⌈강화 / 2⌉ → +1 11 · +2 11 · +3 10 · +4 10 · +5 9.
+힘 효과: 시작 힘 10이면 부족 2 → 명중 ÷ 2.25 (명중 10 → 4.4, 근접 적 회피 2 상대 약 77%). 힘 물약 2개 = 힘 12 → 벌점 없음. 강화 주문서 3장을 한 무기에 = +3 → 요구 10, 최대 피해 +3(소검 2~8) — 힘 12면 남는 힘 2 → 보너스 0~2.
+
+검산 (`StrengthUpgradeTests` — 요구 힘 표 · 명중 배수 · 보너스 굴림).
 
 검산 (`WeaponTests.ProjectAssets_MatchBalanceTable` · `Resolve_MatchesDesignTable`).
 

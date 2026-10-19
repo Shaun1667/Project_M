@@ -100,7 +100,7 @@ namespace ProjectM.UI
             SetBar(_mpFill, _mpLabel, "MP", _model.Mana, _model.MaxMana);
             SetBar(_xpFill, _xpLabel, null, _model.ExpToNext > 0 ? _model.Exp : 1, _model.ExpToNext > 0 ? _model.ExpToNext : 1);
             if (_xpLabel != null) _xpLabel.text = HudText.ExpLabel(_model.Level, _model.Exp, _model.ExpToNext);
-            if (_weaponLabel != null) _weaponLabel.text = _model.Text.WeaponLabel(_model.Weapon, _model.UnarmedDamage);
+            if (_weaponLabel != null) _weaponLabel.text = _model.Text.WeaponLabel(_model.Weapon, _model.UnarmedDamage, _model.Strength);
             DrawStatusIcons();
             DrawQuickSlots();
 

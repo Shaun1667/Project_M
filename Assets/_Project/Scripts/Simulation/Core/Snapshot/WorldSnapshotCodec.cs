@@ -286,7 +286,10 @@ namespace ProjectM.Core
                     w.Write(u.Weapon.AccuracyPercent);
                     w.Write(u.Weapon.AttackCostTicks);
                     w.Write(u.Weapon.Reach);
+                    w.Write(u.Weapon.Upgrade); // 14 (3-7b)
+                    w.Write(u.Weapon.StrengthRequirement);
                 }
+                w.Write(u.Strength); // 14 (3-7b)
             }
         }
 
@@ -326,10 +329,12 @@ namespace ProjectM.Core
                 {
                     var weaponId = r.ReadString();
                     int wMin = r.ReadInt32(), wMax = r.ReadInt32(), wAcc = r.ReadInt32(), wCost = r.ReadInt32(), wReach = r.ReadInt32();
-                    weapon = new EquippedWeapon(weaponId, wMin, wMax, wAcc, wCost, wReach);
+                    int wUpgrade = r.ReadInt32(), wStr = r.ReadInt32();
+                    weapon = new EquippedWeapon(weaponId, wMin, wMax, wAcc, wCost, wReach, wUpgrade, wStr);
                 }
+                int strength = r.ReadInt32();
                 units[i] = new UnitState(id, faction, visualId, maxHp, attackDamage, sightRange, x, y, hp, hasLastSeen, lastSeenX, lastSeenY,
-                    maxMana, mana, inventory, quick, previousPos, wanderTarget, statuses, accuracy, evasion, expReward, expMaxLevel, level, exp, weapon);
+                    maxMana, mana, inventory, quick, previousPos, wanderTarget, statuses, accuracy, evasion, expReward, expMaxLevel, level, exp, weapon, strength);
             }
             return units;
         }
@@ -366,6 +371,7 @@ namespace ProjectM.Core
             {
                 w.Write((int)entry.Kind);
                 w.Write(entry.Id ?? string.Empty);
+                w.Write(entry.Upgrade); // 14 (3-7b)
             }
         }
 
@@ -377,7 +383,8 @@ namespace ProjectM.Core
                 var kind = (InventoryKind)r.ReadInt32();
                 var id = r.ReadString();
                 if (!Enum.IsDefined(typeof(InventoryKind), kind)) throw new InvalidDataException("알 수 없는 인벤토리 종류 " + (int)kind);
-                refs[k] = kind == InventoryKind.None ? InventoryRef.Empty : new InventoryRef(kind, id);
+                int upgrade = r.ReadInt32(); // 14 (3-7b)
+                refs[k] = kind == InventoryKind.None ? InventoryRef.Empty : new InventoryRef(kind, id, upgrade);
             }
             return refs;
         }

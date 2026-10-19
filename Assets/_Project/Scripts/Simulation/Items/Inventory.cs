@@ -14,32 +14,39 @@ namespace ProjectM.Items
         Item = 2,
     }
 
-    /// <summary>인벤토리 칸 · 빠른 칸 하나의 내용: 종류 + ID (주문 ID 또는 아이템 ID). 빈 칸 = Empty.</summary>
+    /// <summary>
+    /// 인벤토리 칸 · 빠른 칸 하나의 내용: 종류 + ID (주문 ID 또는 아이템 ID) + 강화 단계(3-7b 무기, 그 밖에는 0). 빈 칸 = Empty.
+    /// 강화가 다르면 다른 항목이다 (소검 ≠ 소검+1).
+    /// </summary>
     public readonly struct InventoryRef : IEquatable<InventoryRef>
     {
         public InventoryKind Kind { get; }
         public string Id { get; }
+        /// <summary>무기 강화 단계 (3-7b — 결정 2026-10-19: 강화는 무기 자체에 붙어 내려놓아도 남음).</summary>
+        public int Upgrade { get; }
 
-        public InventoryRef(InventoryKind kind, string id)
+        public InventoryRef(InventoryKind kind, string id, int upgrade = 0)
         {
             if (kind == InventoryKind.None ? !string.IsNullOrEmpty(id) : string.IsNullOrEmpty(id))
                 throw new ArgumentException("빈 칸은 ID가 없고, 빈 칸이 아니면 ID가 있어야 한다.", nameof(id));
+            if (upgrade < 0 || (upgrade > 0 && kind != InventoryKind.Item)) throw new ArgumentOutOfRangeException(nameof(upgrade), upgrade, "강화는 아이템만, 0 이상.");
             Kind = kind;
             Id = kind == InventoryKind.None ? null : id;
+            Upgrade = upgrade;
         }
 
         public static InventoryRef Empty => default;
         public static InventoryRef Spell(string id) => new InventoryRef(InventoryKind.Spell, id);
-        public static InventoryRef Item(string id) => new InventoryRef(InventoryKind.Item, id);
+        public static InventoryRef Item(string id, int upgrade = 0) => new InventoryRef(InventoryKind.Item, id, upgrade);
 
         public bool IsEmpty => Kind == InventoryKind.None;
 
-        public bool Equals(InventoryRef other) => Kind == other.Kind && Id == other.Id;
+        public bool Equals(InventoryRef other) => Kind == other.Kind && Id == other.Id && Upgrade == other.Upgrade;
         public override bool Equals(object obj) => obj is InventoryRef other && Equals(other);
-        public override int GetHashCode() => ((int)Kind * 397) ^ (Id != null ? Id.GetHashCode() : 0);
+        public override int GetHashCode() => ((int)Kind * 397) ^ (Id != null ? Id.GetHashCode() : 0) ^ (Upgrade * 7919);
         public static bool operator ==(InventoryRef a, InventoryRef b) => a.Equals(b);
         public static bool operator !=(InventoryRef a, InventoryRef b) => !a.Equals(b);
-        public override string ToString() => IsEmpty ? "(빈 칸)" : $"{Kind}:{Id}";
+        public override string ToString() => IsEmpty ? "(빈 칸)" : Upgrade > 0 ? $"{Kind}:{Id}+{Upgrade}" : $"{Kind}:{Id}";
     }
 
     /// <summary>아이템을 "사용"하면 하는 일 (3-2a). 끝에만 추가한다.</summary>
@@ -52,6 +59,10 @@ namespace ProjectM.Items
         LearnSpell = 2,
         /// <summary>근접 무기 (3-7a): 쓰면 든다 — 차례 1 (EquipWeaponCommand), 끼던 무기는 인벤토리로.</summary>
         EquipWeapon = 3,
+        /// <summary>힘 물약 (3-7b): 마시면 힘 + Amount — 차례 1 (UseConsumableCommand).</summary>
+        StrengthPotion = 4,
+        /// <summary>강화 주문서 (3-7b): 읽으면 든 무기 강화 + Amount — 차례 1. 든 무기가 없으면 쓸 수 없다.</summary>
+        UpgradeScroll = 5,
     }
 
     /// <summary>아이템 하나의 규칙 데이터 (3-2a). 값은 ItemCatalogAsset에서 온다 — BALANCE.md 9번.</summary>
@@ -63,9 +74,14 @@ namespace ProjectM.Items
         public string SpellId { get; }
         /// <summary>무기(EquipWeapon)의 수치 (3-7a). 그 밖에는 null.</summary>
         public WeaponDef Weapon { get; }
+        /// <summary>힘 물약 · 강화 주문서의 양 (3-7b, 둘 다 1). 그 밖에는 0.</summary>
+        public int Amount { get; }
 
-        public ItemDef(string id, ItemUse use, string spellId = null, WeaponDef weapon = null)
+        public ItemDef(string id, ItemUse use, string spellId = null, WeaponDef weapon = null, int amount = 0)
         {
+            bool consumable = use == ItemUse.StrengthPotion || use == ItemUse.UpgradeScroll;
+            if (consumable && amount < 1) throw new ArgumentOutOfRangeException(nameof(amount), amount, "물약 · 주문서의 양은 1 이상: " + id);
+            Amount = consumable ? amount : 0;
             if (string.IsNullOrEmpty(id)) throw new ArgumentException("아이템 ID가 비어 있다.", nameof(id));
             if (use == ItemUse.LearnSpell && string.IsNullOrEmpty(spellId)) throw new ArgumentException("마법서에 가르칠 주문이 없다: " + id, nameof(spellId));
             if (use == ItemUse.EquipWeapon && weapon == null) throw new ArgumentException("무기 수치가 없다: " + id, nameof(weapon));

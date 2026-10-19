@@ -305,7 +305,7 @@ namespace ProjectM.Tests
             var restored = World.Restore(WorldSnapshotCodec.Decode(bytes), (w, id) => new Idle());
             Assert.That(restored.Units.Get(s.Player.Id).Weapon, Is.EqualTo(s.Player.Weapon));
             Assert.That(WorldSnapshotCodec.Encode(restored.Capture()), Is.EqualTo(bytes));
-            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.EqualTo(13));
+            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.EqualTo(14));
         }
 
         [Test]

@@ -16,7 +16,9 @@ namespace ProjectM.Data
         [Min(0)] [SerializeField] private int _minDistanceFromStart = 3;
         [Tooltip("한 판에 놓는 무기 수 (3-7a) — 무기 종류 중 시드로 고름, 1~마지막 전 층")]
         [Min(0)] [SerializeField] private int _weaponsPerRun = 2;
+        [Tooltip("한 판에 놓는 강화 주문서 수 (3-7b)")] [Min(0)] [SerializeField] private int _upgradeScrollsPerRun = 3;
+        [Tooltip("한 판에 놓는 힘 물약 수 (3-7b)")] [Min(0)] [SerializeField] private int _strengthPotionsPerRun = 2;
 
-        public LootConfig ToConfig() => new LootConfig(_maxBooksPerFloor, _minDistanceFromStart, _weaponsPerRun);
+        public LootConfig ToConfig() => new LootConfig(_maxBooksPerFloor, _minDistanceFromStart, _weaponsPerRun, _upgradeScrollsPerRun, _strengthPotionsPerRun);
     }
 }

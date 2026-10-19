@@ -136,7 +136,7 @@ namespace ProjectM.Tests
             Assert.That(p.InventorySlots, Is.EqualTo(s.Player.InventorySlots));
             Assert.That(p.QuickSlots, Is.EqualTo(s.Player.QuickSlots));
             Assert.That(WorldSnapshotCodec.Encode(restored.Capture()), Is.EqualTo(bytes));
-            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.EqualTo(13), "3-4b: 한 판 기록 · 3-5: 바닥 아이템 · 3-6: 레벨 · 명중 · 3-7a: 무기");
+            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.EqualTo(14), "3-4b: 한 판 기록 · 3-5: 바닥 아이템 · 3-6: 레벨 · 명중 · 3-7a: 무기 · 3-7b: 힘 · 강화");
         }
 
         // 결정 2026-10-17: 빠른 칸에 없는 주문도 인벤토리에서 바로 쓴다. 빠른 칸에 아이템이 있으면 주문 시전은 막힘
@@ -266,7 +266,7 @@ namespace ProjectM.Tests
             var asset = AssetDatabase.LoadAssetAtPath<ItemCatalogAsset>("Assets/_Project/Data/Items/ItemCatalog.asset");
             Assert.That(asset, Is.Not.Null, "ItemCatalog.asset 없음 — 메뉴 ProjectM/Setup/Main Scene 실행");
             var book = asset.ToBook();
-            Assert.That(book.Count, Is.EqualTo(12), "융합기 + 마법서 5 (3-5) + 무기 6 (3-7a)");
+            Assert.That(book.Count, Is.EqualTo(14), "융합기 + 마법서 5 (3-5) + 무기 6 (3-7a) + 힘 물약 · 강화 주문서 (3-7b)");
             Assert.That(book.TryGet("fusion_device", out var device), Is.True);
             Assert.That(device.Use, Is.EqualTo(ItemUse.Fusion));
             Assert.That(asset.DisplayNames()["fusion_device"], Is.EqualTo("마법 융합기"));

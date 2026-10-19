@@ -27,10 +27,14 @@ namespace ProjectM.Units
         public int ExpReward { get; }
         /// <summary>경험치를 주는 플레이어 최고 레벨 (3-6, SPD maxLvl).</summary>
         public int ExpMaxLevel { get; }
+        /// <summary>힘 (3-7b, SPD — 플레이어 10). 무기를 들지 않는 적은 0.</summary>
+        public int Strength { get; }
 
         public UnitDef(string visualId, int maxHp, int attackDamage, int sightRange, int maxMana = 0, IReadOnlyList<string> startingSpells = null,
-            int accuracy = 0, int evasion = 0, int expReward = 0, int expMaxLevel = 0)
+            int accuracy = 0, int evasion = 0, int expReward = 0, int expMaxLevel = 0, int strength = 0)
         {
+            if (strength < 0) throw new ArgumentOutOfRangeException(nameof(strength), strength, "힘은 0 이상이어야 한다.");
+            Strength = strength;
             if (accuracy < 0) throw new ArgumentOutOfRangeException(nameof(accuracy), accuracy, "명중은 0 이상이어야 한다.");
             if (evasion < 0) throw new ArgumentOutOfRangeException(nameof(evasion), evasion, "회피는 0 이상이어야 한다.");
             if (expReward < 0) throw new ArgumentOutOfRangeException(nameof(expReward), expReward, "경험치는 0 이상이어야 한다.");
