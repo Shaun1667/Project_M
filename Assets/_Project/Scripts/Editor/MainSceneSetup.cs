@@ -57,6 +57,8 @@ namespace ProjectM.Editor
         private const string FogTilePath = VisualsDir + "/FogTile.asset";
         private const string StairsUpTilePath = VisualsDir + "/StairsUpTile.asset";
         private const string WallMaterialPath = VisualsDir + "/Materials/WallGreybox.mat";
+        /// <summary>코드로 만드는 도형(그레이박스 캡슐 · 바닥 책 상자)용 흰 URP Lit — 색은 틴트 · 칸마다 덮어씀. 빌드 마젠타 방지.</summary>
+        private const string ShapeMaterialPath = VisualsDir + "/Materials/ShapeGreybox.mat";
         private const string Urp3DPath = "Assets/_Project/Settings/Rendering/URP3D.asset";
         private const string Renderer3DPath = "Assets/_Project/Settings/Rendering/Renderer3D.asset";
 
@@ -123,7 +125,7 @@ namespace ProjectM.Editor
 
             var entitiesGo = FindOrCreate("Entities", null);
             var entityPresenter = GetOrAdd<EntityPresenter>(entitiesGo);
-            SetRefs(entityPresenter, ("_grid", grid), ("_catalog", catalog));
+            SetRefs(entityPresenter, ("_grid", grid), ("_catalog", catalog), ("_greyboxMaterial", EnsureShapeMaterial()));
 
             var tilemapPresenter = GetOrAdd<TilemapPresenter>(terrainGo);
             SetRefs(tilemapPresenter, ("_tilemap", tilemap), ("_visuals", tileVisuals), ("_wallMaterial", EnsureWallMaterial()));
@@ -174,7 +176,7 @@ namespace ProjectM.Editor
             var lootConfig = EnsureAsset<LootConfigAsset>(LootConfigPath, ("_maxBooksPerFloor", 2), ("_minDistanceFromStart", 3));
             var floorItemsGo = FindOrCreate("FloorItems", null);
             var floorItems = GetOrAdd<FloorItemPresenter>(floorItemsGo);
-            SetRefs(floorItems, ("_entities", entityPresenter));
+            SetRefs(floorItems, ("_entities", entityPresenter), ("_bookMaterial", EnsureShapeMaterial()));
             // 임시 보스 (3-4b) — 없을 때만 BALANCE 3번 값으로
             var bossDef = EnsureAsset<UnitDefAsset>(BossDefPath,
                 ("_visualId", BossVisualId), ("_maxHp", 60), ("_attackDamage", 5), ("_sightRange", 10));
@@ -270,6 +272,22 @@ namespace ProjectM.Editor
             material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { name = "WallGreybox" };
             material.SetColor("_BaseColor", new Color(0.42f, 0.42f, 0.46f));
             AssetDatabase.CreateAsset(material, WallMaterialPath);
+            return material;
+        }
+
+        /// <summary>
+        /// 코드로 만드는 도형용 흰 URP Lit 재질. GameObject.CreatePrimitive가 붙이는 기본 재질(Built-in Standard 셰이더)은
+        /// 에디터에서는 보이지만 URP 빌드에 들어가지 않아 마젠타가 된다 — 씬이 참조하는 이 재질로 바꿔 끼운다.
+        /// </summary>
+        private static Material EnsureShapeMaterial()
+        {
+            var material = AssetDatabase.LoadAssetAtPath<Material>(ShapeMaterialPath);
+            if (material != null) return material;
+            EnsureFolder(System.IO.Path.GetDirectoryName(ShapeMaterialPath).Replace('\\', '/'));
+            material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { name = "ShapeGreybox" };
+            material.SetColor("_BaseColor", Color.white);
+            material.enableInstancing = true;
+            AssetDatabase.CreateAsset(material, ShapeMaterialPath);
             return material;
         }
 

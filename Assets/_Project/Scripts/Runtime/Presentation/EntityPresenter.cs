@@ -57,6 +57,7 @@ namespace ProjectM.Presentation
         [SerializeField] private Grid _grid;
         [SerializeField] private EntityVisualCatalog _catalog;
         [Tooltip("칸마다 서는 높이 (계단 위 등, G-2b). 비면 바닥 y = 0")] [SerializeField] private TilemapPresenter _ground;
+        [Tooltip("그레이박스 캡슐 재질 (URP Lit, 흰색 — 색은 틴트). 비면 Unity 기본 재질 — 빌드에서 마젠타로 깨진다")] [SerializeField] private Material _greyboxMaterial;
 
         [Header("코드 움직임 (G-2b, 초 · m) — 실시간 모드 1초 안")]
         [SerializeField] [Range(0.02f, 0.5f)] private float _moveDuration = 0.12f;
@@ -237,8 +238,8 @@ namespace ProjectM.Presentation
             return null;
         }
 
-        /// <summary>그레이박스: 발밑이 바닥에 닿는 캡슐 (충돌체 제거).</summary>
-        private static void CreateCapsule(Transform root, float height)
+        /// <summary>그레이박스: 발밑이 바닥에 닿는 캡슐 (충돌체 제거). 재질은 URP Lit — CreatePrimitive 기본 재질은 빌드에서 깨진다.</summary>
+        private void CreateCapsule(Transform root, float height)
         {
             var capsule = GameObject.CreatePrimitive(PrimitiveType.Capsule);
             var collider = capsule.GetComponent<Collider>();
@@ -247,6 +248,7 @@ namespace ProjectM.Presentation
             capsule.transform.SetParent(root, false);
             capsule.transform.localScale = new Vector3(CapsuleWidth, height * 0.5f, CapsuleWidth); // 기본 캡슐 높이 2
             capsule.transform.localPosition = new Vector3(0f, height * 0.5f, 0f);
+            if (_greyboxMaterial != null) capsule.GetComponent<Renderer>().sharedMaterial = _greyboxMaterial;
         }
 
         private void OnMoved(EntityMovedEvent e)

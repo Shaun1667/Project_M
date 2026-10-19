@@ -15,6 +15,8 @@ namespace ProjectM.Presentation
     {
         [SerializeField] private EntityPresenter _entities;
         [Tooltip("item.<아이템 ID> 키: 프리팹 = 반짝임 루프, 틴트 = 책 색 (메뉴 ProjectM/Setup/FX가 채움)")] [SerializeField] private FxCatalog _catalog;
+        [Tooltip("책 상자 재질 (URP Lit, 흰색 — 색은 칸마다 덮어씀). 비면 Unity 기본 재질 — 빌드에서 마젠타로 깨진다")]
+        [SerializeField] private Material _bookMaterial;
         [SerializeField] private Vector3 _bookSize = new Vector3(0.34f, 0.07f, 0.44f);
         [Tooltip("바닥에서 뜬 높이 · 위아래 흔들림 (m)")] [SerializeField] private float _hoverHeight = 0.35f;
         [SerializeField] private float _bobAmount = 0.06f;
@@ -53,10 +55,11 @@ namespace ProjectM.Presentation
         }
 
         /// <summary>테스트 · 에디터 Setup용.</summary>
-        public void Configure(EntityPresenter entities, FxCatalog catalog)
+        public void Configure(EntityPresenter entities, FxCatalog catalog, Material bookMaterial = null)
         {
             _entities = entities;
             _catalog = catalog;
+            _bookMaterial = bookMaterial;
         }
 
         public bool Has(GridPos pos, string itemId) => _views.Exists(v => v.Pos == pos && v.ItemId == itemId);
@@ -135,6 +138,7 @@ namespace ProjectM.Presentation
                 }
             }
             var renderer = book.GetComponent<Renderer>();
+            if (_bookMaterial != null) renderer.sharedMaterial = _bookMaterial; // CreatePrimitive의 기본 재질(Built-in Standard)은 URP 빌드에 없다
             if (_block == null) _block = new MaterialPropertyBlock();
             renderer.GetPropertyBlock(_block);
             _block.SetColor(BaseColorId, color);

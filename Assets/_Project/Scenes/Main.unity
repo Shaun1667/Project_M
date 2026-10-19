@@ -2264,6 +2264,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: ProjectM.Runtime::ProjectM.Presentation.FloorItemPresenter
   _entities: {fileID: 2108178770}
   _catalog: {fileID: 11400000, guid: 23ad1d470fe18304fa62ef5a0310d810, type: 2}
+  _bookMaterial: {fileID: 2100000, guid: e28b00420dfda4d4cbfa0883e181b0b7, type: 2}
   _bookSize: {x: 0.34, y: 0.07, z: 0.44}
   _hoverHeight: 0.35
   _bobAmount: 0.06
@@ -2908,6 +2909,7 @@ MonoBehaviour:
   _grid: {fileID: 311868166}
   _catalog: {fileID: 11400000, guid: 6e59fb9562ab24444a1a13ce3f73cebd, type: 2}
   _ground: {fileID: 2048705274}
+  _greyboxMaterial: {fileID: 2100000, guid: e28b00420dfda4d4cbfa0883e181b0b7, type: 2}
   _moveDuration: 0.12
   _moveHop: 0.08
   _lungeDuration: 0.18
@@ -2922,6 +2924,7 @@ MonoBehaviour:
   _idleBreath: 0.03
   _idleSpeed: 2.4
   _teleportCells: 1.6
+  _walkHold: 0.2
 --- !u!4 &2108178771
 Transform:
   m_ObjectHideFlags: 0
