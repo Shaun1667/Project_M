@@ -196,6 +196,7 @@ namespace ProjectM.Editor
             var rootGo = FindOrCreate("GameRoot", null);
             var input = GetOrAdd<PlayerInputController>(rootGo);
             SetRefs(input, ("_camera", cameraGo != null ? cameraGo.GetComponent<Camera>() : null), ("_grid", grid), ("_aimPreview", aimPreview),
+                ("_cameraRig", cameraController), // 2026-10-19 둘러보기 · 확대 축소
                 ("_hud", hud), ("_inventoryView", inventoryView));
 
             var root = GetOrAdd<GameRoot>(rootGo);

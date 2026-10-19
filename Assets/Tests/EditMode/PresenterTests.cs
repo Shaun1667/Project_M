@@ -247,6 +247,62 @@ namespace ProjectM.Tests
             Assert.That(_grid.WorldToCell(ground), Is.EqualTo(new Vector3Int(4, 7, 0)));
         }
 
+        // ── 둘러보기 · 확대 축소 (2026-10-19 사용자 요청) ──
+
+        private CameraController Rig()
+        {
+            var camGo = new GameObject("Rig");
+            camGo.transform.SetParent(_root.transform, false);
+            camGo.AddComponent<Camera>();
+            var rig = camGo.AddComponent<CameraController>();
+            rig.Apply();
+            rig.SetPanBounds(20f, 10f);
+            rig.SnapToTarget(new Vector3(5.5f, 0f, 5.5f));
+            return rig;
+        }
+
+        [Test]
+        public void Camera_PanBy_MovesLookTarget_ClampedToMap_FreeLook()
+        {
+            var rig = Rig();
+            rig.PanBy(new Vector3(3f, 7f, 2f));
+            Assert.That(rig.LookTarget, Is.EqualTo(new Vector3(8.5f, 0f, 7.5f)), "높이는 무시");
+            Assert.That(rig.IsFreeLook, Is.True);
+            float distance = Vector3.Distance(rig.transform.position, rig.LookTarget);
+            Assert.That(distance, Is.EqualTo(rig.Distance).Within(1e-3f), "보는 곳에서 같은 거리");
+            rig.PanBy(new Vector3(100f, 0f, -100f));
+            Assert.That(rig.LookTarget, Is.EqualTo(new Vector3(20f, 0f, 0f)), "맵 밖으로 안 나감");
+        }
+
+        [Test]
+        public void Camera_FollowTarget_EndsFreeLook()
+        {
+            var rig = Rig();
+            rig.PanBy(new Vector3(4f, 0f, 0f));
+            rig.FollowTarget(new Vector3(6.5f, 0f, 5.5f));
+            Assert.That(rig.IsFreeLook, Is.False, "플레이어가 움직이면 다시 따라감 (사용자 요청)");
+            Assert.That(rig.LookTarget, Is.EqualTo(new Vector3(6.5f, 0f, 5.5f)));
+        }
+
+        [Test]
+        public void Camera_Zoom_ClampsDistance_KeepsTarget()
+        {
+            var rig = Rig();
+            float start = rig.Distance;
+            rig.Zoom(1f);
+            Assert.That(rig.Distance, Is.LessThan(start), "휠 올림 = 확대(가까이)");
+            rig.Zoom(-2f);
+            Assert.That(rig.Distance, Is.GreaterThan(start), "휠 내림 = 축소(멀리)");
+            for (int i = 0; i < 50; i++) rig.Zoom(-1f);
+            float far = rig.Distance;
+            rig.Zoom(-1f);
+            Assert.That(rig.Distance, Is.EqualTo(far), "최대 거리에서 멈춤");
+            for (int i = 0; i < 50; i++) rig.Zoom(1f);
+            Assert.That(rig.Distance, Is.GreaterThanOrEqualTo(1f));
+            Assert.That(rig.LookTarget, Is.EqualTo(new Vector3(5.5f, 0f, 5.5f)), "보는 곳은 그대로");
+            Assert.That(Vector3.Distance(rig.transform.position, rig.LookTarget), Is.EqualTo(rig.Distance).Within(1e-3f));
+        }
+
         // ── G-2a Varco 모델 연결 (결정 2026-10-18) ──
 
         /// <summary>시험용 모듈 "프리팹": 충돌체 없는 큐브 (원점 = 바닥 중앙, 키 height).</summary>

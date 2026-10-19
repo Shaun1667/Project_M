@@ -43,6 +43,8 @@ namespace ProjectM.Input
         [SerializeField] private float _pathStepInterval = 0.08f;
         [Tooltip("첫 방향키 뒤 두 번째 키(대각선)를 기다리는 시간, 초")]
         [SerializeField] private float _comboWindow = 0.07f;
+        [Tooltip("둘러보기 카메라 (끌기 · 휠, 2026-10-19). 비면 끌기 · 휠 없음")] [SerializeField] private ProjectM.Presentation.CameraController _cameraRig;
+        [Tooltip("이만큼(px) 넘게 끌면 클릭이 아니라 맵 둘러보기")] [Min(1f)] [SerializeField] private float _dragThreshold = 12f;
 
         private static readonly (Key key, GridPos dir)[] DirectionKeys =
         {
@@ -78,6 +80,10 @@ namespace ProjectM.Input
         private int _aimSlot = -1;
         private GridPos _aimCursor;
         private Vector2 _lastMousePos;
+        // 둘러보기 (2026-10-19): 누른 채 _dragThreshold 넘게 움직이면 끌기, 아니면 놓을 때 클릭
+        private bool _pressing;
+        private bool _dragging;
+        private Vector2 _pressPos;
 
         private readonly InventoryMenu _inventory = new InventoryMenu();
 
@@ -204,9 +210,11 @@ namespace ProjectM.Input
             var mouse = Mouse.current;
             if (_inventory.IsOpen)
             {
+                _pressing = _dragging = false;
                 HandleInventory(player, keyboard, mouse);
                 return;
             }
+            HandleWheel(mouse);
             if (keyboard != null && keyboard[Key.I].wasPressedThisFrame)
             {
                 OpenInventory();
@@ -233,12 +241,60 @@ namespace ProjectM.Input
                 var screen = mouse.position.ReadValue();
                 int slot = _hud != null ? _hud.QuickSlotAt(screen) : -1;
                 if (slot >= 0) UseQuickSlot(player, slot);
-                else if (_camera != null && _grid != null) OnClick(player, screen);
+                else BeginPress(screen); // 칸 클릭은 놓을 때 — 그 전에 끌면 둘러보기
+                return;
+            }
+            if (mouse != null && TrackPress(mouse, out var releasedAt))
+            {
+                if (_camera != null && _grid != null) OnClick(player, releasedAt);
                 return;
             }
 
             if (_path != null && Time.time >= _nextPathStepTime)
                 StepPath();
+        }
+
+        // ── 둘러보기 · 확대 축소 (2026-10-19 사용자 요청) ──
+
+        private void BeginPress(Vector2 screen)
+        {
+            _pressing = true;
+            _dragging = false;
+            _pressPos = screen;
+        }
+
+        /// <summary>
+        /// 누르고 있는 동안: 처음 누른 곳에서 _dragThreshold(px) 넘게 움직이면 끌기 → 카메라가 잡은 바닥 점을 커서에 맞춰 옮긴다.
+        /// 놓을 때 끌지 않았으면 true(클릭, 놓은 화면 점). 둘러본 카메라는 플레이어가 움직이면 다시 따라간다 (CameraController.FollowTarget).
+        /// </summary>
+        private bool TrackPress(Mouse mouse, out Vector2 releasedAt)
+        {
+            releasedAt = mouse.position.ReadValue();
+            if (!_pressing) return false;
+            if (mouse.leftButton.wasReleasedThisFrame || !mouse.leftButton.isPressed)
+            {
+                bool click = !_dragging;
+                _pressing = _dragging = false;
+                return click;
+            }
+            if (_cameraRig == null) return false;
+            if (!_dragging && (releasedAt - _pressPos).sqrMagnitude > _dragThreshold * _dragThreshold)
+            {
+                if (!_cameraRig.BeginDrag(_pressPos)) return false;
+                _dragging = true;
+                CancelPath();
+            }
+            if (_dragging) _cameraRig.DragTo(releasedAt);
+            return false;
+        }
+
+        /// <summary>휠: 올리면 확대, 내리면 축소 (사용자 요청 2026-10-19).</summary>
+        private void HandleWheel(Mouse mouse)
+        {
+            if (mouse == null || _cameraRig == null) return;
+            float scroll = mouse.scroll.ReadValue().y;
+            if (Mathf.Abs(scroll) < 0.01f) return;
+            _cameraRig.Zoom(Mathf.Sign(scroll)); // 휠 한 칸 = 120 (Windows) — 방향만 쓴다
         }
 
         // ── 빠른 칸 (3-2a) ──
@@ -547,8 +603,8 @@ namespace ProjectM.Input
             if (mouse != null && _camera != null && _grid != null)
             {
                 var screen = mouse.position.ReadValue();
-                bool clicked = mouse.leftButton.wasPressedThisFrame;
-                if (clicked && _hud != null)
+                bool pressed = mouse.leftButton.wasPressedThisFrame;
+                if (pressed && _hud != null)
                 {
                     int slot = _hud.QuickSlotAt(screen);
                     if (slot >= 0)
@@ -558,6 +614,9 @@ namespace ProjectM.Input
                         return;
                     }
                 }
+                if (pressed) BeginPress(screen);
+                bool clicked = TrackPress(mouse, out _); // 시전은 놓을 때 — 끌었으면 둘러보기만
+                if (_dragging) return;
                 if (clicked || (screen - _lastMousePos).sqrMagnitude > 0.01f)
                 {
                     _lastMousePos = screen;

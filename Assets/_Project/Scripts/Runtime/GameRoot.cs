@@ -205,13 +205,20 @@ namespace ProjectM
             World.Events.Flush();
 
             if (_camera != null)
+            {
+                _camera.SetPanBounds(World.Map.Width, World.Map.Height); // 둘러보기 범위 = 맵
                 _camera.SnapToTarget(_entityPresenter.CellCenter(Floor.Start));
+            }
         }
 
         private void OnEntityMoved(EntityMovedEvent e)
         {
             if (e.Id != _playerId || _camera == null) return;
-            if (e.From == e.To) _camera.SnapToTarget(_entityPresenter.CellCenter(e.To)); // 층 이동 (3-4a: 제자리 이동 이벤트)
+            if (e.From == e.To) // 층 이동 (3-4a: 제자리 이동 이벤트)
+            {
+                _camera.SetPanBounds(World.Map.Width, World.Map.Height);
+                _camera.SnapToTarget(_entityPresenter.CellCenter(e.To));
+            }
             else _camera.FollowTarget(_entityPresenter.CellCenter(e.To)); // G-2b: 걸음은 부드럽게
         }
 
