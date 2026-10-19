@@ -1,7 +1,10 @@
 using ProjectM.Core;
 using ProjectM.Presentation;
 using UnityEditor;
+using UnityEditor.Animations;
 using UnityEngine;
+using UnityEngine.Animations;
+using UnityEngine.Playables;
 
 namespace ProjectM.Editor
 {
@@ -10,6 +13,8 @@ namespace ProjectM.Editor
     /// 몇 번 실행해도 결과가 같다 (프리팹은 같은 경로에 덮어써 GUID 유지). 메뉴: ProjectM/Setup/Varco Models.
     /// 크기 · 방향 기준은 Docs/ART_ASSETS.md 0-1 · 12번 (Varco는 모든 모델을 가장 긴 쪽 1 m로 보내므로 여기서 맞춘다).
     /// 프리팹 구조: 루트(원점 = 발밑 중앙, 앞 = +Z) → 모델(크기 · 방향 보정). 루트는 건드리지 않아 표현 코드가 자유롭게 돌리고 옮긴다.
+    /// 애니메이션 (2026-10-19): 양 마법사 · Animation/Idle · Walk(Mixamo)를 Humanoid로 가져와 리타깃하고, Idle ↔ Walk 컨트롤러(bool Moving)를
+    /// 플레이어 모델의 Animator에 붙인다. 루트 이동은 클립에 굽고(제자리) 위치 · 방향은 EntityPresenter가 맡는다. 지팡이는 Idle 첫 자세에서 세워 붙인다.
     /// </summary>
     public static class VarcoModelSetup
     {
@@ -17,6 +22,13 @@ namespace ProjectM.Editor
         private const string PrefabDir = "Assets/_Project/Prefabs/Varco";
         private const string TileVisualSetPath = "Assets/_Project/Data/Visuals/TileVisualSet.asset";
         private const string EntityCatalogPath = "Assets/_Project/Data/Visuals/EntityVisualCatalog.asset";
+        private const string AnimationDir = "Assets/_Project/Animation/";
+        private const string PlayerControllerPath = AnimationDir + "PlayerAnimator.controller";
+        /// <summary>EntityPresenter가 이동 중에 켜는 bool 파라미터 (EntityPresenter.MovingParameter와 같아야 한다).</summary>
+        private const string MovingParameter = "Moving";
+        /// <summary>Walk 재생 속도 — 한 칸 이동(0.12초 보간 · 키 반복)이 빨라 걸음을 조금 빠르게.</summary>
+        private const float WalkSpeed = 1.5f;
+        private const float BlendSeconds = 0.12f;
 
         /// <summary>모델별 보정: 크기 배율 · 앞 방향 보정(Y 회전, 도). ART_ASSETS.md 12번 표와 같은 값.</summary>
         private struct ModelSpec
@@ -75,7 +87,18 @@ namespace ProjectM.Editor
                 return;
             }
 
-            var player = BuildPrefab(Player, AttachStaff);
+            // 애니메이션 (2026-10-19): 양 · 클립을 Humanoid로 (리타깃), 컨트롤러는 Idle 기본 · Moving이면 Walk
+            EnsureHumanoid(ModelDir + Player.Model + ".fbx", null);
+            var idle = EnsureHumanoid(AnimationDir + "Idle.fbx", "Idle");
+            var walk = EnsureHumanoid(AnimationDir + "Walk.fbx", "Walk");
+            var controller = idle != null && walk != null ? EnsurePlayerController(idle, walk) : null;
+            if (controller == null) Debug.LogWarning("[VarcoModelSetup] Animation/Idle.fbx · Walk.fbx 없음 — 플레이어 애니메이션 생략 (코드 움직임만)");
+
+            var player = BuildPrefab(Player, sheep =>
+            {
+                SetupAnimator(sheep, controller, idle);
+                AttachStaff(sheep);
+            });
             catalog.SetPrefab("player", player);
             var variants = new GameObject[MeleeVariants.Length];
             for (int i = 0; i < MeleeVariants.Length; i++)
@@ -119,6 +142,122 @@ namespace ProjectM.Editor
             {
                 Object.DestroyImmediate(root);
             }
+        }
+
+        /// <summary>
+        /// FBX를 Humanoid(이 모델로 아바타 생성)로 가져온다. clipName이 있으면 첫 클립을 그 이름 · 반복 · 루트 이동 굽기(제자리)로 맞추고 돌려준다.
+        /// 이미 같으면 다시 가져오지 않는다 (멱등).
+        /// </summary>
+        private static AnimationClip EnsureHumanoid(string path, string clipName)
+        {
+            if (!(AssetImporter.GetAtPath(path) is ModelImporter importer)) return null;
+            bool dirty = false;
+            if (importer.animationType != ModelImporterAnimationType.Human || importer.avatarSetup != ModelImporterAvatarSetup.CreateFromThisModel)
+            {
+                importer.animationType = ModelImporterAnimationType.Human;
+                importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
+                dirty = true;
+            }
+            if (clipName != null)
+            {
+                var clips = importer.clipAnimations.Length > 0 ? importer.clipAnimations : importer.defaultClipAnimations;
+                if (clips.Length > 0)
+                {
+                    var c = clips[0];
+                    if (c.name != clipName || !c.loopTime || !c.lockRootRotation || !c.lockRootHeightY || !c.lockRootPositionXZ || clips.Length != 1)
+                    {
+                        c.name = clipName;
+                        c.loopTime = true;
+                        c.lockRootRotation = true;   // 루트 회전 · 높이 · 이동을 포즈에 굽는다 (제자리 걸음 — 이동은 코드가)
+                        c.lockRootHeightY = true;
+                        c.lockRootPositionXZ = true;
+                        c.keepOriginalOrientation = true;
+                        c.keepOriginalPositionY = true;
+                        c.keepOriginalPositionXZ = true;
+                        importer.clipAnimations = new[] { c };
+                        dirty = true;
+                    }
+                }
+            }
+            if (dirty) importer.SaveAndReimport();
+            if (clipName == null) return null;
+            foreach (var o in AssetDatabase.LoadAllAssetsAtPath(path))
+                if (o is AnimationClip clip && clip.name == clipName) return clip;
+            return null;
+        }
+
+        /// <summary>Idle(기본) ↔ Walk 컨트롤러 (bool Moving). 있으면 상태 · 전이만 다시 맞춘다 (GUID 유지).</summary>
+        private static AnimatorController EnsurePlayerController(AnimationClip idle, AnimationClip walk)
+        {
+            var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(PlayerControllerPath);
+            if (controller == null) controller = AnimatorController.CreateAnimatorControllerAtPath(PlayerControllerPath);
+            bool hasParam = false;
+            foreach (var p in controller.parameters) hasParam |= p.name == MovingParameter && p.type == AnimatorControllerParameterType.Bool;
+            if (!hasParam) controller.AddParameter(MovingParameter, AnimatorControllerParameterType.Bool);
+
+            var machine = controller.layers[0].stateMachine;
+            var idleState = FindOrAddState(machine, "Idle", idle);
+            var walkState = FindOrAddState(machine, "Walk", walk);
+            walkState.speed = WalkSpeed;
+            machine.defaultState = idleState;
+            EnsureTransition(idleState, walkState, AnimatorConditionMode.If);
+            EnsureTransition(walkState, idleState, AnimatorConditionMode.IfNot);
+            EditorUtility.SetDirty(controller);
+            return controller;
+        }
+
+        private static AnimatorState FindOrAddState(AnimatorStateMachine machine, string name, Motion motion)
+        {
+            foreach (var child in machine.states)
+            {
+                if (child.state.name != name) continue;
+                child.state.motion = motion;
+                return child.state;
+            }
+            var state = machine.AddState(name);
+            state.motion = motion;
+            return state;
+        }
+
+        private static void EnsureTransition(AnimatorState from, AnimatorState to, AnimatorConditionMode mode)
+        {
+            foreach (var t in from.transitions)
+                if (t.destinationState == to) from.RemoveTransition(t); // 조건 · 시간을 표대로 다시
+            var transition = from.AddTransition(to);
+            transition.hasExitTime = false;
+            transition.duration = BlendSeconds;
+            transition.AddCondition(mode, 0f, MovingParameter);
+        }
+
+        /// <summary>모델 루트(FBX, Humanoid라 Animator가 있음)에 컨트롤러를 붙이고 Idle 첫 자세로 둔다 — 지팡이를 그 자세에서 세워 붙이기 위해.</summary>
+        private static void SetupAnimator(GameObject sheep, AnimatorController controller, AnimationClip idle)
+        {
+            if (controller == null) return;
+            var animator = sheep.GetComponent<Animator>();
+            if (animator == null) animator = sheep.AddComponent<Animator>();
+            animator.runtimeAnimatorController = controller;
+            animator.applyRootMotion = false; // 위치 · 방향은 EntityPresenter
+            animator.cullingMode = AnimatorCullingMode.CullUpdateTransforms;
+            if (idle == null || animator.avatar == null) return;
+            animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+            animator.Rebind();
+            var graph = PlayableGraph.Create("IdlePose");
+            try
+            {
+                var output = AnimationPlayableOutput.Create(graph, "Pose", animator);
+                var playable = AnimationClipPlayable.Create(graph, idle);
+                playable.SetApplyFootIK(false);
+                output.SetSourcePlayable(playable);
+                graph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
+                graph.Play();
+                playable.SetTime(0);
+                graph.Evaluate(0f);
+            }
+            finally
+            {
+                graph.Destroy();
+            }
+            animator.cullingMode = AnimatorCullingMode.CullUpdateTransforms;
         }
 
         /// <summary>지팡이를 오른손 뼈에 붙인다: 세워 든 채, 손이 지팡이 길이의 StaffGripRatio 지점에 오게.</summary>

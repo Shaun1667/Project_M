@@ -382,6 +382,34 @@ namespace ProjectM.Tests
             Assert.That(view.Root.position, Is.EqualTo(_grid.GetCellCenterWorld(new Vector3Int(9, 9, 0))), "층 이동은 바로");
         }
 
+        // 애니메이션 (2026-10-19): 걸어서 옮기면 Walk, 이동 + 유지 시간이 지나면 Idle, 제자리 이동(층 이동)은 걷지 않음
+        [Test]
+        public void Motion_WalkWhileMoving_IdleAfterHold_TeleportDoesNotWalk()
+        {
+            var presenter = CreateEntityPresenter();
+            var id = new EntityId(3);
+            _bus.Publish(new EntitySpawnedEvent(id, new GridPos(0, 0), "player"));
+            _bus.Flush();
+            presenter.TryGetView(id, out var view);
+            presenter.Advance(0.01f);
+            Assert.That(view.Walking, Is.False, "처음엔 Idle");
+
+            _bus.Publish(new EntityMovedEvent(id, new GridPos(0, 0), new GridPos(1, 0)));
+            _bus.Flush();
+            presenter.Advance(0.05f);
+            Assert.That(view.Walking, Is.True, "걷는 중");
+            presenter.Advance(0.2f); // 보간(0.12) 끝 · 유지 시간(0.2) 안
+            Assert.That(view.Walking, Is.True, "이어 걸을 수 있게 잠깐 유지");
+            presenter.Advance(0.5f);
+            Assert.That(view.Walking, Is.False, "멈추면 Idle");
+
+            _bus.Publish(new EntityMovedEvent(id, new GridPos(5, 5), new GridPos(5, 5)));
+            _bus.Flush();
+            presenter.Advance(0.01f);
+            Assert.That(view.Walking, Is.False, "층 이동은 걷지 않음");
+            Assert.That(view.Animator, Is.Null, "그레이박스 캡슐은 애니메이션 없음 — 코드 움직임만");
+        }
+
         // 근접 공격 = 공격자가 대상 쪽으로 찔렀다 돌아옴, 대상은 번쩍(밝게)
         [Test]
         public void Motion_AttackLungesAttacker_FlashesTarget()

@@ -284,6 +284,16 @@ Varco는 모든 모델을 **가장 긴 쪽 1 m**로 보내므로 크기는 프�
 
 ---
 
+### 12-1. 애니메이션 (G-2c, 2026-10-19)
+
+| 클립 | 파일 | 적용 | 설정 |
+|---|---|---|---|
+| Idle | `Assets/_Project/Animation/Idle.fbx` (Mixamo, 8.3초) | 플레이어 기본 | Humanoid 리타깃 · 반복 · 루트 굽기 |
+| Walk | `Assets/_Project/Animation/Walk.fbx` (Mixamo, 0.97초) | 플레이어 이동 중 (`Moving`) | 〃 · 상태 속도 1.5 |
+
+컨트롤러 `Assets/_Project/Animation/PlayerAnimator.controller` (메뉴 ProjectM/Setup/Varco Models가 만들고 플레이어 프리팹 모델에 붙임). 양 마법사 · 클립 모두 Humanoid(이 모델로 아바타).
+적 · 보스는 아직 클립 없음(코드 움직임). 다음 후보: 공격 · 시전 · 피격 · 사망 클립(같은 이벤트 지점에 트리거로).
+
 ## 13. 연결된 이펙트 (G-3, 2026-10-19)
 
 에셋: 사용자가 가져온 **Hovl Studio — Magic effects pack**(H) · **Eric VFX Studio — Free Game VFX**(E), `Assets/_Project/FX` (Shuriken 프리팹, 데모 씬은 지움).

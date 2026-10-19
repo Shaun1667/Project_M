@@ -26,6 +26,12 @@ namespace ProjectM.Presentation
         internal float DeathT = -1f;        // 0 이상이면 사망 연출 중
         internal float IdlePhase;
         internal bool Flashing;
+        internal float WalkUntil = -1f;     // 이 시각까지 걷는 중 (애니메이션 Walk)
+
+        /// <summary>애니메이션 컨트롤러가 붙은 모델 (2026-10-19 — 플레이어 Idle · Walk). 없으면 코드 움직임만.</summary>
+        public Animator Animator { get; internal set; }
+        /// <summary>지금 걷는 중으로 보이는지 (Walk 재생 · 테스트 확인용).</summary>
+        public bool Walking { get; internal set; }
 
         public EntityView(Transform root, Renderer[] renderers)
         {
@@ -67,6 +73,11 @@ namespace ProjectM.Presentation
         [Tooltip("대기 숨쉬기 세기 (세로 배율)")] [SerializeField] [Range(0f, 0.1f)] private float _idleBreath = 0.03f;
         [SerializeField] [Range(0.1f, 6f)] private float _idleSpeed = 2.4f;
         [Tooltip("이보다 먼 이동(칸)은 보간 없이 옮긴다 — 층 이동 · 순간 이동")] [SerializeField] private float _teleportCells = 1.6f;
+        [Tooltip("한 칸 이동이 끝난 뒤에도 Walk를 유지하는 시간 (초) — 이어 걸을 때 Idle로 깜빡이지 않게")] [SerializeField] [Range(0f, 1f)] private float _walkHold = 0.2f;
+
+        /// <summary>애니메이션 컨트롤러의 이동 중 bool 파라미터 (VarcoModelSetup이 만든 컨트롤러와 같은 이름).</summary>
+        public const string MovingParameter = "Moving";
+        private static readonly int MovingHash = Animator.StringToHash(MovingParameter);
 
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
         private static readonly int ColorId = Shader.PropertyToID("_Color");
@@ -205,12 +216,25 @@ namespace ProjectM.Presentation
                 From = at,
                 To = at,
                 IdlePhase = (e.Id.Value * 0.618f) % 1f * Mathf.PI * 2f, // 엔티티마다 숨쉬기 박자를 어긋나게
+                Animator = FindAnimator(root),
             };
             _views.Add(e.Id, view);
             _positions[e.Id] = e.Pos;
             _baseTints[e.Id] = tint;
             ApplyTint(e.Id, view);
             ApplyVisibility(e.Id, view);
+        }
+
+        /// <summary>컨트롤러가 붙은 Animator (애니메이션 모델). 없으면 null — 그 엔티티는 코드 움직임만.</summary>
+        private static Animator FindAnimator(Transform root)
+        {
+            foreach (var animator in root.GetComponentsInChildren<Animator>(true))
+            {
+                if (animator.runtimeAnimatorController == null) continue;
+                animator.applyRootMotion = false; // 위치 · 방향은 여기서
+                return animator;
+            }
+            return null;
         }
 
         /// <summary>그레이박스: 발밑이 바닥에 닿는 캡슐 (충돌체 제거).</summary>
@@ -241,6 +265,7 @@ namespace ProjectM.Presentation
             view.From = teleport ? to : shown;
             view.To = to;
             view.MoveT = teleport ? 1f : 0f;
+            if (!teleport) view.WalkUntil = _time + _moveDuration + _walkHold; // 걸어서 옮긴 칸 = Walk
             Pose(view);
             ApplyVisibility(e.Id, view);
         }
@@ -302,6 +327,7 @@ namespace ProjectM.Presentation
                 var view = pair.Value;
                 Step(view, dt);
                 Pose(view);
+                UpdateWalk(view);
                 if (view.Flashing) ApplyTint(pair.Key, view);
             }
             for (int i = _dying.Count - 1; i >= 0; i--)
@@ -331,6 +357,15 @@ namespace ProjectM.Presentation
             view.CastT = Mathf.Min(1f, view.CastT + dt / _castDuration);
         }
 
+        /// <summary>이동 직후 · 이어 걷는 동안 Walk, 멈추면 Idle (애니메이션 모델만 — 컨트롤러 bool Moving).</summary>
+        private void UpdateWalk(EntityView view)
+        {
+            bool walking = _time < view.WalkUntil;
+            if (view.Walking == walking) return;
+            view.Walking = walking;
+            if (view.Animator != null && view.Animator.isActiveAndEnabled) view.Animator.SetBool(MovingHash, walking);
+        }
+
         private static Vector3 BasePosition(EntityView view) => Vector3.Lerp(view.From, view.To, Smooth(view.MoveT));
 
         private static float Smooth(float t) => t * t * (3f - 2f * t);
@@ -340,13 +375,14 @@ namespace ProjectM.Presentation
         {
             if (view.Root == null) return;
             var pos = BasePosition(view);
-            pos.y += _moveHop * Mathf.Sin(Mathf.PI * view.MoveT);
+            bool animated = view.Animator != null; // 애니메이션 모델은 통통 튐 · 숨쉬기를 클립(Walk · Idle)이 맡는다
+            if (!animated) pos.y += _moveHop * Mathf.Sin(Mathf.PI * view.MoveT);
             pos += view.LungeDir * (_lungeDistance * Mathf.Sin(Mathf.PI * view.LungeT));
             pos.y += _castHop * Mathf.Sin(Mathf.PI * view.CastT);
             if (view.HitT < 1f)
                 pos += view.Root.right * (_hitShake * (1f - view.HitT) * Mathf.Sin(view.HitT * 40f));
 
-            float breath = _idleBreath * Mathf.Sin(_time * _idleSpeed + view.IdlePhase);
+            float breath = animated ? 0f : _idleBreath * Mathf.Sin(_time * _idleSpeed + view.IdlePhase);
             var scale = new Vector3(1f - breath * 0.5f, 1f + breath, 1f - breath * 0.5f);
             if (view.DeathT >= 0f)
             {
