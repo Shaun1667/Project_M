@@ -25,6 +25,8 @@ namespace ProjectM.UI
         Assign,
         Unassign,
         Close,
+        /// <summary>물약 던지기 (3-9) — 사용 바로 아래.</summary>
+        Throw,
     }
 
     public enum InventoryActionKind
@@ -38,6 +40,8 @@ namespace ProjectM.UI
         Unassigned,
         /// <summary>융합할 주문 두 개를 골랐다 (Entry = 첫째, Second = 둘째, 창은 닫힘) — 3-2b.</summary>
         FuseSpells,
+        /// <summary>물약 던지기 (3-9) → 입력이 던지기 조준으로 (창은 닫힘).</summary>
+        ThrowItem,
     }
 
     /// <summary>InventoryMenu 조작의 결과 — 입력 쪽이 조준 시작 · 안내 문구에 쓴다.</summary>
@@ -83,6 +87,9 @@ namespace ProjectM.UI
         public int MenuIndex { get; private set; }
         /// <summary>융합 고르기에서 첫 주문의 인벤토리 칸, 아직이면 -1 (3-2b).</summary>
         public int FusionFirst { get; private set; } = -1;
+
+        /// <summary>그 항목을 던질 수 있는지 (3-9 — 입력이 Consumables.CanThrow로 채움). null이면 던지기 메뉴 없음.</summary>
+        public Func<InventoryRef, bool> CanThrow { get; set; }
 
         /// <summary>상태가 바뀌면 알린다 (다시 그리기).</summary>
         public event Action Changed;
@@ -233,6 +240,7 @@ namespace ProjectM.UI
         {
             _options.Clear();
             _options.Add(InventoryMenuOption.Use);
+            if (CanThrow != null && CanThrow(entry)) _options.Add(InventoryMenuOption.Throw);
             _options.Add(InventoryMenuOption.Assign);
             if (Inventory.QuickSlotOf(unit, entry) >= 0) _options.Add(InventoryMenuOption.Unassign);
             _options.Add(InventoryMenuOption.Close);
@@ -248,6 +256,9 @@ namespace ProjectM.UI
                 case InventoryMenuOption.Use:
                     Close();
                     return new InventoryAction(entry.Kind == InventoryKind.Spell ? InventoryActionKind.CastSpell : InventoryActionKind.UseItem, entry);
+                case InventoryMenuOption.Throw:
+                    Close();
+                    return new InventoryAction(InventoryActionKind.ThrowItem, entry);
                 case InventoryMenuOption.Assign:
                     State = InventoryMenuState.ChooseSlot;
                     _options.Clear();

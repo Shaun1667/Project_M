@@ -136,6 +136,9 @@ namespace ProjectM.Editor
             // 3-7b 힘 물약 · 강화 주문서: 모델이 없어 책 상자(색 = 틴트) + 반짝임
             new Row("item.potion_strength", Hovl + "Sparks/Sparks flashing yellow", 0.35f, PotionRed, 1f, 0f, 0.25f),
             new Row("item.scroll_upgrade", Hovl + "Sparks/Sparks flashing yellow", 0.35f, ScrollGold, 1f, 0f, 0.25f),
+            // 3-9 겉모습 (potion_<색> · scroll_<룬>): 모델은 ItemVisualCatalog, 반짝임은 앞부분 줄 하나 — 색으로 정체가 드러나지 않게 공통
+            new Row("item.potion", Hovl + "Sparks/Sparks flashing yellow", 0.35f, Steel, 1f, 0f, 0.25f),
+            new Row("item.scroll", Hovl + "Sparks/Sparks flashing yellow", 0.35f, ScrollGold, 1f, 0f, 0.25f),
         };
 
         [MenuItem("ProjectM/Setup/FX")]

@@ -34,6 +34,7 @@ namespace ProjectM
         [SerializeField] private FusionCatalogAsset _fusionCatalog;
         [Tooltip("마법서 배치 수치 (3-5). 비우면 바닥에 마법서를 놓지 않는다")] [SerializeField] private LootConfigAsset _lootConfig;
         [Tooltip("경험치 · 레벨업 수치 (3-6). 비우면 경험치를 주지 않는다")] [SerializeField] private ProgressionConfigAsset _progressionConfig;
+        [Tooltip("물약 · 주문서 수치 · 겉모습 (3-9). 비우면 식별 · 무작위 배치 없음")] [SerializeField] private ConsumableConfigAsset _consumableConfig;
         [SerializeField] private TilemapPresenter _tilemapPresenter;
         [SerializeField] private EntityPresenter _entityPresenter;
         [Tooltip("시야 안개. 비우면 안개 없이 전부 보인다")]
@@ -163,6 +164,8 @@ namespace ProjectM
             var sight = new ShadowcastSightRule();
             var progression = _progressionConfig != null ? _progressionConfig.ToConfig() : null;
             var vision = World.InstallCoreSystems(sight, Magic, Statuses, Terrains, progression);
+            var consumableConfig = _consumableConfig != null ? _consumableConfig.ToConfig() : ConsumableConfig.Default;
+            var consumables = new ConsumableRules(Items, consumableConfig, Statuses, Terrains, progression, sight); // 3-9 물약 · 주문서 효과
 
             // 3-4a: 적 재생성(⑤) · 계단 사용(틱 밖 — 입력이 부른다)
             var spawn = _spawnConfig.ToConfig();
@@ -196,12 +199,18 @@ namespace ProjectM
                 Loot.PlanSpellbooks(World, Items, loot, dungeonConfig.FloorCount);
                 Loot.PlanWeapons(World, Items, loot, dungeonConfig.FloorCount); // 3-7a: 책 계획 뒤에 붙인다
                 Loot.PlanConsumables(World, Items, loot, dungeonConfig.FloorCount); // 3-7b: 강화 주문서 · 힘 물약 (무기 계획 뒤)
+                Loot.PlanRandomConsumables(World, Items, consumableConfig, dungeonConfig.FloorCount); // 3-9: 층마다 무작위 물약 · 주문서
+            }
+            Identification.AssignLooks(World, Items, consumableConfig); // 3-9: 판마다 겉모습 (배치 계획 모두 뒤 — 앞 계획은 그대로)
+            if (loot != null)
+            {
                 Loot.PlaceFloorItems(World, Floor.Start, loot);
             }
             vision.Refresh(); // 첫 시야 — 이후는 매 틱 ⑥ 단계에서
 
+            _hudText.Run = World.Run; // 3-9: 모르는 물약 · 주문서는 겉모습 이름으로
             _hud.Bind(World.Events, player, Spells, _hudText, progression);
-            _input.Bind(World, Config, new TurnClock(World.Scheduler, World.PlayerInput), sight, Spells, new BresenhamTargetingRule(), Items, Fusions, stairs);
+            _input.Bind(World, Config, new TurnClock(World.Scheduler, World.PlayerInput), sight, Spells, new BresenhamTargetingRule(), Items, Fusions, stairs, consumables);
             World.Events.Flush();
 
             if (_camera != null)

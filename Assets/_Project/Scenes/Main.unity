@@ -1976,6 +1976,7 @@ MonoBehaviour:
   _fusionCatalog: {fileID: 11400000, guid: 41c82f9736ceb3a4badb20302ef62377, type: 2}
   _lootConfig: {fileID: 11400000, guid: eba65e90e24f86443ae5d2a52c37ad24, type: 2}
   _progressionConfig: {fileID: 11400000, guid: 3d71df037ad5b4e4e895d468e144a1af, type: 2}
+  _consumableConfig: {fileID: 11400000, guid: 7d1f47f21ed95914f9a5c96aa853962e, type: 2}
   _tilemapPresenter: {fileID: 2048705274}
   _entityPresenter: {fileID: 2108178770}
   _fogPresenter: {fileID: 2006350448}
@@ -2770,11 +2771,13 @@ MonoBehaviour:
   _waterColor: {r: 0.15, g: 0.45, b: 1, a: 0.45}
   _contaminatedWaterColor: {r: 0.4, g: 0.6, b: 0.15, a: 0.5}
   _icePatchColor: {r: 0.75, g: 0.92, b: 1, a: 0.55}
+  _paralyticGasColor: {r: 0.95, g: 0.85, b: 0.2, a: 0.45}
   _fireZoneTile: {fileID: 11400000, guid: 0a1c05c39c127e542be05a4ee774b848, type: 2}
   _poisonCloudTile: {fileID: 11400000, guid: 4081aebdc6e35b3459c8e3d877955c0f, type: 2}
   _waterTile: {fileID: 11400000, guid: 993c3301005ad924dab922cd510ac83b, type: 2}
   _contaminatedWaterTile: {fileID: 11400000, guid: a557661a8ee4a6241b66daa82d6a7a11, type: 2}
   _icePatchTile: {fileID: 11400000, guid: b48d9b3b9685e6f4a88e98958833c303, type: 2}
+  _paralyticGasTile: {fileID: 0}
 --- !u!483693784 &1977550035
 TilemapRenderer:
   serializedVersion: 2

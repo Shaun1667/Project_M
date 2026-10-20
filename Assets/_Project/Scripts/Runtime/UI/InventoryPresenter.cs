@@ -149,6 +149,7 @@ namespace ProjectM.UI
                 case InventoryMenuOption.Use: return HudText.MenuUse;
                 case InventoryMenuOption.Assign: return HudText.MenuAssign;
                 case InventoryMenuOption.Unassign: return HudText.MenuUnassign;
+                case InventoryMenuOption.Throw: return HudText.MenuThrow;
                 default: return HudText.MenuClose;
             }
         }

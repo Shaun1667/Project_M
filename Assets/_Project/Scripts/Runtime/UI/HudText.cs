@@ -45,10 +45,39 @@ namespace ProjectM.UI
             return _reactionNames.TryGetValue(id, out var name) ? name : id;
         }
 
+        /// <summary>이번 판 기록 (3-9 식별) — 있으면 모르는 물약 · 주문서는 겉모습 이름("진홍 물약")으로. GameRoot가 판마다 넣는다.</summary>
+        public RunState Run { get; set; }
+
         public string Item(string id)
         {
             if (string.IsNullOrEmpty(id)) return "-";
+            if (Run != null && !Run.IsKnown(id)) return LookName(Run.LookOf(id));
+            return KnownItem(id);
+        }
+
+        /// <summary>식별과 상관없는 진짜 이름 (데이터의 DisplayName).</summary>
+        public string KnownItem(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return "-";
             return _itemNames.TryGetValue(id, out var name) ? name : id;
+        }
+
+        // ── 3-9 물약 · 주문서 겉모습 이름 (ConsumableArtSetup의 색 · 룬 키) ──
+        private static readonly Dictionary<string, string> LookNames = new Dictionary<string, string>
+        {
+            { "potion_crimson", "진홍 물약" }, { "potion_amber", "호박색 물약" }, { "potion_golden", "황금 물약" }, { "potion_jade", "비취 물약" },
+            { "potion_blue", "파란 물약" }, { "potion_sky", "하늘색 물약" }, { "potion_navy", "남색 물약" }, { "potion_magenta", "자홍 물약" },
+            { "potion_bistre", "갈색 물약" }, { "potion_charcoal", "숯빛 물약" }, { "potion_silver", "은빛 물약" }, { "potion_ivory", "상아색 물약" },
+            { "scroll_tyr", "티르 룬 주문서" }, { "scroll_feoh", "페오 룬 주문서" }, { "scroll_ur", "우르 룬 주문서" }, { "scroll_thorn", "소른 룬 주문서" },
+            { "scroll_rad", "라드 룬 주문서" }, { "scroll_gyfu", "기푸 룬 주문서" }, { "scroll_wynn", "윈 룬 주문서" }, { "scroll_haegl", "하걸 룬 주문서" },
+            { "scroll_is", "이스 룬 주문서" }, { "scroll_sigel", "시겔 룬 주문서" }, { "scroll_beorc", "베오르크 룬 주문서" }, { "scroll_oethel", "오셀 룬 주문서" },
+        };
+
+        /// <summary>겉모습 키 → 이름 ("진홍 물약"). 모르는 키면 키 그대로.</summary>
+        public static string LookName(string look)
+        {
+            if (string.IsNullOrEmpty(look)) return "-";
+            return LookNames.TryGetValue(look, out var name) ? name : look;
         }
 
         /// <summary>인벤토리 · 빠른 칸 항목 이름. 빈 칸은 "-".</summary>
@@ -139,6 +168,7 @@ namespace ProjectM.UI
         public const string MenuAssign = "등록하기";
         public const string MenuUnassign = "등록 해제";
         public const string MenuClose = "닫기";
+        public const string MenuThrow = "던지기";
 
         public const string DeadHint = "쓰러졌다 — R 키로 새 판";
 
@@ -166,6 +196,51 @@ namespace ProjectM.UI
         public static string StrengthGained(int strength) => $"힘이 올랐다 (힘 {strength})";
         public string Upgraded(EquippedWeapon weapon) => $"강화: {WeaponName(weapon)} ({weapon.MinDamage}~{weapon.MaxDamage}, 요구 힘 {weapon.StrengthRequirement})";
         public const string NoWeaponToUpgrade = "든 무기가 없다 — 강화 주문서를 쓸 수 없다";
+
+        // ── 3-9 물약 · 주문서 ──
+        /// <summary>쓴 한 줄: "진홍 물약을 마셨다 — 치유 물약이었다". 쓰기 전 몰랐으면 겉모습 이름, 쓰면서 식별됐으면 정체를 붙인다.</summary>
+        public string ConsumableUsed(string itemId, string look, ConsumeMode mode, bool wasKnown, bool known)
+        {
+            string name = wasKnown ? KnownItem(itemId) : LookName(look);
+            string verb = mode == ConsumeMode.Drink ? "마셨다" : mode == ConsumeMode.Read ? "읽었다" : "던졌다 — 깨졌다";
+            string reveal = !wasKnown && known ? $" — {KnownItem(itemId)}{Ida(KnownItem(itemId))}" : string.Empty;
+            return $"{Eul(name)} {verb}{reveal}";
+        }
+
+        /// <summary>효과 한 줄 (힘 · 강화 · 경험 · 식별은 각자 이벤트가 따로 적으므로 null).</summary>
+        public static string ConsumableEffectText(ConsumableEffect effect)
+        {
+            switch (effect)
+            {
+                case ConsumableEffect.Healing: return "상처가 아물었다";
+                case ConsumableEffect.Purity: return "주변 공기가 맑아졌다";
+                case ConsumableEffect.ToxicGas: return "독가스가 퍼졌다";
+                case ConsumableEffect.LiquidFlame: return "불길이 치솟았다";
+                case ConsumableEffect.Frost: return "냉기가 퍼졌다";
+                case ConsumableEffect.ParalyticGas: return "마비 가스가 퍼졌다";
+                case ConsumableEffect.MagicMapping: return "이 층의 지도가 떠올랐다";
+                case ConsumableEffect.Teleportation: return "순간이동했다";
+                case ConsumableEffect.Recharging: return "마나가 가득 찼다";
+                case ConsumableEffect.Rage: return "격노의 외침 — 적들이 몰려온다";
+                case ConsumableEffect.Retribution: return "응징의 빛이 터졌다";
+                default: return null;
+            }
+        }
+
+        public string Identified(string itemId, string look) =>
+            string.IsNullOrEmpty(itemId) ? "식별할 것이 없다" : $"{LookName(look)}: {KnownItem(itemId)}{Ida(KnownItem(itemId))}";
+
+        public string ThrowAimHint(InventoryRef entry) => $"{Entry(entry)} 던지기: Space/클릭 던지기 · Tab 다음 대상 · Esc 취소";
+        public string NotThrowable(InventoryRef entry) => $"{Entry(entry)}: 던질 수 없다";
+
+        /// <summary>서술격 조사: 받침 있으면 "이었다", 없으면 "였다".</summary>
+        public static string Ida(string word)
+        {
+            if (string.IsNullOrEmpty(word)) return "이었다";
+            char last = word[word.Length - 1];
+            if (last < '가' || last > '힣') return "이었다";
+            return (last - 0xAC00) % 28 != 0 ? "이었다" : "였다";
+        }
         // 3-7c 기습 · 방어
         public static string Surprise(EntityId target) => $"기습! {Enemy(target)}";
         public static string Blocked(int amount) => $"방어: {amount} 막음";
@@ -199,6 +274,7 @@ namespace ProjectM.UI
                 case TerrainEffectType.Water: return "물 웅덩이";
                 case TerrainEffectType.ContaminatedWater: return "오염된 물";
                 case TerrainEffectType.IcePatch: return "빙판";
+                case TerrainEffectType.ParalyticGas: return "마비 가스";
                 default: return type.ToString();
             }
         }
@@ -213,6 +289,7 @@ namespace ProjectM.UI
                 case DamageKind.Reaction: return attacker == playerId ? $"{Reaction(cause.Id)} (내 주문의 반응)" : Reaction(cause.Id);
                 case DamageKind.Status: return Status(cause.Status);
                 case DamageKind.Terrain: return Terrain(cause.Terrain);
+                case DamageKind.Item: return KnownItem(cause.Id);
                 default: return "알 수 없음";
             }
         }

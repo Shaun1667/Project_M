@@ -475,3 +475,17 @@ MonoBehaviour:
     Speed: 1
     Lifetime: 0
     Height: 0.25
+  - Key: item.potion
+    Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+    Scale: 0.35
+    Tint: {r: 0.85, g: 0.88, b: 0.95, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0.25
+  - Key: item.scroll
+    Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+    Scale: 0.35
+    Tint: {r: 1, g: 0.82, b: 0.35, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0.25

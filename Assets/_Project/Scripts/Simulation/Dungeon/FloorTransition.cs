@@ -121,7 +121,7 @@ namespace ProjectM.Dungeon
                 foreach (var t in pair.Value)
                     events.Publish(new TerrainChangedEvent(_world.Terrain.PosOf(pair.Key), t.Type, t.Remaining));
             foreach (var item in _world.FloorItems.All)
-                events.Publish(new FloorItemPlacedEvent(item.Pos, item.ItemId));
+                events.Publish(new FloorItemPlacedEvent(item.Pos, item.ItemId, ProjectM.Items.Identification.VisualOf(_world, item.ItemId)));
             foreach (var unit in _world.Units.ToSortedList())
             {
                 if (!restored || unit.Id == player.Id) continue;

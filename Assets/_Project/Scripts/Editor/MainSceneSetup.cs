@@ -40,6 +40,7 @@ namespace ProjectM.Editor
         private const string ItemCatalogPath = "Assets/_Project/Data/Items/ItemCatalog.asset";
         private const string FusionCatalogPath = "Assets/_Project/Data/Fusions/FusionCatalog.asset";
         private const string LootConfigPath = "Assets/_Project/Data/Items/LootConfig.asset";
+        private const string ConsumableConfigPath = "Assets/_Project/Data/Items/ConsumableConfig.asset";
         private const string ProgressionConfigPath = "Assets/_Project/Data/Units/ProgressionConfig.asset";
         private const string ItemVisualCatalogPath = "Assets/_Project/Data/Visuals/ItemVisualCatalog.asset";
 
@@ -180,6 +181,7 @@ namespace ProjectM.Editor
             // 3-5: 바닥 아이템(마법서) — 배치 수치(없을 때만 BALANCE 11번 값) · 표시 (색 · 반짝임은 메뉴 ProjectM/Setup/FX가 채움)
             var lootConfig = EnsureAsset<LootConfigAsset>(LootConfigPath, ("_maxBooksPerFloor", 2), ("_minDistanceFromStart", 3));
             FillZeroInts(lootConfig, ("_weaponsPerRun", 2), ("_upgradeScrollsPerRun", 3), ("_strengthPotionsPerRun", 2)); // 3-7a 무기 2 · 3-7b 강화 3 · 힘 2 (BALANCE 11번)
+            var consumableConfig = LoadOrCreate<ConsumableConfigAsset>(ConsumableConfigPath); // 3-9: 새로 만들면 필드 초기값 = BALANCE 14번
             var floorItemsGo = FindOrCreate("FloorItems", null);
             var floorItems = GetOrAdd<FloorItemPresenter>(floorItemsGo);
             SetRefs(floorItems, ("_entities", entityPresenter), ("_bookMaterial", EnsureShapeMaterial()),
@@ -216,6 +218,7 @@ namespace ProjectM.Editor
                 ("_itemCatalog", itemCatalog),
                 ("_fusionCatalog", fusionCatalog),
                 ("_lootConfig", lootConfig),
+                ("_consumableConfig", consumableConfig),
                 ("_progressionConfig", progressionConfig),
                 ("_floorItems", floorItems),
                 ("_terrainOverlay", terrainOverlay),
@@ -399,6 +402,9 @@ namespace ProjectM.Editor
             // 3-3a: 빙판 8틱 · 위 유닛 둔화 (D4 100%)
             changed |= catalog.AddIfMissing(new TerrainCatalogAsset.Entry
                 { Type = TerrainEffectType.IcePatch, DurationTicks = 8, AppliesStatus = StatusType.Slow });
+            // 3-9: 마비 가스 4틱 · 위 유닛 마비 (마비 가스 물약, BALANCE 7번)
+            changed |= catalog.AddIfMissing(new TerrainCatalogAsset.Entry
+                { Type = TerrainEffectType.ParalyticGas, DurationTicks = 4, AppliesStatus = StatusType.Paralyze });
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }
@@ -658,11 +664,30 @@ namespace ProjectM.Editor
             changed |= catalog.FillWeaponSpecials("dirk", 67, 0); // 3-7c: 더크 기습 최소 피해 67%
             changed |= catalog.FillWeaponSpecials("quarterstaff", 0, 2); // 3-7c: 육척봉 방어 0~2
             // 3-7b 힘 물약 · 강화 주문서 (BALANCE 9번) — 한 판에 2 · 3개 (BALANCE 11번)
-            changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "potion_strength", DisplayName = "힘 물약", Use = ItemUse.StrengthPotion, Amount = 1 });
-            changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "scroll_upgrade", DisplayName = "강화 주문서", Use = ItemUse.UpgradeScroll, Amount = 1 });
+            changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "potion_strength", DisplayName = "힘 물약", Use = ItemUse.Potion, Amount = 1, Effect = ConsumableEffect.Strength });
+            changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "scroll_upgrade", DisplayName = "강화 주문서", Use = ItemUse.Scroll, Amount = 1, Effect = ConsumableEffect.Upgrade });
+            changed |= catalog.FillEffect("potion_strength", ConsumableEffect.Strength); // 3-9: 3-7b 줄에 효과
+            changed |= catalog.FillEffect("scroll_upgrade", ConsumableEffect.Upgrade);
+            // 3-9 물약 · 주문서 (SPD 효과 · 무게, BALANCE 14번) — 판마다 겉모습이 섞인다 (식별)
+            changed |= catalog.AddIfMissing(Consumable("potion_healing", "치유 물약", ItemUse.Potion, ConsumableEffect.Healing, 3));
+            changed |= catalog.AddIfMissing(Consumable("potion_experience", "경험 물약", ItemUse.Potion, ConsumableEffect.Experience, 1));
+            changed |= catalog.AddIfMissing(Consumable("potion_purity", "정화 물약", ItemUse.Potion, ConsumableEffect.Purity, 2));
+            changed |= catalog.AddIfMissing(Consumable("potion_toxic_gas", "독가스 물약", ItemUse.Potion, ConsumableEffect.ToxicGas, 3));
+            changed |= catalog.AddIfMissing(Consumable("potion_liquid_flame", "액체 화염 물약", ItemUse.Potion, ConsumableEffect.LiquidFlame, 3));
+            changed |= catalog.AddIfMissing(Consumable("potion_frost", "냉기 물약", ItemUse.Potion, ConsumableEffect.Frost, 3));
+            changed |= catalog.AddIfMissing(Consumable("potion_paralytic_gas", "마비 가스 물약", ItemUse.Potion, ConsumableEffect.ParalyticGas, 2));
+            changed |= catalog.AddIfMissing(Consumable("scroll_identify", "식별 주문서", ItemUse.Scroll, ConsumableEffect.Identify, 3));
+            changed |= catalog.AddIfMissing(Consumable("scroll_magic_mapping", "지도 주문서", ItemUse.Scroll, ConsumableEffect.MagicMapping, 1));
+            changed |= catalog.AddIfMissing(Consumable("scroll_teleportation", "순간이동 주문서", ItemUse.Scroll, ConsumableEffect.Teleportation, 1));
+            changed |= catalog.AddIfMissing(Consumable("scroll_recharging", "충전 주문서", ItemUse.Scroll, ConsumableEffect.Recharging, 1));
+            changed |= catalog.AddIfMissing(Consumable("scroll_rage", "격노 주문서", ItemUse.Scroll, ConsumableEffect.Rage, 1));
+            changed |= catalog.AddIfMissing(Consumable("scroll_retribution", "응징 주문서", ItemUse.Scroll, ConsumableEffect.Retribution, 1));
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }
+
+        private static ItemCatalogAsset.Entry Consumable(string id, string name, ItemUse use, ConsumableEffect effect, int weight) =>
+            new ItemCatalogAsset.Entry { Id = id, DisplayName = name, Use = use, Effect = effect, Weight = weight };
 
         /// <summary>융합 규칙 (3-2b, REACTIONS.md 5번): 없는 ID만 BALANCE 10번 값으로 추가한다. 상태를 거는 융합이 생기면 확률을 꼭 적는다.</summary>
         private static FusionCatalogAsset EnsureFusionCatalog()

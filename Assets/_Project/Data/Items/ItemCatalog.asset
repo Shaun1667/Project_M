@@ -26,6 +26,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     Amount: 0
+    Effect: 0
+    Weight: 0
   - Id: spellbook_fire
     DisplayName: "\uBD88\uAF43 \uD654\uC0B4 \uB9C8\uBC95\uC11C"
     Use: 2
@@ -39,6 +41,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     Amount: 0
+    Effect: 0
+    Weight: 0
   - Id: spellbook_ice
     DisplayName: "\uC5BC\uC74C \uD654\uC0B4 \uB9C8\uBC95\uC11C"
     Use: 2
@@ -52,6 +56,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     Amount: 0
+    Effect: 0
+    Weight: 0
   - Id: spellbook_lightning
     DisplayName: "\uBC88\uAC1C \uC904\uAE30 \uB9C8\uBC95\uC11C"
     Use: 2
@@ -65,6 +71,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     Amount: 0
+    Effect: 0
+    Weight: 0
   - Id: spellbook_poison
     DisplayName: "\uB3C5 \uD3ED\uBC1C \uB9C8\uBC95\uC11C"
     Use: 2
@@ -78,6 +86,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     Amount: 0
+    Effect: 0
+    Weight: 0
   - Id: spellbook_water
     DisplayName: "\uBB3C\uBCF4\uB77C \uB9C8\uBC95\uC11C"
     Use: 2
@@ -91,6 +101,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     Amount: 0
+    Effect: 0
+    Weight: 0
   - Id: shortsword
     DisplayName: "\uC18C\uAC80"
     Use: 3
@@ -104,6 +116,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     Amount: 0
+    Effect: 0
+    Weight: 0
   - Id: hand_axe
     DisplayName: "\uC190\uB3C4\uB07C"
     Use: 3
@@ -117,6 +131,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     Amount: 0
+    Effect: 0
+    Weight: 0
   - Id: spear
     DisplayName: "\uCC3D"
     Use: 3
@@ -130,6 +146,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     Amount: 0
+    Effect: 0
+    Weight: 0
   - Id: quarterstaff
     DisplayName: "\uC721\uCC99\uBD09"
     Use: 3
@@ -143,6 +161,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 2
     Amount: 0
+    Effect: 0
+    Weight: 0
   - Id: dirk
     DisplayName: "\uB354\uD06C"
     Use: 3
@@ -156,6 +176,8 @@ MonoBehaviour:
     SurpriseMinPercent: 67
     Defense: 0
     Amount: 0
+    Effect: 0
+    Weight: 0
   - Id: sickle
     DisplayName: "\uC190\uB0AB"
     Use: 3
@@ -169,6 +191,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     Amount: 0
+    Effect: 0
+    Weight: 0
   - Id: potion_strength
     DisplayName: "\uD798 \uBB3C\uC57D"
     Use: 4
@@ -182,6 +206,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     Amount: 1
+    Effect: 1
+    Weight: 0
   - Id: scroll_upgrade
     DisplayName: "\uAC15\uD654 \uC8FC\uBB38\uC11C"
     Use: 5
@@ -195,5 +221,202 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     Amount: 1
+    Effect: 2
+    Weight: 0
+  - Id: potion_healing
+    DisplayName: "\uCE58\uC720 \uBB3C\uC57D"
+    Use: 4
+    SpellId: 
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
+    Amount: 0
+    Effect: 3
+    Weight: 3
+  - Id: potion_experience
+    DisplayName: "\uACBD\uD5D8 \uBB3C\uC57D"
+    Use: 4
+    SpellId: 
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
+    Amount: 0
+    Effect: 4
+    Weight: 1
+  - Id: potion_purity
+    DisplayName: "\uC815\uD654 \uBB3C\uC57D"
+    Use: 4
+    SpellId: 
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
+    Amount: 0
+    Effect: 5
+    Weight: 2
+  - Id: potion_toxic_gas
+    DisplayName: "\uB3C5\uAC00\uC2A4 \uBB3C\uC57D"
+    Use: 4
+    SpellId: 
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
+    Amount: 0
+    Effect: 6
+    Weight: 3
+  - Id: potion_liquid_flame
+    DisplayName: "\uC561\uCCB4 \uD654\uC5FC \uBB3C\uC57D"
+    Use: 4
+    SpellId: 
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
+    Amount: 0
+    Effect: 7
+    Weight: 3
+  - Id: potion_frost
+    DisplayName: "\uB0C9\uAE30 \uBB3C\uC57D"
+    Use: 4
+    SpellId: 
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
+    Amount: 0
+    Effect: 8
+    Weight: 3
+  - Id: potion_paralytic_gas
+    DisplayName: "\uB9C8\uBE44 \uAC00\uC2A4 \uBB3C\uC57D"
+    Use: 4
+    SpellId: 
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
+    Amount: 0
+    Effect: 9
+    Weight: 2
+  - Id: scroll_identify
+    DisplayName: "\uC2DD\uBCC4 \uC8FC\uBB38\uC11C"
+    Use: 5
+    SpellId: 
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
+    Amount: 0
+    Effect: 10
+    Weight: 3
+  - Id: scroll_magic_mapping
+    DisplayName: "\uC9C0\uB3C4 \uC8FC\uBB38\uC11C"
+    Use: 5
+    SpellId: 
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
+    Amount: 0
+    Effect: 11
+    Weight: 1
+  - Id: scroll_teleportation
+    DisplayName: "\uC21C\uAC04\uC774\uB3D9 \uC8FC\uBB38\uC11C"
+    Use: 5
+    SpellId: 
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
+    Amount: 0
+    Effect: 12
+    Weight: 1
+  - Id: scroll_recharging
+    DisplayName: "\uCDA9\uC804 \uC8FC\uBB38\uC11C"
+    Use: 5
+    SpellId: 
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
+    Amount: 0
+    Effect: 13
+    Weight: 1
+  - Id: scroll_rage
+    DisplayName: "\uACA9\uB178 \uC8FC\uBB38\uC11C"
+    Use: 5
+    SpellId: 
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
+    Amount: 0
+    Effect: 14
+    Weight: 1
+  - Id: scroll_retribution
+    DisplayName: "\uC751\uC9D5 \uC8FC\uBB38\uC11C"
+    Use: 5
+    SpellId: 
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
+    Amount: 0
+    Effect: 15
+    Weight: 1
   _weaponDamageDivisor: 3
   _weaponMinDamage: 2

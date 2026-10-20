@@ -17,6 +17,8 @@ namespace ProjectM.Status
         ContaminatedWater = 4,
         /// <summary>빙판 (3-3a): 물 타일 × 얼음(결빙) · 얼음 + 물 융합, 위 유닛 둔화. 불을 맞으면 물 타일로 (해동).</summary>
         IcePatch = 5,
+        /// <summary>마비 가스 (3-9 마비 가스 물약): 위 유닛 마비.</summary>
+        ParalyticGas = 6,
     }
 
     /// <summary>

@@ -113,7 +113,8 @@ namespace ProjectM.Presentation
             root.SetParent(transform, false);
             root.position = CellCenter(e.Pos);
 
-            if (_models != null && _models.TryGet(e.ItemId, out var modelPrefab, out bool upright))
+            // 3-9: 물약 · 주문서는 판마다 정한 겉모습(VisualId)으로 그린다 — 아이템 ID로 찾으면 정체가 드러난다
+            if (_models != null && _models.TryGet(e.VisualId, out var modelPrefab, out bool upright))
             {
                 // 3-7a 무기: 모델을 눕혀(날이 바닥과 나란히) 떠서 돈다 — 도는 축(Book) 아래에 눕힌 모델
                 var spin = new GameObject("Book").transform;
@@ -121,7 +122,7 @@ namespace ProjectM.Presentation
                 var model = Instantiate(modelPrefab, spin, false);
                 model.name = "Model";
                 model.transform.localRotation = upright ? Quaternion.identity : Quaternion.Euler(90f, 0f, 0f); // 무기는 눕히고, 물약 · 주문서는 그대로
-                AddGlow(root, e.ItemId);
+                AddGlow(root, e.VisualId);
                 var modelView = new View { Pos = e.Pos, ItemId = e.ItemId, Root = root, Book = spin, Phase = (e.Pos.X * 0.37f + e.Pos.Y * 0.61f) % 1f * Mathf.PI * 2f };
                 _views.Add(modelView);
                 Pose(modelView);
@@ -137,7 +138,7 @@ namespace ProjectM.Presentation
             book.transform.localScale = _bookSize;
 
             var color = new Color(0.8f, 0.75f, 0.6f);
-            if (_catalog != null && TryGetTintOnly("item." + e.ItemId, out var fx))
+            if (_catalog != null && TryGetTintOnly("item." + e.VisualId, out var fx))
             {
                 if (fx.Tint.a > 0f) color = fx.Tint;
                 if (fx.Prefab != null)
@@ -172,7 +173,11 @@ namespace ProjectM.Presentation
         /// <summary>반짝임 루프만 (모델이 있는 아이템 — 색은 FxCatalog 틴트).</summary>
         private void AddGlow(Transform root, string itemId)
         {
-            if (_catalog == null || !TryGetTintOnly("item." + itemId, out var fx) || fx.Prefab == null) return;
+            if (_catalog == null) return;
+            // 3-9: 겉모습 키(potion_crimson)에 줄이 없으면 앞부분(item.potion) 줄 — 색 · 룬마다 줄을 두지 않는다
+            int cut = itemId.LastIndexOf('_');
+            if (!TryGetTintOnly("item." + itemId, out var fx) && (cut <= 0 || !TryGetTintOnly("item." + itemId.Substring(0, cut), out fx))) return;
+            if (fx.Prefab == null) return;
             var glow = Instantiate(fx.Prefab, root, false);
             glow.name = "Glow";
             glow.transform.localPosition = Vector3.up * fx.Height;

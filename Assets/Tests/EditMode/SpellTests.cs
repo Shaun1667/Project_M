@@ -52,6 +52,8 @@ namespace ProjectM.Tests
             new ProjectM.Status.TerrainDef(ProjectM.Status.TerrainEffectType.ContaminatedWater, 8, ProjectM.Status.StatusType.Wet, damagePerTick: 1),
             // 3-3a: 빙판 8틱 · 둔화
             new ProjectM.Status.TerrainDef(ProjectM.Status.TerrainEffectType.IcePatch, 8, ProjectM.Status.StatusType.Slow),
+            // 3-9: 마비 가스 4틱 · 마비
+            new ProjectM.Status.TerrainDef(ProjectM.Status.TerrainEffectType.ParalyticGas, 4, ProjectM.Status.StatusType.Paralyze),
         }, BalanceStatuses());
 
         // BALANCE.md 5 · 6 · 7번 전체 (상태 + 지형) — 에셋 검산 · 지형 · 반응 테스트용. reactions = 반응 표 (없으면 반응 없음)

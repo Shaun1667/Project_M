@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d45d45a7531a94428a3f3962cb1b2cc, type: 3}
+  m_Name: ConsumableConfig
+  m_EditorClassIdentifier: ProjectM.Runtime::ProjectM.Data.ConsumableConfigAsset
+  _potionLooks:
+  - potion_crimson
+  - potion_amber
+  - potion_golden
+  - potion_jade
+  - potion_blue
+  - potion_sky
+  - potion_navy
+  - potion_magenta
+  - potion_bistre
+  - potion_charcoal
+  - potion_silver
+  - potion_ivory
+  _scrollLooks:
+  - scroll_tyr
+  - scroll_feoh
+  - scroll_ur
+  - scroll_thorn
+  - scroll_rad
+  - scroll_gyfu
+  - scroll_wynn
+  - scroll_haegl
+  - scroll_is
+  - scroll_sigel
+  - scroll_beorc
+  - scroll_oethel
+  _randomPotionsPerFloor: 2
+  _randomScrollsPerFloor: 2
+  _gasRadius: 2
+  _purityRadius: 3
+  _throwRange: 8
+  _healingCures: 01000000020000000300000004000000i
+  _purityClears: 010000000200000006000000i
+  _retributionBasePercent: 10
+  _retributionHpPercent: 22.5
+  _retributionPowerScale: 4.45
+  _retributionPowerCap: 4

@@ -20,6 +20,7 @@ namespace ProjectM.Presentation
         [SerializeField] private Color _waterColor = new Color(0.15f, 0.45f, 1f, 0.45f);
         [SerializeField] private Color _contaminatedWaterColor = new Color(0.4f, 0.6f, 0.15f, 0.5f);
         [SerializeField] private Color _icePatchColor = new Color(0.75f, 0.92f, 1f, 0.55f);
+        [SerializeField] private Color _paralyticGasColor = new Color(0.95f, 0.85f, 0.2f, 0.45f); // 3-9 마비 가스
 
         [Header("G-3 바닥 무늬 (비면 흰 사각형)")]
         [SerializeField] private TileBase _fireZoneTile;
@@ -27,6 +28,7 @@ namespace ProjectM.Presentation
         [SerializeField] private TileBase _waterTile;
         [SerializeField] private TileBase _contaminatedWaterTile;
         [SerializeField] private TileBase _icePatchTile;
+        [SerializeField] private TileBase _paralyticGasTile;
 
         private readonly Dictionary<GridPos, List<TerrainEffectType>> _cells = new Dictionary<GridPos, List<TerrainEffectType>>();
         private SimEventBus _bus;
@@ -65,6 +67,7 @@ namespace ProjectM.Presentation
                 case TerrainEffectType.Water: return _waterColor;
                 case TerrainEffectType.ContaminatedWater: return _contaminatedWaterColor;
                 case TerrainEffectType.IcePatch: return _icePatchColor;
+                case TerrainEffectType.ParalyticGas: return _paralyticGasColor;
                 default: return Color.clear;
             }
         }
@@ -79,6 +82,7 @@ namespace ProjectM.Presentation
                 case TerrainEffectType.Water: tile = _waterTile; break;
                 case TerrainEffectType.ContaminatedWater: tile = _contaminatedWaterTile; break;
                 case TerrainEffectType.IcePatch: tile = _icePatchTile; break;
+                case TerrainEffectType.ParalyticGas: tile = _paralyticGasTile != null ? _paralyticGasTile : _poisonCloudTile; break; // 무늬는 독구름과 같게
             }
             return tile != null ? tile : _tile;
         }

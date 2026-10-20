@@ -24,8 +24,8 @@ namespace ProjectM.Tests
         {
             new ItemDef("shortsword", ItemUse.EquipWeapon, weapon: new WeaponDef(15, 3, 100, 1, 1, 12)),
             new ItemDef("hand_axe", ItemUse.EquipWeapon, weapon: new WeaponDef(12, 3, 132, 1, 1, 12)),
-            new ItemDef("potion_strength", ItemUse.StrengthPotion, amount: 1),
-            new ItemDef("scroll_upgrade", ItemUse.UpgradeScroll, amount: 1),
+            new ItemDef("potion_strength", ItemUse.Potion, amount: 1, effect: ConsumableEffect.Strength),
+            new ItemDef("scroll_upgrade", ItemUse.Scroll, amount: 1, effect: ConsumableEffect.Upgrade),
         }, new WeaponRules(3, 2));
 
         private sealed class Idle : ICommandSource
@@ -264,8 +264,8 @@ namespace ProjectM.Tests
                 Assert.That(book.TryGet(id, out var def), Is.True, id);
                 Assert.That(def.Weapon.StrengthRequirement, Is.EqualTo(12), id);
             }
-            Assert.That(book.TryGet("potion_strength", out var potion) && potion.Use == ItemUse.StrengthPotion && potion.Amount == 1, Is.True);
-            Assert.That(book.TryGet("scroll_upgrade", out var scroll) && scroll.Use == ItemUse.UpgradeScroll && scroll.Amount == 1, Is.True);
+            Assert.That(book.TryGet("potion_strength", out var potion) && potion.Use == ItemUse.Potion && potion.Effect == ConsumableEffect.Strength && potion.Amount == 1, Is.True);
+            Assert.That(book.TryGet("scroll_upgrade", out var scroll) && scroll.Use == ItemUse.Scroll && scroll.Effect == ConsumableEffect.Upgrade && scroll.Amount == 1, Is.True);
             var loot = AssetDatabase.LoadAssetAtPath<LootConfigAsset>("Assets/_Project/Data/Items/LootConfig.asset").ToConfig();
             Assert.That((loot.UpgradeScrollsPerRun, loot.StrengthPotionsPerRun), Is.EqualTo((3, 2)));
             var player = AssetDatabase.LoadAssetAtPath<UnitDefAsset>("Assets/_Project/Data/Units/Player.asset").ToDef();

@@ -266,7 +266,7 @@ namespace ProjectM.Tests
             var asset = AssetDatabase.LoadAssetAtPath<ItemCatalogAsset>("Assets/_Project/Data/Items/ItemCatalog.asset");
             Assert.That(asset, Is.Not.Null, "ItemCatalog.asset 없음 — 메뉴 ProjectM/Setup/Main Scene 실행");
             var book = asset.ToBook();
-            Assert.That(book.Count, Is.EqualTo(14), "융합기 + 마법서 5 (3-5) + 무기 6 (3-7a) + 힘 물약 · 강화 주문서 (3-7b)");
+            Assert.That(book.Count, Is.EqualTo(27), "융합기 + 마법서 5 (3-5) + 무기 6 (3-7a) + 힘 물약 · 강화 주문서 (3-7b) + 물약 7 · 주문서 6 (3-9)");
             Assert.That(book.TryGet("fusion_device", out var device), Is.True);
             Assert.That(device.Use, Is.EqualTo(ItemUse.Fusion));
             Assert.That(asset.DisplayNames()["fusion_device"], Is.EqualTo("마법 융합기"));

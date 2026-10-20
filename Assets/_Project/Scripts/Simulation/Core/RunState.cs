@@ -16,6 +16,8 @@ namespace ProjectM.Core
         Status = 4,
         /// <summary>지형 효과의 틱당 피해 — Terrain.</summary>
         Terrain = 5,
+        /// <summary>물약 · 주문서 (3-9 응징 등) — Id = 아이템 ID.</summary>
+        Item = 6,
     }
 
     /// <summary>피해 하나의 출처 (3-4b). 값 타입 — 이벤트 · 저장에 그대로 쓴다.</summary>
@@ -39,6 +41,7 @@ namespace ProjectM.Core
         public static DamageCause Reaction(string id) => new DamageCause(DamageKind.Reaction, id);
         public static DamageCause FromStatus(StatusType type) => new DamageCause(DamageKind.Status, status: type);
         public static DamageCause FromTerrain(TerrainEffectType type) => new DamageCause(DamageKind.Terrain, terrain: type);
+        public static DamageCause Item(string id) => new DamageCause(DamageKind.Item, id);
     }
 
     /// <summary>한 판의 결과 (3-4b). 끝에만 추가한다.</summary>
@@ -82,6 +85,44 @@ namespace ProjectM.Core
         /// <summary>계획 끝에 붙인다 (3-7a 무기 — 책 계획 뒤).</summary>
         internal void AddPendingFloorItems(System.Collections.Generic.IEnumerable<PendingFloorItem> items) => _pendingFloorItems.AddRange(items);
 
+        // ── 식별 (3-9, SPD): 물약 · 주문서는 판마다 겉모습(색 · 룬)이 섞이고, 써 보거나 식별 주문서를 읽기 전에는 무엇인지 모른다 ──
+        private readonly System.Collections.Generic.List<ItemLook> _looks = new System.Collections.Generic.List<ItemLook>();
+        private readonly System.Collections.Generic.List<string> _identified = new System.Collections.Generic.List<string>();
+
+        /// <summary>아이템 ID → 겉모습 (정한 순서 = ItemBook 순서).</summary>
+        public System.Collections.Generic.IReadOnlyList<ItemLook> Looks => _looks;
+        /// <summary>식별한 아이템 ID (식별한 순서).</summary>
+        public System.Collections.Generic.IReadOnlyList<string> Identified => _identified;
+
+        /// <summary>그 아이템의 겉모습 키. 겉모습이 없는 아이템(무기 · 책)이면 null.</summary>
+        public string LookOf(string itemId)
+        {
+            foreach (var look in _looks)
+                if (look.ItemId == itemId) return look.Look;
+            return null;
+        }
+
+        public bool IsIdentified(string itemId) => _identified.Contains(itemId);
+
+        /// <summary>무엇인지 아는지 — 겉모습이 없는 아이템은 늘 안다.</summary>
+        public bool IsKnown(string itemId) => LookOf(itemId) == null || IsIdentified(itemId);
+
+        internal void SetLooks(System.Collections.Generic.IEnumerable<ItemLook> looks, System.Collections.Generic.IEnumerable<string> identified)
+        {
+            _looks.Clear();
+            _looks.AddRange(looks);
+            _identified.Clear();
+            _identified.AddRange(identified);
+        }
+
+        /// <summary>식별한다. 겉모습이 있고 처음 식별했으면 true.</summary>
+        internal bool Identify(string itemId)
+        {
+            if (LookOf(itemId) == null || _identified.Contains(itemId)) return false;
+            _identified.Add(itemId);
+            return true;
+        }
+
         /// <summary>그 층 몫을 꺼낸다 (계획에서 빠짐).</summary>
         internal System.Collections.Generic.List<string> TakePendingFloorItems(int floor)
         {
@@ -93,6 +134,20 @@ namespace ProjectM.Core
                 _pendingFloorItems.RemoveAt(i--);
             }
             return taken;
+        }
+    }
+
+    /// <summary>판마다 정한 물약 · 주문서의 겉모습 하나 (3-9 식별): 아이템 ID → 모습 키 (ItemVisualCatalog, 예: potion_crimson). 스냅샷 v16.</summary>
+    [System.Serializable]
+    public readonly struct ItemLook
+    {
+        public readonly string ItemId;
+        public readonly string Look;
+
+        public ItemLook(string itemId, string look)
+        {
+            ItemId = itemId;
+            Look = look;
         }
     }
 

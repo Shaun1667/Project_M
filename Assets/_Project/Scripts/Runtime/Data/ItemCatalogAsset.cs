@@ -29,6 +29,9 @@ namespace ProjectM.Data
             [Tooltip("방어 (3-7c) — 육척봉 2(근접 피해 − 0~2), 나머지 0")] public int Defense;
             [Header("힘 물약 · 강화 주문서 (3-7b)")]
             [Tooltip("힘 물약 = 힘 +, 강화 주문서 = 강화 + (둘 다 1)")] public int Amount;
+            [Header("물약 · 주문서 (3-9, BALANCE 14번)")]
+            [Tooltip("Potion · Scroll만: 효과")] public ConsumableEffect Effect;
+            [Tooltip("층마다 무작위로 놓을 때의 무게 (SPD). 0 = 무작위로 안 놓음 (힘 · 강화는 보장 수로만)")] public int Weight;
         }
 
         [SerializeField] private List<Entry> _items = new List<Entry>();
@@ -46,7 +49,7 @@ namespace ProjectM.Data
                 var weapon = e.Use == ItemUse.EquipWeapon
                     ? new WeaponDef(e.MaxDamage, e.UpgradeEfficiency, Mathf.RoundToInt(e.Accuracy * 100f), e.AttackCostTicks, e.Reach, e.StrengthRequirement, e.SurpriseMinPercent, e.Defense)
                     : null;
-                defs.Add(new ItemDef(e.Id, e.Use, e.SpellId, weapon, e.Amount));
+                defs.Add(new ItemDef(e.Id, e.Use, e.SpellId, weapon, e.Amount, e.Effect, e.Weight));
             }
             return new ItemBook(defs, new WeaponRules(_weaponDamageDivisor, _weaponMinDamage));
         }
@@ -87,6 +90,20 @@ namespace ProjectM.Data
                 if (e.Defense == 0 && defense != 0) { e.Defense = defense; changed = true; }
                 _items[i] = e;
                 return changed;
+            }
+            return false;
+        }
+
+        /// <summary>에디터 Setup용 (3-9): 그 ID 줄의 효과가 None이면 넣는다 (3-7b 힘 물약 · 강화 주문서 줄). 바뀌었으면 true.</summary>
+        public bool FillEffect(string id, ConsumableEffect effect)
+        {
+            for (int i = 0; i < _items.Count; i++)
+            {
+                var e = _items[i];
+                if (e.Id != id || e.Effect != ConsumableEffect.None) continue;
+                e.Effect = effect;
+                _items[i] = e;
+                return true;
             }
             return false;
         }

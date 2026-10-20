@@ -68,6 +68,7 @@ namespace ProjectM.Input
         private ITargetingRule _targeting;
         private ItemBook _items;
         private FusionBook _fusions;
+        private ConsumableRules _consumables;
         private ProjectM.Dungeon.FloorTransition _stairs;
         private bool _stairsHintShown;
 
@@ -78,6 +79,8 @@ namespace ProjectM.Input
         private string _aimSpellId;
         private string _aimFusionSecond;
         private int _aimSlot = -1;
+        // 던지기 조준 (3-9): 던질 물약 (Empty = 던지기 아님)
+        private InventoryRef _aimThrow;
         private GridPos _aimCursor;
         private Vector2 _lastMousePos;
         // 둘러보기 (2026-10-19): 누른 채 _dragThreshold 넘게 움직이면 끌기, 아니면 놓을 때 클릭
@@ -90,7 +93,7 @@ namespace ProjectM.Input
         /// <summary>HUD에 보일 안내 한 줄 (조준 안내 · 시전 불가 이유 · 인벤토리 안내). 빈 문자열 = 지움.</summary>
         public event System.Action<string> HintChanged;
 
-        public bool IsAiming => _aimSpellId != null;
+        public bool IsAiming => _aimSpellId != null || !_aimThrow.IsEmpty;
         public InventoryMenu Inventory => _inventory;
 
         /// <summary>안내 문구 (한글 · 주문 · 아이템 표시 이름). GameRoot가 Catalog 이름으로 채운다.</summary>
@@ -120,7 +123,7 @@ namespace ProjectM.Input
         private void OnDestroy() => _inventory.Changed -= DrawInventory;
 
         public void Bind(World world, GameConfig config, ITickClock clock, ISightRule sight, SpellBook spells, ITargetingRule targeting,
-            ItemBook items, FusionBook fusions, ProjectM.Dungeon.FloorTransition stairs = null)
+            ItemBook items, FusionBook fusions, ProjectM.Dungeon.FloorTransition stairs = null, ConsumableRules consumables = null)
         {
             Unbind();
             _world = world;
@@ -131,6 +134,8 @@ namespace ProjectM.Input
             _targeting = targeting;
             _items = items ?? ItemBook.Empty;
             _fusions = fusions ?? FusionBook.Empty;
+            _consumables = consumables ?? new ConsumableRules(_items);
+            _inventory.CanThrow = entry => Consumables.CanThrow(_items, entry); // 3-9: 물약만 "던지기"
             _stairs = stairs;
             _stairsHintShown = false;
             _comboPending = false;
@@ -338,11 +343,9 @@ namespace ProjectM.Input
                 _clock.SubmitPlayerCommand(new EquipWeaponCommand(_world, _items, index, entry, _config.DefaultActionCostTicks));
                 return;
             }
-            if (_items.TryGet(entry.Id, out var consumable)
-                && (consumable.Use == ItemUse.StrengthPotion || consumable.Use == ItemUse.UpgradeScroll)
-                && PlayerActions.TryGetPlayer(_world, out var user))
+            if (_items.TryGet(entry.Id, out var consumable) && consumable.IsConsumable && PlayerActions.TryGetPlayer(_world, out var user))
             {
-                // 3-7b: 힘 물약 · 강화 주문서 = 차례 1 (결정 2026-10-19). 든 무기 없이 주문서는 차례를 쓰지 않고 안내만
+                // 3-7b · 3-9: 물약 · 주문서 = 차례 1 (결정 2026-10-19). 든 무기 없이 강화 주문서는 차례를 쓰지 않고 안내만
                 if (Consumables.Check(_items, user, entry) == ConsumeResult.NoWeapon)
                 {
                     Hint(HudText.NoWeaponToUpgrade);
@@ -350,7 +353,7 @@ namespace ProjectM.Input
                 }
                 int index = System.Array.IndexOf(user.InventorySlots, entry);
                 CloseInventory();
-                _clock.SubmitPlayerCommand(new UseConsumableCommand(_world, _items, index, entry, _config.DefaultActionCostTicks));
+                _clock.SubmitPlayerCommand(new UseConsumableCommand(_world, _consumables, index, entry, _config.DefaultActionCostTicks));
                 return;
             }
             if (_items.TryGet(entry.Id, out var item) && item.Use == ItemUse.Fusion)
@@ -454,6 +457,9 @@ namespace ProjectM.Input
                 case InventoryActionKind.FuseSpells:
                     TryStartFusionAim(player, action.Entry.Id, action.Second.Id);
                     break;
+                case InventoryActionKind.ThrowItem:
+                    BeginThrowAim(player, action.Entry);
+                    break;
                 default:
                     Hint(InventoryHint(player));
                     break;
@@ -542,6 +548,19 @@ namespace ProjectM.Input
                 return;
             }
             BeginAim(player, firstId, secondId, -1, fused.Range);
+        }
+
+        /// <summary>던지기 조준 시작 (3-9): 주문 조준과 같은 조작 · 미리보기, 판정은 Throwing.Check.</summary>
+        private void BeginThrowAim(Unit player, InventoryRef entry)
+        {
+            if (!Consumables.CanThrow(_items, entry))
+            {
+                Hint(Text.NotThrowable(entry));
+                return;
+            }
+            CancelAim();
+            _aimThrow = entry;
+            BeginAim(player, null, null, -1, _consumables.Config.ThrowRange);
         }
 
         private void BeginAim(Unit player, string spellId, string fusionSecondId, int slot, int range)
@@ -633,6 +652,20 @@ namespace ProjectM.Input
 
         private void TryCast(Unit player)
         {
+            if (!_aimThrow.IsEmpty)
+            {
+                var throwBlock = Throwing.Check(_world, _consumables, _targeting, _sight, player, _aimThrow, _aimCursor, out _);
+                if (throwBlock != CastBlock.None)
+                {
+                    Hint(AimHint() + "  — " + HudText.CastBlockReason(throwBlock));
+                    return;
+                }
+                var thrown = _aimThrow;
+                CancelAim();
+                _clock.SubmitPlayerCommand(new ThrowItemCommand(_world, _consumables, _targeting, System.Array.IndexOf(player.InventorySlots, thrown), thrown,
+                    _aimCursor, _config.DefaultActionCostTicks));
+                return;
+            }
             ICommand command;
             var block = _aimFusionSecond != null
                 ? FusionCasting.TryCreateCast(_world, _config, _spells, _fusions, _items, _targeting, _sight, _aimSpellId, _aimFusionSecond, _aimCursor, out command)
@@ -649,7 +682,9 @@ namespace ProjectM.Input
         private void RefreshAim(Unit player)
         {
             SpellPreview preview;
-            var block = _aimFusionSecond != null
+            var block = !_aimThrow.IsEmpty
+                ? Throwing.Check(_world, _consumables, _targeting, _sight, player, _aimThrow, _aimCursor, out preview)
+                : _aimFusionSecond != null
                 ? FusionCasting.Check(_world, _spells, _fusions, _items, _targeting, _sight, player, _aimSpellId, _aimFusionSecond, _aimCursor, out _, out preview)
                 : SpellCasting.CheckSpell(_world, _spells, _targeting, _sight, player, _aimSpellId, _aimCursor, out _, out preview);
             if (_aimPreview != null) _aimPreview.Show(_aimCursor, preview, block == CastBlock.None);
@@ -661,6 +696,7 @@ namespace ProjectM.Input
             bool wasAiming = IsAiming;
             _aimSpellId = null;
             _aimFusionSecond = null;
+            _aimThrow = InventoryRef.Empty;
             _aimSlot = -1;
             if (_aimPreview != null) _aimPreview.Hide();
             if (_hud != null && !_inventory.IsOpen) _hud.SetHighlightSlot(-1);
@@ -677,6 +713,7 @@ namespace ProjectM.Input
 
         private string AimHint()
         {
+            if (!_aimThrow.IsEmpty) return Text.ThrowAimHint(_aimThrow);
             var spell = AimSpell();
             if (spell == null) return HudText.CastBlockReason(CastBlock.UnknownSpell);
             return _aimFusionSecond != null

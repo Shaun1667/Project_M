@@ -193,15 +193,64 @@ namespace ProjectM.Items
             var plan = new List<PendingFloorItem>();
             var rng = world.Rng.Get(RngStream.Loot);
             int floors = Math.Max(1, floorCount - 1);
-            AddCopies(plan, rng, floors, FirstOfUse(items, ItemUse.UpgradeScroll), config.UpgradeScrollsPerRun);
-            AddCopies(plan, rng, floors, FirstOfUse(items, ItemUse.StrengthPotion), config.StrengthPotionsPerRun);
+            AddCopies(plan, rng, floors, FirstOfEffect(items, ConsumableEffect.Upgrade), config.UpgradeScrollsPerRun);
+            AddCopies(plan, rng, floors, FirstOfEffect(items, ConsumableEffect.Strength), config.StrengthPotionsPerRun);
             if (plan.Count > 0) world.Run.AddPendingFloorItems(StableByFloor(plan));
         }
 
-        private static string FirstOfUse(ItemBook items, ItemUse use)
+        /// <summary>
+        /// 층마다 무작위 물약 · 주문서 (3-9, 결정 2026-10-20 — SPD 무게): 1~마지막 전 층마다 물약 RandomPotionsPerFloor개 · 주문서 RandomScrollsPerFloor개를
+        /// ItemDef.Weight 무게로 뽑아(RngStream.Loot, 같은 종류 겹칠 수 있음) 계획 끝에 붙인다. 무게 0(힘 · 강화)은 뽑지 않는다 — 보장 수로만.
+        /// PlanConsumables 다음에 부른다 — 앞의 계획 · 맵 · 적 배치는 바뀌지 않는다.
+        /// </summary>
+        public static void PlanRandomConsumables(World world, ItemBook items, ConsumableConfig config, int floorCount)
+        {
+            if (world == null) throw new ArgumentNullException(nameof(world));
+            if (items == null) throw new ArgumentNullException(nameof(items));
+            if (config == null) throw new ArgumentNullException(nameof(config));
+            var potions = Weighted(items, ItemUse.Potion);
+            var scrolls = Weighted(items, ItemUse.Scroll);
+            var rng = world.Rng.Get(RngStream.Loot);
+            int floors = Math.Max(1, floorCount - 1);
+            var plan = new List<PendingFloorItem>();
+            for (int f = 1; f <= floors; f++)
+            {
+                for (int k = 0; k < config.RandomPotionsPerFloor; k++) AddWeighted(plan, rng, f, potions);
+                for (int k = 0; k < config.RandomScrollsPerFloor; k++) AddWeighted(plan, rng, f, scrolls);
+            }
+            if (plan.Count > 0) world.Run.AddPendingFloorItems(plan);
+        }
+
+        private static List<ItemDef> Weighted(ItemBook items, ItemUse use)
+        {
+            var list = new List<ItemDef>();
+            foreach (var id in items.Ids)
+                if (items.TryGet(id, out var def) && def.Use == use && def.Weight > 0) list.Add(def);
+            return list;
+        }
+
+        /// <summary>무게대로 하나 뽑아 그 층에 (ItemBook 순서로 무게를 쌓아 0~합 굴림).</summary>
+        private static void AddWeighted(List<PendingFloorItem> plan, IRng rng, int floor, List<ItemDef> defs)
+        {
+            int total = 0;
+            foreach (var def in defs) total += def.Weight;
+            if (total == 0) return;
+            int roll = rng.Range(0, total);
+            foreach (var def in defs)
+            {
+                if (roll < def.Weight)
+                {
+                    plan.Add(new PendingFloorItem(floor, def.Id));
+                    return;
+                }
+                roll -= def.Weight;
+            }
+        }
+
+        private static string FirstOfEffect(ItemBook items, ConsumableEffect effect)
         {
             foreach (var id in items.Ids)
-                if (items.TryGet(id, out var def) && def.Use == use) return id;
+                if (items.TryGet(id, out var def) && def.Effect == effect) return id;
             return null;
         }
 
@@ -253,7 +302,7 @@ namespace ProjectM.Items
                 var pos = candidates[i];
                 candidates.RemoveAt(i);
                 world.FloorItems.Add(pos, id);
-                world.Events.Publish(new FloorItemPlacedEvent(pos, id));
+                world.Events.Publish(new FloorItemPlacedEvent(pos, id, Identification.VisualOf(world, id)));
             }
         }
     }
@@ -336,16 +385,18 @@ namespace ProjectM.Items
         }
     }
 
-    /// <summary>바닥에 아이템이 놓였다 (3-5 — 층 생성 · 돌아온 층 다시 그리기).</summary>
+    /// <summary>바닥에 아이템이 놓였다 (3-5 — 층 생성 · 돌아온 층 다시 그리기). VisualId = 그릴 모습 (3-9 물약 · 주문서는 판마다 정한 겉모습, 그 밖에는 ItemId).</summary>
     public sealed class FloorItemPlacedEvent : ISimEvent
     {
         public GridPos Pos { get; }
         public string ItemId { get; }
+        public string VisualId { get; }
 
-        public FloorItemPlacedEvent(GridPos pos, string itemId)
+        public FloorItemPlacedEvent(GridPos pos, string itemId, string visualId = null)
         {
             Pos = pos;
             ItemId = itemId;
+            VisualId = string.IsNullOrEmpty(visualId) ? itemId : visualId;
         }
     }
 

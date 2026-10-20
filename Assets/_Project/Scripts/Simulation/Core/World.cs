@@ -223,6 +223,8 @@ namespace ProjectM.Core
                 LastPlayerAttacker = Run.LastPlayerAttacker,
                 FloorItems = CaptureFloorItems(),
                 PendingFloorItems = new List<PendingFloorItem>(Run.PendingFloorItems).ToArray(),
+                ItemLooks = new List<ItemLook>(Run.Looks).ToArray(),
+                IdentifiedItems = new List<string>(Run.Identified).ToArray(),
             };
         }
 
@@ -303,6 +305,7 @@ namespace ProjectM.Core
             var world = new World(map, ids, rng, scheduler);
             LoadFloorData(world, snapshot.MapWidth, snapshot.MapHeight, snapshot.Cells, snapshot.Explored, snapshot.Terrain, snapshot.Units, snapshot.FloorItems);
             world.Run.SetPendingFloorItems(snapshot.PendingFloorItems);
+            world.Run.SetLooks(snapshot.ItemLooks, snapshot.IdentifiedItems);
             world.Floor = snapshot.Floor;
             world._storedFloors.AddRange(snapshot.StoredFloors);
             world.Run.Kills = snapshot.Kills;

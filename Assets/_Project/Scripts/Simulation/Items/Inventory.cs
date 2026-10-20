@@ -59,10 +59,48 @@ namespace ProjectM.Items
         LearnSpell = 2,
         /// <summary>근접 무기 (3-7a): 쓰면 든다 — 차례 1 (EquipWeaponCommand), 끼던 무기는 인벤토리로.</summary>
         EquipWeapon = 3,
-        /// <summary>힘 물약 (3-7b): 마시면 힘 + Amount — 차례 1 (UseConsumableCommand).</summary>
-        StrengthPotion = 4,
-        /// <summary>강화 주문서 (3-7b): 읽으면 든 무기 강화 + Amount — 차례 1. 든 무기가 없으면 쓸 수 없다.</summary>
-        UpgradeScroll = 5,
+        /// <summary>물약 (3-7b 힘 물약 → 3-9 물약 전체): 마시면 Effect — 차례 1 (UseConsumableCommand). 던질 수 있다 (ThrowItemCommand).</summary>
+        Potion = 4,
+        /// <summary>주문서 (3-7b 강화 주문서 → 3-9 주문서 전체): 읽으면 Effect — 차례 1. 강화는 든 무기가 없으면 쓸 수 없다.</summary>
+        Scroll = 5,
+    }
+
+    /// <summary>
+    /// 물약 · 주문서 효과 (3-9, SPD). 끝에만 추가한다 (에셋이 정수로 저장). 효과 수치는 ConsumableConfig (BALANCE 14번).
+    /// </summary>
+    public enum ConsumableEffect
+    {
+        None = 0,
+        /// <summary>힘 물약: 힘 + Amount.</summary>
+        Strength = 1,
+        /// <summary>강화 주문서: 든 무기 강화 + Amount.</summary>
+        Upgrade = 2,
+        /// <summary>치유 물약: 체력 가득 + HealingCures 상태 풀기.</summary>
+        Healing = 3,
+        /// <summary>경험 물약: 다음 레벨까지 필요한 경험치.</summary>
+        Experience = 4,
+        /// <summary>정화 물약: 반경 안 PurityClears 지형(가스 · 불) 없앰.</summary>
+        Purity = 5,
+        /// <summary>독가스 물약: 반경 안 독구름.</summary>
+        ToxicGas = 6,
+        /// <summary>액체 화염 물약: 반경 안 화염 지대.</summary>
+        LiquidFlame = 7,
+        /// <summary>냉기 물약: 반경 안 유닛 빙결 · 물 → 빙판 · 화염 지대 끔.</summary>
+        Frost = 8,
+        /// <summary>마비 가스 물약: 반경 안 마비 가스.</summary>
+        ParalyticGas = 9,
+        /// <summary>식별 주문서: 인벤토리의 모르는 물약 · 주문서 한 종류(앞 칸부터)를 식별.</summary>
+        Identify = 10,
+        /// <summary>지도 주문서: 이 층 전체를 탐험한 것으로.</summary>
+        MagicMapping = 11,
+        /// <summary>순간이동 주문서: 이 층의 무작위 빈 바닥으로.</summary>
+        Teleportation = 12,
+        /// <summary>충전 주문서 (SPD 재충전 → 마나): 마나 가득.</summary>
+        Recharging = 13,
+        /// <summary>격노 주문서: 이 층의 모든 적이 읽은 칸으로 몰려온다.</summary>
+        Rage = 14,
+        /// <summary>응징 주문서: 보이는 적 모두에게 피해 (잃은 체력이 많을수록 셈).</summary>
+        Retribution = 15,
     }
 
     /// <summary>아이템 하나의 규칙 데이터 (3-2a). 값은 ItemCatalogAsset에서 온다 — BALANCE.md 9번.</summary>
@@ -76,12 +114,24 @@ namespace ProjectM.Items
         public WeaponDef Weapon { get; }
         /// <summary>힘 물약 · 강화 주문서의 양 (3-7b, 둘 다 1). 그 밖에는 0.</summary>
         public int Amount { get; }
+        /// <summary>물약 · 주문서의 효과 (3-9). 그 밖에는 None.</summary>
+        public ConsumableEffect Effect { get; }
+        /// <summary>층마다 무작위로 놓을 때의 무게 (3-9, SPD). 0 = 무작위로 놓지 않음 (힘 · 강화는 보장 수로만).</summary>
+        public int Weight { get; }
 
-        public ItemDef(string id, ItemUse use, string spellId = null, WeaponDef weapon = null, int amount = 0)
+        public bool IsConsumable => Use == ItemUse.Potion || Use == ItemUse.Scroll;
+
+        public ItemDef(string id, ItemUse use, string spellId = null, WeaponDef weapon = null, int amount = 0,
+            ConsumableEffect effect = ConsumableEffect.None, int weight = 0)
         {
-            bool consumable = use == ItemUse.StrengthPotion || use == ItemUse.UpgradeScroll;
-            if (consumable && amount < 1) throw new ArgumentOutOfRangeException(nameof(amount), amount, "물약 · 주문서의 양은 1 이상: " + id);
-            Amount = consumable ? amount : 0;
+            bool consumable = use == ItemUse.Potion || use == ItemUse.Scroll;
+            if (consumable && effect == ConsumableEffect.None) throw new ArgumentException("물약 · 주문서에 효과가 없다: " + id, nameof(effect));
+            bool needsAmount = effect == ConsumableEffect.Strength || effect == ConsumableEffect.Upgrade;
+            if (consumable && needsAmount && amount < 1) throw new ArgumentOutOfRangeException(nameof(amount), amount, "힘 물약 · 강화 주문서의 양은 1 이상: " + id);
+            if (weight < 0) throw new ArgumentOutOfRangeException(nameof(weight), weight, "무게는 0 이상: " + id);
+            Amount = consumable && needsAmount ? amount : 0;
+            Effect = consumable ? effect : ConsumableEffect.None;
+            Weight = consumable ? weight : 0;
             if (string.IsNullOrEmpty(id)) throw new ArgumentException("아이템 ID가 비어 있다.", nameof(id));
             if (use == ItemUse.LearnSpell && string.IsNullOrEmpty(spellId)) throw new ArgumentException("마법서에 가르칠 주문이 없다: " + id, nameof(spellId));
             if (use == ItemUse.EquipWeapon && weapon == null) throw new ArgumentException("무기 수치가 없다: " + id, nameof(weapon));

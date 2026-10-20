@@ -190,7 +190,7 @@ namespace ProjectM.Tests
             var book = asset.ToBook(statusAsset.ToBook());
             var expected = SpellTests.BalanceTerrains();
             Assert.That(book.Count, Is.EqualTo(expected.Count));
-            foreach (var type in new[] { TerrainEffectType.FireZone, TerrainEffectType.PoisonCloud, TerrainEffectType.Water, TerrainEffectType.ContaminatedWater, TerrainEffectType.IcePatch })
+            foreach (var type in new[] { TerrainEffectType.FireZone, TerrainEffectType.PoisonCloud, TerrainEffectType.Water, TerrainEffectType.ContaminatedWater, TerrainEffectType.IcePatch, TerrainEffectType.ParalyticGas })
             {
                 Assert.That(book.TryGet(type, out var a), Is.True, type.ToString());
                 expected.TryGet(type, out var e);

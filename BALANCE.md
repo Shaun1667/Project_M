@@ -23,6 +23,7 @@
 | 11 | 바닥 아이템(마법서) 배치 | `Assets/_Project/Data/Items/LootConfig.asset` (`LootConfigAsset`) | `ProjectM.Items.LootConfig` · `Loot` | 사용 중 (3-5) |
 | 13 | 무기 (3-7a) | `ItemCatalog.asset`의 무기 줄 · 공통 값 (`ItemCatalogAsset`) — 9번과 같은 에셋 | `ProjectM.Items.WeaponDef` · `WeaponRules` · `Weapons` · `ProjectM.Units.EquippedWeapon` | 사용 중 (3-7a) |
 | 12 | 경험치 · 레벨업 | `Assets/_Project/Data/Units/ProgressionConfig.asset` (`ProgressionConfigAsset`) + 유닛 에셋의 명중 · 회피 · 경험치 (3번) | `ProjectM.Units.ProgressionConfig` · `Progression` | 사용 중 (3-6) |
+| 14 | 물약 · 주문서 (효과 · 식별 · 무작위 배치 · 던지기) | `Assets/_Project/Data/Items/ConsumableConfig.asset` (`ConsumableConfigAsset`) + `ItemCatalog.asset`의 `Effect` · `Weight` (9번) | `ProjectM.Items.ConsumableConfig` · `Consumables` · `Identification` · `Throwing` | 사용 중 (3-9) |
 
 **데이터 구조 규칙 (0-4 결정)**
 - 에셋은 `ScriptableObject`(어셈블리 `ProjectM.Runtime`, 네임스페이스 `ProjectM.Data`)이고, `ToXxx()`로 순수 C# 객체를 만들어 Simulation에 넘긴다. Simulation은 ScriptableObject를 모른다 (CLAUDE.md 핵심 설계 규칙 1).
@@ -200,6 +201,7 @@
 | Water 물 타일 | 물 — 폭발 3×3 (3-2). **화염 지대 칸에는 안 깔림** (`BlockedBy` FireZone) | **12** | Wet 젖음 |
 | ContaminatedWater 오염된 물 | 물 타일 × 독 = 오염 (남은 틱 유지) · 물 + 독 융합(3-2b, 10번) | **8** (융합으로 생길 때) | Wet 젖음 + **매 틱 피해 1** (`DamagePerTick`, D7) |
 | IcePatch 빙판 | 물 타일 · 오염된 물 × 얼음 = 결빙 (**8**로 새로 정함) · 얼음 + 물 융합 (3-3a). 불을 맞으면 물 타일 **12** | **8** | Slow 둔화 |
+| ParalyticGas 마비 가스 | 마비 가스 물약 (3-9, 14번) — 깨진 칸에서 2걸음 | **4** (Claude 임시, 독구름과 같게) | Paralyze 마비 |
 
 필드 `SpellCatalog` 항목의 `LeavesTerrain`: `poison_basic` → PoisonCloud, `water_basic` → Water (3-2). (`fire_basic` → FireZone은 2026-10-17 3-1 D2로 삭제)
 지형이 매 턴 거는 상태는 **100%** (2026-10-17 사용자 확인 — 요청표의 50%는 쓰지 않음).
@@ -292,12 +294,13 @@
 | `spellbook_poison` | 독 폭발 마법서 | LearnSpell → `poison_basic` | 〃 |
 | `spellbook_water` | 물보라 마법서 | LearnSpell → `water_basic` | 〃 |
 | `shortsword` · `hand_axe` · `spear` · `quarterstaff` · `dirk` · `sickle` | 무기 6종 | EquipWeapon | 3-7a: 사용 → 든다(차례 1), 수치는 13번 |
-| `potion_strength` | 힘 물약 | StrengthPotion, `Amount` **1** | 3-7b: 사용 → 힘 +1, 물약 소모, 차례 1 (결정 2026-10-19). 바닥에서 주움 (11번) |
-| `scroll_upgrade` | 강화 주문서 | UpgradeScroll, `Amount` **1** | 3-7b: 사용 → 든 무기 강화 +1(무기 자체에 — 내려놓아도 남음), 주문서 소모, 차례 1. 든 무기가 없으면 쓰지 않음 |
+| `potion_strength` | 힘 물약 | Potion · Strength, `Amount` **1** | 3-7b: 사용 → 힘 +1, 물약 소모, 차례 1 (결정 2026-10-19). 바닥에서 주움 (11번). 3-9부터 `Use` 이름 StrengthPotion → Potion (값 4 그대로) + 효과 줄 |
+| `scroll_upgrade` | 강화 주문서 | Scroll · Upgrade, `Amount` **1** | 3-7b: 사용 → 든 무기 강화 +1(무기 자체에 — 내려놓아도 남음), 주문서 소모, 차례 1. 든 무기가 없으면 쓰지 않음. 3-9부터 UpgradeScroll → Scroll (값 5) |
+| `potion_*` 7 · `scroll_*` 6 | 3-9 물약 · 주문서 | Potion · Scroll + `Effect` · `Weight` | 14번 표 |
 
 필드 `SpellId` = 마법서가 가르치는 주문 (LearnSpell만, 3-5).
 
-검산 (`InventoryTests.ProjectAsset_MatchesBalanceTable` — 14개, `StrengthUpgradeTests.ProjectAssets_MatchBalanceTable` — 물약 · 주문서, `SpellbookTests.ProjectAssets_MatchBalanceTable` — 마법서 → 주문): 에셋 값이 위 표와 같다.
+검산 (`InventoryTests.ProjectAsset_MatchesBalanceTable` — 27개, `StrengthUpgradeTests.ProjectAssets_MatchBalanceTable` — 물약 · 주문서, `SpellbookTests.ProjectAssets_MatchBalanceTable` — 마법서 → 주문): 에셋 값이 위 표와 같다.
 
 ---
 
@@ -406,6 +409,56 @@
 검산 (`SurpriseDefenseTests`).
 
 검산 (`WeaponTests.ProjectAssets_MatchBalanceTable` · `Resolve_MatchesDesignTable`).
+
+---
+
+## 14. 물약 · 주문서 — `Data/Items/ConsumableConfig.asset` + `ItemCatalog.asset` (3-9)
+
+결정 (2026-10-20, 사용자 — 모두 추천안): SPD와 같은 효과 · 식별 · 무게. 쉬운 15종부터 (나머지는 다음 항목). 해로운 물약은 던진다. 수치 중 SPD에 그대로 대응하지 않는 것(반경 · 사거리 · 마비 가스 지속)은 Claude 임시값.
+
+**종류 · 무게** (`ItemCatalog` 줄, 무게 = 층마다 무작위로 뽑힐 비율 — SPD 표 그대로, 0 = 무작위 안 됨):
+
+| ID | 이름 | `Effect` | `Weight` | 효과 |
+|---|---|---|---|---|
+| `potion_strength` | 힘 물약 | Strength | 0 | 힘 +1 — 한 판 2개 보장 (11번) |
+| `potion_healing` | 치유 물약 | Healing | **3** | 체력 가득 + 화상 · 둔화 · 중독 · 마비 풀기 (SPD는 서서히 — 여기는 즉시) |
+| `potion_experience` | 경험 물약 | Experience | **1** | 다음 레벨까지 필요한 경험치 (= 1레벨 오름) |
+| `potion_purity` | 정화 물약 | Purity | **2** | 3걸음 안 화염 지대 · 독구름 · 마비 가스 없앰 |
+| `potion_toxic_gas` | 독가스 물약 | ToxicGas | **3** | 2걸음 안 독구름 (7번 4틱) |
+| `potion_liquid_flame` | 액체 화염 물약 | LiquidFlame | **3** | 2걸음 안 화염 지대 (7번 4틱) |
+| `potion_frost` | 냉기 물약 | Frost | **3** | 2걸음 안 유닛 빙결(6번 2틱) · 화염 지대 끔 · 물 → 빙판(8틱) |
+| `potion_paralytic_gas` | 마비 가스 물약 | ParalyticGas | **2** | 2걸음 안 마비 가스 (7번 4틱) |
+| `scroll_upgrade` | 강화 주문서 | Upgrade | 0 | 든 무기 +1 — 한 판 3장 보장 (11번) |
+| `scroll_identify` | 식별 주문서 | Identify | **3** | 인벤토리 앞 칸부터 모르는 물약 · 주문서 한 종류 (SPD는 고르기 — 고르는 창은 나중에) |
+| `scroll_magic_mapping` | 지도 주문서 | MagicMapping | **1** | 이 층 바닥 + 둘레 벽 전부 탐험 |
+| `scroll_teleportation` | 순간이동 주문서 | Teleportation | **1** | 이 층의 빈 바닥(계단 제외) 무작위 (`RngStream.Combat`) |
+| `scroll_recharging` | 충전 주문서 | Recharging | **1** | 마나 가득 (SPD는 마법봉 충전 → 이 게임은 마나) |
+| `scroll_rage` | 격노 주문서 | Rage | **1** | 이 층의 모든 적이 읽은 칸을 기억 → 몰려옴 |
+| `scroll_retribution` | 응징 주문서 | Retribution | **1** | 보이는 적마다 아래 공식 피해 |
+
+**ConsumableConfig** (`ConsumableConfigAsset` 필드 초기값 = 아래 값):
+
+| 항목 | 필드 | 값 | 비고 |
+|---|---|---|---|
+| 물약 겉모습 | `_potionLooks` | 12색 (`potion_crimson` … `potion_ivory`) | 판마다 종류에 섞어 나눔 (`RngStream.Loot`, 배치 계획 모두 뒤) |
+| 주문서 겉모습 | `_scrollLooks` | 12룬 (`scroll_tyr` … `scroll_oethel`) | 〃 |
+| 층마다 무작위 물약 | `_randomPotionsPerFloor` | **2** | 1~마지막 전 층마다, 무게대로 (겹칠 수 있음) |
+| 층마다 무작위 주문서 | `_randomScrollsPerFloor` | **2** | 〃 |
+| 가스 퍼짐 | `_gasRadius` | **2** 걸음 | 벽을 돌아 셈 (벽 너머로 새지 않음). 독가스 · 화염 · 냉기 · 마비 가스 |
+| 정화 퍼짐 | `_purityRadius` | **3** 걸음 | |
+| 던지기 사거리 | `_throwRange` | **8** 칸 | 벽 앞 · 유닛 칸에서 멈춤, 보이는 칸만 |
+| 치유가 푸는 상태 | `_healingCures` | 화상 · 둔화 · 중독 · 마비 | |
+| 정화가 없애는 지형 | `_purityClears` | 화염 지대 · 독구름 · 마비 가스 | 물 · 빙판은 그대로 |
+| 응징 | `_retributionBasePercent` · `_retributionHpPercent` · `_retributionPowerScale` · `_retributionPowerCap` | **10** · **22.5** · **4.45** · **4** | SPD 그대로: 피해 = 최대 체력 × 10% + 현재 체력 × 힘 × 22.5%, 힘 = min(4, 잃은 체력 비율 × 4.45) |
+
+쓰기 규칙: 마시기 · 읽기 · 던지기 모두 차례 1. 마시거나 읽으면 그 종류가 식별된다. 던진 물약은 범위 물약(정화 · 가스 · 화염 · 냉기)만 효과가 나고 식별되며, 나머지는 깨져 사라진다(SPD). 주문서는 던지지 않는다.
+
+결과:
+- 한 판(5층) 물약 · 주문서 = 보장 5 + 4층 × 4 = **21개**. 무작위 물약 하나가 치유일 확률 3/17 ≈ 18%, 무작위 주문서 하나가 식별일 확률 3/8.
+- 응징 검산: 내 체력 10/20 → 힘 2.225 → 체력 200인 적 = 20 + 100.125 → **120**. 체력 가득이면 힘 0 → 최대 체력 10%만. 근접 적(체력 8)은 내 체력이 반이면 0.8 + 8 × 2.225 × 0.225 = 4.8 → **5**.
+- 가스 2걸음 = 열린 방에서 5×5 (25칸). 던지기 사거리 8이면 플레이어가 범위(2) 밖에서 던질 수 있다. 마시면 자기도 맞는다 (규칙 10).
+
+검산 (`ConsumableTests.ProjectAssets_MatchBalanceTable` · `Retribution_HitsVisibleEnemiesOnly_BalanceValue` · `Retribution_FullHp_OnlyBasePart`).
 
 ---
 

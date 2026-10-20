@@ -84,6 +84,17 @@ namespace ProjectM.Core
                     w.Write(p.ItemId ?? string.Empty);
                 }
 
+                // 16 (3-9): 식별
+                w.Write(snapshot.ItemLooks.Length);
+                foreach (var look in snapshot.ItemLooks)
+                {
+                    w.Write(look.ItemId ?? string.Empty);
+                    w.Write(look.Look ?? string.Empty);
+                }
+                w.Write(snapshot.IdentifiedItems.Length);
+                foreach (var id in snapshot.IdentifiedItems)
+                    w.Write(id ?? string.Empty);
+
                 w.Flush();
                 return stream.ToArray();
             }
@@ -161,6 +172,16 @@ namespace ProjectM.Core
                     int floor = r.ReadInt32();
                     s.PendingFloorItems[i] = new PendingFloorItem(floor, r.ReadString());
                 }
+
+                s.ItemLooks = new ItemLook[ReadCount(r)];
+                for (int i = 0; i < s.ItemLooks.Length; i++)
+                {
+                    var itemId = r.ReadString();
+                    s.ItemLooks[i] = new ItemLook(itemId, r.ReadString());
+                }
+                s.IdentifiedItems = new string[ReadCount(r)];
+                for (int i = 0; i < s.IdentifiedItems.Length; i++)
+                    s.IdentifiedItems[i] = r.ReadString();
 
                 if (stream.Position != stream.Length)
                     throw new InvalidDataException("스냅샷 끝에 남는 데이터가 있다.");

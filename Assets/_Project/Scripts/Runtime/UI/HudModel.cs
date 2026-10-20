@@ -108,6 +108,8 @@ namespace ProjectM.UI
             _bus.Subscribe<StrengthChangedEvent>(OnStrengthChanged);
             _bus.Subscribe<SurpriseAttackEvent>(OnSurprise);
             _bus.Subscribe<DamageBlockedEvent>(OnBlocked);
+            _bus.Subscribe<ConsumableUsedEvent>(OnConsumableUsed);
+            _bus.Subscribe<ItemIdentifiedEvent>(OnIdentified);
             _lastPickupFail = null;
             Changed?.Invoke();
         }
@@ -196,6 +198,23 @@ namespace ProjectM.UI
             Changed?.Invoke();
         }
 
+        // 3-9: "진홍 물약을 마셨다 — 치유 물약이었다" + 효과 한 줄 (던져서 깨지기만 한 물약은 효과 줄 없음)
+        private void OnConsumableUsed(ConsumableUsedEvent e)
+        {
+            if (e.Unit != _playerId) return;
+            AddLog(Text.ConsumableUsed(e.ItemId, e.Look, e.Mode, e.WasKnown, e.Known));
+            bool effectShown = e.Mode != ConsumeMode.Throw || Consumables.IsArea(e.Effect);
+            var effect = effectShown ? HudText.ConsumableEffectText(e.Effect) : null;
+            if (effect != null) AddLog(effect);
+            Changed?.Invoke();
+        }
+
+        private void OnIdentified(ItemIdentifiedEvent e)
+        {
+            AddLog(Text.Identified(e.ItemId, e.Look));
+            Changed?.Invoke();
+        }
+
         // 3-7c: "기습! 적 #3" (피해 줄 앞) · "방어: 1 막음" (플레이어가 막았을 때만)
         private void OnSurprise(SurpriseAttackEvent e)
         {
@@ -269,6 +288,8 @@ namespace ProjectM.UI
             _bus.Unsubscribe<StrengthChangedEvent>(OnStrengthChanged);
             _bus.Unsubscribe<SurpriseAttackEvent>(OnSurprise);
             _bus.Unsubscribe<DamageBlockedEvent>(OnBlocked);
+            _bus.Unsubscribe<ConsumableUsedEvent>(OnConsumableUsed);
+            _bus.Unsubscribe<ItemIdentifiedEvent>(OnIdentified);
             _bus = null;
         }
 
