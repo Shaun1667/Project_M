@@ -16,32 +16,37 @@ namespace ProjectM.Presentation
         {
             public string ItemId;
             [Tooltip("모델 프리팹 (세워 둔 모습, 원점 = 가운데). 바닥에서는 눕혀서 떠 돈다")] public GameObject Prefab;
+            [Tooltip("켜면 눕히지 않고 프리팹 모습 그대로 (3-9a 물약 · 주문서 — 원점 = 바닥 중앙). 끄면 무기처럼 눕힘")] public bool Upright;
         }
 
         [SerializeField] private List<Entry> _entries = new List<Entry>();
 
-        public bool TryGet(string itemId, out GameObject prefab)
+        public bool TryGet(string itemId, out GameObject prefab) => TryGet(itemId, out prefab, out _);
+
+        public bool TryGet(string itemId, out GameObject prefab, out bool upright)
         {
             foreach (var e in _entries)
             {
                 if (e.ItemId != itemId || e.Prefab == null) continue;
                 prefab = e.Prefab;
+                upright = e.Upright;
                 return true;
             }
             prefab = null;
+            upright = false;
             return false;
         }
 
         /// <summary>테스트 · 에디터 Setup용: 있으면 바꾸고 없으면 추가.</summary>
-        public void Set(string itemId, GameObject prefab)
+        public void Set(string itemId, GameObject prefab, bool upright = false)
         {
             for (int i = 0; i < _entries.Count; i++)
             {
                 if (_entries[i].ItemId != itemId) continue;
-                _entries[i] = new Entry { ItemId = itemId, Prefab = prefab };
+                _entries[i] = new Entry { ItemId = itemId, Prefab = prefab, Upright = upright };
                 return;
             }
-            _entries.Add(new Entry { ItemId = itemId, Prefab = prefab });
+            _entries.Add(new Entry { ItemId = itemId, Prefab = prefab, Upright = upright });
         }
     }
 }

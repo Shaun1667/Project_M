@@ -113,14 +113,14 @@ namespace ProjectM.Presentation
             root.SetParent(transform, false);
             root.position = CellCenter(e.Pos);
 
-            if (_models != null && _models.TryGet(e.ItemId, out var modelPrefab))
+            if (_models != null && _models.TryGet(e.ItemId, out var modelPrefab, out bool upright))
             {
                 // 3-7a 무기: 모델을 눕혀(날이 바닥과 나란히) 떠서 돈다 — 도는 축(Book) 아래에 눕힌 모델
                 var spin = new GameObject("Book").transform;
                 spin.SetParent(root, false);
                 var model = Instantiate(modelPrefab, spin, false);
                 model.name = "Model";
-                model.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+                model.transform.localRotation = upright ? Quaternion.identity : Quaternion.Euler(90f, 0f, 0f); // 무기는 눕히고, 물약 · 주문서는 그대로
                 AddGlow(root, e.ItemId);
                 var modelView = new View { Pos = e.Pos, ItemId = e.ItemId, Root = root, Book = spin, Phase = (e.Pos.X * 0.37f + e.Pos.Y * 0.61f) % 1f * Mathf.PI * 2f };
                 _views.Add(modelView);
