@@ -25,6 +25,7 @@ namespace ProjectM.Tests
         {
             _root = new GameObject("PresenterTestRoot");
             _grid = _root.AddComponent<Grid>();
+            _grid.cellSize = new Vector3(1f, 1f, 0f); // 실제 씬과 같게 — 칸 두께 0 (G-2b, 아니면 칸 중앙이 바닥 0.5 m 아래)
             var tilemapGo = new GameObject("Tilemap");
             tilemapGo.transform.SetParent(_root.transform, false);
             _tilemap = tilemapGo.AddComponent<Tilemap>();
@@ -235,7 +236,8 @@ namespace ProjectM.Tests
             _root.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
             var center = _grid.GetCellCenterWorld(new Vector3Int(4, 7, 0));
             Assert.That(center.y, Is.EqualTo(0f).Within(1e-4f), "칸은 바닥(y = 0)에");
-            Assert.That(new Vector2(center.x, center.z), Is.EqualTo(new Vector2(4.5f, 7.5f)));
+            Assert.That(center.x, Is.EqualTo(4.5f).Within(1e-4f));
+            Assert.That(center.z, Is.EqualTo(7.5f).Within(1e-4f)); // 90° 회전의 부동소수 오차 허용
 
             var camGo = new GameObject("Cam");
             camGo.transform.SetParent(_root.transform, false);
@@ -508,7 +510,7 @@ namespace ProjectM.Tests
             Assert.That(block.GetColor("_BaseColor").r, Is.GreaterThan(1f), "피격 번쩍");
 
             presenter.FinishMotions();
-            Assert.That(a.Root.position, Is.EqualTo(home), "돌아옴");
+            Assert.That(Vector3.Distance(a.Root.position, home), Is.LessThan(1e-4f), "돌아옴"); // 찌르기 곡선 끝의 부동소수 오차 허용
             t.Renderers[0].GetPropertyBlock(block);
             Assert.That(block.GetColor("_BaseColor").r, Is.EqualTo(1f).Within(1e-4f), "번쩍 끝");
         }

@@ -138,6 +138,7 @@ namespace ProjectM.Tests
 
             Progression.GainExp(s.World, s.Player, 29, Progress);
             Assert.That((s.Player.Level, s.Player.Exp), Is.EqualTo((6, 0)));
+            s.World.Events.Flush(); // 레벨업 경험치 이벤트를 먼저 비운다 — 안 그러면 아래 Kill의 Flush 때 들어와 "경험치 없음" 검사가 틀림
             s.Events.Clear();
             Kill(s, SpawnRat(s, new GridPos(3, 1)));
             Assert.That(s.Player.Exp, Is.EqualTo(0), "레벨 6 > 최고 레벨 5 → 0 (반복 사냥 방지)");
