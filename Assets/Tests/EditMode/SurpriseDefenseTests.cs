@@ -169,7 +169,7 @@ namespace ProjectM.Tests
             var w = restored.Units.Get(s.Player.Id).Weapon;
             Assert.That((w.SurpriseMinPercent, w.Defense), Is.EqualTo((67, 0)));
             Assert.That(WorldSnapshotCodec.Encode(restored.Capture()), Is.EqualTo(bytes));
-            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.EqualTo(15));
+            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.GreaterThanOrEqualTo(15)); // 기습 · 방어가 들어간 버전 이상
         }
 
         [Test]
