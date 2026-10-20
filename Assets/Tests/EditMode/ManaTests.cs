@@ -133,7 +133,7 @@ namespace ProjectM.Tests
             Assert.That(WorldSnapshotCodec.Encode(restored.Capture()), Is.EqualTo(bytes));
         }
 
-        // 2-6: 10틱마다 최대 체력의 1%(올림 · 최소 1), 플레이어만, 최대치에서 멈춤
+        // 2-6: 10틱마다 최대 체력의 1% (2026-10-20부터 소수점 누적 — 최대 20이면 50틱마다 1), 플레이어만, 최대치에서 멈춤
         private static readonly MagicConfig MagicWithHpRegen = new MagicConfig(3, 1, 4, 10, 1);
 
         private static Session StartWithHpRegen(params GridPos[] enemies)
@@ -153,19 +153,19 @@ namespace ProjectM.Tests
         }
 
         [Test]
-        public void HpRegen_PlayerHealsOneEveryTenTicks_UpToMax()
+        public void HpRegen_PlayerHealsOnePercentPerTenTicks_UpToMax()
         {
             var s = StartWithHpRegen();
             var healed = new List<UnitHealedEvent>();
             s.World.Events.Subscribe<UnitHealedEvent>(healed.Add);
             Combat.ApplyDamage(s.World, EntityId.None, s.Player, 3); // 17/20
 
-            s.Wait(9); // 틱 0 ~ 8
+            s.Wait(49); // 틱 0 ~ 48 — 회복 주기 4번 = 0.8
             Assert.That(s.Player.Hp, Is.EqualTo(17));
-            s.Wait(1); // 틱 9 → (9 + 1) % 10 == 0
-            Assert.That(s.Player.Hp, Is.EqualTo(18), "최대 체력 20의 1% = 0.2 → 올림 · 최소 1");
+            s.Wait(1); // 틱 49 → 5번째 주기, 누적 1.0
+            Assert.That(s.Player.Hp, Is.EqualTo(18), "최대 체력 20의 1% = 0.2씩 누적 → 50틱에 1");
 
-            s.Wait(40);
+            s.Wait(200);
             Assert.That(s.Player.Hp, Is.EqualTo(20), "최대치에서 멈춤");
             s.World.Events.Flush();
             Assert.That(healed.Count, Is.EqualTo(3));
@@ -184,13 +184,20 @@ namespace ProjectM.Tests
         }
 
         [Test]
-        public void HpRegen_AmountIsPercentRoundedUpMinimumOne()
+        public void HpRegen_AmountIsExactPercent_FractionsCarry()
         {
-            Assert.That(MagicWithHpRegen.HpRegenAmount(20), Is.EqualTo(1));
-            Assert.That(MagicWithHpRegen.HpRegenAmount(100), Is.EqualTo(1));
-            Assert.That(MagicWithHpRegen.HpRegenAmount(101), Is.EqualTo(2));
-            Assert.That(new MagicConfig(3, 1, 4, 10, 5).HpRegenAmount(30), Is.EqualTo(2), "1.5 → 2");
-            Assert.That(Magic.HpRegenAmount(20), Is.EqualTo(0), "주기 0 = 회복 없음");
+            int Sum(MagicConfig c, int maxHp, int cycles)
+            {
+                int total = 0;
+                for (int k = 1; k <= cycles; k++) total += c.HpRegenAmount(maxHp, k);
+                return total;
+            }
+            Assert.That(Sum(MagicWithHpRegen, 20, 4), Is.EqualTo(0), "0.2 × 4 = 0.8");
+            Assert.That(Sum(MagicWithHpRegen, 20, 5), Is.EqualTo(1));
+            Assert.That(Sum(MagicWithHpRegen, 20, 100), Is.EqualTo(20), "100주기(1000틱) = 최대 체력 100%");
+            Assert.That(MagicWithHpRegen.HpRegenAmount(100, 1), Is.EqualTo(1), "최대 100이면 주기마다 1");
+            Assert.That(Sum(MagicWithHpRegen, 150, 2), Is.EqualTo(3), "1.5 × 2");
+            Assert.That(Magic.HpRegenAmount(20, 1), Is.EqualTo(0), "주기 0 = 회복 없음");
         }
 
         [Test]

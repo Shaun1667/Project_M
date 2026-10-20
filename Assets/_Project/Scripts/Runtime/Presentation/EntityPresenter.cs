@@ -407,6 +407,21 @@ namespace ProjectM.Presentation
             }
         }
 
+        /// <summary>
+        /// 이동 · 공격 · 맞음 · 시전 · 죽음 연출 중 하나라도 진행 중인지 (2026-10-20 — 입력이 이것이 끝날 때까지 다음 행동을 받지 않음).
+        /// 걷기 유지 시간 · 숨쉬기 같은 대기 연출은 넣지 않는다.
+        /// </summary>
+        public bool IsAnimating
+        {
+            get
+            {
+                if (_dying.Count > 0) return true;
+                foreach (var pair in _views)
+                    if (!pair.Value.IsSettled) return true;
+                return false;
+            }
+        }
+
         /// <summary>연출을 모두 끝 상태로 (테스트 · 디버그).</summary>
         public void FinishMotions() => Advance(10f);
 

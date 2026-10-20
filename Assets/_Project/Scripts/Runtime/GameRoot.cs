@@ -117,6 +117,8 @@ namespace ProjectM
             _hudText = new HudText(_spellCatalog.DisplayNames(), _reactionCatalog.DisplayNames(), _itemCatalog.DisplayNames(), _fusionCatalog.DisplayNames());
             _input.Text = _hudText;
             _input.HintChanged += _hud.SetHint;
+            // 2026-10-20: 이동 · 공격 · 주문 연출이 끝날 때까지 다음 행동(= 다음 틱)을 받지 않는다
+            _input.PresentationBusy = () => _entityPresenter.IsAnimating || (_fx != null && _fx.IsPlaying);
         }
 
         private void OnDestroy()

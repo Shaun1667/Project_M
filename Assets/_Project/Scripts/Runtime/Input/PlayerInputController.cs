@@ -94,6 +94,12 @@ namespace ProjectM.Input
         public event System.Action<string> HintChanged;
 
         public bool IsAiming => _aimSpellId != null || !_aimThrow.IsEmpty;
+
+        /// <summary>
+        /// 연출이 재생 중인지 (2026-10-20 사용자 요청): true인 동안 다음 행동(이동 · 공격 · 시전 · 아이템 · 계단)을 받지 않는다 →
+        /// 다음 틱은 연출이 끝난 뒤에 진행된다. 규칙은 그대로 즉시 계산되고 입력만 기다린다. GameRoot가 EntityPresenter · FxPresenter로 채움.
+        /// </summary>
+        public System.Func<bool> PresentationBusy { get; set; }
         public InventoryMenu Inventory => _inventory;
 
         /// <summary>안내 문구 (한글 · 주문 · 아이템 표시 이름). GameRoot가 Catalog 이름으로 채운다.</summary>
@@ -213,6 +219,11 @@ namespace ProjectM.Input
 
             var keyboard = Keyboard.current;
             var mouse = Mouse.current;
+            if (PresentationBusy != null && PresentationBusy())
+            {
+                HandleWheel(mouse); // 확대 축소만 — 누르고 있는 키는 연출이 끝난 다음 프레임에 이어서 읽힌다
+                return;
+            }
             if (_inventory.IsOpen)
             {
                 _pressing = _dragging = false;

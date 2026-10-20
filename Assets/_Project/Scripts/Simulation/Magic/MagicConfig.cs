@@ -20,7 +20,7 @@ namespace ProjectM.Magic
         public int InventorySlotCount { get; }
         /// <summary>플레이어 체력 회복 주기 (틱). 0이면 체력 자동 회복 없음.</summary>
         public int HpRegenIntervalTicks { get; }
-        /// <summary>한 번에 회복하는 체력 = 최대 체력의 이 퍼센트, 올림 · 최소 1.</summary>
+        /// <summary>주기마다 회복하는 체력 = 최대 체력의 이 퍼센트 (소수점은 다음 주기로 이어짐 — 2026-10-20부터 올림 · 최소 1 없음).</summary>
         public int HpRegenPercent { get; }
 
         public MagicConfig(int manaRegenIntervalTicks, int manaRegenAmount, int quickSlotCount,
@@ -47,11 +47,16 @@ namespace ProjectM.Magic
             HpRegenPercent = hpRegenPercent;
         }
 
-        /// <summary>최대 체력 maxHp인 유닛이 한 번에 회복하는 체력. 회복이 꺼져 있으면 0.</summary>
-        public int HpRegenAmount(int maxHp)
+        /// <summary>
+        /// 최대 체력 maxHp인 유닛이 count번째 회복 주기(1부터)에 회복하는 체력. 회복이 꺼져 있으면 0.
+        /// 정확히 주기마다 maxHp × 퍼센트 / 100 — 소수점은 누적해 정수가 될 때 준다 (count번째까지 합 = ⌊maxHp × 퍼센트 × count / 100⌋).
+        /// count는 틱 번호에서 계산하므로 저장할 상태가 없다 (규칙 6). 최대 체력 20 · 1% → 5번째 주기(50틱)마다 1.
+        /// </summary>
+        public int HpRegenAmount(int maxHp, long count)
         {
-            if (HpRegenIntervalTicks == 0 || HpRegenPercent == 0 || maxHp <= 0) return 0;
-            return Math.Max(1, (maxHp * HpRegenPercent + 99) / 100);
+            if (HpRegenIntervalTicks == 0 || HpRegenPercent == 0 || maxHp <= 0 || count < 1) return 0;
+            long perCycle = (long)maxHp * HpRegenPercent;
+            return (int)(perCycle * count / 100 - perCycle * (count - 1) / 100);
         }
     }
 }

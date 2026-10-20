@@ -147,6 +147,7 @@ Assets/
 - 애니메이션 (G-2c): 클립(Mixamo 등)과 Varco 모델은 뼈 이름이 달라 **Humanoid 리타깃**으로 붙인다 — `VarcoModelSetup`이 모델 · 클립을 Humanoid로 가져오고(루트 회전 · 높이는 굽고, 앞뒤 이동 XZ는 굽지 않고 루트로 빼서 `applyRootMotion = false`로 버림 — 구우면 몸이 앞으로 밀려 나감) 컨트롤러를 만든다. 위치 · 방향은 `EntityPresenter`가 맡고 Animator에는 파라미터만 넘긴다(지금 bool `Moving` = Walk). 애니메이션 모델은 코드 통통 튐 · 숨쉬기를 끈다. 새 클립 = `Assets/_Project/Animation/` + 컨트롤러 상태 한 줄 + 이벤트 지점에서 파라미터.
 - 상태 · 지형 표시는 타일 오버레이와 상태 아이콘 데이터로 정의한다 (2.5D/2D 공용).
 - 이펙트 (G-3): `FxPresenter`가 시뮬레이션 이벤트만 보고 띄운다 — 무엇을 띄울지는 `FxCatalog`(키 → 프리팹 · 크기 · 색 · 속도 · 길이), 표는 메뉴 `ProjectM/Setup/FX`(`FxSetup.Table` = ART_ASSETS.md 13번, Main Scene · Varco Models 다음에 실행). 새 지형 · 상태 · 주문 · 반응은 키 한 줄 추가(없는 키는 조용히 건너뜀). 가져온 팩 효과는 반복 · 수 m 데모 설정이라 Lifetime · Scale로 맞추고, 시간대별 렌더로 확인한다. 팩 재질은 URP로 변환 + **소프트 파티클 끔**(렌더러에 깊이 텍스처가 없어 연기 · 불꽃이 투명해짐). 시야 밖 효과는 띄우지 않는다.
+- 입력은 연출을 기다린다 (2026-10-20 사용자 요청): `PlayerInputController.PresentationBusy`(= `EntityPresenter.IsAnimating` ‖ `FxPresenter.IsPlaying`)가 true인 동안 다음 행동을 받지 않는다. 새 연출을 넣으면 이 두 판정에 들어가는지 정한다.
 - 연출은 로직을 기다리지 않는다. 로직은 즉시 계산하고 애니메이션이 따라오며, 실시간 모드에서는 1초 안에 끝나도록 연출 시간을 줄이거나 건너뛸 수 있어야 한다.
 
 ## 새 PC 환경 준비

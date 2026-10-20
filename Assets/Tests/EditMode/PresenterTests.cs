@@ -460,6 +460,25 @@ namespace ProjectM.Tests
             Assert.That(view.Root.position, Is.EqualTo(_grid.GetCellCenterWorld(new Vector3Int(2, 1, 0))));
         }
 
+        // 2026-10-20: 이동 연출 중에는 IsAnimating — 입력이 다음 행동(다음 틱)을 기다린다
+        [Test]
+        public void Motion_IsAnimatingUntilStepFinishes()
+        {
+            var presenter = CreateEntityPresenter();
+            var id = new EntityId(5);
+            _bus.Publish(new EntitySpawnedEvent(id, new GridPos(0, 0), "player"));
+            _bus.Flush();
+            presenter.FinishMotions();
+            Assert.That(presenter.IsAnimating, Is.False, "가만히 있으면 아님 (숨쉬기 · 대기는 넣지 않음)");
+            _bus.Publish(new EntityMovedEvent(id, new GridPos(0, 0), new GridPos(1, 0)));
+            _bus.Flush();
+            Assert.That(presenter.IsAnimating, Is.True);
+            presenter.Advance(0.05f);
+            Assert.That(presenter.IsAnimating, Is.True, "이동 0.12초 중");
+            presenter.Advance(0.2f);
+            Assert.That(presenter.IsAnimating, Is.False, "걷기 유지 시간과 상관없이 칸에 닿으면 끝");
+        }
+
         // 애니메이션 (2026-10-19): 걸어서 옮기면 Walk, 이동 + 유지 시간이 지나면 Idle, 제자리 이동(층 이동)은 걷지 않음
         [Test]
         public void Motion_WalkWhileMoving_IdleAfterHold_TeleportDoesNotWalk()

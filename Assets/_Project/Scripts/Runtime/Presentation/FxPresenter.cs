@@ -132,6 +132,12 @@ namespace ProjectM.Presentation
 
         private void Update() => Advance(Time.deltaTime);
 
+        /// <summary>
+        /// 주문 연출(날아가는 투사체 · 광선 · 맞을 때까지 기다리는 효과)이 진행 중인지 (2026-10-20 — 입력 대기용).
+        /// 터진 뒤 남는 한 번짜리 효과(연기 등) · 지형 · 상태 반복 효과는 넣지 않는다.
+        /// </summary>
+        public bool IsPlaying => _pending.Count > 0 || _projectiles.Count > 0 || _lines.Count > 0;
+
         // ── 지형 · 시야 ──
 
         private void OnMapLoaded(MapLoadedEvent e) => ClearAll(); // 새 판 · 층 이동: 남은 효과를 모두 지운다
