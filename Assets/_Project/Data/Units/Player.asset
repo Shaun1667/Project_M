@@ -23,3 +23,4 @@ MonoBehaviour:
   _expReward: 0
   _expMaxLevel: 0
   _strength: 10
+  _startingArmor: armor_cloth

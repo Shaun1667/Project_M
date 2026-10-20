@@ -27,6 +27,8 @@ namespace ProjectM.Data
             [Tooltip("강화 0 요구 힘 (3-7b) — SPD 2티어 12. 강화하면 첫 단계 −1, 그 뒤 2단계마다 −1")] public int StrengthRequirement;
             [Tooltip("기습 최소 피해 상승 % (3-7c) — 더크 67, 나머지 0")] public int SurpriseMinPercent;
             [Tooltip("방어 (3-7c) — 육척봉 2(근접 피해 − 0~2), 나머지 0")] public int Defense;
+            [Header("갑옷 (EquipArmor만, 3-10a — SPD)")]
+            [Tooltip("티어 1 천 ~ 5 판금. 방어 = 강화 ~ 티어 × (2 + 강화), 나누기는 공통 값. 요구 힘은 위 StrengthRequirement")] public int Tier;
             [Header("힘 물약 · 강화 주문서 (3-7b)")]
             [Tooltip("힘 물약 = 힘 +, 강화 주문서 = 강화 + (둘 다 1)")] public int Amount;
             [Header("물약 · 주문서 (3-9, BALANCE 14번)")]
@@ -40,6 +42,11 @@ namespace ProjectM.Data
         [Min(1)] [SerializeField] private int _weaponDamageDivisor = 3;
         [Tooltip("최소 피해 기본 (나누기 전, 강화마다 +1) — SPD 2티어 2")]
         [Min(0)] [SerializeField] private int _weaponMinDamage = 2;
+        [Header("갑옷 공통 (3-10a, BALANCE 15번)")]
+        [Tooltip("방어 나누기 — SPD 방어 굴림을 이 값으로 나눠 반올림 (결정 2026-10-20: 무기처럼 3)")]
+        [Min(1)] [SerializeField] private int _armorDefenseDivisor = 3;
+        [Tooltip("힘 1 모자랄 때마다 방어 굴림에서 빼는 양 (SPD 크기, 나누기 전) — SPD 2")]
+        [Min(0)] [SerializeField] private int _armorDeficitPenalty = 2;
 
         public ItemBook ToBook()
         {
@@ -49,9 +56,10 @@ namespace ProjectM.Data
                 var weapon = e.Use == ItemUse.EquipWeapon
                     ? new WeaponDef(e.MaxDamage, e.UpgradeEfficiency, Mathf.RoundToInt(e.Accuracy * 100f), e.AttackCostTicks, e.Reach, e.StrengthRequirement, e.SurpriseMinPercent, e.Defense)
                     : null;
-                defs.Add(new ItemDef(e.Id, e.Use, e.SpellId, weapon, e.Amount, e.Effect, e.Weight));
+                var armor = e.Use == ItemUse.EquipArmor ? new ArmorDef(e.Tier, e.StrengthRequirement) : null;
+                defs.Add(new ItemDef(e.Id, e.Use, e.SpellId, weapon, e.Amount, e.Effect, e.Weight, armor));
             }
-            return new ItemBook(defs, new WeaponRules(_weaponDamageDivisor, _weaponMinDamage));
+            return new ItemBook(defs, new WeaponRules(_weaponDamageDivisor, _weaponMinDamage), new ArmorRules(_armorDefenseDivisor, _armorDeficitPenalty));
         }
 
         /// <summary>ID → 표시 이름 (이름이 빈 항목은 빠짐).</summary>

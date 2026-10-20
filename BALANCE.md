@@ -23,6 +23,7 @@
 | 11 | 바닥 아이템(마법서) 배치 | `Assets/_Project/Data/Items/LootConfig.asset` (`LootConfigAsset`) | `ProjectM.Items.LootConfig` · `Loot` | 사용 중 (3-5) |
 | 13 | 무기 (3-7a) | `ItemCatalog.asset`의 무기 줄 · 공통 값 (`ItemCatalogAsset`) — 9번과 같은 에셋 | `ProjectM.Items.WeaponDef` · `WeaponRules` · `Weapons` · `ProjectM.Units.EquippedWeapon` | 사용 중 (3-7a) |
 | 12 | 경험치 · 레벨업 | `Assets/_Project/Data/Units/ProgressionConfig.asset` (`ProgressionConfigAsset`) + 유닛 에셋의 명중 · 회피 · 경험치 (3번) | `ProjectM.Units.ProgressionConfig` · `Progression` | 사용 중 (3-6) |
+| 15 | 갑옷 (3-10a) | `ItemCatalog.asset`의 갑옷 줄 · 갑옷 공통 값 + `Player.asset`의 `_startingArmor` + `LootConfig.asset`의 `_armorsPerRun` | `ProjectM.Items.ArmorDef` · `ArmorRules` · `Armors` · `ProjectM.Units.EquippedArmor` | 사용 중 (3-10a) |
 | 14 | 물약 · 주문서 (효과 · 식별 · 무작위 배치 · 던지기) | `Assets/_Project/Data/Items/ConsumableConfig.asset` (`ConsumableConfigAsset`) + `ItemCatalog.asset`의 `Effect` · `Weight` (9번) | `ProjectM.Items.ConsumableConfig` · `Consumables` · `Identification` · `Throwing` | 사용 중 (3-9) |
 
 **데이터 구조 규칙 (0-4 결정)**
@@ -459,6 +460,35 @@
 - 가스 2걸음 = 열린 방에서 5×5 (25칸). 던지기 사거리 8이면 플레이어가 범위(2) 밖에서 던질 수 있다. 마시면 자기도 맞는다 (규칙 10).
 
 검산 (`ConsumableTests.ProjectAssets_MatchBalanceTable` · `Retribution_HitsVisibleEnemiesOnly_BalanceValue` · `Retribution_FullHp_OnlyBasePart`).
+
+---
+
+## 15. 갑옷 — `ItemCatalog.asset` (갑옷 줄 · 공통 값) (3-10a)
+
+결정 (2026-10-20, 사용자 — 모두 추천안): SPD 5종 전부 · 방어는 무기처럼 ÷3 · 모델은 Varco로(그 전까지 회색 상자) · 갑옷 → 인벤토리 UI 순서.
+SPD 규칙 그대로: 방어 굴림 = 강화 ~ 티어 × (2 + 강화) (SPD Armor.DRMin/DRMax, 고른 굴림 — SPD는 정규분포), 요구 힘 = 8 + 2 × 티어. 근접 피해만 줄인다(주문 X).
+
+| 공통 | 필드 | 값 | 비고 |
+|---|---|---|---|
+| 방어 나누기 | `_armorDefenseDivisor` | **3** | 게임 방어 = round((굴림 − 벌점) / 3), 0 이상 |
+| 힘 모자람 벌점 | `_armorDeficitPenalty` | **2** | 모자란 힘 1당 굴림 − 2 (SPD Hero.drRoll, 나누기 전). 회피도 1당 ÷ 1.5 (SPD) |
+
+| ID | 이름 | 티어 `Tier` | 요구 힘 | SPD 방어 (+0) | 게임 방어 (+0) | +3 |
+|---|---|---|---|---|---|---|
+| `armor_cloth` | 천 갑옷 | 1 | **10** | 0~2 | 0~1 | 요구 8 · 1~2 |
+| `armor_leather` | 가죽 갑옷 | 2 | **12** | 0~4 | 0~1 | 요구 10 · 1~3 |
+| `armor_mail` | 사슬 갑옷 | 3 | **14** | 0~6 | 0~2 | 요구 12 · 1~5 |
+| `armor_scale` | 비늘 갑옷 | 4 | **16** | 0~8 | 0~3 | 요구 14 · 1~7 |
+| `armor_plate` | 판금 갑옷 | 5 | **18** | 0~10 | 0~3 | 요구 16 · 1~8 |
+
+- 요구 힘 강화 감소는 무기와 같은 규칙(첫 강화 −1, 그 뒤 2단계마다 −1 — 사용자 결정 2026-10-19). SPD 원래 공식(삼각수)과 다름.
+- 플레이어는 **천 갑옷을 입고 시작** (`Player.asset` `_startingArmor` = `armor_cloth`, SPD). 한 판에 갑옷 **2벌** (`LootConfig` `_armorsPerRun`, 2티어 이상 중 겹치지 않게, 1~4층).
+- 강화 주문서: 든 무기 먼저, 없으면 입은 갑옷 (`UpgradeTarget.Auto`) — 고르는 창은 3-10b 인벤토리 UI에서.
+- 육척봉 방어(0~2, 13번)와 함께면 둘 다 굴려 더함.
+
+결과: 시작(힘 10 · 천 갑옷) 근접 적 피해 2 → 평균 약 0.5 막음. 판금은 힘 18이 필요 — 힘 물약 2개(12)로는 6 모자라 굴림 −12 → 사실상 방어 0 · 회피 ÷ 11. 사슬(14)도 힘 12면 2 모자라 0~6 − 4 → 0~1 · 회피 ÷ 2.25 → 지금 판(힘 물약 2개)에서는 가죽(12) +강화가 현실적인 선택.
+
+검산 (`ArmorTests` — `Resolve_MatchesSpdFormula` · `ShownDefense_DividedByThree` · `ProjectAssets_MatchBalanceTable`).
 
 ---
 

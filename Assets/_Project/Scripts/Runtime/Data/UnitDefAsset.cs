@@ -33,8 +33,9 @@ namespace ProjectM.Data
 
         [Tooltip("힘 (3-7b, SPD — 플레이어 10). 무기 요구 힘과 비교. 적은 0")]
         [Min(0)] [SerializeField] private int _strength;
+        [Tooltip("처음 입는 갑옷 아이템 ID (3-10a, 플레이어 armor_cloth). 비면 맨몸")] [SerializeField] private string _startingArmor;
 
         public UnitDef ToDef() => new UnitDef(_visualId, _maxHp, _attackDamage, _sightRange, _maxMana, _startingSpells,
-            _accuracy, _evasion, _expReward, _expMaxLevel, _strength);
+            _accuracy, _evasion, _expReward, _expMaxLevel, _strength, _startingArmor);
     }
 }

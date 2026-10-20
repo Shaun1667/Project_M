@@ -25,6 +25,7 @@ MonoBehaviour:
     StrengthRequirement: 0
     SurpriseMinPercent: 0
     Defense: 0
+    Tier: 0
     Amount: 0
     Effect: 0
     Weight: 0
@@ -40,6 +41,7 @@ MonoBehaviour:
     StrengthRequirement: 0
     SurpriseMinPercent: 0
     Defense: 0
+    Tier: 0
     Amount: 0
     Effect: 0
     Weight: 0
@@ -55,6 +57,7 @@ MonoBehaviour:
     StrengthRequirement: 0
     SurpriseMinPercent: 0
     Defense: 0
+    Tier: 0
     Amount: 0
     Effect: 0
     Weight: 0
@@ -70,6 +73,7 @@ MonoBehaviour:
     StrengthRequirement: 0
     SurpriseMinPercent: 0
     Defense: 0
+    Tier: 0
     Amount: 0
     Effect: 0
     Weight: 0
@@ -85,6 +89,7 @@ MonoBehaviour:
     StrengthRequirement: 0
     SurpriseMinPercent: 0
     Defense: 0
+    Tier: 0
     Amount: 0
     Effect: 0
     Weight: 0
@@ -100,6 +105,7 @@ MonoBehaviour:
     StrengthRequirement: 0
     SurpriseMinPercent: 0
     Defense: 0
+    Tier: 0
     Amount: 0
     Effect: 0
     Weight: 0
@@ -115,6 +121,7 @@ MonoBehaviour:
     StrengthRequirement: 12
     SurpriseMinPercent: 0
     Defense: 0
+    Tier: 0
     Amount: 0
     Effect: 0
     Weight: 0
@@ -130,6 +137,7 @@ MonoBehaviour:
     StrengthRequirement: 12
     SurpriseMinPercent: 0
     Defense: 0
+    Tier: 0
     Amount: 0
     Effect: 0
     Weight: 0
@@ -145,6 +153,7 @@ MonoBehaviour:
     StrengthRequirement: 12
     SurpriseMinPercent: 0
     Defense: 0
+    Tier: 0
     Amount: 0
     Effect: 0
     Weight: 0
@@ -160,6 +169,7 @@ MonoBehaviour:
     StrengthRequirement: 12
     SurpriseMinPercent: 0
     Defense: 2
+    Tier: 0
     Amount: 0
     Effect: 0
     Weight: 0
@@ -175,6 +185,7 @@ MonoBehaviour:
     StrengthRequirement: 12
     SurpriseMinPercent: 67
     Defense: 0
+    Tier: 0
     Amount: 0
     Effect: 0
     Weight: 0
@@ -190,6 +201,7 @@ MonoBehaviour:
     StrengthRequirement: 12
     SurpriseMinPercent: 0
     Defense: 0
+    Tier: 0
     Amount: 0
     Effect: 0
     Weight: 0
@@ -205,6 +217,7 @@ MonoBehaviour:
     StrengthRequirement: 0
     SurpriseMinPercent: 0
     Defense: 0
+    Tier: 0
     Amount: 1
     Effect: 1
     Weight: 0
@@ -220,6 +233,7 @@ MonoBehaviour:
     StrengthRequirement: 0
     SurpriseMinPercent: 0
     Defense: 0
+    Tier: 0
     Amount: 1
     Effect: 2
     Weight: 0
@@ -235,6 +249,7 @@ MonoBehaviour:
     StrengthRequirement: 0
     SurpriseMinPercent: 0
     Defense: 0
+    Tier: 0
     Amount: 0
     Effect: 3
     Weight: 3
@@ -250,6 +265,7 @@ MonoBehaviour:
     StrengthRequirement: 0
     SurpriseMinPercent: 0
     Defense: 0
+    Tier: 0
     Amount: 0
     Effect: 4
     Weight: 1
@@ -265,6 +281,7 @@ MonoBehaviour:
     StrengthRequirement: 0
     SurpriseMinPercent: 0
     Defense: 0
+    Tier: 0
     Amount: 0
     Effect: 5
     Weight: 2
@@ -280,6 +297,7 @@ MonoBehaviour:
     StrengthRequirement: 0
     SurpriseMinPercent: 0
     Defense: 0
+    Tier: 0
     Amount: 0
     Effect: 6
     Weight: 3
@@ -295,6 +313,7 @@ MonoBehaviour:
     StrengthRequirement: 0
     SurpriseMinPercent: 0
     Defense: 0
+    Tier: 0
     Amount: 0
     Effect: 7
     Weight: 3
@@ -310,6 +329,7 @@ MonoBehaviour:
     StrengthRequirement: 0
     SurpriseMinPercent: 0
     Defense: 0
+    Tier: 0
     Amount: 0
     Effect: 8
     Weight: 3
@@ -325,6 +345,7 @@ MonoBehaviour:
     StrengthRequirement: 0
     SurpriseMinPercent: 0
     Defense: 0
+    Tier: 0
     Amount: 0
     Effect: 9
     Weight: 2
@@ -340,6 +361,7 @@ MonoBehaviour:
     StrengthRequirement: 0
     SurpriseMinPercent: 0
     Defense: 0
+    Tier: 0
     Amount: 0
     Effect: 10
     Weight: 3
@@ -355,6 +377,7 @@ MonoBehaviour:
     StrengthRequirement: 0
     SurpriseMinPercent: 0
     Defense: 0
+    Tier: 0
     Amount: 0
     Effect: 11
     Weight: 1
@@ -370,6 +393,7 @@ MonoBehaviour:
     StrengthRequirement: 0
     SurpriseMinPercent: 0
     Defense: 0
+    Tier: 0
     Amount: 0
     Effect: 12
     Weight: 1
@@ -385,6 +409,7 @@ MonoBehaviour:
     StrengthRequirement: 0
     SurpriseMinPercent: 0
     Defense: 0
+    Tier: 0
     Amount: 0
     Effect: 13
     Weight: 1
@@ -400,6 +425,7 @@ MonoBehaviour:
     StrengthRequirement: 0
     SurpriseMinPercent: 0
     Defense: 0
+    Tier: 0
     Amount: 0
     Effect: 14
     Weight: 1
@@ -415,8 +441,91 @@ MonoBehaviour:
     StrengthRequirement: 0
     SurpriseMinPercent: 0
     Defense: 0
+    Tier: 0
     Amount: 0
     Effect: 15
     Weight: 1
+  - Id: armor_cloth
+    DisplayName: "\uCC9C \uAC11\uC637"
+    Use: 6
+    SpellId: 
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 10
+    SurpriseMinPercent: 0
+    Defense: 0
+    Tier: 1
+    Amount: 0
+    Effect: 0
+    Weight: 0
+  - Id: armor_leather
+    DisplayName: "\uAC00\uC8FD \uAC11\uC637"
+    Use: 6
+    SpellId: 
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 12
+    SurpriseMinPercent: 0
+    Defense: 0
+    Tier: 2
+    Amount: 0
+    Effect: 0
+    Weight: 0
+  - Id: armor_mail
+    DisplayName: "\uC0AC\uC2AC \uAC11\uC637"
+    Use: 6
+    SpellId: 
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 14
+    SurpriseMinPercent: 0
+    Defense: 0
+    Tier: 3
+    Amount: 0
+    Effect: 0
+    Weight: 0
+  - Id: armor_scale
+    DisplayName: "\uBE44\uB298 \uAC11\uC637"
+    Use: 6
+    SpellId: 
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 16
+    SurpriseMinPercent: 0
+    Defense: 0
+    Tier: 4
+    Amount: 0
+    Effect: 0
+    Weight: 0
+  - Id: armor_plate
+    DisplayName: "\uD310\uAE08 \uAC11\uC637"
+    Use: 6
+    SpellId: 
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 18
+    SurpriseMinPercent: 0
+    Defense: 0
+    Tier: 5
+    Amount: 0
+    Effect: 0
+    Weight: 0
   _weaponDamageDivisor: 3
   _weaponMinDamage: 2
+  _armorDefenseDivisor: 3
+  _armorDeficitPenalty: 2

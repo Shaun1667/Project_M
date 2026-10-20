@@ -63,6 +63,8 @@ namespace ProjectM.Items
         Potion = 4,
         /// <summary>주문서 (3-7b 강화 주문서 → 3-9 주문서 전체): 읽으면 Effect — 차례 1. 강화는 든 무기가 없으면 쓸 수 없다.</summary>
         Scroll = 5,
+        /// <summary>갑옷 (3-10a): 쓰면 입는다 — 차례 1 (EquipWeaponCommand 공용), 입던 갑옷은 인벤토리로.</summary>
+        EquipArmor = 6,
     }
 
     /// <summary>
@@ -121,9 +123,14 @@ namespace ProjectM.Items
 
         public bool IsConsumable => Use == ItemUse.Potion || Use == ItemUse.Scroll;
 
+        /// <summary>갑옷(EquipArmor)의 수치 (3-10a). 그 밖에는 null.</summary>
+        public ArmorDef Armor { get; }
+
         public ItemDef(string id, ItemUse use, string spellId = null, WeaponDef weapon = null, int amount = 0,
-            ConsumableEffect effect = ConsumableEffect.None, int weight = 0)
+            ConsumableEffect effect = ConsumableEffect.None, int weight = 0, ArmorDef armor = null)
         {
+            if (use == ItemUse.EquipArmor && armor == null) throw new ArgumentException("갑옷 수치가 없다: " + id, nameof(armor));
+            Armor = use == ItemUse.EquipArmor ? armor : null;
             bool consumable = use == ItemUse.Potion || use == ItemUse.Scroll;
             if (consumable && effect == ConsumableEffect.None) throw new ArgumentException("물약 · 주문서에 효과가 없다: " + id, nameof(effect));
             bool needsAmount = effect == ConsumableEffect.Strength || effect == ConsumableEffect.Upgrade;
@@ -151,10 +158,14 @@ namespace ProjectM.Items
         /// <summary>무기 공통 수치 (3-7a) — 피해 나누기 · 최소 기본.</summary>
         public WeaponRules WeaponRules { get; }
 
-        public ItemBook(IEnumerable<ItemDef> defs, WeaponRules weaponRules = null)
+        /// <summary>갑옷 공통 수치 (3-10a) — 방어 나누기 · 힘 모자람 벌점.</summary>
+        public ArmorRules ArmorRules { get; }
+
+        public ItemBook(IEnumerable<ItemDef> defs, WeaponRules weaponRules = null, ArmorRules armorRules = null)
         {
             if (defs == null) throw new ArgumentNullException(nameof(defs));
             WeaponRules = weaponRules ?? WeaponRules.Identity;
+            ArmorRules = armorRules ?? ArmorRules.Identity;
             foreach (var def in defs)
             {
                 if (def == null) throw new ArgumentException("null 아이템", nameof(defs));

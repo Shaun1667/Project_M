@@ -38,6 +38,8 @@ namespace ProjectM.Units
         public EquippedWeapon Weapon { get; internal set; }
         /// <summary>힘 (3-7b, SPD — 플레이어 시작 10). 힘 물약으로만 오른다. 무기 요구 힘과 비교.</summary>
         public int Strength { get; internal set; }
+        /// <summary>입은 갑옷 (3-10a). Empty = 맨몸. Items.Armors로만 바꾼다.</summary>
+        public EquippedArmor Armor { get; internal set; }
 
         public GridPos Pos { get; internal set; }
         public int Hp { get; internal set; }
@@ -80,8 +82,9 @@ namespace ProjectM.Units
             GridPos? lastSeenTargetPos = null, int maxMana = 0, int mana = 0, InventoryRef[] inventorySlots = null, InventoryRef[] quickSlots = null,
             GridPos? previousPos = null, GridPos? wanderTarget = null,
             int accuracy = 0, int evasion = 0, int expReward = 0, int expMaxLevel = 0, int level = 1, int exp = 0,
-            EquippedWeapon weapon = default, int strength = 0)
+            EquippedWeapon weapon = default, int strength = 0, EquippedArmor armor = default)
         {
+            Armor = armor;
             Weapon = weapon;
             Strength = strength;
             Accuracy = accuracy;

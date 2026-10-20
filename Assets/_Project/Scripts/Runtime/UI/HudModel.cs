@@ -43,6 +43,8 @@ namespace ProjectM.UI
         public int ExpToNext { get; private set; }
         /// <summary>든 무기 (3-7a) — Empty = 맨손 (피해 = UnarmedDamage).</summary>
         public EquippedWeapon Weapon { get; private set; }
+        /// <summary>입은 갑옷 (3-10a). Empty = 맨몸.</summary>
+        public EquippedArmor Armor { get; private set; }
         public int UnarmedDamage { get; private set; }
         /// <summary>힘 (3-7b).</summary>
         public int Strength { get; private set; }
@@ -68,6 +70,7 @@ namespace ProjectM.UI
             Level = player.Level;
             Exp = player.Exp;
             Weapon = player.Weapon;
+            Armor = player.Armor;
             UnarmedDamage = player.AttackDamage;
             Strength = player.Strength;
             ExpToNext = progression != null ? Progression.ExpToNextOrZero(player, progression) : 0;
@@ -109,6 +112,8 @@ namespace ProjectM.UI
             _bus.Subscribe<SurpriseAttackEvent>(OnSurprise);
             _bus.Subscribe<DamageBlockedEvent>(OnBlocked);
             _bus.Subscribe<ConsumableUsedEvent>(OnConsumableUsed);
+            _bus.Subscribe<ArmorEquippedEvent>(OnArmorEquipped);
+            _bus.Subscribe<ArmorUpgradedEvent>(OnArmorUpgraded);
             _bus.Subscribe<ItemIdentifiedEvent>(OnIdentified);
             _lastPickupFail = null;
             Changed?.Invoke();
@@ -178,6 +183,24 @@ namespace ProjectM.UI
             if (e.Unit != _playerId) return;
             Weapon = e.Weapon;
             AddLog(Text.Equipped(e.Weapon.ItemId));
+            Changed?.Invoke();
+        }
+
+        // 3-10a: "가죽 갑옷을 입었다" (판 시작 천 갑옷은 Bind가 먼저 읽어 로그 없음) · "강화: 가죽 갑옷+1 (방어 0~2, 요구 힘 11)"
+        private void OnArmorEquipped(ArmorEquippedEvent e)
+        {
+            if (e.Unit != _playerId) return;
+            bool alreadyShown = e.Armor.Equals(Armor); // 판 시작 천 갑옷 — Bind가 이미 읽음
+            Armor = e.Armor;
+            if (!alreadyShown) AddLog(Text.Worn(e.Armor.ItemId));
+            Changed?.Invoke();
+        }
+
+        private void OnArmorUpgraded(ArmorUpgradedEvent e)
+        {
+            if (e.Unit != _playerId) return;
+            Armor = e.Armor;
+            AddLog(Text.ArmorUpgraded(e.Armor));
             Changed?.Invoke();
         }
 
@@ -289,6 +312,8 @@ namespace ProjectM.UI
             _bus.Unsubscribe<SurpriseAttackEvent>(OnSurprise);
             _bus.Unsubscribe<DamageBlockedEvent>(OnBlocked);
             _bus.Unsubscribe<ConsumableUsedEvent>(OnConsumableUsed);
+            _bus.Unsubscribe<ArmorEquippedEvent>(OnArmorEquipped);
+            _bus.Unsubscribe<ArmorUpgradedEvent>(OnArmorUpgraded);
             _bus.Unsubscribe<ItemIdentifiedEvent>(OnIdentified);
             _bus = null;
         }

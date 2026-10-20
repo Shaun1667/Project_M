@@ -40,7 +40,7 @@ namespace ProjectM.Units
             if (evasion <= 0) return true;
             var rng = world.Rng.Get(RngStream.Combat);
             float accuracyRoll = rng.NextFloat() * attacker.Accuracy * AccuracyPercent(attacker) / 100f * MeleeWeapon.StrengthAccuracyFactor(attacker);
-            float evasionRoll = rng.NextFloat() * evasion;
+            float evasionRoll = rng.NextFloat() * evasion * ProjectM.Items.Armors.EvasionFactor(target); // 3-10a: 갑옷 힘 모자람 1당 ÷ 1.5
             return accuracyRoll >= evasionRoll;
         }
     }
@@ -88,8 +88,10 @@ namespace ProjectM.Units
         public static int ApplyDefense(World world, Unit target, int damage)
         {
             int defense = DefenseOf(target);
-            if (defense <= 0 || damage <= 0) return damage;
-            int blocked = System.Math.Min(damage, world.Rng.Get(RngStream.Combat).Range(0, defense + 1));
+            if (damage <= 0 || (defense <= 0 && target.Armor.IsEmpty)) return damage;
+            int rolled = defense > 0 ? world.Rng.Get(RngStream.Combat).Range(0, defense + 1) : 0;
+            rolled += ProjectM.Items.Armors.RollDefense(world, target); // 3-10a 갑옷 (무기 방어 다음에 굴림)
+            int blocked = System.Math.Min(damage, rolled);
             if (blocked > 0) world.Events.Publish(new DamageBlockedEvent(target.Id, blocked));
             return damage - blocked;
         }

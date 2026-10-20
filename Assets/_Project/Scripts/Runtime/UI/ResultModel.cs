@@ -45,6 +45,7 @@ namespace ProjectM.UI
                 ? text.DeathCause(run.LastPlayerDamage, run.LastPlayerAttacker, run.BossId, player != null ? player.Id : EntityId.None)
                 : string.Empty;
             string equipment = player != null && !player.Weapon.IsEmpty ? text.WeaponName(player.Weapon) : HudText.NoEquipment;
+            if (player != null && !player.Armor.IsEmpty) equipment += " · " + text.ArmorName(player.Armor); // 3-10a
             return new ResultModel(run.Outcome, world.DeepestFloor, run.Kills, world.Scheduler.CurrentTick, seed, slots, equipment, cause);
         }
 

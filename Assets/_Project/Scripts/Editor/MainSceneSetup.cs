@@ -99,6 +99,7 @@ namespace ProjectM.Editor
                 ("_visualId", EnemyVisualId), ("_maxHp", 8), ("_attackDamage", 2), ("_sightRange", 6));
             // 3-6 · 3-7 명중 · 회피 · 경험치 (SPD 영웅 · 쥐) — 아직 0인 칸만 BALANCE 3번 값으로 채운다
             FillZeroInts(playerDef, ("_accuracy", 10), ("_evasion", 5), ("_strength", 10)); // 3-7b 힘 10 (SPD)
+            FillEmptyString(playerDef, "_startingArmor", "armor_cloth"); // 3-10a 천 갑옷을 입고 시작 (SPD)
             FillZeroInts(enemyDef, ("_accuracy", 8), ("_evasion", 2), ("_expReward", 1), ("_expMaxLevel", 5));
             var spawnConfig = EnsureAsset<SpawnConfigAsset>(SpawnConfigPath,
                 ("_enemyCount", 5), ("_enemyMinDistanceFromStart", 8));
@@ -180,7 +181,7 @@ namespace ProjectM.Editor
 
             // 3-5: 바닥 아이템(마법서) — 배치 수치(없을 때만 BALANCE 11번 값) · 표시 (색 · 반짝임은 메뉴 ProjectM/Setup/FX가 채움)
             var lootConfig = EnsureAsset<LootConfigAsset>(LootConfigPath, ("_maxBooksPerFloor", 2), ("_minDistanceFromStart", 3));
-            FillZeroInts(lootConfig, ("_weaponsPerRun", 2), ("_upgradeScrollsPerRun", 3), ("_strengthPotionsPerRun", 2)); // 3-7a 무기 2 · 3-7b 강화 3 · 힘 2 (BALANCE 11번)
+            FillZeroInts(lootConfig, ("_weaponsPerRun", 2), ("_upgradeScrollsPerRun", 3), ("_strengthPotionsPerRun", 2), ("_armorsPerRun", 2)); // 3-10a 갑옷 2 // 3-7a 무기 2 · 3-7b 강화 3 · 힘 2 (BALANCE 11번)
             var consumableConfig = LoadOrCreate<ConsumableConfigAsset>(ConsumableConfigPath); // 3-9: 새로 만들면 필드 초기값 = BALANCE 14번
             var floorItemsGo = FindOrCreate("FloorItems", null);
             var floorItems = GetOrAdd<FloorItemPresenter>(floorItemsGo);
@@ -562,8 +563,9 @@ namespace ProjectM.Editor
             var (mpFill, mpLabel) = EnsureBar(canvasGo.transform, "MpBar", new Vector2(24, -54), new Color(0.25f, 0.5f, 1f), font);
             // 3-6: 경험치 막대 (레벨 · 경험치)
             var (xpFill, xpLabel) = EnsureBar(canvasGo.transform, "XpBar", new Vector2(24, -92), new Color(0.85f, 0.7f, 0.2f), font, 22f, 18f);
-            // 3-7a: 든 무기 한 줄 (경험치 막대 오른쪽)
+            // 3-7a: 든 무기 한 줄 (경험치 막대 오른쪽) · 3-10a: 입은 갑옷 한 줄 (그 위, 마나 막대 오른쪽)
             var weaponLabel = EnsureText(canvasGo.transform, "Weapon", topLeft, new Vector2(404, -90), new Vector2(700, 26), 22, font, TextAlignmentOptions.TopLeft);
+            var armorLabel = EnsureText(canvasGo.transform, "Armor", topLeft, new Vector2(404, -58), new Vector2(700, 26), 22, font, TextAlignmentOptions.TopLeft);
 
             var iconsGo = FindOrCreate("StatusIcons", canvasGo.transform);
             var icons = GetOrAdd<RectTransform>(iconsGo);
@@ -603,7 +605,7 @@ namespace ProjectM.Editor
             SetRefs(hud,
                 ("_hpFill", hpFill), ("_hpLabel", hpLabel),
                 ("_mpFill", mpFill), ("_mpLabel", mpLabel),
-                ("_xpFill", xpFill), ("_xpLabel", xpLabel), ("_weaponLabel", weaponLabel),
+                ("_xpFill", xpFill), ("_xpLabel", xpLabel), ("_weaponLabel", weaponLabel), ("_armorLabel", armorLabel),
                 ("_statusIcons", icons), ("_quickSlots", quick), ("_hintText", hint), ("_logText", log));
             // 로그 줄 수 (결정 2026-10-16: 8줄). 2-4까지 씬에 저장된 6을 덮어쓴다
             var hudSo = new SerializedObject(hud);
@@ -682,9 +684,18 @@ namespace ProjectM.Editor
             changed |= catalog.AddIfMissing(Consumable("scroll_recharging", "충전 주문서", ItemUse.Scroll, ConsumableEffect.Recharging, 1));
             changed |= catalog.AddIfMissing(Consumable("scroll_rage", "격노 주문서", ItemUse.Scroll, ConsumableEffect.Rage, 1));
             changed |= catalog.AddIfMissing(Consumable("scroll_retribution", "응징 주문서", ItemUse.Scroll, ConsumableEffect.Retribution, 1));
+            // 3-10a 갑옷 5종 (SPD 1~5티어, 요구 힘 8 + 2 × 티어, BALANCE 15번)
+            changed |= catalog.AddIfMissing(Armor("armor_cloth", "천 갑옷", 1, 10));
+            changed |= catalog.AddIfMissing(Armor("armor_leather", "가죽 갑옷", 2, 12));
+            changed |= catalog.AddIfMissing(Armor("armor_mail", "사슬 갑옷", 3, 14));
+            changed |= catalog.AddIfMissing(Armor("armor_scale", "비늘 갑옷", 4, 16));
+            changed |= catalog.AddIfMissing(Armor("armor_plate", "판금 갑옷", 5, 18));
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }
+
+        private static ItemCatalogAsset.Entry Armor(string id, string name, int tier, int strength) =>
+            new ItemCatalogAsset.Entry { Id = id, DisplayName = name, Use = ItemUse.EquipArmor, Tier = tier, StrengthRequirement = strength };
 
         private static ItemCatalogAsset.Entry Consumable(string id, string name, ItemUse use, ConsumableEffect effect, int weight) =>
             new ItemCatalogAsset.Entry { Id = id, DisplayName = name, Use = use, Effect = effect, Weight = weight };
@@ -840,6 +851,22 @@ namespace ProjectM.Editor
         /// <summary>
         /// 이미 있는 에셋에 새로 생긴 정수 필드를 채운다: 값이 0인 필드만 (사용자가 고친 값은 그대로 — 여러 번 실행해도 같음).
         /// </summary>
+        /// <summary>문자열 필드가 비어 있을 때만 넣는다 (사용자가 고친 값은 그대로).</summary>
+        private static void FillEmptyString(ScriptableObject asset, string field, string value)
+        {
+            var so = new SerializedObject(asset);
+            var prop = so.FindProperty(field);
+            if (prop == null)
+            {
+                Debug.LogError($"[MainSceneSetup] {asset.GetType().Name}.{field} 필드 없음");
+                return;
+            }
+            if (!string.IsNullOrEmpty(prop.stringValue)) return;
+            prop.stringValue = value;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(asset);
+        }
+
         private static void FillZeroInts(ScriptableObject asset, params (string field, int value)[] values)
         {
             var so = new SerializedObject(asset);

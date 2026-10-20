@@ -192,6 +192,9 @@ namespace ProjectM
             var player = FloorPopulator.Populate(World, Floor.Start, _playerDef.ToDef(), enemyDef, spawn, enemyAi,
                 Magic.QuickSlotCount, Magic.InventorySlotCount);
             _playerId = player.Id;
+            var startingArmor = _playerDef.ToDef().StartingArmor;
+            if (startingArmor != null && !Armors.Wear(World, Items, player, startingArmor)) // 3-10a: 천 갑옷을 입고 시작 (SPD)
+                Debug.LogWarning($"[GameRoot] 시작 갑옷 '{startingArmor}'가 ItemCatalog에 없다.", this);
             _player = player;
             _playerDead = false;
             _runEnded = false;
@@ -202,6 +205,7 @@ namespace ProjectM
                 Loot.PlanWeapons(World, Items, loot, dungeonConfig.FloorCount); // 3-7a: 책 계획 뒤에 붙인다
                 Loot.PlanConsumables(World, Items, loot, dungeonConfig.FloorCount); // 3-7b: 강화 주문서 · 힘 물약 (무기 계획 뒤)
                 Loot.PlanRandomConsumables(World, Items, consumableConfig, dungeonConfig.FloorCount); // 3-9: 층마다 무작위 물약 · 주문서
+                Loot.PlanArmors(World, Items, loot, dungeonConfig.FloorCount); // 3-10a: 갑옷 (앞 계획 뒤)
             }
             Identification.AssignLooks(World, Items, consumableConfig); // 3-9: 판마다 겉모습 (배치 계획 모두 뒤 — 앞 계획은 그대로)
             if (loot != null)

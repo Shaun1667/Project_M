@@ -313,6 +313,19 @@ namespace ProjectM.Core
                     w.Write(u.Weapon.Defense);
                 }
                 w.Write(u.Strength); // 14 (3-7b)
+                // 17 (3-10a): 입은 갑옷
+                w.Write(!u.Armor.IsEmpty);
+                if (!u.Armor.IsEmpty)
+                {
+                    w.Write(u.Armor.ItemId);
+                    w.Write(u.Armor.Tier);
+                    w.Write(u.Armor.Upgrade);
+                    w.Write(u.Armor.StrengthRequirement);
+                    w.Write(u.Armor.DefenseMin);
+                    w.Write(u.Armor.DefenseMax);
+                    w.Write(u.Armor.DeficitPenalty);
+                    w.Write(u.Armor.DefenseDivisor);
+                }
             }
         }
 
@@ -356,8 +369,16 @@ namespace ProjectM.Core
                     weapon = new EquippedWeapon(weaponId, wMin, wMax, wAcc, wCost, wReach, wUpgrade, wStr, wSurprise, wDefense);
                 }
                 int strength = r.ReadInt32();
+                var armor = EquippedArmor.Empty;
+                if (r.ReadBoolean())
+                {
+                    var armorId = r.ReadString();
+                    int aTier = r.ReadInt32(), aUpgrade = r.ReadInt32(), aStr = r.ReadInt32(), aMin = r.ReadInt32(), aMax = r.ReadInt32();
+                    int aPenalty = r.ReadInt32(), aDivisor = r.ReadInt32();
+                    armor = new EquippedArmor(armorId, aTier, aUpgrade, aStr, aMin, aMax, aPenalty, aDivisor);
+                }
                 units[i] = new UnitState(id, faction, visualId, maxHp, attackDamage, sightRange, x, y, hp, hasLastSeen, lastSeenX, lastSeenY,
-                    maxMana, mana, inventory, quick, previousPos, wanderTarget, statuses, accuracy, evasion, expReward, expMaxLevel, level, exp, weapon, strength);
+                    maxMana, mana, inventory, quick, previousPos, wanderTarget, statuses, accuracy, evasion, expReward, expMaxLevel, level, exp, weapon, strength, armor);
             }
             return units;
         }

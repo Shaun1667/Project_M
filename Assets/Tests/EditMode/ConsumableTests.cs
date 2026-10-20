@@ -421,7 +421,7 @@ namespace ProjectM.Tests
             var restored = World.Restore(WorldSnapshotCodec.Decode(WorldSnapshotCodec.Encode(s.World.Capture())), (w, id) => new Idle());
             Assert.That(restored.Run.Looks.Select(l => (l.ItemId, l.Look)), Is.EqualTo(s.World.Run.Looks.Select(l => (l.ItemId, l.Look))));
             Assert.That(restored.Run.Identified, Is.EqualTo(new[] { "potion_healing" }));
-            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.EqualTo(16));
+            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.GreaterThanOrEqualTo(16)); // 식별이 들어간 버전 이상 (정확한 값은 ArmorTests — 17)
         }
 
         [Test]

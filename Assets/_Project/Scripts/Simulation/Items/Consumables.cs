@@ -158,6 +158,14 @@ namespace ProjectM.Items
         NotThrowable = 3,
     }
 
+    /// <summary>강화 주문서가 강화할 장비 (3-10a). Auto = 든 무기, 없으면 입은 갑옷.</summary>
+    public enum UpgradeTarget
+    {
+        Auto = 0,
+        Weapon = 1,
+        Armor = 2,
+    }
+
     /// <summary>물약 · 주문서를 어떻게 썼는지 (3-9). 끝에만 추가한다.</summary>
     public enum ConsumeMode
     {
@@ -174,11 +182,24 @@ namespace ProjectM.Items
     public static class Consumables
     {
         /// <summary>쓸 수 있는지 미리 본다 (입력이 차례를 쓰기 전에 — 든 무기 없이 강화 주문서를 읽으려 하면 NoWeapon).</summary>
-        public static ConsumeResult Check(ItemBook items, Unit unit, InventoryRef entry)
+        public static ConsumeResult Check(ItemBook items, Unit unit, InventoryRef entry, UpgradeTarget target = UpgradeTarget.Auto)
         {
             if (entry.Kind != InventoryKind.Item || !items.TryGet(entry.Id, out var def) || !def.IsConsumable) return ConsumeResult.NotConsumable;
-            if (def.Effect == ConsumableEffect.Upgrade && unit.Weapon.IsEmpty) return ConsumeResult.NoWeapon;
+            if (def.Effect == ConsumableEffect.Upgrade && ResolveTarget(unit, target) == UpgradeTarget.Auto) return ConsumeResult.NoWeapon;
             return ConsumeResult.Used;
+        }
+
+        /// <summary>강화할 장비 (3-10a): Auto면 든 무기, 없으면 입은 갑옷. 고른 장비가 없으면 Auto(= 강화할 것 없음).</summary>
+        public static UpgradeTarget ResolveTarget(Unit unit, UpgradeTarget target)
+        {
+            switch (target)
+            {
+                case UpgradeTarget.Weapon: return unit.Weapon.IsEmpty ? UpgradeTarget.Auto : UpgradeTarget.Weapon;
+                case UpgradeTarget.Armor: return unit.Armor.IsEmpty ? UpgradeTarget.Auto : UpgradeTarget.Armor;
+                default:
+                    if (!unit.Weapon.IsEmpty) return UpgradeTarget.Weapon;
+                    return unit.Armor.IsEmpty ? UpgradeTarget.Auto : UpgradeTarget.Armor;
+            }
         }
 
         /// <summary>던질 수 있는지 — 물약만 (3-9).</summary>
@@ -194,21 +215,21 @@ namespace ProjectM.Items
             Use(world, new ConsumableRules(items), unit, inventoryIndex);
 
         /// <summary>인벤토리 칸 index의 물약을 마시거나 주문서를 읽는다 (틱 안 — UseConsumableCommand가 부름).</summary>
-        public static ConsumeResult Use(World world, ConsumableRules rules, Unit unit, int inventoryIndex)
+        public static ConsumeResult Use(World world, ConsumableRules rules, Unit unit, int inventoryIndex, UpgradeTarget upgradeTarget = UpgradeTarget.Auto)
         {
             if (world == null) throw new ArgumentNullException(nameof(world));
             if (rules == null) throw new ArgumentNullException(nameof(rules));
             if (unit == null) throw new ArgumentNullException(nameof(unit));
             if (inventoryIndex < 0 || inventoryIndex >= unit.InventorySlots.Length) return ConsumeResult.NotConsumable;
             var entry = unit.InventorySlots[inventoryIndex];
-            var result = Check(rules.Items, unit, entry);
+            var result = Check(rules.Items, unit, entry, upgradeTarget);
             if (result != ConsumeResult.Used) return result;
 
             rules.Items.TryGet(entry.Id, out var def);
             Inventory.RemoveAt(world, unit, inventoryIndex);
             var mode = def.Use == ItemUse.Potion ? ConsumeMode.Drink : ConsumeMode.Read;
             Announce(world, unit, def, mode, unit.Pos, identify: true);
-            Apply(world, rules, unit, def, unit.Pos);
+            Apply(world, rules, unit, def, unit.Pos, upgradeTarget);
             return result;
         }
 
@@ -245,7 +266,7 @@ namespace ProjectM.Items
             world.Events.Publish(new ConsumableUsedEvent(unit.Id, def.Id, def.Effect, mode, at, look, wasKnown, world.Run.IsKnown(def.Id)));
         }
 
-        private static void Apply(World world, ConsumableRules rules, Unit unit, ItemDef def, GridPos at)
+        private static void Apply(World world, ConsumableRules rules, Unit unit, ItemDef def, GridPos at, UpgradeTarget upgradeTarget = UpgradeTarget.Auto)
         {
             var config = rules.Config;
             switch (def.Effect)
@@ -256,6 +277,11 @@ namespace ProjectM.Items
                     break;
                 case ConsumableEffect.Upgrade:
                 {
+                    if (ResolveTarget(unit, upgradeTarget) == UpgradeTarget.Armor)
+                    {
+                        Armors.Upgrade(world, rules.Items, unit, def.Amount); // 3-10a
+                        break;
+                    }
                     var held = unit.Weapon;
                     if (held.IsEmpty || !rules.Items.TryGet(held.ItemId, out var weaponItem)) break;
                     unit.Weapon = Weapons.Resolve(held.ItemId, weaponItem.Weapon, rules.Items.WeaponRules, held.Upgrade + def.Amount);
@@ -467,8 +493,12 @@ namespace ProjectM.Items
         {
         }
 
-        public UseConsumableCommand(World world, ConsumableRules rules, int inventoryIndex, InventoryRef entry, int costTicks)
+        private readonly UpgradeTarget _upgradeTarget;
+
+        public UseConsumableCommand(World world, ConsumableRules rules, int inventoryIndex, InventoryRef entry, int costTicks,
+            UpgradeTarget upgradeTarget = UpgradeTarget.Auto)
         {
+            _upgradeTarget = upgradeTarget;
             if (costTicks < 1) throw new ArgumentOutOfRangeException(nameof(costTicks));
             _world = world ?? throw new ArgumentNullException(nameof(world));
             _rules = rules ?? throw new ArgumentNullException(nameof(rules));
@@ -481,7 +511,7 @@ namespace ProjectM.Items
         {
             if (!_world.Units.TryGet(context.Actor, out var unit) || !unit.IsAlive) return;
             if (_inventoryIndex < 0 || _inventoryIndex >= unit.InventorySlots.Length || unit.InventorySlots[_inventoryIndex] != _entry) return;
-            Consumables.Use(_world, _rules, unit, _inventoryIndex);
+            Consumables.Use(_world, _rules, unit, _inventoryIndex, _upgradeTarget);
         }
     }
 

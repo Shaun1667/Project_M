@@ -94,13 +94,13 @@ namespace ProjectM.Items
         /// <summary>a / b를 반올림 (0.5는 위로 — 6.67 → 7, 0.67 → 1).</summary>
         private static int Divide(int a, int b) => (int)Math.Round((double)a / b, MidpointRounding.AwayFromZero);
 
-        /// <summary>인벤토리 칸 index의 무기를 든다 (틱 안 — EquipWeaponCommand가 부름). 무기가 아니면 false.</summary>
+        /// <summary>인벤토리 칸 index의 무기를 든다 (틱 안 — EquipWeaponCommand가 부름). 갑옷이면 입는다 (3-10a, Armors.Equip). 둘 다 아니면 false.</summary>
         public static bool Equip(World world, ItemBook items, Unit unit, int inventoryIndex)
         {
             if (world == null) throw new ArgumentNullException(nameof(world));
             if (items == null) throw new ArgumentNullException(nameof(items));
             if (unit == null) throw new ArgumentNullException(nameof(unit));
-            if (!TryGetWeaponAt(items, unit, inventoryIndex, out var itemId, out var def)) return false;
+            if (!TryGetWeaponAt(items, unit, inventoryIndex, out var itemId, out var def)) return Armors.Equip(world, items, unit, inventoryIndex);
 
             int upgrade = unit.InventorySlots[inventoryIndex].Upgrade;
             var previous = unit.Weapon;

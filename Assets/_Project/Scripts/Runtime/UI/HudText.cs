@@ -195,7 +195,17 @@ namespace ProjectM.UI
         // 3-7b 힘 · 강화
         public static string StrengthGained(int strength) => $"힘이 올랐다 (힘 {strength})";
         public string Upgraded(EquippedWeapon weapon) => $"강화: {WeaponName(weapon)} ({weapon.MinDamage}~{weapon.MaxDamage}, 요구 힘 {weapon.StrengthRequirement})";
-        public const string NoWeaponToUpgrade = "든 무기가 없다 — 강화 주문서를 쓸 수 없다";
+        public const string NoWeaponToUpgrade = "강화할 장비가 없다 — 무기를 들거나 갑옷을 입어야 한다";
+
+        // ── 3-10a 갑옷 ──
+        public string Worn(string itemId) => $"{Eul(Item(itemId))} 입었다";
+        /// <summary>갑옷 이름 + 강화 ("가죽 갑옷+2").</summary>
+        public string ArmorName(EquippedArmor armor) => armor.Upgrade > 0 ? $"{Item(armor.ItemId)}+{armor.Upgrade}" : Item(armor.ItemId);
+        /// <summary>HUD 갑옷 줄: "갑옷: 천 갑옷 방어 0~1 · 힘 10/10", 맨몸이면 "갑옷: 없음".</summary>
+        public string ArmorLabel(EquippedArmor armor, int strength) => armor.IsEmpty
+            ? "갑옷: 없음"
+            : $"갑옷: {ArmorName(armor)} 방어 {armor.ShownMin}~{armor.ShownMax} · 힘 {strength}/{armor.StrengthRequirement}";
+        public string ArmorUpgraded(EquippedArmor armor) => $"강화: {ArmorName(armor)} (방어 {armor.ShownMin}~{armor.ShownMax}, 요구 힘 {armor.StrengthRequirement})";
 
         // ── 3-9 물약 · 주문서 ──
         /// <summary>쓴 한 줄: "진홍 물약을 마셨다 — 치유 물약이었다". 쓰기 전 몰랐으면 겉모습 이름, 쓰면서 식별됐으면 정체를 붙인다.</summary>

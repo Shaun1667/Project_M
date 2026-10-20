@@ -20,8 +20,14 @@ namespace ProjectM.Items
         /// <summary>한 판에 놓는 힘 물약 수 (3-7b).</summary>
         public int StrengthPotionsPerRun { get; }
 
-        public LootConfig(int maxBooksPerFloor, int minDistanceFromStart, int weaponsPerRun = 0, int upgradeScrollsPerRun = 0, int strengthPotionsPerRun = 0)
+        /// <summary>한 판에 놓는 갑옷 수 (3-10a) — 2티어 이상 중 시드로 고름(같은 종 안 겹침), 1~마지막 전 층.</summary>
+        public int ArmorsPerRun { get; }
+
+        public LootConfig(int maxBooksPerFloor, int minDistanceFromStart, int weaponsPerRun = 0, int upgradeScrollsPerRun = 0, int strengthPotionsPerRun = 0,
+            int armorsPerRun = 0)
         {
+            if (armorsPerRun < 0) throw new ArgumentOutOfRangeException(nameof(armorsPerRun));
+            ArmorsPerRun = armorsPerRun;
             if (upgradeScrollsPerRun < 0) throw new ArgumentOutOfRangeException(nameof(upgradeScrollsPerRun));
             if (strengthPotionsPerRun < 0) throw new ArgumentOutOfRangeException(nameof(strengthPotionsPerRun));
             UpgradeScrollsPerRun = upgradeScrollsPerRun;
@@ -195,6 +201,33 @@ namespace ProjectM.Items
             int floors = Math.Max(1, floorCount - 1);
             AddCopies(plan, rng, floors, FirstOfEffect(items, ConsumableEffect.Upgrade), config.UpgradeScrollsPerRun);
             AddCopies(plan, rng, floors, FirstOfEffect(items, ConsumableEffect.Strength), config.StrengthPotionsPerRun);
+            if (plan.Count > 0) world.Run.AddPendingFloorItems(StableByFloor(plan));
+        }
+
+        /// <summary>
+        /// 갑옷 배치 계획 (3-10a): 2티어 이상 갑옷(천 갑옷은 입고 시작)을 섞어(RngStream.Loot) 앞에서 ArmorsPerRun개를 1~마지막 전 층에 무작위로, 계획 끝에.
+        /// PlanRandomConsumables 다음에 부른다 — 앞 계획 · 맵 · 적 배치는 바뀌지 않는다.
+        /// </summary>
+        public static void PlanArmors(World world, ItemBook items, LootConfig config, int floorCount)
+        {
+            if (world == null) throw new ArgumentNullException(nameof(world));
+            if (items == null) throw new ArgumentNullException(nameof(items));
+            if (config == null) throw new ArgumentNullException(nameof(config));
+            if (config.ArmorsPerRun == 0) return;
+            var armors = new List<string>();
+            foreach (var id in items.Ids)
+                if (items.TryGet(id, out var def) && def.Use == ItemUse.EquipArmor && def.Armor.Tier >= 2) armors.Add(id);
+            var rng = world.Rng.Get(RngStream.Loot);
+            for (int i = 0; i < armors.Count - 1; i++)
+            {
+                int j = rng.Range(i, armors.Count);
+                (armors[i], armors[j]) = (armors[j], armors[i]);
+            }
+            int floors = Math.Max(1, floorCount - 1);
+            int count = Math.Min(config.ArmorsPerRun, armors.Count);
+            var plan = new List<PendingFloorItem>(count);
+            for (int k = 0; k < count; k++)
+                plan.Add(new PendingFloorItem(1 + rng.Range(0, floors), armors[k]));
             if (plan.Count > 0) world.Run.AddPendingFloorItems(StableByFloor(plan));
         }
 

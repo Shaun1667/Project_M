@@ -551,6 +551,18 @@
   - 실패 6개 모두 같은 원인: 각 기능 테스트가 스냅샷 버전을 `Is.EqualTo(15)`로 검사 → 3-9에서 v16으로 올리자 함께 깨짐 (Boss · Floor · Inventory · StrengthUpgrade · SurpriseDefense · Weapon)
   - 해결: "그 기능이 들어간 버전 이상"(`Is.GreaterThanOrEqualTo(n)`)으로. 정확한 현재 버전은 그 버전을 올린 항목의 테스트 하나(`ConsumableTests` — 16)만 검사
   - 피드백: 버전 · 개수처럼 다른 항목이 올리는 값은 정확히 같은지 검사하지 말고 하한으로. 버전을 올릴 때는 `grep "CurrentFormatVersion, Is.EqualTo"`로 남은 곳을 확인
+- [ ] **3-10. 장비 · 인벤토리 — SPD 방식** (2026-10-20 사용자 요청: SPD 배낭 화면처럼, 장비도 SPD처럼, F 키로도 열기)
+  - 결정 (2026-10-20, 사용자): ① 장비 칸 = **5칸(무기 · 갑옷 · 유물 · 기타 · 반지) + 갑옷까지 구현** (유물 · 반지는 틀만) ② 아이콘 = **3D 모델 렌더**(에디터 메뉴) ③ 주문 = **처음엔 배낭을 같이 쓰고, 나중에 "주문 보관함"을 얻으면 분리** ④ 겹치기 = **같은 종류는 한 칸에 겹침**(개수 표시) ⑤ 갑옷 = **SPD 5종 전부** ⑥ 방어 = **무기처럼 ÷3** ⑦ 갑옷 모델 = **Varco로 생성**(확인 후 가져옴, 그 전엔 회색 상자) ⑧ 순서 = **3-10a 갑옷 → 3-10b 배낭 UI**
+  - 참고: 질문에서 요구 힘을 "10~14"로 잘못 적었음 — SPD 실제 값 10 · 12 · 14 · 16 · 18로 구현
+- [x] **3-10a. 갑옷** (2026-10-20) — 테스트 작성, 실행 안 함 · 플레이 확인 대기
+  - 구현: `ItemUse.EquipArmor`=6 · `ArmorDef`(티어 · 요구 힘) · `ArmorRules`(나누기 3 · 벌점 2) · `Armors`(Resolve · Equip · Wear · Upgrade · RollDefense · EvasionFactor) · `Unit.Armor`(`EquippedArmor`, **스냅샷 v17**). 입기는 무기와 같은 `EquipWeaponCommand`(차례 1, `Weapons.Equip`이 갑옷이면 `Armors.Equip`). 방어는 `MeleeWeapon.ApplyDefense`(무기 방어 + 갑옷 굴림, 근접만), 회피 벌점은 `Combat.RollHit`
+  - 강화 주문서: `UpgradeTarget`(Auto = 무기 먼저, 없으면 갑옷 · Weapon · Armor) — `UseConsumableCommand` 인자. 고르는 창은 3-10b
+  - 데이터: 갑옷 5줄 · 공통 2값 (BALANCE 15번), `Player.asset` `_startingArmor` = 천 갑옷, `LootConfig` `_armorsPerRun` 2 (`Loot.PlanArmors`, 무작위 소모품 계획 뒤)
+  - 화면: HUD에 갑옷 줄(마나 막대 오른쪽 "갑옷: 천 갑옷 방어 0~1 · 힘 10/10"), 로그 "가죽 갑옷을 입었다" · "강화: …", 결과 화면 장비에 갑옷. 바닥 모습은 아직 회색 상자(Varco 모델 전)
+  - 정한 것 (Claude): 방어 굴림은 고른 분포(SPD는 정규분포 — 무기와 같게), 힘 모자람의 이동 속도 벌점(SPD)은 뺌, 갑옷 배치는 2티어 이상에서 겹치지 않게, 판 시작 천 갑옷은 로그 없음
+  - 확인: 컴파일 0 · Setup 실행 — 카탈로그 32줄, 갑옷 5종 수치가 BALANCE 표와 같음(에디터에서 계산). 테스트 `ArmorTests` 작성 + `InventoryTests` 개수 32 · 스냅샷 정확한 버전 검사를 ArmorTests로 옮김 — **실행 안 함**
+  - **확인 못 한 것:** 테스트 실행 · 플레이 (HUD 갑옷 줄 · 입기 · 방어 체감)
+  - 확인 방법: `Main.unity` 플레이 → HUD 마나 막대 오른쪽에 "갑옷: 천 갑옷 방어 0~1 · 힘 10/10" → 바닥 갑옷(회색 상자)을 주워 I → 사용 → "…을 입었다", 갑옷 줄이 바뀜, 천 갑옷은 인벤토리로. 적에게 맞으면 가끔 "방어: n 막음"
 ## Phase G — 3D 그래픽 (결정 2026-10-18: 재미 검증보다 먼저, Varco 3D 모델, 실시간 3D)
 목표: 규칙(Simulation)은 그대로 두고 표현 레이어만 3D로. 모델이 오기 전에 3D 틀(그레이박스)을 먼저 만들고, 모델 · 이펙트는 ID에 끼우기만 한다. 목록 · 규격 `Docs/ART_ASSETS.md`.
 

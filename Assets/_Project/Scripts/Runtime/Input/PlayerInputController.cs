@@ -346,7 +346,8 @@ namespace ProjectM.Input
                 else Hint(string.Empty); // 배운 내용은 로그에 (SpellLearnedEvent)
                 return;
             }
-            if (_items.TryGet(entry.Id, out var weapon) && weapon.Use == ItemUse.EquipWeapon && PlayerActions.TryGetPlayer(_world, out var holder))
+            if (_items.TryGet(entry.Id, out var weapon) && (weapon.Use == ItemUse.EquipWeapon || weapon.Use == ItemUse.EquipArmor)
+                && PlayerActions.TryGetPlayer(_world, out var holder)) // 3-10a: 갑옷도 같은 행동 (입기)
             {
                 // 3-7a: 무기 장착 = 차례 1 (결정 2026-10-19). 인벤토리를 닫고 행동으로 넘긴다
                 int index = System.Array.IndexOf(holder.InventorySlots, entry);
