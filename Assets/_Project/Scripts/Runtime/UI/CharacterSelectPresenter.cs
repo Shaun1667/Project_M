@@ -16,7 +16,7 @@ namespace ProjectM.UI
     {
         [Tooltip("창 전체 (열려 있을 때만 켠다)")] [SerializeField] private RectTransform _panel;
         [SerializeField] private TMP_FontAsset _font;
-        [SerializeField] private Vector2 _cardSize = new Vector2(260, 330);
+        [SerializeField] private Vector2 _cardSize = new Vector2(330, 620);
         [SerializeField] private float _spacing = 40;
         [Tooltip("초상 확대 배율 (정수 — 픽셀이 번지지 않게)")] [SerializeField] private int _portraitScale = 4;
 
@@ -54,12 +54,16 @@ namespace ProjectM.UI
             _model.Confirmed -= OnConfirmed;
         }
 
-        /// <summary>창을 연다. portraits · names는 같은 길이, onConfirm(고른 칸 번호)은 확정 때 한 번.</summary>
-        public void Open(IReadOnlyList<Sprite> portraits, IReadOnlyList<string> names, int initial, Action<int> onConfirm)
+        /// <summary>
+        /// 창을 연다. portraits · names는 같은 길이, onConfirm(고른 칸 번호)은 확정 때 한 번.
+        /// illustrations(같은 길이, 칸이 null이면 없음)가 있으면 그 카드는 일러스트를 카드에 맞춰 보여 주고, 없으면 64px 초상을 정수 배율로.
+        /// </summary>
+        public void Open(IReadOnlyList<Sprite> portraits, IReadOnlyList<string> names, int initial, Action<int> onConfirm,
+            IReadOnlyList<Sprite> illustrations = null)
         {
             if (_panel == null) return;
             _onConfirm = onConfirm;
-            Build(portraits, names);
+            Build(portraits, names, illustrations);
             _panel.gameObject.SetActive(true);
             _panel.SetAsLastSibling();
             if (Mouse.current != null) _lastMouse = Mouse.current.position.ReadValue();
@@ -108,15 +112,15 @@ namespace ProjectM.UI
             return -1;
         }
 
-        private void Build(IReadOnlyList<Sprite> portraits, IReadOnlyList<string> names)
+        private void Build(IReadOnlyList<Sprite> portraits, IReadOnlyList<string> names, IReadOnlyList<Sprite> illustrations)
         {
             foreach (var c in _cards) Destroy(c.rect.gameObject);
             _cards.Clear();
             var image = _panel.GetComponent<Image>();
             if (image != null) image.color = PanelColor;
-            if (_title == null) _title = MakeText(_panel, "Title", new Vector2(0, 220), new Vector2(900, 60), 44);
+            if (_title == null) _title = MakeText(_panel, "Title", new Vector2(0, 380), new Vector2(900, 60), 44);
             _title.text = HudText.CharacterSelectTitle;
-            if (_hint == null) _hint = MakeText(_panel, "Hint", new Vector2(0, -250), new Vector2(1200, 40), 26);
+            if (_hint == null) _hint = MakeText(_panel, "Hint", new Vector2(0, -380), new Vector2(1200, 40), 26);
             _hint.text = HudText.CharacterSelectHint;
 
             float total = names.Count * _cardSize.x + (names.Count - 1) * _spacing;
@@ -131,14 +135,26 @@ namespace ProjectM.UI
                 box.color = CardColor;
                 box.raycastTarget = false;
 
-                var sprite = i < portraits.Count ? portraits[i] : null;
+                var illustration = illustrations != null && i < illustrations.Count ? illustrations[i] : null;
+                var sprite = illustration != null ? illustration : i < portraits.Count ? portraits[i] : null;
                 if (sprite != null)
                 {
                     var portrait = new GameObject("Portrait", typeof(RectTransform), typeof(Image));
                     var pr = (RectTransform)portrait.transform;
                     pr.SetParent(rect, false);
-                    pr.sizeDelta = sprite.rect.size * _portraitScale;
-                    pr.anchoredPosition = new Vector2(0, 25);
+                    if (illustration != null)
+                    {
+                        // 일러스트: 이름 줄 위 영역에 비율 유지로 맞춤 (부드러운 필터로 가져옴)
+                        var area = new Vector2(_cardSize.x - 16, _cardSize.y - 70);
+                        float scale = Mathf.Min(area.x / sprite.rect.width, area.y / sprite.rect.height);
+                        pr.sizeDelta = sprite.rect.size * scale;
+                        pr.anchoredPosition = new Vector2(0, 27);
+                    }
+                    else
+                    {
+                        pr.sizeDelta = sprite.rect.size * _portraitScale;
+                        pr.anchoredPosition = new Vector2(0, 25);
+                    }
                     var pi = portrait.GetComponent<Image>();
                     pi.sprite = sprite;
                     pi.raycastTarget = false;

@@ -704,6 +704,26 @@ namespace ProjectM.Editor
             return catalog;
         }
 
+        /// <summary>
+        /// 원본 일러스트 가져오기: 도트풍 그림이지만 칸이 일정한 격자가 아니라(판별 결과) 선택 창에서 줄여 보여 주므로 부드러운 필터 · 밉맵 · 압축 없음.
+        /// </summary>
+        private static void ImportIllustration(string path)
+        {
+            var importer = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (importer == null) return;
+            var settings = new TextureImporterSettings();
+            importer.ReadTextureSettings(settings);
+            settings.textureType = TextureImporterType.Sprite;
+            settings.spriteMode = (int)SpriteImportMode.Single;
+            settings.spriteAlignment = (int)SpriteAlignment.Center;
+            settings.filterMode = FilterMode.Bilinear;
+            settings.mipmapEnabled = true;
+            importer.SetTextureSettings(settings);
+            importer.textureCompression = TextureImporterCompression.Uncompressed;
+            importer.maxTextureSize = 2048;
+            importer.SaveAndReimport();
+        }
+
         /// <summary>캐릭터 선택 창 (2026-10-21): HUD 위를 덮는 판 — 카드는 실행 중에 만든다.</summary>
         private static CharacterSelectPresenter EnsureCharacterSelect()
         {
@@ -730,8 +750,15 @@ namespace ProjectM.Editor
             {
                 string path = $"{CharacterArtDir}/{id}.png";
                 PixelTestSetup.ImportPixelSprite(path, SpriteAlignment.BottomCenter);
+                string illustPath = $"{CharacterArtDir}/{id}_illust.png"; // 7등신 원본 일러스트 (있을 때만, 2026-10-21)
+                Sprite illust = null;
+                if (System.IO.File.Exists(illustPath))
+                {
+                    ImportIllustration(illustPath);
+                    illust = AssetDatabase.LoadAssetAtPath<Sprite>(illustPath);
+                }
                 changed |= catalog.AddOrFill(new CharacterCatalogAsset.Entry
-                    { Id = id, DisplayName = name, VisualId = id, Portrait = AssetDatabase.LoadAssetAtPath<Sprite>(path) });
+                    { Id = id, DisplayName = name, VisualId = id, Portrait = AssetDatabase.LoadAssetAtPath<Sprite>(path), Illustration = illust });
             }
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;

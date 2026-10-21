@@ -147,17 +147,19 @@ namespace ProjectM
                 return;
             }
             var portraits = new System.Collections.Generic.List<Sprite>(list.Count);
+            var illustrations = new System.Collections.Generic.List<Sprite>(list.Count);
             var names = new System.Collections.Generic.List<string>(list.Count);
             foreach (var c in list)
             {
                 portraits.Add(c.Portrait);
+                illustrations.Add(c.Illustration);
                 names.Add(string.IsNullOrEmpty(c.DisplayName) ? c.Id : c.DisplayName);
             }
             _characterSelect.Open(portraits, names, _characterIndex, index =>
             {
                 _characterIndex = index;
                 StartNewRun(list[index].VisualId);
-            });
+            }, illustrations);
         }
 
         private void Update()

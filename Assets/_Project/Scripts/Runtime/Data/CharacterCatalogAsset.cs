@@ -18,24 +18,26 @@ namespace ProjectM.Data
             public string Id;
             [Tooltip("선택 창 이름 (표시 전용, 임시)")] public string DisplayName;
             [Tooltip("플레이어 유닛의 모습 ID (EntityVisualCatalog)")] public string VisualId;
-            [Tooltip("선택 창 초상 (64px 픽셀 스프라이트, 점 필터)")] public Sprite Portrait;
+            [Tooltip("게임 안 64px 스프라이트 (4등신 · 격자 맞춤, 점 필터) — 일러스트가 없으면 선택 창 초상으로도 씀")] public Sprite Portrait;
+            [Tooltip("원본 일러스트 (7등신 도트 일러스트, 결정 2026-10-21) — 있으면 선택 창 카드에 이것을 보여 줌")] public Sprite Illustration;
         }
 
         [SerializeField] private List<Entry> _characters = new List<Entry>();
 
         public IReadOnlyList<Entry> Characters => _characters;
 
-        /// <summary>에디터 Setup용: 같은 ID가 없으면 추가, 있으면 초상만 비었을 때 채운다 (사용자가 고친 이름은 그대로). 바뀌었으면 true.</summary>
+        /// <summary>에디터 Setup용: 같은 ID가 없으면 추가, 있으면 초상 · 일러스트가 비었을 때만 채운다 (사용자가 고친 이름은 그대로). 바뀌었으면 true.</summary>
         public bool AddOrFill(Entry entry)
         {
             for (int i = 0; i < _characters.Count; i++)
             {
                 if (_characters[i].Id != entry.Id) continue;
                 var e = _characters[i];
-                if (e.Portrait != null || entry.Portrait == null) return false;
-                e.Portrait = entry.Portrait;
+                bool changed = false;
+                if (e.Portrait == null && entry.Portrait != null) { e.Portrait = entry.Portrait; changed = true; }
+                if (e.Illustration == null && entry.Illustration != null) { e.Illustration = entry.Illustration; changed = true; }
                 _characters[i] = e;
-                return true;
+                return changed;
             }
             _characters.Add(entry);
             return true;
