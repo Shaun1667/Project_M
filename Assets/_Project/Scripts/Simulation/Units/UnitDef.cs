@@ -69,5 +69,9 @@ namespace ProjectM.Units
             MaxMana = maxMana;
             StartingSpells = spells;
         }
+
+        /// <summary>모습만 바꾼 사본 (캐릭터 선택 — 결정 2026-10-21: 지금은 외형만 다름). 수치 · 시작 주문 · 갑옷은 그대로.</summary>
+        public UnitDef WithVisualId(string visualId) => new UnitDef(visualId, MaxHp, AttackDamage, SightRange, MaxMana, StartingSpells,
+            Accuracy, Evasion, ExpReward, ExpMaxLevel, Strength, StartingArmor);
     }
 }

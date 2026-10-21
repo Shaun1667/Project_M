@@ -34,7 +34,7 @@ namespace ProjectM.Editor
                 return;
             }
             foreach (var name in new[] { "floor", "wall", "wall_top" }) Import(name, SpriteAlignment.Center);
-            foreach (var name in new[] { "player", "mouse" }) Import(name, SpriteAlignment.BottomCenter);
+            foreach (var name in new[] { "player", "mouse", "Heroes/hero_black_red" }) Import(name, SpriteAlignment.BottomCenter);
             foreach (var name in new[] { "sword", "potion", "cloth" }) Import(name, SpriteAlignment.Center);
 
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
@@ -67,7 +67,7 @@ namespace ProjectM.Editor
             so.FindProperty("_floor").objectReferenceValue = LoadSprite("floor");
             so.FindProperty("_wall").objectReferenceValue = LoadSprite("wall");
             so.FindProperty("_wallTop").objectReferenceValue = LoadSprite("wall_top");
-            so.FindProperty("_player").objectReferenceValue = LoadSprite("player");
+            so.FindProperty("_player").objectReferenceValue = LoadSprite("Heroes/hero_black_red"); // 결정 2026-10-21: 금발 · 검은 코트 · 빨간 눈
             so.FindProperty("_enemy").objectReferenceValue = LoadSprite("mouse");
             var items = so.FindProperty("_items");
             string[] itemNames = { "sword", "potion", "cloth" };
@@ -80,9 +80,11 @@ namespace ProjectM.Editor
             Debug.Log("[PixelTestSetup] 완료: " + ScenePath);
         }
 
-        private static void Import(string name, SpriteAlignment pivot)
+        private static void Import(string name, SpriteAlignment pivot) => ImportPixelSprite($"{ArtDir}/{name}.png", pivot);
+
+        /// <summary>픽셀 스프라이트 가져오기 설정: 점 필터 · 압축 없음 · 64 PPU · 밉맵 없음 (MainSceneSetup 캐릭터 초상도 같이 씀).</summary>
+        internal static void ImportPixelSprite(string path, SpriteAlignment pivot)
         {
-            string path = $"{ArtDir}/{name}.png";
             var importer = AssetImporter.GetAtPath(path) as TextureImporter;
             if (importer == null)
             {

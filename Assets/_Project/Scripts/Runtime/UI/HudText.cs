@@ -172,6 +172,10 @@ namespace ProjectM.UI
 
         public const string DeadHint = "쓰러졌다 — R 키로 새 판";
 
+        // ── 캐릭터 선택 (2026-10-21) ──
+        public const string CharacterSelectTitle = "캐릭터 선택";
+        public const string CharacterSelectHint = "← → 고르기 · Enter/클릭 시작";
+
         // ── 마법서 (3-5) ──
         public string PickedUp(string itemId) => $"{Eul(Item(itemId))} 주웠다";
         // 3-7a 무기

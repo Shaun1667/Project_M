@@ -41,6 +41,10 @@ namespace ProjectM.Editor
         private const string FusionCatalogPath = "Assets/_Project/Data/Fusions/FusionCatalog.asset";
         private const string LootConfigPath = "Assets/_Project/Data/Items/LootConfig.asset";
         private const string ConsumableConfigPath = "Assets/_Project/Data/Items/ConsumableConfig.asset";
+        private const string CharacterCatalogPath = "Assets/_Project/Data/Units/CharacterCatalog.asset";
+        private const string CharacterArtDir = "Assets/_Project/Art/Pixel/Characters";
+        // 2026-10-21 캐릭터 선택 — 모습 ID (3D Main에서는 픽셀 전환 전까지 둘 다 플레이어 모델)
+        private static readonly (string Id, string Name)[] Characters = { ("hero_blond", "금발의 마법사"), ("hero_black", "흑발의 마법사") };
         private const string ProgressionConfigPath = "Assets/_Project/Data/Units/ProgressionConfig.asset";
         private const string ItemVisualCatalogPath = "Assets/_Project/Data/Visuals/ItemVisualCatalog.asset";
 
@@ -178,6 +182,8 @@ namespace ProjectM.Editor
             else Debug.LogWarning("[MainSceneSetup] MainCamera 태그 카메라 없음");
 
             var (hud, inventoryView, result) = EnsureHud();
+            var characterSelect = EnsureCharacterSelect(); // 2026-10-21 판 시작 캐릭터 선택 창
+            var characterCatalog = EnsureCharacterCatalog();
 
             // 3-5: 바닥 아이템(마법서) — 배치 수치(없을 때만 BALANCE 11번 값) · 표시 (색 · 반짝임은 메뉴 ProjectM/Setup/FX가 채움)
             var lootConfig = EnsureAsset<LootConfigAsset>(LootConfigPath, ("_maxBooksPerFloor", 2), ("_minDistanceFromStart", 3));
@@ -220,6 +226,8 @@ namespace ProjectM.Editor
                 ("_fusionCatalog", fusionCatalog),
                 ("_lootConfig", lootConfig),
                 ("_consumableConfig", consumableConfig),
+                ("_characters", characterCatalog),
+                ("_characterSelect", characterSelect),
                 ("_progressionConfig", progressionConfig),
                 ("_floorItems", floorItems),
                 ("_terrainOverlay", terrainOverlay),
@@ -327,6 +335,8 @@ namespace ProjectM.Editor
             // G-1 3D 그레이박스: 프리팹이 없으면 캡슐 (색 · 키). Varco 모델은 G-2에서 Prefab에 넣는다 — Setup은 Prefab을 건드리지 않는다
             catalog.Set(PlayerVisualId, AssetDatabase.LoadAssetAtPath<Sprite>(PlayerSpritePath), new Color(0.3f, 0.85f, 0.4f), 0.9f);
             catalog.Set(EnemyVisualId, AssetDatabase.LoadAssetAtPath<Sprite>(UnitCircleSpritePath), new Color(0.9f, 0.25f, 0.2f), 0.8f);
+            foreach (var (id, _) in Characters) // 고를 수 있는 캐릭터 — 모델은 Varco Models 메뉴가 플레이어 모델로 넣는다
+                catalog.Set(id, AssetDatabase.LoadAssetAtPath<Sprite>($"{CharacterArtDir}/{id}.png"), new Color(0.3f, 0.85f, 0.4f), 0.9f);
             // 3-4b 임시 보스: 짙은 자주색, 두 배 키 (판정은 1칸)
             catalog.Set(BossVisualId, AssetDatabase.LoadAssetAtPath<Sprite>(UnitCircleSpritePath), new Color(0.55f, 0.1f, 0.45f), 1.8f);
             EditorUtility.SetDirty(catalog);
@@ -690,6 +700,39 @@ namespace ProjectM.Editor
             changed |= catalog.AddIfMissing(Armor("armor_mail", "사슬 갑옷", 3, 14));
             changed |= catalog.AddIfMissing(Armor("armor_scale", "비늘 갑옷", 4, 16));
             changed |= catalog.AddIfMissing(Armor("armor_plate", "판금 갑옷", 5, 18));
+            if (changed) EditorUtility.SetDirty(catalog);
+            return catalog;
+        }
+
+        /// <summary>캐릭터 선택 창 (2026-10-21): HUD 위를 덮는 판 — 카드는 실행 중에 만든다.</summary>
+        private static CharacterSelectPresenter EnsureCharacterSelect()
+        {
+            var canvasGo = FindOrCreate("HUD", null);
+            var font = EnsureHudFont();
+            var panelGo = FindOrCreate("CharacterSelect", canvasGo.transform);
+            var panel = GetOrAdd<RectTransform>(panelGo);
+            panel.anchorMin = Vector2.zero;
+            panel.anchorMax = Vector2.one;
+            panel.offsetMin = panel.offsetMax = Vector2.zero;
+            GetOrAdd<Image>(panelGo).raycastTarget = false;
+            panelGo.transform.SetAsLastSibling();
+            var view = GetOrAdd<CharacterSelectPresenter>(canvasGo);
+            SetRefs(view, ("_panel", panel), ("_font", font));
+            return view;
+        }
+
+        /// <summary>캐릭터 목록 (2026-10-21): 초상 이미지를 픽셀 설정으로 가져오고, 없는 캐릭터만 추가 (사용자가 고친 이름은 그대로).</summary>
+        private static CharacterCatalogAsset EnsureCharacterCatalog()
+        {
+            var catalog = LoadOrCreate<CharacterCatalogAsset>(CharacterCatalogPath);
+            bool changed = false;
+            foreach (var (id, name) in Characters)
+            {
+                string path = $"{CharacterArtDir}/{id}.png";
+                PixelTestSetup.ImportPixelSprite(path, SpriteAlignment.BottomCenter);
+                changed |= catalog.AddOrFill(new CharacterCatalogAsset.Entry
+                    { Id = id, DisplayName = name, VisualId = id, Portrait = AssetDatabase.LoadAssetAtPath<Sprite>(path) });
+            }
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }

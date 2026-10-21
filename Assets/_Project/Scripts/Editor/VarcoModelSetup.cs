@@ -117,6 +117,7 @@ namespace ProjectM.Editor
                 AttachWeapons(sheep); // 3-7a: 손에 무기 6종을 꺼 둔 채 붙임 — 들면 EntityPresenter가 켜고 지팡이를 숨김
             });
             catalog.SetPrefab("player", player);
+            foreach (var id in new[] { "hero_blond", "hero_black" }) catalog.SetPrefab(id, player); // 2026-10-21 캐릭터 선택 — 픽셀 전환 전까지 같은 모델
             var variants = new GameObject[MeleeVariants.Length];
             for (int i = 0; i < MeleeVariants.Length; i++)
                 variants[i] = BuildPrefab(MeleeVariants[i], null);

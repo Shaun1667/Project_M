@@ -35,6 +35,8 @@ namespace ProjectM
         [Tooltip("마법서 배치 수치 (3-5). 비우면 바닥에 마법서를 놓지 않는다")] [SerializeField] private LootConfigAsset _lootConfig;
         [Tooltip("경험치 · 레벨업 수치 (3-6). 비우면 경험치를 주지 않는다")] [SerializeField] private ProgressionConfigAsset _progressionConfig;
         [Tooltip("물약 · 주문서 수치 · 겉모습 (3-9). 비우면 식별 · 무작위 배치 없음")] [SerializeField] private ConsumableConfigAsset _consumableConfig;
+        [Tooltip("고를 수 있는 캐릭터 (2026-10-21). 비우거나 창이 없으면 고르지 않고 Player.asset 모습으로 시작")] [SerializeField] private CharacterCatalogAsset _characters;
+        [SerializeField] private CharacterSelectPresenter _characterSelect;
         [SerializeField] private TilemapPresenter _tilemapPresenter;
         [SerializeField] private EntityPresenter _entityPresenter;
         [Tooltip("시야 안개. 비우면 안개 없이 전부 보인다")]
@@ -129,18 +131,45 @@ namespace ProjectM
         private void Start()
         {
             if (Config == null) return;
-            StartNewRun();
+            BeginCharacterSelect();
+        }
+
+        /// <summary>지난 판에 고른 캐릭터 (다음 선택 창의 처음 칸). 저장 대상 아님 — 판의 캐릭터는 플레이어 유닛의 모습 ID에 남는다.</summary>
+        private int _characterIndex;
+
+        /// <summary>판을 시작하기 전에 캐릭터를 고른다 (결정 2026-10-21 — 처음 · R 새 판마다). 목록이나 창이 없으면 바로 시작.</summary>
+        private void BeginCharacterSelect()
+        {
+            var list = _characters != null ? _characters.Characters : null;
+            if (list == null || list.Count == 0 || _characterSelect == null)
+            {
+                StartNewRun(null);
+                return;
+            }
+            var portraits = new System.Collections.Generic.List<Sprite>(list.Count);
+            var names = new System.Collections.Generic.List<string>(list.Count);
+            foreach (var c in list)
+            {
+                portraits.Add(c.Portrait);
+                names.Add(string.IsNullOrEmpty(c.DisplayName) ? c.Id : c.DisplayName);
+            }
+            _characterSelect.Open(portraits, names, _characterIndex, index =>
+            {
+                _characterIndex = index;
+                StartNewRun(list[index].VisualId);
+            });
         }
 
         private void Update()
         {
             // 입력만 읽는다 — 규칙은 틱으로만 진행한다.
             var keyboard = Keyboard.current;
-            if (_runEnded && keyboard != null && keyboard.rKey.wasPressedThisFrame)
-                StartNewRun();
+            if (_runEnded && keyboard != null && keyboard.rKey.wasPressedThisFrame && (_characterSelect == null || !_characterSelect.IsOpen))
+                BeginCharacterSelect();
         }
 
-        private void StartNewRun()
+        /// <param name="visualId">고른 캐릭터의 모습 ID (null이면 Player.asset 그대로).</param>
+        private void StartNewRun(string visualId)
         {
             ulong seed = _fixedSeed != 0 ? (ulong)_fixedSeed : (ulong)System.DateTime.UtcNow.Ticks;
             Seed = seed;
@@ -189,10 +218,12 @@ namespace ProjectM
             World.Events.Subscribe<RunEndedEvent>(OnRunEnded);
 
             World.Events.Publish(new MapLoadedEvent(World.Map));
-            var player = FloorPopulator.Populate(World, Floor.Start, _playerDef.ToDef(), enemyDef, spawn, enemyAi,
+            var playerDef = _playerDef.ToDef();
+            if (!string.IsNullOrEmpty(visualId)) playerDef = playerDef.WithVisualId(visualId); // 2026-10-21 캐릭터 선택 — 지금은 외형만
+            var player = FloorPopulator.Populate(World, Floor.Start, playerDef, enemyDef, spawn, enemyAi,
                 Magic.QuickSlotCount, Magic.InventorySlotCount);
             _playerId = player.Id;
-            var startingArmor = _playerDef.ToDef().StartingArmor;
+            var startingArmor = playerDef.StartingArmor;
             if (startingArmor != null && !Armors.Wear(World, Items, player, startingArmor)) // 3-10a: 천 갑옷을 입고 시작 (SPD)
                 Debug.LogWarning($"[GameRoot] 시작 갑옷 '{startingArmor}'가 ItemCatalog에 없다.", this);
             _player = player;

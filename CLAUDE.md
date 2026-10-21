@@ -120,6 +120,7 @@ Assets/
 - Unity 6.6에는 `UnityEngine.EntityId`가 있다. `UnityEngine`과 `ProjectM.Core`를 함께 쓰는 파일은 `using EntityId = ProjectM.Core.EntityId;` 별칭을 둔다.
 - 시뮬레이션 → 화면은 `SimEventBus` 이벤트로만 (`Core/Events/WorldEvents.cs`). 표현 어댑터는 `Bind(bus)`/`Unbind()`로 구독하고 규칙을 갖지 않는다. 씬 연결은 `GameRoot` 하나, 씬 구성은 메뉴 `ProjectM/Setup/Main Scene`(멱등).
 - HUD는 `HudModel`(순수 C#, 이벤트 → 값 · 로그) + `HudPresenter`(그리기만). 화면에 보이는 한글 문구는 `HudText` 한곳, 주문 이름은 `SpellCatalog`의 `DisplayName`(표시 전용 데이터). 새 이벤트를 로그에 넣을 때는 HudModel에 넣고 `HudModelTests`로 문구를 검사한다
+- 캐릭터 선택 (2026-10-21): 고를 수 있는 캐릭터는 `CharacterCatalog.asset`(Id · 이름 · 모습 ID · 초상) 데이터로만 추가. 판 시작은 `GameRoot.BeginCharacterSelect` → `StartNewRun(모습 ID)` → `UnitDef.WithVisualId` — 지금은 외형만 다르고, 능력이 달라지면 목록 줄에 필드를 더한다.
 - 개발자 디버그 기능은 디버그 창(`Editor/Debug/DebugWindow`, 메뉴 ProjectM/Debug/Debug Window)에 섹션으로 추가한다. 표시만 바꾸는 기능이 기본이고, 게임 상태를 바꾸는 기능은 [상태 변경]으로 표시한다. 런타임 쪽 진입점은 `GameRoot.DebugXxx`.
 - 싱글턴 + `DontDestroyOnLoad` 남발을 피한다. 순수 로직은 생성자 주입, 어댑터는 씬 컴포지션 루트 하나에서 연결한다.
 
