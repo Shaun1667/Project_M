@@ -625,9 +625,9 @@
   - 확인: 컴파일 0 · Setup 실행(타일 누락 경고 없음, 테두리 46장 연결) · 미리보기 `39_seamless_mock.png` · 플레이 모드 카메라 렌더 `38_seamless_tiles.png`. 테스트 추가 없음(실행 안 함)
   - **확인 못 한 것 · 남은 것:** 직접 조작으로 둘러보기. 계단 타일은 예전 바닥이 그려진 그림이라 새 바닥과 무늬가 다름 → 새로 만들어야 함. 문 · 바닥 그림자(벽 밑) 없음
 - [x] **P-3a3. 얇은 벽 RuleTile** (2026-10-22 사용자 요청 "벽을 RuleTile로 만들어서 이렇게(SPD 스크린샷) 얇게") — 플레이 확인 대기
-  - 구현: `PixelWallTile : RuleTile<Neighbor>`(이웃 Floor · NotFloor · Shown(바닥 또는 아래가 바닥인 벽) · Hidden, 회전 없음, 스프라이트 여러 장 규칙은 x % 장 수) — 규칙 37개(앞면 4 = 좌우가 바닥인지 · 윗면 33 = 위 · 오른쪽 · 왼쪽 변 + 안쪽 모서리 4)를 MainSceneSetup `EnsurePixelWallTile`이 `Tiles/Wall` 그림으로 매번 새로 만듦. 그림 `Tools/tiles_wall.py`: 벽 속 투명, 보이는 쪽 16px 돌 블록(16×16) 테두리, 앞면 = 위 16px 테두리 + 아래 48px 벽돌(W1 텍스처 x % 4) + 밑동 그림자. `PixelTileSet`은 바닥 · 벽 RuleTile · 계단만, `PixelMapPresenter`는 바닥이 바뀌면 둘레 벽 `RefreshTile`. 직전의 벽 윗면 텍스처 · `PixelRims` 덮개 · rim 46장은 지움(Setup이 PixelRims 오브젝트 정리). 패키지 `com.unity.2d.tilemap.extras` 9.0.0을 manifest에 명시(전에는 간접 의존), Runtime · Editor asmdef가 참조. 카메라 배경 = 검정(벽 속이 안개와 같은 색)
+  - 구현: `PixelWallTile : RuleTile<Neighbor>`(이웃 Floor · NotFloor · Shown(바닥 또는 아래가 바닥인 벽) · Hidden, 회전 없음, 스프라이트 여러 장 규칙은 x % 장 수) — 규칙 37개(앞면 4 = 좌우가 바닥인지 · 윗면 33 = 위 · 오른쪽 · 왼쪽 변 + 안쪽 모서리 4)를 MainSceneSetup `EnsurePixelWallTile`이 `Tiles/Wall` 그림으로 매번 새로 만듦. 그림 `Tools/tiles_wall.py`: 벽 속 투명, 보이는 쪽 16px 돌 블록(16×16) 테두리, 앞면 = 위 16px 테두리 + 아래 48px 벽돌(W1 텍스처 x % 4) + 밑동 그림자. `PixelTileSet`은 바닥 · 벽 RuleTile · 계단만, `PixelMapPresenter`는 바닥이 바뀌면 둘레 벽 `RefreshTile`. 직전의 벽 윗면 텍스처 · `PixelRims` 덮개 · rim 46장은 지움(Setup이 PixelRims 오브젝트 정리). 패키지 `com.unity.2d.tilemap.extras` 9.0.0을 manifest에 명시(전에는 간접 의존), Runtime · Editor asmdef가 참조. 카메라 배경 = 검정(벽 속이 안개와 같은 색 — Unity MCP가 멈춰 사용자가 Setup을 직접 실행, 씬 반영 확인)
   - 확인: 컴파일 0 · Setup 실행(규칙 37 · 빠진 그림 0) · 미리보기 `40_thin_wall_mock.png` · 플레이 모드 렌더 `41_thin_wall_game.png` — 얇은 테두리 · 앞면 벽돌 정상. 테스트 추가 없음(실행 안 함)
-  - **확인 못 한 것:** 카메라 배경 검정은 코드만 고침 — 고친 뒤 Unity MCP가 응답하지 않아(플레이 모드 종료 중) Setup을 다시 못 돌림 → 씬에는 아직 예전 어두운 남색 배경. Unity에서 메뉴 ProjectM/Setup/Main Scene 한 번 실행 필요. 직접 조작 확인 · 문 타일 · 계단 새 그림 없음
+  - **확인 못 한 것:** 직접 조작 확인 · 문 타일 · 계단 새 그림 없음
 ## Phase G — 3D 그래픽 (결정 2026-10-18: 재미 검증보다 먼저, Varco 3D 모델, 실시간 3D)
 목표: 규칙(Simulation)은 그대로 두고 표현 레이어만 3D로. 모델이 오기 전에 3D 틀(그레이박스)을 먼저 만들고, 모델 · 이펙트는 ID에 끼우기만 한다. 목록 · 규격 `Docs/ART_ASSETS.md`.
 
