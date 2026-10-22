@@ -14,14 +14,12 @@ namespace ProjectM.Presentation
         [Tooltip("바닥 큰 그림 한 변의 칸 수 (N×N)")] [SerializeField] private int _span = 4;
         [Tooltip("바닥 N×N — 아래 줄부터 (y % N) * N + (x % N)")] [SerializeField] private TileBase[] _floors = new TileBase[0];
         [Tooltip("벽 — 얇은 벽 RuleTile (PixelWallTile)")] [SerializeField] private TileBase _wall;
-        [Tooltip("홀로 선 벽의 솟은 윗면 4장 — 비트 1 오른쪽 · 2 왼쪽 닫힘 (벽 위 칸에 덮개)")] [SerializeField] private TileBase[] _wallCaps = new TileBase[0];
         [SerializeField] private TileBase _stairsDown;
         [SerializeField] private TileBase _stairsUp;
 
         public TileBase StairsDown => _stairsDown;
         public TileBase StairsUp => _stairsUp;
         public TileBase Wall => _wall;
-        public TileBase WallCap(int mask) => _wallCaps != null && mask >= 0 && mask < _wallCaps.Length ? _wallCaps[mask] : null;
 
         public TileBase Floor(int x, int y) => PickGrid(_floors, x, y);
 
@@ -37,12 +35,11 @@ namespace ProjectM.Presentation
         private static int Wrap(int v, int n) => ((v % n) + n) % n;
 
         /// <summary>에디터 Setup용.</summary>
-        public void Configure(int span, TileBase[] floors, TileBase wall, TileBase[] wallCaps, TileBase stairsDown, TileBase stairsUp)
+        public void Configure(int span, TileBase[] floors, TileBase wall, TileBase stairsDown, TileBase stairsUp)
         {
             _span = span;
             _floors = floors ?? new TileBase[0];
             _wall = wall;
-            _wallCaps = wallCaps ?? new TileBase[0];
             _stairsDown = stairsDown;
             _stairsUp = stairsUp;
         }

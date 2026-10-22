@@ -31,10 +31,5 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 48e22115fc6e2a142a4446d65334f33b, type: 2}
   - {fileID: 11400000, guid: b3276bb25ce0cfa4eb75c8922516d911, type: 2}
   _wall: {fileID: 11400000, guid: fa8e770265f1af245a7429888f110c5e, type: 2}
-  _wallCaps:
-  - {fileID: 11400000, guid: 77ff37b95902be0459a36501ab18e860, type: 2}
-  - {fileID: 11400000, guid: b99afec3771627143853ba7dafbd4947, type: 2}
-  - {fileID: 11400000, guid: 83421a287ee1c5445957fcdcb47a06de, type: 2}
-  - {fileID: 11400000, guid: c24e28d5cd2b28449bde1ee8c4682307, type: 2}
   _stairsDown: {fileID: 11400000, guid: 8b1f4c6a5c80f2843a24f47a63bc13a3, type: 2}
   _stairsUp: {fileID: 11400000, guid: f6283173aa1ab96499432c66ce5ded01, type: 2}
