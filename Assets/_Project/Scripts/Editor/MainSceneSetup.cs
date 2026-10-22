@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using ProjectM.Core;
 using ProjectM.Data;
 using ProjectM.Input;
@@ -41,6 +42,12 @@ namespace ProjectM.Editor
         private const string FusionCatalogPath = "Assets/_Project/Data/Fusions/FusionCatalog.asset";
         private const string LootConfigPath = "Assets/_Project/Data/Items/LootConfig.asset";
         private const string ConsumableConfigPath = "Assets/_Project/Data/Items/ConsumableConfig.asset";
+        // P-3a (결정 2026-10-21): 2D 픽셀 그래픽 — Grid를 눕히지 않고 정사영 카메라, 맵은 PixelMapPresenter. false면 G-1 3D 그대로
+        private const bool Pixel2D = true;
+        private const int PixelsPerUnit = 64;
+        private const string PixelTileDir = "Assets/_Project/Art/Pixel/Tiles";
+        private const string PixelTileSetPath = "Assets/_Project/Data/Visuals/PixelTileSet.asset";
+        private const string SpriteUnlitMaterialPath = "Assets/_Project/Art/Pixel/SpriteUnlit.mat";
         private const string CharacterCatalogPath = "Assets/_Project/Data/Units/CharacterCatalog.asset";
         private const string CharacterArtDir = "Assets/_Project/Art/Pixel/Characters";
         // 2026-10-21 캐릭터 선택 — 모습 ID (3D Main에서는 픽셀 전환 전까지 둘 다 플레이어 모델)
@@ -125,7 +132,7 @@ namespace ProjectM.Editor
             // Grid를 X축 90° 돌려 바닥(XZ)에 눕힌다 — 칸 (x, y) = 월드 (x + 0.5, 0, y + 0.5). Tilemap 덮개는 로컬 −Z(= 월드 위)로 조금씩 띄운다
             var gridGo = FindOrCreate("Grid", null);
             var grid = GetOrAdd<Grid>(gridGo);
-            gridGo.transform.SetPositionAndRotation(Vector3.zero, Quaternion.Euler(90f, 0f, 0f));
+            gridGo.transform.SetPositionAndRotation(Vector3.zero, Pixel2D ? Quaternion.identity : Quaternion.Euler(90f, 0f, 0f)); // P-3a 2D: 칸 (x, y) = 월드 (x + 0.5, y + 0.5, 0)
             // 칸 두께 0: 아니면 칸 중앙이 로컬 z 0.5 = 월드 y −0.5가 되어 유닛 · 모듈이 바닥 평면(y = 0, 클릭 · 덮개)보다 0.5 m 아래에 놓인다 (G-2b에서 발견)
             grid.cellSize = new Vector3(1f, 1f, 0f);
 
@@ -144,6 +151,7 @@ namespace ProjectM.Editor
             tilemapSo.FindProperty("_walls3D").boolValue = true;
             tilemapSo.ApplyModifiedPropertiesWithoutUndo();
             SetRefs(entityPresenter, ("_ground", tilemapPresenter)); // G-2b: 계단 위 서는 높이
+            var pixelMap = Pixel2D ? EnsurePixelMap(gridGo) : null; // P-3a 2D 맵 (3D TilemapPresenter는 남겨 두되 묶지 않음)
 
             // 지형 효과 오버레이: 바닥 위 1 cm · 유닛 아래
             var terrainFxGo = FindOrCreate("TerrainFx", gridGo.transform);
@@ -174,10 +182,15 @@ namespace ProjectM.Editor
             if (cameraGo != null)
             {
                 cameraController = GetOrAdd<CameraController>(cameraGo);
-                cameraController.Apply(); // G-1: 원근 · 기울임
+                cameraController.ConfigurePixel2D(Pixel2D, PixelsPerUnit); // P-3a: 2D 정사영 · 정수 배율 (끄면 G-1 원근 · 기울임)
                 var cam = cameraGo.GetComponent<Camera>();
                 cam.nearClipPlane = 0.3f;
                 cam.farClipPlane = 100f;
+                if (Pixel2D) // P-3a: 하늘 대신 어두운 바탕 (맵 밖 · 빈 칸)
+                {
+                    cam.clearFlags = CameraClearFlags.SolidColor;
+                    cam.backgroundColor = new Color(0.04f, 0.035f, 0.05f);
+                }
             }
             else Debug.LogWarning("[MainSceneSetup] MainCamera 태그 카메라 없음");
 
@@ -232,6 +245,7 @@ namespace ProjectM.Editor
                 ("_floorItems", floorItems),
                 ("_terrainOverlay", terrainOverlay),
                 ("_tilemapPresenter", tilemapPresenter),
+                ("_pixelMap", pixelMap),
                 ("_entityPresenter", entityPresenter),
                 ("_fogPresenter", fogPresenter),
                 ("_input", input),
@@ -702,6 +716,68 @@ namespace ProjectM.Editor
             changed |= catalog.AddIfMissing(Armor("armor_plate", "판금 갑옷", 5, 18));
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
+        }
+
+        /// <summary>
+        /// P-3a 2D 맵: Grid 아래 "PixelMap" Tilemap(맨 아래 정렬) + PixelMapPresenter + PixelTileSet(Art/Pixel/Tiles의 64px 타일).
+        /// 바닥 변형은 floor_*.png 전부. 여러 번 실행해도 결과가 같다.
+        /// </summary>
+        private static PixelMapPresenter EnsurePixelMap(GameObject gridGo)
+        {
+            var go = FindOrCreate("PixelMap", gridGo.transform);
+            go.transform.localPosition = new Vector3(0f, 0f, 0.01f); // 다른 덮개(지형 효과 · 안개 · 조준)보다 뒤
+            var tilemap = GetOrAdd<Tilemap>(go);
+            var renderer = GetOrAdd<TilemapRenderer>(go);
+            renderer.sortingOrder = -10;
+            renderer.sharedMaterial = EnsureSpriteUnlitMaterial();
+            var floors = new List<TileBase>();
+            foreach (var guid in AssetDatabase.FindAssets("floor_ t:Texture2D", new[] { PixelTileDir }))
+            {
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                floors.Add(EnsurePixelTile(System.IO.Path.GetFileNameWithoutExtension(path)));
+            }
+            floors.Sort((a, b) => string.CompareOrdinal(a.name, b.name)); // 순서 고정
+            var set = LoadOrCreate<PixelTileSet>(PixelTileSetPath);
+            set.Configure(floors.ToArray(), EnsurePixelTile("wall_front"), EnsurePixelTile("wall_top"),
+                EnsurePixelTile("stairs_down"), EnsurePixelTile("stairs_up"));
+            EditorUtility.SetDirty(set);
+            var presenter = GetOrAdd<PixelMapPresenter>(go);
+            SetRefs(presenter, ("_tilemap", tilemap), ("_tiles", set));
+            return presenter;
+        }
+
+        /// <summary>Art/Pixel/Tiles/name.png → 픽셀 설정 스프라이트 + 같은 폴더 name.asset Tile. 없으면 null.</summary>
+        private static TileBase EnsurePixelTile(string name)
+        {
+            string png = $"{PixelTileDir}/{name}.png";
+            if (!System.IO.File.Exists(png))
+            {
+                Debug.LogWarning("[MainSceneSetup] 픽셀 타일 없음: " + png);
+                return null;
+            }
+            PixelTestSetup.ImportPixelSprite(png, SpriteAlignment.Center);
+            string assetPath = $"{PixelTileDir}/{name}.asset";
+            var tile = AssetDatabase.LoadAssetAtPath<Tile>(assetPath);
+            if (tile == null)
+            {
+                tile = ScriptableObject.CreateInstance<Tile>();
+                AssetDatabase.CreateAsset(tile, assetPath);
+            }
+            tile.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(png);
+            tile.colliderType = Tile.ColliderType.None;
+            EditorUtility.SetDirty(tile);
+            return tile;
+        }
+
+        /// <summary>조명 없이 그대로 그리는 스프라이트 재질 (Universal 렌더러 — P-3a).</summary>
+        internal static Material EnsureSpriteUnlitMaterial()
+        {
+            var material = AssetDatabase.LoadAssetAtPath<Material>(SpriteUnlitMaterialPath);
+            if (material != null) return material;
+            var shader = Shader.Find("Universal Render Pipeline/2D/Sprite-Unlit-Default") ?? Shader.Find("Sprites/Default");
+            material = new Material(shader);
+            AssetDatabase.CreateAsset(material, SpriteUnlitMaterialPath);
+            return material;
         }
 
         /// <summary>

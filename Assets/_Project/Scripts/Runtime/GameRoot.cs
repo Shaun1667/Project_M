@@ -38,6 +38,7 @@ namespace ProjectM
         [Tooltip("고를 수 있는 캐릭터 (2026-10-21). 비우거나 창이 없으면 고르지 않고 Player.asset 모습으로 시작")] [SerializeField] private CharacterCatalogAsset _characters;
         [SerializeField] private CharacterSelectPresenter _characterSelect;
         [SerializeField] private TilemapPresenter _tilemapPresenter;
+        [Tooltip("2D 픽셀 맵 (P-3a). 있으면 3D TilemapPresenter 대신 이것을 쓴다")] [SerializeField] private PixelMapPresenter _pixelMap;
         [SerializeField] private EntityPresenter _entityPresenter;
         [Tooltip("시야 안개. 비우면 안개 없이 전부 보인다")]
         [SerializeField] private FogPresenter _fogPresenter;
@@ -96,7 +97,7 @@ namespace ProjectM
         private void Awake()
         {
             if (_config == null || _dungeonConfig == null || _playerDef == null || _enemyDef == null || _bossDef == null || _result == null || _spawnConfig == null || _magicConfig == null
-                || _spellCatalog == null || _statusCatalog == null || _terrainCatalog == null || _reactionCatalog == null || _itemCatalog == null || _fusionCatalog == null || _tilemapPresenter == null || _entityPresenter == null || _input == null || _hud == null)
+                || _spellCatalog == null || _statusCatalog == null || _terrainCatalog == null || _reactionCatalog == null || _itemCatalog == null || _fusionCatalog == null || (_tilemapPresenter == null && _pixelMap == null) || _entityPresenter == null || _input == null || _hud == null)
             {
                 Debug.LogError("[GameRoot] 참조가 비어 있다. 메뉴 ProjectM/Setup/Main Scene을 실행한다.", this);
                 enabled = false;
@@ -209,7 +210,8 @@ namespace ProjectM
             if (loot != null) World.Scheduler.AddSystem(TickPhase.ManaRegen, new ItemPickupSystem(World, Items)); // 3-5: 걸어 들어가면 줍기
             var stairs = new FloorTransition(World, generator, dungeonConfig.FloorCount, enemyDef, spawn, (w, id) => enemyAi, vision, _bossDef.ToDef(), loot);
 
-            _tilemapPresenter.Bind(World.Events);
+            if (_pixelMap != null) _pixelMap.Bind(World.Events); // P-3a 2D 맵 — 3D 맵은 묶지 않음
+            else _tilemapPresenter.Bind(World.Events);
             _entityPresenter.Bind(World.Events);
             if (_fogPresenter != null) _fogPresenter.Bind(World.Events);
             if (_terrainOverlay != null) _terrainOverlay.Bind(World.Events);

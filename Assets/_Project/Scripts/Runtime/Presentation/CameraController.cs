@@ -21,7 +21,17 @@ namespace ProjectM.Presentation
         [Tooltip("가장 멀리 (m)")] [Min(1f)] [SerializeField] private float _maxDistance = 32f;
         [Tooltip("휠 한 칸에 바뀌는 거리 (m)")] [Min(0.1f)] [SerializeField] private float _zoomStep = 2f;
 
+        [Header("2D 픽셀 (P-3a, 결정 2026-10-21) — 켜면 정사영 · 위에서 똑바로 · 1 텍셀 = 정수 화면 픽셀")]
+        [Tooltip("2D 픽셀 모드. 끄면 G-1 3D 고각도 카메라")] [SerializeField] private bool _pixel2D;
+        [Tooltip("1칸(1 m)의 픽셀 수 — 스프라이트 PPU와 같게")] [Min(1)] [SerializeField] private int _pixelsPerUnit = 64;
+        [Tooltip("확대 배율 (1 텍셀 = 몇 화면 픽셀). 0 = 화면 높이에 맞춰 자동")] [Min(0)] [SerializeField] private int _pixelZoom;
+        [Tooltip("자동 배율일 때 세로로 보이게 할 칸 수 (대략)")] [Min(4)] [SerializeField] private int _tilesTall = 14;
+        [Tooltip("휠 배율 최대")] [Min(1)] [SerializeField] private int _maxPixelZoom = 4;
+
         private static readonly Plane Ground = new Plane(Vector3.up, Vector3.zero);
+        /// <summary>2D: 칸 평면 z = 0 (Grid를 돌리지 않음).</summary>
+        private static readonly Plane Ground2D = new Plane(Vector3.back, Vector3.zero);
+        private const float Depth2D = 10f;
         private Camera _camera;
         private Vector3 _target;
         private Vector3 _velocity;
@@ -44,16 +54,55 @@ namespace ProjectM.Presentation
         /// <summary>카메라 설정(원근 · 시야각)을 맞춘다 — Setup 메뉴도 부른다.</summary>
         public void Apply()
         {
+            if (_pixel2D)
+            {
+                Camera.orthographic = true;
+                transform.rotation = Quaternion.identity;
+                ApplyPixelZoom();
+                return;
+            }
             Camera.orthographic = false;
             Camera.fieldOfView = _fieldOfView;
             transform.rotation = Quaternion.Euler(_pitch, 0f, 0f);
         }
 
+        public bool IsPixel2D => _pixel2D;
+
+        /// <summary>에디터 Setup용 (P-3a): 2D 픽셀 모드 켜기 · 끄기.</summary>
+        public void ConfigurePixel2D(bool on, int pixelsPerUnit = 64)
+        {
+            _pixel2D = on;
+            _pixelsPerUnit = Mathf.Max(1, pixelsPerUnit);
+            Apply();
+        }
+
+        /// <summary>지금 배율 (1 텍셀 = 몇 화면 픽셀) — 0이면 화면 높이로 정한다.</summary>
+        public int PixelZoom => _pixelZoom > 0 ? _pixelZoom : Mathf.Max(1, Mathf.FloorToInt(Screen.height / (float)(_pixelsPerUnit * _tilesTall) + 0.5f));
+
+        /// <summary>정사영 크기 = 화면 높이 / (2 × PPU × 배율) — 텍셀이 화면 픽셀에 딱 맞음.</summary>
+        private void ApplyPixelZoom() => Camera.orthographicSize = Mathf.Max(1, Screen.height) / (2f * _pixelsPerUnit * PixelZoom);
+
+        private Vector3 PositionFor(Vector3 target) => _pixel2D
+            ? new Vector3(target.x, target.y, -Depth2D)
+            : target - Quaternion.Euler(_pitch, 0f, 0f) * Vector3.forward * _distance;
+
+        /// <summary>2D: 카메라 위치를 화면 픽셀 격자에 맞춘다 (픽셀이 떨리지 않게).</summary>
+        private Vector3 SnapToPixels(Vector3 position)
+        {
+            if (!_pixel2D) return position;
+            float unit = 1f / (_pixelsPerUnit * PixelZoom);
+            return new Vector3(Mathf.Round(position.x / unit) * unit, Mathf.Round(position.y / unit) * unit, position.z);
+        }
+
         public void SnapToTarget(Vector3 targetWorldPos)
         {
-            var rotation = Quaternion.Euler(_pitch, 0f, 0f);
-            transform.rotation = rotation;
-            transform.position = targetWorldPos - rotation * Vector3.forward * _distance;
+            if (_pixel2D)
+            {
+                transform.rotation = Quaternion.identity;
+                ApplyPixelZoom();
+            }
+            else transform.rotation = Quaternion.Euler(_pitch, 0f, 0f);
+            transform.position = SnapToPixels(PositionFor(targetWorldPos));
             _target = targetWorldPos;
             _velocity = Vector3.zero;
             _following = false;
@@ -96,12 +145,14 @@ namespace ProjectM.Presentation
         /// <summary>보는 곳을 바닥에서 delta만큼 옮긴다 (둘러보기 — 따라가기를 멈춤). 범위 밖으로는 안 나감.</summary>
         public void PanBy(Vector3 delta)
         {
-            delta.y = 0f;
+            if (_pixel2D) delta.z = 0f;
+            else delta.y = 0f;
             var target = _target + delta;
             if (_hasBounds)
             {
                 target.x = Mathf.Clamp(target.x, _boundsMin.x, _boundsMax.x);
-                target.z = Mathf.Clamp(target.z, _boundsMin.y, _boundsMax.y);
+                if (_pixel2D) target.y = Mathf.Clamp(target.y, _boundsMin.y, _boundsMax.y);
+                else target.z = Mathf.Clamp(target.z, _boundsMin.y, _boundsMax.y);
             }
             _target = target;
             _following = false;
@@ -113,6 +164,15 @@ namespace ProjectM.Presentation
         /// <summary>휠: notches &gt; 0 = 확대(가까이), &lt; 0 = 축소(멀리). 보는 곳은 그대로.</summary>
         public void Zoom(float notches)
         {
+            if (_pixel2D)
+            {
+                int zoom = Mathf.Clamp(PixelZoom + (notches > 0 ? 1 : notches < 0 ? -1 : 0), 1, _maxPixelZoom);
+                if (zoom == PixelZoom) return;
+                _pixelZoom = zoom;
+                ApplyPixelZoom();
+                if (!_following) PlaceAtTarget();
+                return;
+            }
             float next = Mathf.Clamp(_distance - notches * _zoomStep, _minDistance, Mathf.Max(_minDistance, _maxDistance));
             if (Mathf.Approximately(next, _distance)) return;
             _distance = next;
@@ -121,22 +181,31 @@ namespace ProjectM.Presentation
 
         private void PlaceAtTarget()
         {
-            var rotation = Quaternion.Euler(_pitch, 0f, 0f);
-            transform.rotation = rotation;
-            transform.position = _target - rotation * Vector3.forward * _distance;
+            transform.rotation = _pixel2D ? Quaternion.identity : Quaternion.Euler(_pitch, 0f, 0f);
+            transform.position = SnapToPixels(PositionFor(_target));
         }
+
+        // 2D: 부드럽게 따라가는 실제 위치 (화면에는 픽셀에 맞춘 값을 놓는다)
+        private Vector3 _smoothPosition;
+        private bool _hasSmooth;
 
         private void LateUpdate()
         {
-            if (!_following) return;
-            var rotation = Quaternion.Euler(_pitch, 0f, 0f);
-            var desired = _target - rotation * Vector3.forward * _distance;
-            transform.position = Vector3.SmoothDamp(transform.position, desired, ref _velocity, _followTime);
-            if ((transform.position - desired).sqrMagnitude < 1e-6f)
+            if (_pixel2D) ApplyPixelZoom(); // 창 크기가 바뀌어도 텍셀 = 정수 화면 픽셀
+            if (!_following)
             {
-                transform.position = desired;
+                _hasSmooth = false;
+                return;
+            }
+            var desired = PositionFor(_target);
+            if (!_hasSmooth) { _smoothPosition = transform.position; _hasSmooth = true; }
+            _smoothPosition = Vector3.SmoothDamp(_smoothPosition, desired, ref _velocity, _followTime);
+            if ((_smoothPosition - desired).sqrMagnitude < 1e-6f)
+            {
+                _smoothPosition = desired;
                 _following = false;
             }
+            transform.position = SnapToPixels(_smoothPosition);
         }
 
         public void SnapToTarget(Transform target)
@@ -147,10 +216,12 @@ namespace ProjectM.Presentation
         /// <summary>화면 좌표가 가리키는 바닥(y = 0) 위 점. 하늘을 가리키면 false.</summary>
         public bool ScreenToGround(Vector2 screenPos, out Vector3 point) => ScreenToGround(Camera, screenPos, out point);
 
+        /// <summary>2D(정사영 · 정면) 카메라면 칸 평면 z = 0, 아니면 바닥 y = 0.</summary>
         public static bool ScreenToGround(Camera camera, Vector2 screenPos, out Vector3 point)
         {
             var ray = camera.ScreenPointToRay(new Vector3(screenPos.x, screenPos.y, 0f));
-            if (Ground.Raycast(ray, out float enter))
+            var plane = camera.orthographic && Vector3.Dot(camera.transform.forward, Vector3.forward) > 0.99f ? Ground2D : Ground;
+            if (plane.Raycast(ray, out float enter))
             {
                 point = ray.GetPoint(enter);
                 return true;
