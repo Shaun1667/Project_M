@@ -17,7 +17,9 @@ MonoBehaviour:
     DisplayName: "\uAE08\uBC1C\uC758 \uB9C8\uBC95\uC0AC"
     VisualId: hero_blond
     Portrait: {fileID: 21300000, guid: daf974b677614ce4eb1093f7dc58cde1, type: 3}
+    Illustration: {fileID: 21300000, guid: 3715468384fae71499ed6102f08494d2, type: 3}
   - Id: hero_black
     DisplayName: "\uD751\uBC1C\uC758 \uB9C8\uBC95\uC0AC"
     VisualId: hero_black
     Portrait: {fileID: 21300000, guid: 84bbeccd5bccd0c488c067fdd3d4c051, type: 3}
+    Illustration: {fileID: 0}
