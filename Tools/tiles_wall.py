@@ -1,7 +1,7 @@
-"""얇은 벽(SPD식) 스프라이트 만들기 (2026-10-22) — PixelWallTile(RuleTile) 규칙과 짝. 64px 칸, 테두리 두께 16px(돌 블록 16×16).
-벽 앞면(아래 칸이 바닥, 위 칸은 바닥 아님): wall_front_nS_X.png — 위 16줄 돌 테두리 + 아래 48줄 벽돌(벽돌 그림 256px 위 48줄을 x % 4로 자름),
+"""얇은 벽(SPD식) 스프라이트 만들기 (2026-10-22) — PixelWallTile(RuleTile) 규칙과 짝. 64px 칸, 테두리 두께 8px(돌 블록 8×8) — 모든 벽이 같은 두께 · 같은 블록(사용자 피드백 2026-10-22, 처음 16px).
+벽 앞면(아래 칸이 바닥, 위 칸은 바닥 아님): wall_front_nS_X.png — 위 8줄 돌 테두리 + 아래 56줄 벽돌(벽돌 그림 256px 위 56줄을 x % 4로 자름),
   S 비트 1 = 오른쪽 칸이 바닥 · 2 = 왼쪽 칸이 바닥이면 그쪽 끝에 얇은 밝은 모서리(2px, 테두리 블록은 안 세움).
-홀로 선 벽(아래 · 위 칸 모두 바닥 — 한 칸 기둥 · 얇은 가로벽): wall_front_cEW_X.png — 위 절반 = 윗면 고리(8px 블록, 가운데 어둠),
+홀로 선 벽(아래 · 위 칸 모두 바닥 — 한 칸 기둥 · 얇은 가로벽): wall_front_cEW_X.png — 위 절반 = 윗면 고리(같은 8px 블록, 가운데 어둠),
   아래 절반 = 벽돌. E · W = 오른쪽 · 왼쪽 칸 종류 f(바닥: 고리 닫고 벽돌 끝 모서리) · w(벽: 고리를 열어 옆 벽과 이음) · o(빈 칸: 고리만 닫음).
 벽 윗면(그 밖): wall_top_MMM.png — 보이는 쪽 변 · 모서리에만 테두리, 나머지는 투명(배경 = 어둠).
   비트 1 위 · 2 오른쪽 · 4 왼쪽 변(보이는 칸 = 바닥 또는 벽 앞면), 8 오른쪽위 · 16 왼쪽위 모서리(보이는 칸), 32 오른쪽아래 · 64 왼쪽아래 모서리(바닥).
@@ -10,7 +10,7 @@
 import os, sys
 from PIL import Image
 
-T, B, R = 64, 16, 8  # 칸 · 테두리 블록 · 고리 블록
+T, B = 64, 8  # 칸 · 테두리 블록(두께) — 고리도 같은 블록
 BASE = [(176, 183, 180), (166, 173, 170), (184, 191, 188)]
 HI, SH, MORTAR = (218, 225, 222), (126, 136, 133), (64, 72, 70)
 KINDS = 'fwo'  # 옆 칸: 바닥 · 벽 · 빈 칸
@@ -70,12 +70,12 @@ def cap(bricks, e, w, x):
     im = Image.new('RGBA', (T, T), (0, 0, 0, 0))
     half = T // 2
     px = bricks_and_base(im, bricks, x, half)
-    for i in range(0, T, R):
-        block(px, i, 0, R)
-        block(px, i, half - R, R)
-    for yy in range(R, half - R, R):
-        if e != 'w': block(px, T - R, yy, R)
-        if w != 'w': block(px, 0, yy, R)
+    for i in range(0, T, B):
+        block(px, i, 0)
+        block(px, i, half - B)
+    for yy in range(B, half - B, B):
+        if e != 'w': block(px, T - B, yy)
+        if w != 'w': block(px, 0, yy)
     edges(px, e == 'f', w == 'f', half)
     return im
 
