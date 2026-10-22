@@ -1,8 +1,8 @@
-"""얇은 벽(SPD식) 스프라이트 만들기 (2026-10-22) — PixelWallTile(RuleTile) 규칙과 짝. 64px 칸, 테두리 두께 8px(돌 블록 8×8) — 모든 벽이 같은 두께 · 같은 블록(사용자 피드백 2026-10-22, 처음 16px).
-벽 앞면(아래 칸이 바닥, 위 칸은 바닥 아님): wall_front_nS_X.png — 위 8줄 돌 테두리 + 아래 56줄 벽돌(벽돌 그림 256px 위 56줄을 x % 4로 자름),
+"""얇은 벽(SPD식) 스프라이트 만들기 (2026-10-22) — PixelWallTile(RuleTile) 규칙과 짝. 64px 칸, 테두리 두께 16px(돌 블록 16×16) — 모든 벽이 같은 두께 · 같은 블록
+(사용자 피드백 2026-10-22 "두꺼운 것으로 맞춰" — 잠시 8px였음).
+벽 앞면(아래 칸이 바닥): wall_front_nS_X.png — 위 16줄 돌 테두리 + 아래 48줄 벽돌(벽돌 그림 256px 위 48줄을 x % 4로 자름) — 모든 앞면이 같은 높이,
   S 비트 1 = 오른쪽 칸이 바닥 · 2 = 왼쪽 칸이 바닥이면 그쪽 끝에 얇은 밝은 모서리(2px, 테두리 블록은 안 세움).
-홀로 선 벽(아래 · 위 칸 모두 바닥 — 한 칸 기둥 · 얇은 가로벽): wall_front_cEW_X.png — 위 절반 = 윗면 고리(같은 8px 블록, 가운데 어둠),
-  아래 절반 = 벽돌. E · W = 오른쪽 · 왼쪽 칸 종류 f(바닥: 고리 닫고 벽돌 끝 모서리) · w(벽: 고리를 열어 옆 벽과 이음) · o(빈 칸: 고리만 닫음).
+홀로 선 벽(위 칸도 바닥 — 한 칸 기둥 · 얇은 가로벽)의 솟은 윗면: wall_cap_M.png — 벽 위 칸에 덮개로(아래 절반 고리, 가운데 어둠), M 비트 1 오른쪽 · 2 왼쪽 닫힘.
 벽 윗면(그 밖): wall_top_MMM.png — 보이는 쪽 변 · 모서리에만 테두리, 나머지는 투명(배경 = 어둠).
   비트 1 위 · 2 오른쪽 · 4 왼쪽 변(보이는 칸 = 바닥 또는 벽 앞면), 8 오른쪽위 · 16 왼쪽위 모서리(보이는 칸), 32 오른쪽아래 · 64 왼쪽아래 모서리(바닥).
   모서리는 붙은 변이 닫혔을 때만 — 오른쪽위: 위 · 오른쪽 닫힘, 왼쪽위: 위 · 왼쪽, 오른쪽아래: 오른쪽, 왼쪽아래: 왼쪽 (PixelWallTile과 같은 규칙).
@@ -10,10 +10,9 @@
 import os, sys
 from PIL import Image
 
-T, B = 64, 8  # 칸 · 테두리 블록(두께) — 고리도 같은 블록
+T, B = 64, 16  # 칸 · 테두리 블록(두께) — 모든 벽 같은 두께
 BASE = [(176, 183, 180), (166, 173, 170), (184, 191, 188)]
 HI, SH, MORTAR = (218, 225, 222), (126, 136, 133), (64, 72, 70)
-KINDS = 'fwo'  # 옆 칸: 바닥 · 벽 · 빈 칸
 
 
 def block(px, x0, y0, size=B):
@@ -65,18 +64,21 @@ def front(bricks, sides, x):
     return im
 
 
-def cap(bricks, e, w, x):
-    """홀로 선 벽: 위 절반 고리(윗면 — 가운데 어둠), 아래 절반 벽돌. 옆이 벽(w)이면 고리를 그쪽으로 열어 이어 붙임."""
+def cap_top(mask):
+    """홀로 선 벽(위 · 아래 칸이 모두 바닥)의 솟은 윗면 — 벽 바로 위 칸(바닥)에 덮개로 그림(PixelMapPresenter의 PixelWallCaps).
+    아래 절반만: 윗줄 블록 + 양옆 블록(닫힌 쪽만) + 가운데 어둠. 벽 칸의 앞면 위 테두리가 고리의 아랫줄이 된다 → 앞면 높이는 다른 벽과 같음.
+    mask 비트 1 = 오른쪽 닫힘(오른쪽 칸이 벽 아님) · 2 = 왼쪽 닫힘."""
     im = Image.new('RGBA', (T, T), (0, 0, 0, 0))
+    px = im.load()
     half = T // 2
-    px = bricks_and_base(im, bricks, x, half)
+    for yy in range(half + B, T):
+        for xx in range(T):
+            px[xx, yy] = (0, 0, 0, 255)
     for i in range(0, T, B):
-        block(px, i, 0)
-        block(px, i, half - B)
-    for yy in range(B, half - B, B):
-        if e != 'w': block(px, T - B, yy)
-        if w != 'w': block(px, 0, yy)
-    edges(px, e == 'f', w == 'f', half)
+        block(px, i, half)
+    for yy in range(half + B, T, B):
+        if mask & 1: block(px, T - B, yy)
+        if mask & 2: block(px, 0, yy)
     return im
 
 
@@ -109,9 +111,8 @@ if __name__ == '__main__':
     for x in range(4):
         for s in range(4):
             front(bricks, s, x).save(os.path.join(out, f'wall_front_n{s}_{x}.png'))
-        for e in KINDS:
-            for w in KINDS:
-                cap(bricks, e, w, x).save(os.path.join(out, f'wall_front_c{e}{w}_{x}.png'))
+    for m in range(4):
+        cap_top(m).save(os.path.join(out, f'wall_cap_{m}.png'))
     n = 0
     for m in range(128):
         if valid(m):
