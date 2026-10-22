@@ -39,8 +39,10 @@ for r in range(rows):
         cnt = Counter(full[x, y] for y in range(y0, max(y0 + 1, y1)) for x in range(x0, max(x0 + 1, x1)))
         col = cnt.most_common(1)[0][0]
         rr, gg, bb = col
-        green = gg > 150 and rr < 120 and bb < 120 and gg - max(rr, bb) > 60
-        op[c, r] = (0, 0, 0, 0) if green else (rr, gg, bb, 255)
+        green = gg > 110 and gg - max(rr, bb) > 45  # 배경 초록 + 가장자리에 섞인 초록 (캐릭터에 진초록이 생기면 기준을 다시 볼 것)
+        if green: op[c, r] = (0, 0, 0, 0)
+        elif gg - max(rr, bb) > 15 and max(rr, bb) < 30: op[c, r] = (18, 16, 22, 255)  # 외곽선에 배경 초록이 섞인 칸 → 외곽선 색
+        else: op[c, r] = (rr, gg, bb, 255)
 box = out.getbbox()
 spr = out.crop(box)
 if spr.height > T - 1 or spr.width > T:  # 칸이 64보다 많이 잡힌 경우만 가장 가까운 칸으로 줄임
