@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: ProjectM.Runtime::ProjectM.Presentation.PixelTileSet
   _floors:
   - {fileID: 11400000, guid: 5008393b9540b4d4f8bff32ab3f20108, type: 2}
+  - {fileID: 11400000, guid: 5488470f43a4edb4381ac2aad39c8f31, type: 2}
   _wallFront: {fileID: 11400000, guid: 796a60e2e7bd7f840ba9f4ce8d282fb6, type: 2}
   _wallTop: {fileID: 11400000, guid: 2986f6a3117a819429a49da313931bcf, type: 2}
   _stairsDown: {fileID: 11400000, guid: 8b1f4c6a5c80f2843a24f47a63bc13a3, type: 2}
