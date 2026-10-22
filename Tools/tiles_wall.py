@@ -1,6 +1,6 @@
 """얇은 벽(SPD식) 스프라이트 만들기 (2026-10-22) — PixelWallTile(RuleTile) 규칙과 짝. 64px 칸, 테두리 두께 16px(돌 블록 16×16).
 벽 앞면(아래 칸이 바닥): wall_front_S_X.png — 위 16줄 돌 테두리 + 아래 48줄 벽돌(벽돌 그림 256px 위 48줄을 x % 4로 자름),
-  S 비트 1 = 오른쪽 칸이 바닥 · 2 = 왼쪽 칸이 바닥이면 그쪽에 세로 테두리.
+  S 비트 1 = 오른쪽 칸이 바닥 · 2 = 왼쪽 칸이 바닥이면 그쪽 끝에 얇은 밝은 모서리(2px, 테두리 블록은 안 세움).
 벽 윗면(그 밖): wall_top_MMM.png — 보이는 쪽 변 · 모서리에만 테두리, 나머지는 투명(배경 = 어둠).
   비트 1 위 · 2 오른쪽 · 4 왼쪽 변(보이는 칸 = 바닥 또는 벽 앞면), 8 오른쪽위 · 16 왼쪽위 모서리(보이는 칸), 32 오른쪽아래 · 64 왼쪽아래 모서리(바닥).
   모서리는 붙은 변이 닫혔을 때만 — 오른쪽위: 위 · 오른쪽 닫힘, 왼쪽위: 위 · 왼쪽, 오른쪽아래: 오른쪽, 왼쪽아래: 왼쪽 (PixelWallTile과 같은 규칙).
@@ -42,7 +42,12 @@ def front(bricks, sides, x):
         for yy, k in ((T - 1, 0.55), (T - 2, 0.8)):
             r, g, b, a = px[xx, yy]
             px[xx, yy] = (int(r * k), int(g * k), int(b * k), a)
-    strips(px, top=True, right=bool(sides & 1), left=bool(sides & 2))
+    strips(px, top=True)
+    for yy in range(T):  # 옆이 바닥(벽 끝): 테두리 블록 대신 얇은 밝은 모서리 2줄 — 블록을 세우면 상자처럼 보임 (2026-10-22 사용자 피드백)
+        for xx, c in ((0, HI), (1, SH)) if sides & 2 else ():
+            px[xx, yy] = c + (255,)
+        for xx, c in ((T - 1, HI), (T - 2, SH)) if sides & 1 else ():
+            px[xx, yy] = c + (255,)
     return im
 
 
