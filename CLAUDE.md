@@ -140,7 +140,7 @@ Assets/
 12. **마법 자원은 마나.**
 
 ## 아트 · 그래픽 규칙
-- **2D 픽셀 전환 (Phase P, 2026-10-21~)**: Grid는 눕히지 않음 — 칸 (x, y) = 월드 (x + 0.5, y + 0.5, 0). 카메라는 `CameraController` 2D 모드(`ConfigurePixel2D` — 정사영, 1 텍셀 = 정수 화면 픽셀, 위치도 화면 픽셀에 맞춤), 화면 → 칸은 z = 0 평면. 맵은 `PixelMapPresenter` + `PixelTileSet`(바닥 변형 · 벽 앞면(아래가 바닥) · 벽 윗면 · 계단, 타일 `Art/Pixel/Tiles/*.png` 64 PPU 점 필터 — Setup이 Tile 에셋을 만듦). 게임 안 스프라이트 = 4등신 격자 맞춤(축소 `Tools/grid64.py` — 칸 가운데 색, 평균 금지), 캐릭터 원본 일러스트 = 7등신. 아래 3D 규칙은 전환이 끝날 때까지의 기준.
+- **2D 픽셀 전환 (Phase P, 2026-10-21~)**: Grid는 눕히지 않음 — 칸 (x, y) = 월드 (x + 0.5, y + 0.5, 0). 카메라는 `CameraController` 2D 모드(`ConfigurePixel2D` — 정사영, 1 텍셀 = 정수 화면 픽셀, 위치도 화면 픽셀에 맞춤), 화면 → 칸은 z = 0 평면. 맵은 `PixelMapPresenter` + `PixelTileSet`(바닥 · 벽 윗면 = 이어지는 256px 그림을 4×4칸으로 잘라 칸 위치 % 4로 고름, 벽 앞면(아래가 바닥) = 가로 띠 x % 4, 벽 윗면 테두리 = 덮개 Tilemap `PixelRims`(열린 변 + 안쪽 모서리 마스크 `rim_MMM`), 계단 — 타일 `Art/Pixel/Tiles/*.png`는 `Tools/tiles_seamless.py`가 만들고 64 PPU 점 필터, Setup이 Tile 에셋을 만듦). 게임 안 스프라이트 = 4등신 격자 맞춤(축소 `Tools/grid64.py` — 칸 가운데 색, 평균 금지), 캐릭터 원본 일러스트 = 7등신. 아래 3D 규칙은 전환이 끝날 때까지의 기준.
 - 실시간 3D (결정 2026-10-18). 데이터는 비주얼 에셋을 **ID로만** 참조하고(`EntityVisualCatalog` VisualId → 프리팹, `TileVisualSet`), 표현 레이어 교체만으로 바꾼다. 규칙(Simulation)은 3D를 모른다.
 - 좌표: Grid 오브젝트를 X축 90° 돌려 칸 (x, y) = 월드 (x + 0.5, 0, y + 0.5). 칸 ↔ 월드는 `Grid.GetCellCenterWorld` / 화면 → 칸은 카메라 광선과 바닥 평면(y = 0)의 교점 (물리 · 충돌체를 쓰지 않는다 — 규칙 2). 모델 원점 = 발밑 중앙.
 - 그래픽 작업을 재미 검증(Phase 4)보다 먼저 한다 (변경 2026-10-18, 사용자 결정 — ~~재미 검증 전에는 그래픽 작업을 하지 않는다~~). 프리팹이 없는 VisualId는 그레이박스 도형(캡슐 · 큐브)으로 그린다.

@@ -45,6 +45,7 @@ namespace ProjectM.Editor
         // P-3a (결정 2026-10-21): 2D 픽셀 그래픽 — Grid를 눕히지 않고 정사영 카메라, 맵은 PixelMapPresenter. false면 G-1 3D 그대로
         private const bool Pixel2D = true;
         private const int PixelsPerUnit = 64;
+        private const int PixelTileSpan = 4; // 바닥 · 벽 큰 그림 = 4×4칸 (결정 2026-10-22)
         private const string PixelTileDir = "Assets/_Project/Art/Pixel/Tiles";
         private const string PixelTileSetPath = "Assets/_Project/Data/Visuals/PixelTileSet.asset";
         private const string SpriteUnlitMaterialPath = "Assets/_Project/Art/Pixel/SpriteUnlit.mat";
@@ -730,19 +731,35 @@ namespace ProjectM.Editor
             var renderer = GetOrAdd<TilemapRenderer>(go);
             renderer.sortingOrder = -10;
             renderer.sharedMaterial = EnsureSpriteUnlitMaterial();
-            var floors = new List<TileBase>();
-            foreach (var guid in AssetDatabase.FindAssets("floor_ t:Texture2D", new[] { PixelTileDir }))
+            // 2026-10-22: 이어지는 타일 — 큰 그림을 PixelTileSpan × PixelTileSpan으로 자른 floor_NN · walltop_NN(아래 줄부터), 벽 앞면 띠 wallfront_N,
+            // 벽 윗면 테두리 rim_MMM(변 4비트 + 안쪽 모서리 4비트, 쓰는 조합만 파일이 있음). 그림은 Tools/tiles_seamless.py가 만든다
+            int cells = PixelTileSpan * PixelTileSpan;
+            var floors = new TileBase[cells];
+            var wallTops = new TileBase[cells];
+            for (int i = 0; i < cells; i++)
             {
-                var path = AssetDatabase.GUIDToAssetPath(guid);
-                floors.Add(EnsurePixelTile(System.IO.Path.GetFileNameWithoutExtension(path)));
+                floors[i] = EnsurePixelTile($"floor_{i:00}");
+                wallTops[i] = EnsurePixelTile($"walltop_{i:00}");
             }
-            floors.Sort((a, b) => string.CompareOrdinal(a.name, b.name)); // 순서 고정
+            var wallFronts = new TileBase[PixelTileSpan];
+            for (int i = 0; i < PixelTileSpan; i++) wallFronts[i] = EnsurePixelTile($"wallfront_{i}");
+            var rims = new TileBase[256];
+            for (int mask = 1; mask < rims.Length; mask++)
+                if (System.IO.File.Exists($"{PixelTileDir}/rim_{mask:000}.png")) rims[mask] = EnsurePixelTile($"rim_{mask:000}");
             var set = LoadOrCreate<PixelTileSet>(PixelTileSetPath);
-            set.Configure(floors.ToArray(), EnsurePixelTile("wall_front"), EnsurePixelTile("wall_top"),
+            set.Configure(PixelTileSpan, floors, wallFronts, wallTops, rims,
                 EnsurePixelTile("stairs_down"), EnsurePixelTile("stairs_up"));
             EditorUtility.SetDirty(set);
+
+            var rimGo = FindOrCreate("PixelRims", gridGo.transform); // 벽 윗면 테두리 — 맵 위 · 지형 효과 · 안개 아래
+            rimGo.transform.localPosition = new Vector3(0f, 0f, 0.005f);
+            var rimMap = GetOrAdd<Tilemap>(rimGo);
+            var rimRenderer = GetOrAdd<TilemapRenderer>(rimGo);
+            rimRenderer.sortingOrder = -9;
+            rimRenderer.sharedMaterial = renderer.sharedMaterial;
+
             var presenter = GetOrAdd<PixelMapPresenter>(go);
-            SetRefs(presenter, ("_tilemap", tilemap), ("_tiles", set));
+            SetRefs(presenter, ("_tilemap", tilemap), ("_tiles", set), ("_rims", rimMap));
             return presenter;
         }
 
