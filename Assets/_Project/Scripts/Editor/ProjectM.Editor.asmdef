@@ -3,6 +3,7 @@
     "rootNamespace": "ProjectM.Editor",
     "references": [
         "ProjectM.Simulation",
+        "Unity.2D.Tilemap.Extras",
         "ProjectM.Runtime",
         "Unity.TextMeshPro",
         "UnityEngine.UI",

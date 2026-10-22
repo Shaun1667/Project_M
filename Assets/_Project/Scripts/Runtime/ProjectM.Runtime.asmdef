@@ -3,6 +3,7 @@
     "rootNamespace": "ProjectM",
     "references": [
         "ProjectM.Simulation",
+        "Unity.2D.Tilemap.Extras",
         "Unity.InputSystem",
         "Unity.TextMeshPro",
         "UnityEngine.UI"

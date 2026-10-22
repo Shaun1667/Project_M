@@ -88,7 +88,7 @@
     },
     "com.unity.2d.tilemap.extras": {
       "version": "9.0.0",
-      "depth": 1,
+      "depth": 0,
       "source": "registry",
       "dependencies": {
         "com.unity.2d.tilemap": "1.0.0",

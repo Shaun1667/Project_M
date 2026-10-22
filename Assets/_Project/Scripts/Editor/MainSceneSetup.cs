@@ -45,6 +45,7 @@ namespace ProjectM.Editor
         // P-3a (결정 2026-10-21): 2D 픽셀 그래픽 — Grid를 눕히지 않고 정사영 카메라, 맵은 PixelMapPresenter. false면 G-1 3D 그대로
         private const bool Pixel2D = true;
         private const int PixelsPerUnit = 64;
+        private const string PixelWallTilePath = "Assets/_Project/Art/Pixel/Tiles/Wall/PixelWallTile.asset";
         private const int PixelTileSpan = 4; // 바닥 · 벽 큰 그림 = 4×4칸 (결정 2026-10-22)
         private const string PixelTileDir = "Assets/_Project/Art/Pixel/Tiles";
         private const string PixelTileSetPath = "Assets/_Project/Data/Visuals/PixelTileSet.asset";
@@ -190,7 +191,7 @@ namespace ProjectM.Editor
                 if (Pixel2D) // P-3a: 하늘 대신 어두운 바탕 (맵 밖 · 빈 칸)
                 {
                     cam.clearFlags = CameraClearFlags.SolidColor;
-                    cam.backgroundColor = new Color(0.04f, 0.035f, 0.05f);
+                    cam.backgroundColor = Color.black; // 2026-10-22 얇은 벽: 벽 속(투명)이 안 본 곳(안개 검정)과 같은 색
                 }
             }
             else Debug.LogWarning("[MainSceneSetup] MainCamera 태그 카메라 없음");
@@ -731,36 +732,92 @@ namespace ProjectM.Editor
             var renderer = GetOrAdd<TilemapRenderer>(go);
             renderer.sortingOrder = -10;
             renderer.sharedMaterial = EnsureSpriteUnlitMaterial();
-            // 2026-10-22: 이어지는 타일 — 큰 그림을 PixelTileSpan × PixelTileSpan으로 자른 floor_NN · walltop_NN(아래 줄부터), 벽 앞면 띠 wallfront_N,
-            // 벽 윗면 테두리 rim_MMM(변 4비트 + 안쪽 모서리 4비트, 쓰는 조합만 파일이 있음). 그림은 Tools/tiles_seamless.py가 만든다
+            // 2026-10-22: 바닥 = 이어지는 큰 그림을 PixelTileSpan × PixelTileSpan으로 자른 floor_NN(아래 줄부터, Tools/tiles_seamless.py),
+            // 벽 = 얇은 벽 RuleTile(PixelWallTile — 그림은 Tools/tiles_wall.py가 Tiles/Wall에)
             int cells = PixelTileSpan * PixelTileSpan;
             var floors = new TileBase[cells];
-            var wallTops = new TileBase[cells];
-            for (int i = 0; i < cells; i++)
-            {
-                floors[i] = EnsurePixelTile($"floor_{i:00}");
-                wallTops[i] = EnsurePixelTile($"walltop_{i:00}");
-            }
-            var wallFronts = new TileBase[PixelTileSpan];
-            for (int i = 0; i < PixelTileSpan; i++) wallFronts[i] = EnsurePixelTile($"wallfront_{i}");
-            var rims = new TileBase[256];
-            for (int mask = 1; mask < rims.Length; mask++)
-                if (System.IO.File.Exists($"{PixelTileDir}/rim_{mask:000}.png")) rims[mask] = EnsurePixelTile($"rim_{mask:000}");
+            for (int i = 0; i < cells; i++) floors[i] = EnsurePixelTile($"floor_{i:00}");
             var set = LoadOrCreate<PixelTileSet>(PixelTileSetPath);
-            set.Configure(PixelTileSpan, floors, wallFronts, wallTops, rims,
+            set.Configure(PixelTileSpan, floors, EnsurePixelWallTile(),
                 EnsurePixelTile("stairs_down"), EnsurePixelTile("stairs_up"));
             EditorUtility.SetDirty(set);
 
-            var rimGo = FindOrCreate("PixelRims", gridGo.transform); // 벽 윗면 테두리 — 맵 위 · 지형 효과 · 안개 아래
-            rimGo.transform.localPosition = new Vector3(0f, 0f, 0.005f);
-            var rimMap = GetOrAdd<Tilemap>(rimGo);
-            var rimRenderer = GetOrAdd<TilemapRenderer>(rimGo);
-            rimRenderer.sortingOrder = -9;
-            rimRenderer.sharedMaterial = renderer.sharedMaterial;
+            var oldRims = gridGo.transform.Find("PixelRims"); // 이전(덮개 테두리) 방식 정리
+            if (oldRims != null) Object.DestroyImmediate(oldRims.gameObject);
 
             var presenter = GetOrAdd<PixelMapPresenter>(go);
-            SetRefs(presenter, ("_tilemap", tilemap), ("_tiles", set), ("_rims", rimMap));
+            SetRefs(presenter, ("_tilemap", tilemap), ("_tiles", set));
             return presenter;
+        }
+
+        /// <summary>
+        /// 얇은 벽 RuleTile (2026-10-22): Tiles/Wall의 wall_front_S_X · wall_top_MMM 그림으로 규칙을 매번 새로 만든다(여러 번 실행해도 같음).
+        /// 비트 · 모서리 조건은 Tools/tiles_wall.py와 같다. 규칙 순서: 앞면(아래가 바닥) 4종 → 윗면 조합. 맞는 규칙이 없으면 그림 없음(벽 속).
+        /// </summary>
+        private static PixelWallTile EnsurePixelWallTile()
+        {
+            string dir = PixelTileDir + "/Wall";
+            Sprite Load(string name)
+            {
+                string png = $"{dir}/{name}.png";
+                if (!System.IO.File.Exists(png)) { Debug.LogWarning("[MainSceneSetup] 벽 그림 없음: " + png); return null; }
+                PixelTestSetup.ImportPixelSprite(png, SpriteAlignment.Center);
+                return AssetDatabase.LoadAssetAtPath<Sprite>(png);
+            }
+            RuleTile.TilingRule Rule(Sprite[] sprites, params (int x, int y, int n)[] neighbors)
+            {
+                var rule = new RuleTile.TilingRule
+                {
+                    m_Sprites = sprites,
+                    m_Output = sprites.Length > 1 ? RuleTile.TilingRuleOutput.OutputSprite.Random : RuleTile.TilingRuleOutput.OutputSprite.Single,
+                    m_ColliderType = Tile.ColliderType.None,
+                };
+                rule.m_Neighbors = new List<int>();
+                rule.m_NeighborPositions = new List<Vector3Int>();
+                foreach (var (x, y, n) in neighbors)
+                {
+                    rule.m_NeighborPositions.Add(new Vector3Int(x, y, 0));
+                    rule.m_Neighbors.Add(n);
+                }
+                return rule;
+            }
+            const int floor = PixelWallTile.Neighbor.Floor, notFloor = PixelWallTile.Neighbor.NotFloor;
+            const int shown = PixelWallTile.Neighbor.Shown, hidden = PixelWallTile.Neighbor.Hidden;
+
+            var rules = new List<RuleTile.TilingRule>();
+            for (int sides = 0; sides < 4; sides++) // 앞면: 비트 1 오른쪽 · 2 왼쪽이 바닥
+            {
+                var sprites = new Sprite[PixelTileSpan];
+                for (int x = 0; x < PixelTileSpan; x++) sprites[x] = Load($"wall_front_{sides}_{x}");
+                rules.Add(Rule(sprites, (0, -1, floor), (1, 0, (sides & 1) != 0 ? floor : notFloor), (-1, 0, (sides & 2) != 0 ? floor : notFloor)));
+            }
+            for (int m = 1; m < 128; m++) // 윗면: 1 위 · 2 오른쪽 · 4 왼쪽 변, 8 오른쪽위 · 16 왼쪽위 · 32 오른쪽아래 · 64 왼쪽아래 모서리
+            {
+                bool n = (m & 1) != 0, e = (m & 2) != 0, w = (m & 4) != 0;
+                if (((m & 8) != 0 && (n || e)) || ((m & 16) != 0 && (n || w)) || ((m & 32) != 0 && e) || ((m & 64) != 0 && w)) continue;
+                var neighbors = new List<(int, int, int)>
+                {
+                    (0, -1, notFloor), (0, 1, n ? shown : hidden), (1, 0, e ? shown : hidden), (-1, 0, w ? shown : hidden),
+                };
+                if (!n && !e) neighbors.Add((1, 1, (m & 8) != 0 ? shown : hidden));
+                if (!n && !w) neighbors.Add((-1, 1, (m & 16) != 0 ? shown : hidden));
+                if (!e) neighbors.Add((1, -1, (m & 32) != 0 ? floor : notFloor));
+                if (!w) neighbors.Add((-1, -1, (m & 64) != 0 ? floor : notFloor));
+                rules.Add(Rule(new[] { Load($"wall_top_{m:000}") }, neighbors.ToArray()));
+            }
+
+            var tile = AssetDatabase.LoadAssetAtPath<PixelWallTile>(PixelWallTilePath);
+            if (tile == null)
+            {
+                tile = ScriptableObject.CreateInstance<PixelWallTile>();
+                AssetDatabase.CreateAsset(tile, PixelWallTilePath);
+            }
+            tile.m_DefaultSprite = null;
+            tile.m_DefaultColliderType = Tile.ColliderType.None;
+            tile.m_TilingRules = rules;
+            tile.UpdateNeighborPositions();
+            EditorUtility.SetDirty(tile);
+            return tile;
         }
 
         /// <summary>Art/Pixel/Tiles/name.png → 픽셀 설정 스프라이트 + 같은 폴더 name.asset Tile. 없으면 null.</summary>
