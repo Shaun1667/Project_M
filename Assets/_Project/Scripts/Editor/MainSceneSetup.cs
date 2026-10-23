@@ -46,6 +46,7 @@ namespace ProjectM.Editor
         private const bool Pixel2D = true;
         private const int PixelsPerUnit = 64;
         private const string PixelWallTilePath = "Assets/_Project/Art/Pixel/Tiles/Wall/PixelWallTile.asset";
+        private const int UnitFootPixels = 26; // 유닛 발 = 칸 아래 끝 + 26px (칸 가운데쯤 — 머리는 위 칸으로, 2026-10-23 사용자 SPD 스크린샷)
         private const int PixelTileSpan = 4; // 바닥 · 벽 큰 그림 = 4×4칸 (결정 2026-10-22)
         private const string PixelTileDir = "Assets/_Project/Art/Pixel/Tiles";
         private const string PixelTileSetPath = "Assets/_Project/Data/Visuals/PixelTileSet.asset";
@@ -154,7 +155,7 @@ namespace ProjectM.Editor
             tilemapSo.FindProperty("_walls3D").boolValue = true;
             tilemapSo.ApplyModifiedPropertiesWithoutUndo();
             SetRefs(entityPresenter, ("_ground", tilemapPresenter)); // G-2b: 계단 위 서는 높이
-            entityPresenter.ConfigurePixel2D(Pixel2D, EnsureSpriteUnlitMaterial(), PixelsPerUnit); // P-3 ⓑ: 유닛 = 스프라이트
+            entityPresenter.ConfigurePixel2D(Pixel2D, EnsureSpriteUnlitMaterial(), PixelsPerUnit, UnitFootPixels); // P-3 ⓑ: 유닛 = 스프라이트
             EditorUtility.SetDirty(entityPresenter);
             var pixelMap = Pixel2D ? EnsurePixelMap(gridGo) : null; // P-3a 2D 맵 (3D TilemapPresenter는 남겨 두되 묶지 않음)
 

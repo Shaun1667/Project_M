@@ -57,7 +57,7 @@ namespace ProjectM.Presentation
     /// <summary>
     /// 엔티티 이벤트(Spawned · Moved · Removed) → 3D 모습 (G-1, 결정 2026-10-18).
     /// P-3 ⓑ (2D 픽셀, 2026-10-23): _pixel2D면 프리팹 대신 스프라이트 하나 — 카탈로그 픽셀 그림(걷기 앞 · 뒤 · 옆 4장, 대기 = 걷기 2번째 장)이 있으면 그것,
-    /// 없으면 그레이박스 Sprite를 Tint로. 발은 칸 아래 끝에서 _footPixels 위 → 64px 스프라이트의 머리가 위 칸으로 올라온다(결정 2026-10-22).
+    /// 없으면 그레이박스 Sprite를 Tint로. 발은 칸 아래 끝에서 _footPixels(26 — 칸 가운데쯤) 위 → 몸은 칸 가운데, 64px 스프라이트의 머리가 위 칸으로 올라온다(결정 2026-10-22 · 23).
     /// 아래 줄 유닛이 앞에 그려지게 z를 칸 y로 조금씩 당긴다. 회전 대신 바라보는 쪽(앞 · 뒤 · 옆)을 바꾼다.
     /// VisualId의 프리팹(변형이 있으면 ID로 하나 — G-2a)이 있으면 그것, 없으면 그레이박스 캡슐(카탈로그 색 · 키). 충돌체는 붙이지 않는다 (규칙 2).
     /// 시야(VisibilityChangedEvent)를 받은 뒤로는 지금 보이는 칸에 있는 엔티티만 그린다 (1-7). 시야 이벤트가 없으면 전부 그린다.
@@ -94,7 +94,7 @@ namespace ProjectM.Presentation
         [SerializeField] private bool _pixel2D;
         [Tooltip("스프라이트 재질 (조명 없음 — MainSceneSetup의 SpriteUnlit)")] [SerializeField] private Material _spriteMaterial;
         [SerializeField] private int _pixelsPerUnit = 64;
-        [Tooltip("발이 칸 아래 끝에서 올라온 픽셀 — 스프라이트(64px)가 칸 위로 넘어 머리가 위 칸에 겹친다 (결정 2026-10-22)")] [SerializeField] [Range(0, 32)] private int _footPixels = 14;
+        [Tooltip("발이 칸 아래 끝에서 올라온 픽셀 — 발을 칸 가운데쯤에 두어 몸이 칸 가운데 서고 머리는 위 칸으로 넘는다 (결정 2026-10-22 · 23, SPD식)")] [SerializeField] [Range(0, 48)] private int _footPixels = 26;
         [Tooltip("유닛 정렬 — 지형 효과(5) 위, 안개(20) 아래")] [SerializeField] private int _sortingOrder = 10;
         [Tooltip("걷기 프레임 속도 (장/초)")] [SerializeField] [Range(2f, 16f)] private float _walkFps = 10f;
 
@@ -150,11 +150,12 @@ namespace ProjectM.Presentation
         }
 
         /// <summary>2D 픽셀 모드 (P-3 ⓑ — Setup · 테스트).</summary>
-        public void ConfigurePixel2D(bool on, Material spriteMaterial, int pixelsPerUnit = 64)
+        public void ConfigurePixel2D(bool on, Material spriteMaterial, int pixelsPerUnit = 64, int footPixels = 26)
         {
             _pixel2D = on;
             _spriteMaterial = spriteMaterial;
             _pixelsPerUnit = pixelsPerUnit;
+            _footPixels = footPixels;
         }
 
         public bool IsPixel2D => _pixel2D;
