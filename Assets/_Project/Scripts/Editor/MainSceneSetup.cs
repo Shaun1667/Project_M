@@ -174,6 +174,15 @@ namespace ProjectM.Editor
             fogGo.transform.localPosition = new Vector3(0f, 0f, -0.02f); // 바닥 · 지형 효과 위 (벽은 TilemapPresenter가 시야를 직접 따름)
             var fogPresenter = GetOrAdd<FogPresenter>(fogGo);
             SetRefs(fogPresenter, ("_tilemap", fogTilemap), ("_fogTile", EnsureFogTile()));
+            if (Pixel2D) // 2026-10-23: SPD처럼 흐릿한 안개 경계 — 칸별 텍스처를 이중 선형으로 늘린 스프라이트 (Tilemap은 남겨 두되 안 그림)
+            {
+                var softGo = FindOrCreate("FogSoft", fogGo.transform);
+                softGo.transform.localPosition = Vector3.zero;
+                var softRenderer = GetOrAdd<SpriteRenderer>(softGo);
+                softRenderer.sharedMaterial = EnsureSpriteUnlitMaterial();
+                softRenderer.sortingOrder = 20;
+                SetRefs(fogPresenter, ("_soft", softRenderer));
+            }
 
             // 주문 조준 미리보기: 안개(20) 위
             var aimGo = FindOrCreate("Aim", gridGo.transform);

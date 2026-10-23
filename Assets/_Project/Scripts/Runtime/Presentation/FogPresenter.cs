@@ -8,6 +8,8 @@ namespace ProjectM.Presentation
     /// <summary>
     /// 시야 안개 (1-7): 지형 위 Tilemap 한 장. 안 본 칸 = 검정, 본 적 있는 칸 = 어둡게, 지금 보이는 칸 = 안개 없음.
     /// VisibilityChangedEvent만 보고 그리며, 바뀐 칸만 다시 칠한다. 안개 타일은 흰 사각형 + 칸별 색(TileFlags.None).
+    /// 부드러운 경계 (2026-10-23 사용자 "SPD처럼 흐릿하게"): _soft가 있으면 Tilemap 대신 칸 하나 = 텍셀 하나인 작은 텍스처를
+    /// 이중 선형(Bilinear)으로 늘려 그린다 — 텍셀 가운데 = 칸 가운데라 이웃 칸 사이(칸 반 + 반)에서 안개가 서서히 바뀐다(SPD 방식). 맵 밖 한 줄은 안 본 칸.
     /// </summary>
     public sealed class FogPresenter : MonoBehaviour
     {
@@ -17,6 +19,10 @@ namespace ProjectM.Presentation
         [SerializeField] private TileBase _fogTile;
         [SerializeField] private Color _unexploredColor = Color.black;
         [SerializeField] private Color _exploredColor = new Color(0f, 0f, 0f, 0.6f);
+        [Tooltip("부드러운 안개 (2D) — 있으면 Tilemap 대신 이 스프라이트에 칸별 텍스처를 늘려 그린다")] [SerializeField] private SpriteRenderer _soft;
+
+        private Texture2D _softTexture;
+        private Color32[] _softPixels;
 
         private SimEventBus _bus;
         private CellState[] _states = System.Array.Empty<CellState>();
@@ -34,15 +40,17 @@ namespace ProjectM.Presentation
             {
                 _revealAll = value;
                 var renderer = _tilemap != null ? _tilemap.GetComponent<TilemapRenderer>() : null;
-                if (renderer != null) renderer.enabled = !value;
+                if (renderer != null) renderer.enabled = !value && _soft == null;
+                if (_soft != null) _soft.enabled = !value;
             }
         }
 
         /// <summary>테스트 · 에디터 Setup용. 씬에서는 인스펙터로 연결한다.</summary>
-        public void Configure(Tilemap tilemap, TileBase fogTile)
+        public void Configure(Tilemap tilemap, TileBase fogTile, SpriteRenderer soft = null)
         {
             _tilemap = tilemap;
             _fogTile = fogTile;
+            _soft = soft;
         }
 
         public void Bind(SimEventBus bus)
@@ -61,15 +69,21 @@ namespace ProjectM.Presentation
             _bus = null;
         }
 
-        private void OnDestroy() => Unbind();
+        private void OnDestroy()
+        {
+            Unbind();
+            DestroySoft();
+        }
 
         private void OnMapLoaded(MapLoadedEvent e)
         {
             _tilemap.ClearAllTiles();
             _width = e.Width;
             _states = new CellState[e.Width * e.Height];
+            if (_soft != null) BuildSoft(e.Width, e.Height);
             for (int i = 0; i < _states.Length; i++)
                 Paint(i, CellState.Unexplored);
+            ApplySoft();
         }
 
         private void OnVisibilityChanged(VisibilityChangedEvent e)
@@ -80,11 +94,18 @@ namespace ProjectM.Presentation
                 var state = e.Visible[i] ? CellState.Visible : e.Explored[i] ? CellState.Explored : CellState.Unexplored;
                 if (state != _states[i]) Paint(i, state);
             }
+            ApplySoft();
         }
 
         private void Paint(int index, CellState state)
         {
             _states[index] = state;
+            if (_softPixels != null)
+            {
+                var color = state == CellState.Visible ? Color.clear : state == CellState.Explored ? _exploredColor : _unexploredColor;
+                _softPixels[(index / _width + 1) * (_width + 2) + index % _width + 1] = color;
+                return;
+            }
             var pos = new Vector3Int(index % _width, index / _width, 0);
             if (state == CellState.Visible)
             {
@@ -94,6 +115,47 @@ namespace ProjectM.Presentation
             _tilemap.SetTile(pos, _fogTile);
             _tilemap.SetTileFlags(pos, TileFlags.None);
             _tilemap.SetColor(pos, state == CellState.Explored ? _exploredColor : _unexploredColor);
+        }
+
+        /// <summary>맵 크기 + 둘레 한 줄짜리 텍스처 (1 텍셀 = 1 칸, 이중 선형). 스프라이트 왼쪽 아래 = 칸 (−1, −1)의 왼쪽 아래.</summary>
+        private void BuildSoft(int width, int height)
+        {
+            DestroySoft();
+            int w = width + 2, h = height + 2;
+            _softTexture = new Texture2D(w, h, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp,
+                name = "SoftFog",
+            };
+            _softPixels = new Color32[w * h];
+            Color32 unexplored = _unexploredColor;
+            for (int i = 0; i < _softPixels.Length; i++) _softPixels[i] = unexplored;
+            _soft.sprite = Sprite.Create(_softTexture, new Rect(0, 0, w, h), Vector2.zero, 1f, 0, SpriteMeshType.FullRect);
+            _soft.sprite.name = "SoftFog";
+            _soft.transform.localPosition = new Vector3(-1f, -1f, _soft.transform.localPosition.z);
+            _tilemap.GetComponent<TilemapRenderer>().enabled = false;
+        }
+
+        private void ApplySoft()
+        {
+            if (_softTexture == null) return;
+            _softTexture.SetPixels32(_softPixels);
+            _softTexture.Apply(false);
+        }
+
+        private void DestroySoft()
+        {
+            if (_soft != null && _soft.sprite != null) DestroySafe(_soft.sprite);
+            if (_softTexture != null) DestroySafe(_softTexture);
+            _softTexture = null;
+            _softPixels = null;
+        }
+
+        private static void DestroySafe(Object obj)
+        {
+            if (Application.isPlaying) Destroy(obj);
+            else DestroyImmediate(obj);
         }
     }
 }
