@@ -1,8 +1,7 @@
 """얇은 벽(SPD식) 스프라이트 만들기 (2026-10-22) — PixelWallTile(RuleTile) 규칙과 짝. 64px 칸, 테두리 두께 16px(돌 블록 16×16) — 모든 벽이 같은 두께 · 같은 블록
 (사용자 피드백 2026-10-22 "두꺼운 것으로 맞춰" — 잠시 8px였음).
-벽 앞면(아래 칸이 바닥, 위 칸은 바닥 아님): wall_front_nS_X.png — 위 16줄 돌 테두리 + 아래 48줄 벽돌(벽돌 그림 256px 위 48줄을 x % 4로 자름) — 모든 앞면이 같은 높이,
-  S 비트 1 = 오른쪽 칸이 바닥 · 2 = 왼쪽 칸이 바닥이면 그쪽 끝에 얇은 밝은 모서리(2px, 테두리 블록은 안 세움).
-홀로 선 벽(위 칸도 바닥 — 한 칸 기둥 · 얇은 가로벽): wall_front_cEW_X.png — 한 칸 안에 윗면 고리(40줄) + 벽돌(24줄), E · W = f · w · o (cap() 참고).
+벽 앞면(아래 칸이 바닥): wall_front_KEW_X.png — 한 칸 안에 윗면 40줄 + 벽돌 24줄, 모든 앞면 같은 높이(벽돌 그림 256px 위 24줄을 x % 4로 자름).
+  K = c(위 칸도 바닥 — 한 칸 기둥 · 얇은 가로벽, 고리를 닫음) · n(위 칸은 바닥 아님), E · W = 오른쪽 · 왼쪽 칸 f(바닥) · w(벽) · o(빈 칸) — front() 참고.
 벽 윗면(그 밖): wall_top_MMM.png — 보이는 쪽 변 · 모서리에만 테두리, 나머지는 투명(배경 = 어둠).
   비트 1 위 · 2 오른쪽 · 4 왼쪽 변(보이는 칸 = 바닥 또는 벽 앞면), 8 오른쪽위 · 16 왼쪽위 모서리(보이는 칸), 32 오른쪽아래 · 64 왼쪽아래 모서리(바닥).
   모서리는 붙은 변이 닫혔을 때만 — 오른쪽위: 위 · 오른쪽 닫힘, 왼쪽위: 위 · 왼쪽, 오른쪽아래: 오른쪽, 왼쪽아래: 왼쪽 (PixelWallTile과 같은 규칙).
@@ -57,31 +56,26 @@ def edges(px, right, left, top):
             px[T - 1, yy] = HI + (255,); px[T - 2, yy] = SH + (255,)
 
 
-def front(bricks, sides, x):
-    im = Image.new('RGBA', (T, T), (0, 0, 0, 0))
-    px = bricks_and_base(im, bricks, x, B)
-    strips(px, top=True)
-    edges(px, sides & 1, sides & 2, 0)
-    return im
+BAND = 8                 # 윗면 가운데 띠 높이
+RIM_Y = B + BAND         # 앞면 위 테두리가 시작하는 줄 (24)
+BRICK_Y = RIM_Y + B      # 벽돌이 시작하는 줄 (40) — 모든 앞면 같은 높이 (2026-10-22 사용자 "벽 높이를 다 맞춰")
 
 
-def cap(bricks, e, w, x):
-    """홀로 선 벽(위 · 아래 칸이 모두 바닥 — 한 칸 기둥 · 얇은 가로벽): 한 칸 안에 윗면 고리 + 벽돌 (2026-10-22 사용자 "한 칸 안에 다 들어가게").
-    고리 = 윗줄 블록 16 + 가운데 띠 8(닫힌 옆만 16×8 블록, 나머지 어둠) + 아랫줄(앞면 테두리) 16, 그 아래 벽돌 24줄. 테두리 두께는 다른 벽과 같은 16px.
-    e · w = 오른쪽 · 왼쪽 칸 종류: f(바닥 — 고리 닫고 벽돌 끝 모서리) · w(벽 — 고리를 열어 옆 벽과 이음) · o(빈 칸 — 고리만 닫음)."""
+def front(bricks, kind, e, w, x):
+    """벽 앞면(아래 칸이 바닥) — 한 칸 안에 위 40줄 = 윗면, 아래 24줄 = 벽돌. 모든 앞면이 같은 구조라 벽돌 높이가 같다.
+    kind: 'c' = 위 칸도 바닥(한 칸 기둥 · 얇은 가로벽 — 윗줄 블록으로 고리를 닫음) · 'n' = 위 칸은 바닥 아님(윗면이 위 칸으로 이어짐).
+    e · w = 오른쪽 · 왼쪽 칸: f(바닥 — 윗면 옆을 블록으로 닫고 벽돌 끝 모서리) · w(벽 — 열어서 옆 벽과 이음) · o(빈 칸 — 닫기만).
+    윗면 = 윗줄 16(c만) · 가운데 띠 8 · 앞면 테두리 16, 테두리 두께는 다른 벽과 같은 16px, 안쪽은 투명(어둠)."""
     im = Image.new('RGBA', (T, T), (0, 0, 0, 0))
-    band = 8
-    rim = B + band
-    px = bricks_and_base(im, bricks, x, rim + B)
-    for yy in range(B, rim):
-        for xx in range(T):
-            px[xx, yy] = (0, 0, 0, 255)
+    px = bricks_and_base(im, bricks, x, BRICK_Y)
     for i in range(0, T, B):
-        block(px, i, 0)
-        block(px, i, rim)
-    if e != 'w': block(px, T - B, B, B, band)
-    if w != 'w': block(px, 0, B, B, band)
-    edges(px, e == 'f', w == 'f', rim + B)
+        block(px, i, RIM_Y)
+        if kind == 'c': block(px, i, 0)
+    for side, x0 in ((e, T - B), (w, 0)):
+        if side == 'w': continue
+        if kind == 'n': block(px, x0, 0)
+        block(px, x0, B, B, BAND)
+    edges(px, e == 'f', w == 'f', BRICK_Y)
     return im
 
 
@@ -112,11 +106,10 @@ if __name__ == '__main__':
         if f.startswith('wall_') and f.endswith('.png'): os.remove(os.path.join(out, f))
     bricks = Image.open(src).convert('RGBA')
     for x in range(4):
-        for s in range(4):
-            front(bricks, s, x).save(os.path.join(out, f'wall_front_n{s}_{x}.png'))
-        for e in 'fwo':
-            for w in 'fwo':
-                cap(bricks, e, w, x).save(os.path.join(out, f'wall_front_c{e}{w}_{x}.png'))
+        for kind in 'cn':
+            for e in 'fwo':
+                for w in 'fwo':
+                    front(bricks, kind, e, w, x).save(os.path.join(out, f'wall_front_{kind}{e}{w}_{x}.png'))
     n = 0
     for m in range(128):
         if valid(m):

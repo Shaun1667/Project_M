@@ -754,7 +754,7 @@ namespace ProjectM.Editor
 
         /// <summary>
         /// 얇은 벽 RuleTile (2026-10-22): Tiles/Wall의 wall_front_S_X · wall_top_MMM 그림으로 규칙을 매번 새로 만든다(여러 번 실행해도 같음).
-        /// 비트 · 모서리 조건은 Tools/tiles_wall.py와 같다. 규칙 순서: 홀로 선 벽(위 · 아래가 바닥) 9종 → 앞면(아래가 바닥) 4종 → 윗면 조합.
+        /// 비트 · 모서리 조건은 Tools/tiles_wall.py와 같다. 규칙 순서: 앞면(아래가 바닥) 18종(위 칸 바닥 c · 아님 n × 옆 칸 바닥 · 벽 · 빈 칸) → 윗면 조합.
         /// 맞는 규칙이 없으면 그림 없음(벽 속).
         /// </summary>
         private static PixelWallTile EnsurePixelWallTile()
@@ -795,13 +795,14 @@ namespace ProjectM.Editor
             }
 
             var rules = new List<RuleTile.TilingRule>();
-            const string kinds = "fwo"; // 옆 칸: 바닥 · 벽 · 빈 칸 (2026-10-22 한 칸 기둥 · 얇은 가로벽 = 윗면 고리 + 벽돌)
+            // 앞면 (2026-10-22 "벽 높이를 다 맞춰"): 모든 앞면 = 한 칸 안에 윗면 40줄 + 벽돌 24줄 — c = 위 칸도 바닥(고리를 닫음) · n = 아님
+            const string kinds = "fwo"; // 옆 칸: 바닥 · 벽 · 빈 칸
             int[] kindNeighbor = { floor, wall, empty };
-            for (int e = 0; e < 3; e++)
-                for (int w = 0; w < 3; w++)
-                    rules.Add(Rule(Frames($"c{kinds[e]}{kinds[w]}"), (0, -1, floor), (0, 1, floor), (1, 0, kindNeighbor[e]), (-1, 0, kindNeighbor[w])));
-            for (int sides = 0; sides < 4; sides++) // 앞면: 비트 1 오른쪽 · 2 왼쪽이 바닥
-                rules.Add(Rule(Frames($"n{sides}"), (0, -1, floor), (1, 0, (sides & 1) != 0 ? floor : notFloor), (-1, 0, (sides & 2) != 0 ? floor : notFloor)));
+            foreach (char kind in "cn")
+                for (int e = 0; e < 3; e++)
+                    for (int w = 0; w < 3; w++)
+                        rules.Add(Rule(Frames($"{kind}{kinds[e]}{kinds[w]}"), (0, -1, floor), (0, 1, kind == 'c' ? floor : notFloor),
+                            (1, 0, kindNeighbor[e]), (-1, 0, kindNeighbor[w])));
             for (int m = 1; m < 128; m++) // 윗면: 1 위 · 2 오른쪽 · 4 왼쪽 변, 8 오른쪽위 · 16 왼쪽위 · 32 오른쪽아래 · 64 왼쪽아래 모서리
             {
                 bool n = (m & 1) != 0, e = (m & 2) != 0, w = (m & 4) != 0;
