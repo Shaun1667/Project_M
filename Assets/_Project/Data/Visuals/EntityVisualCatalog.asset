@@ -51,7 +51,8 @@ MonoBehaviour:
     WalkFront: []
     WalkBack: []
     WalkSide: []
-    PixelVariants: []
+    PixelVariants:
+    - {fileID: 21300000, guid: 38fca723c245e5c4188ec112f08c95d0, type: 3}
   - Id: hero_blond
     Sprite: {fileID: 21300000, guid: daf974b677614ce4eb1093f7dc58cde1, type: 3}
     Tint: {r: 1, g: 1, b: 1, a: 1}
