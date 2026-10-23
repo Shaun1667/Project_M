@@ -771,23 +771,30 @@ namespace ProjectM.Editor
             var floors = new TileBase[cells];
             for (int i = 0; i < cells; i++) floors[i] = EnsurePixelTile($"floor_{i:00}");
             var set = LoadOrCreate<PixelTileSet>(PixelTileSetPath);
-            set.Configure(PixelTileSpan, floors, EnsurePixelWallTile(),
+            var caps = new TileBase[4]; // 홀로 선 벽(한 칸 기둥 · 얇은 가로벽)의 솟은 윗면 — 위 칸에 덮개 (2026-10-23 SPD식 벽 높이)
+            for (int i = 0; i < caps.Length; i++) caps[i] = EnsurePixelTile($"Wall/wall_cap_{i}");
+            set.Configure(PixelTileSpan, floors, EnsurePixelWallTile(), caps,
                 EnsurePixelTile("stairs_down"), EnsurePixelTile("stairs_up"));
             EditorUtility.SetDirty(set);
 
             var oldRims = gridGo.transform.Find("PixelRims"); // 이전(덮개 테두리) 방식 정리
             if (oldRims != null) Object.DestroyImmediate(oldRims.gameObject);
-            var oldCaps = gridGo.transform.Find("PixelWallCaps"); // 솟은 윗면 덮개 방식 정리 (2026-10-22 — 기둥은 한 칸 안에)
-            if (oldCaps != null) Object.DestroyImmediate(oldCaps.gameObject);
+            var capGo = FindOrCreate("PixelWallCaps", gridGo.transform); // 맵 위 · 지형 효과 · 안개 아래
+            capGo.transform.localPosition = new Vector3(0f, 0f, 0.005f);
+            var capMap = GetOrAdd<Tilemap>(capGo);
+            var capRenderer = GetOrAdd<TilemapRenderer>(capGo);
+            capRenderer.sortingOrder = -9;
+            capRenderer.sharedMaterial = renderer.sharedMaterial;
 
             var presenter = GetOrAdd<PixelMapPresenter>(go);
-            SetRefs(presenter, ("_tilemap", tilemap), ("_tiles", set));
+            SetRefs(presenter, ("_tilemap", tilemap), ("_tiles", set), ("_caps", capMap));
             return presenter;
         }
 
         /// <summary>
         /// 얇은 벽 RuleTile (2026-10-22): Tiles/Wall의 wall_front_S_X · wall_top_MMM 그림으로 규칙을 매번 새로 만든다(여러 번 실행해도 같음).
-        /// 비트 · 모서리 조건은 Tools/tiles_wall.py와 같다. 규칙 순서: 앞면(아래가 바닥) 18종(위 칸 바닥 c · 아님 n × 옆 칸 바닥 · 벽 · 빈 칸) → 윗면 조합.
+        /// 비트 · 모서리 조건은 Tools/tiles_wall.py와 같다. 규칙 순서: 앞면(아래가 바닥, 칸 전체 = 테두리 16 + 벽돌 48) 4종 → 윗면 조합.
+        /// 홀로 선 벽의 솟은 윗면은 RuleTile 밖(PixelWallCaps 덮개, wall_cap_M) — SPD처럼 기둥이 1.5칸 (2026-10-23).
         /// 맞는 규칙이 없으면 그림 없음(벽 속).
         /// </summary>
         private static PixelWallTile EnsurePixelWallTile()
@@ -819,7 +826,6 @@ namespace ProjectM.Editor
             }
             const int floor = PixelWallTile.Neighbor.Floor, notFloor = PixelWallTile.Neighbor.NotFloor;
             const int shown = PixelWallTile.Neighbor.Shown, hidden = PixelWallTile.Neighbor.Hidden;
-            const int wall = PixelWallTile.Neighbor.This, empty = PixelWallTile.Neighbor.Empty;
             Sprite[] Frames(string key)
             {
                 var sprites = new Sprite[PixelTileSpan];
@@ -828,14 +834,9 @@ namespace ProjectM.Editor
             }
 
             var rules = new List<RuleTile.TilingRule>();
-            // 앞면 (2026-10-22 "벽 높이를 다 맞춰"): 모든 앞면 = 한 칸 안에 윗면 40줄 + 벽돌 24줄 — c = 위 칸도 바닥(고리를 닫음) · n = 아님
-            const string kinds = "fwo"; // 옆 칸: 바닥 · 벽 · 빈 칸
-            int[] kindNeighbor = { floor, wall, empty };
-            foreach (char kind in "cn")
-                for (int e = 0; e < 3; e++)
-                    for (int w = 0; w < 3; w++)
-                        rules.Add(Rule(Frames($"{kind}{kinds[e]}{kinds[w]}"), (0, -1, floor), (0, 1, kind == 'c' ? floor : notFloor),
-                            (1, 0, kindNeighbor[e]), (-1, 0, kindNeighbor[w])));
+            // 앞면 (2026-10-23 사용자 "벽이 낮다" → SPD처럼 칸 전체): 테두리 16 + 벽돌 48 — 높이 64 ≈ 캐릭터 키. 비트 1 오른쪽 · 2 왼쪽이 바닥
+            for (int sides = 0; sides < 4; sides++)
+                rules.Add(Rule(Frames($"n{sides}"), (0, -1, floor), (1, 0, (sides & 1) != 0 ? floor : notFloor), (-1, 0, (sides & 2) != 0 ? floor : notFloor)));
             for (int m = 1; m < 128; m++) // 윗면: 1 위 · 2 오른쪽 · 4 왼쪽 변, 8 오른쪽위 · 16 왼쪽위 · 32 오른쪽아래 · 64 왼쪽아래 모서리
             {
                 bool n = (m & 1) != 0, e = (m & 2) != 0, w = (m & 4) != 0;

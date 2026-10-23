@@ -31,5 +31,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 48e22115fc6e2a142a4446d65334f33b, type: 2}
   - {fileID: 11400000, guid: b3276bb25ce0cfa4eb75c8922516d911, type: 2}
   _wall: {fileID: 11400000, guid: fa8e770265f1af245a7429888f110c5e, type: 2}
+  _wallCaps:
+  - {fileID: 11400000, guid: db9d64a4d1fd4f945aad16eba2058e68, type: 2}
+  - {fileID: 11400000, guid: e4a91b7b55c0a964299edf08315f0bb3, type: 2}
+  - {fileID: 11400000, guid: 484386313a9e0b7498c6e1d86889ccc3, type: 2}
+  - {fileID: 11400000, guid: 191b1f7236312464f90df2e329ceb432, type: 2}
   _stairsDown: {fileID: 11400000, guid: 8b1f4c6a5c80f2843a24f47a63bc13a3, type: 2}
   _stairsUp: {fileID: 11400000, guid: f6283173aa1ab96499432c66ce5ded01, type: 2}
