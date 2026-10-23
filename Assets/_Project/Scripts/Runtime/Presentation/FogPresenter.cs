@@ -10,6 +10,8 @@ namespace ProjectM.Presentation
     /// VisibilityChangedEvent만 보고 그리며, 바뀐 칸만 다시 칠한다. 안개 타일은 흰 사각형 + 칸별 색(TileFlags.None).
     /// 부드러운 경계 (2026-10-23 사용자 "SPD처럼 흐릿하게"): _soft가 있으면 Tilemap 대신 칸 하나 = 텍셀 하나인 작은 텍스처를
     /// 이중 선형(Bilinear)으로 늘려 그린다 — 텍셀 가운데 = 칸 가운데라 이웃 칸 사이(칸 반 + 반)에서 안개가 서서히 바뀐다(SPD 방식). 맵 밖 한 줄은 안 본 칸.
+    /// 안 본 칸은 번짐 없이 완전히 검정 (2026-10-23 사용자 — 번진 빛에 안 본 벽이 비쳤음): 그 위에 Tilemap이 안 본 칸만 검정으로 덮는다(정렬이 부드러운 안개보다 위).
+    /// 그래서 경계의 그러데이션은 보이는 · 본 칸 안쪽에서만 생긴다.
     /// </summary>
     public sealed class FogPresenter : MonoBehaviour
     {
@@ -40,7 +42,7 @@ namespace ProjectM.Presentation
             {
                 _revealAll = value;
                 var renderer = _tilemap != null ? _tilemap.GetComponent<TilemapRenderer>() : null;
-                if (renderer != null) renderer.enabled = !value && _soft == null;
+                if (renderer != null) renderer.enabled = !value;
                 if (_soft != null) _soft.enabled = !value;
             }
         }
@@ -100,13 +102,17 @@ namespace ProjectM.Presentation
         private void Paint(int index, CellState state)
         {
             _states[index] = state;
+            var pos = new Vector3Int(index % _width, index / _width, 0);
             if (_softPixels != null)
             {
                 var color = state == CellState.Visible ? Color.clear : state == CellState.Explored ? _exploredColor : _unexploredColor;
                 _softPixels[(index / _width + 1) * (_width + 2) + index % _width + 1] = color;
-                return;
+                if (state != CellState.Unexplored) // 안 본 칸만 Tilemap 검정으로 (부드러운 안개 위)
+                {
+                    _tilemap.SetTile(pos, null);
+                    return;
+                }
             }
-            var pos = new Vector3Int(index % _width, index / _width, 0);
             if (state == CellState.Visible)
             {
                 _tilemap.SetTile(pos, null);
@@ -134,7 +140,6 @@ namespace ProjectM.Presentation
             _soft.sprite = Sprite.Create(_softTexture, new Rect(0, 0, w, h), Vector2.zero, 1f, 0, SpriteMeshType.FullRect);
             _soft.sprite.name = "SoftFog";
             _soft.transform.localPosition = new Vector3(-1f, -1f, _soft.transform.localPosition.z);
-            _tilemap.GetComponent<TilemapRenderer>().enabled = false;
         }
 
         private void ApplySoft()

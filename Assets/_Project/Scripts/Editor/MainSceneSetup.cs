@@ -181,6 +181,7 @@ namespace ProjectM.Editor
                 var softRenderer = GetOrAdd<SpriteRenderer>(softGo);
                 softRenderer.sharedMaterial = EnsureSpriteUnlitMaterial();
                 softRenderer.sortingOrder = 20;
+                GetOrAdd<TilemapRenderer>(fogGo).sortingOrder = 21; // 안 본 칸 검정은 부드러운 안개 위 (번짐 없음)
                 SetRefs(fogPresenter, ("_soft", softRenderer));
             }
 
