@@ -100,11 +100,15 @@ namespace ProjectM.Presentation
             }
         }
 
-        /// <summary>이 칸에 덮을 솟은 윗면 (테스트용 공개) — 바로 아래 칸이 홀로 선 벽(그 위 · 아래가 바닥)일 때. 옆이 벽이면 그쪽을 열어 이음.</summary>
+        /// <summary>
+        /// 이 칸에 덮을 솟은 윗면 (테스트용 공개) — 바로 아래 칸이 한 칸 기둥(위 · 아래가 바닥, 양옆도 벽 아님)일 때만.
+        /// 옆으로 이어진 한 줄 벽(얇은 가로벽)은 솟지 않는다 — 옆 벽보다 반 칸 튀어나와 보였음 (2026-10-23 사용자 피드백).
+        /// </summary>
         public TileBase CapAt(int x, int y)
         {
             if (_tiles == null || !IsWall(x, y - 1) || !IsWalkable(x, y) || !IsWalkable(x, y - 2)) return null;
-            return _tiles.WallCap((IsWall(x + 1, y - 1) ? 0 : 1) | (IsWall(x - 1, y - 1) ? 0 : 2));
+            if (IsWall(x + 1, y - 1) || IsWall(x - 1, y - 1)) return null;
+            return _tiles.WallCap(3);
         }
 
         private bool IsWall(int x, int y) => InBounds(x, y) && _types[y * _width + x] == TileType.Wall;
