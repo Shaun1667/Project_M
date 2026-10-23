@@ -198,6 +198,11 @@ namespace ProjectM.Presentation
             view.Facing = Mathf.Abs(dir.x) >= Mathf.Abs(dir.y)
                 ? (dir.x < 0f ? PixelFacing.Left : PixelFacing.Right)
                 : (dir.y > 0f ? PixelFacing.Back : PixelFacing.Front);
+            if (view.PixelRenderer != null && !view.Pixel.HasPixel) // 정지 그림(적): 좌우만 뒤집어 가는 쪽을 봄
+            {
+                if (view.Facing == PixelFacing.Left) view.PixelRenderer.flipX = true;
+                else if (view.Facing == PixelFacing.Right) view.PixelRenderer.flipX = false;
+            }
             UpdateSpriteFrame(view);
         }
 
@@ -271,8 +276,10 @@ namespace ProjectM.Presentation
             {
                 bool known = _catalog != null && _catalog.TryGet(e.VisualId, out pixel);
                 if (!known) Debug.LogWarning($"[EntityPresenter] VisualId '{e.VisualId}'가 카탈로그에 없다 ({e.Id})");
-                pixelRenderer = CreateSprite(root, known && pixel.HasPixel ? null : pixel.Sprite);
-                if (known && !pixel.HasPixel) tint = pixel.Tint; // 그레이박스 스프라이트는 카탈로그 색
+                // 걷기 그림이 있으면 프레임이 고름, 아니면 정지 그림(적 변형 — 엔티티 ID로), 그것도 없으면 그레이박스 Sprite를 카탈로그 색으로
+                var still = known && !pixel.HasPixel ? EntityVisualCatalog.PickPixelStill(pixel, e.Id.Value) : null;
+                pixelRenderer = CreateSprite(root, known && pixel.HasPixel ? null : still != null ? still : pixel.Sprite);
+                if (known && !pixel.HasPixel && still == null) tint = pixel.Tint; // 정지 그림 유닛은 숨쉬기 · 통통 튐을 코드가 맡는다
             }
             else if (_catalog != null && _catalog.TryGet(e.VisualId, out var visual))
             {

@@ -26,6 +26,7 @@ namespace ProjectM.Presentation
             [Tooltip("2D 걷기 — 앞(아래로 감)")] public Sprite[] WalkFront;
             [Tooltip("2D 걷기 — 뒤(위로 감)")] public Sprite[] WalkBack;
             [Tooltip("2D 걷기 — 옆(오른쪽으로 감, 왼쪽은 뒤집기)")] public Sprite[] WalkSide;
+            [Tooltip("2D 정지 그림 변형 (걷기 그림이 없는 적 — 엔티티 ID로 하나, 3D Variants와 같은 고르기)")] public Sprite[] PixelVariants;
 
             /// <summary>2D 픽셀 그림이 하나라도 있는지.</summary>
             public bool HasPixel => PixelIdle != null || (WalkFront != null && WalkFront.Length > 0);
@@ -89,6 +90,32 @@ namespace ProjectM.Presentation
                 return;
             }
             _entries.Add(new Entry { Id = id, Tint = Color.white, Prefab = prefab });
+        }
+
+        /// <summary>2D 정지 그림: 변형이 있으면 엔티티 ID로 하나(3D PickPrefab과 같은 고르기), 없으면 PixelIdle. 둘 다 없으면 null.</summary>
+        public static Sprite PickPixelStill(Entry entry, int entityId)
+        {
+            var variants = entry.PixelVariants;
+            if (variants != null && variants.Length > 0)
+            {
+                var picked = variants[(entityId & int.MaxValue) % variants.Length];
+                if (picked != null) return picked;
+            }
+            return entry.PixelIdle;
+        }
+
+        /// <summary>2D 정지 그림 변형 연결 (적 · 보스 — Setup · 테스트). null이면 지운다.</summary>
+        public void SetPixelVariants(string id, Sprite[] variants)
+        {
+            for (int i = 0; i < _entries.Count; i++)
+            {
+                if (_entries[i].Id != id) continue;
+                var e = _entries[i];
+                e.PixelVariants = variants;
+                _entries[i] = e;
+                return;
+            }
+            _entries.Add(new Entry { Id = id, Tint = Color.white, PixelVariants = variants });
         }
 
         /// <summary>2D 픽셀 그림 연결 (P-3 ⓑ Setup · 테스트).</summary>

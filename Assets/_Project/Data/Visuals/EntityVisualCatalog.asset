@@ -23,6 +23,7 @@ MonoBehaviour:
     WalkFront: []
     WalkBack: []
     WalkSide: []
+    PixelVariants: []
   - Id: enemy_melee
     Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
     Tint: {r: 0.9, g: 0.25, b: 0.2, a: 1}
@@ -36,6 +37,10 @@ MonoBehaviour:
     WalkFront: []
     WalkBack: []
     WalkSide: []
+    PixelVariants:
+    - {fileID: 21300000, guid: 0a8b842ca24dd464d9d858ce5d584c97, type: 3}
+    - {fileID: 21300000, guid: 0e9b8b3c96ebdc0419faccc2972fad69, type: 3}
+    - {fileID: 21300000, guid: 08d1276cbc6b83a4a8258fc8334aa05c, type: 3}
   - Id: boss
     Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
     Tint: {r: 0.55, g: 0.1, b: 0.45, a: 1}
@@ -46,6 +51,7 @@ MonoBehaviour:
     WalkFront: []
     WalkBack: []
     WalkSide: []
+    PixelVariants: []
   - Id: hero_blond
     Sprite: {fileID: 21300000, guid: daf974b677614ce4eb1093f7dc58cde1, type: 3}
     Tint: {r: 1, g: 1, b: 1, a: 1}
@@ -68,6 +74,7 @@ MonoBehaviour:
     - {fileID: 21300000, guid: 8675a52fad343314a8e40a9dc42874e4, type: 3}
     - {fileID: 21300000, guid: a3fa63276f1775349a7a4a61f5fa0f1a, type: 3}
     - {fileID: 21300000, guid: 362bdf8e894b1844d98175b38afadd48, type: 3}
+    PixelVariants: []
   - Id: hero_black
     Sprite: {fileID: 21300000, guid: 84bbeccd5bccd0c488c067fdd3d4c051, type: 3}
     Tint: {r: 1, g: 1, b: 1, a: 1}
@@ -78,3 +85,4 @@ MonoBehaviour:
     WalkFront: []
     WalkBack: []
     WalkSide: []
+    PixelVariants: []

@@ -52,6 +52,7 @@ namespace ProjectM.Editor
         private const string SpriteUnlitMaterialPath = "Assets/_Project/Art/Pixel/SpriteUnlit.mat";
         private const string CharacterCatalogPath = "Assets/_Project/Data/Units/CharacterCatalog.asset";
         private const string CharacterArtDir = "Assets/_Project/Art/Pixel/Characters";
+        private const string EnemyArtDir = "Assets/_Project/Art/Pixel/Enemies";
         // 2026-10-21 캐릭터 선택 — 모습 ID (3D Main에서는 픽셀 전환 전까지 둘 다 플레이어 모델)
         private static readonly (string Id, string Name)[] Characters = { ("hero_blond", "금발의 마법사"), ("hero_black", "흑발의 마법사") };
         private const string ProgressionConfigPath = "Assets/_Project/Data/Units/ProgressionConfig.asset";
@@ -375,6 +376,17 @@ namespace ProjectM.Editor
             }
             // 3-4b 임시 보스: 짙은 자주색, 두 배 키 (판정은 1칸)
             catalog.Set(BossVisualId, AssetDatabase.LoadAssetAtPath<Sprite>(UnitCircleSpritePath), new Color(0.55f, 0.1f, 0.45f), 1.8f);
+            // P-3 ⓑ 적 · 보스 2D 정지 그림 (2026-10-23 Varco) — 3D 변형과 같은 순서(토끼 · 쥐 · 슬라임)라 같은 엔티티 = 같은 모습
+            Sprite Enemy(string name)
+            {
+                string png = $"{EnemyArtDir}/{name}.png";
+                if (!System.IO.File.Exists(png)) return null;
+                PixelTestSetup.ImportPixelSprite(png, SpriteAlignment.BottomCenter);
+                return AssetDatabase.LoadAssetAtPath<Sprite>(png);
+            }
+            Sprite[] Present(params Sprite[] sprites) => System.Array.FindAll(sprites, x => x != null);
+            catalog.SetPixelVariants(EnemyVisualId, Present(Enemy("enemy_rabbit"), Enemy("enemy_mouse"), Enemy("enemy_slime")));
+            catalog.SetPixelVariants(BossVisualId, Present(Enemy("boss_slime_girl")));
             EditorUtility.SetDirty(catalog);
             return catalog;
         }
