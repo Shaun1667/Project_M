@@ -153,6 +153,8 @@ namespace ProjectM.Editor
             tilemapSo.FindProperty("_walls3D").boolValue = true;
             tilemapSo.ApplyModifiedPropertiesWithoutUndo();
             SetRefs(entityPresenter, ("_ground", tilemapPresenter)); // G-2b: 계단 위 서는 높이
+            entityPresenter.ConfigurePixel2D(Pixel2D, EnsureSpriteUnlitMaterial(), PixelsPerUnit); // P-3 ⓑ: 유닛 = 스프라이트
+            EditorUtility.SetDirty(entityPresenter);
             var pixelMap = Pixel2D ? EnsurePixelMap(gridGo) : null; // P-3a 2D 맵 (3D TilemapPresenter는 남겨 두되 묶지 않음)
 
             // 지형 효과 오버레이: 바닥 위 1 cm · 유닛 아래
@@ -352,7 +354,25 @@ namespace ProjectM.Editor
             catalog.Set(PlayerVisualId, AssetDatabase.LoadAssetAtPath<Sprite>(PlayerSpritePath), new Color(0.3f, 0.85f, 0.4f), 0.9f);
             catalog.Set(EnemyVisualId, AssetDatabase.LoadAssetAtPath<Sprite>(UnitCircleSpritePath), new Color(0.9f, 0.25f, 0.2f), 0.8f);
             foreach (var (id, _) in Characters) // 고를 수 있는 캐릭터 — 모델은 Varco Models 메뉴가 플레이어 모델로 넣는다
-                catalog.Set(id, AssetDatabase.LoadAssetAtPath<Sprite>($"{CharacterArtDir}/{id}.png"), new Color(0.3f, 0.85f, 0.4f), 0.9f);
+            {
+                // 2D(P-3 ⓑ)에서는 스프라이트를 그대로 그리므로 흰색 (3D 캡슐 색은 모델이 있어 안 씀)
+                var idle = AssetDatabase.LoadAssetAtPath<Sprite>($"{CharacterArtDir}/{id}.png");
+                catalog.Set(id, idle, Color.white, 0.9f);
+                // P-3 ⓑ 걷기 (2026-10-22 금발 마법사): {id}_walk_{front,back,side}_0~3 — 없으면 정지 그림만
+                Sprite[] Walk(string dir)
+                {
+                    var frames = new List<Sprite>();
+                    for (int i = 0; i < 4; i++)
+                    {
+                        var sprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{CharacterArtDir}/{id}_walk_{dir}_{i}.png");
+                        if (sprite != null) frames.Add(sprite);
+                    }
+                    return frames.ToArray();
+                }
+                var front = Walk("front");
+                if (front.Length > 0) catalog.SetPixel(id, idle, front, Walk("back"), Walk("side"));
+                else catalog.SetPixel(id, null, null, null, null);
+            }
             // 3-4b 임시 보스: 짙은 자주색, 두 배 키 (판정은 1칸)
             catalog.Set(BossVisualId, AssetDatabase.LoadAssetAtPath<Sprite>(UnitCircleSpritePath), new Color(0.55f, 0.1f, 0.45f), 1.8f);
             EditorUtility.SetDirty(catalog);

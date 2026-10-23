@@ -3750,6 +3750,12 @@ MonoBehaviour:
   _idleSpeed: 2.4
   _teleportCells: 1.6
   _walkHold: 0.2
+  _pixel2D: 1
+  _spriteMaterial: {fileID: 2100000, guid: 86f15b1ede84ed747a44e692fd5e5ea7, type: 2}
+  _pixelsPerUnit: 64
+  _footPixels: 14
+  _sortingOrder: 10
+  _walkFps: 10
 --- !u!4 &2108178771
 Transform:
   m_ObjectHideFlags: 0

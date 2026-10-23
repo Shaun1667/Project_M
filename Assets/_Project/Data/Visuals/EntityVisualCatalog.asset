@@ -19,6 +19,10 @@ MonoBehaviour:
     Prefab: {fileID: 728124216887604353, guid: 6a2daa709e8d65546b3f2e5f5b55f6c1, type: 3}
     Height: 0.9
     Variants: []
+    PixelIdle: {fileID: 0}
+    WalkFront: []
+    WalkBack: []
+    WalkSide: []
   - Id: enemy_melee
     Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
     Tint: {r: 0.9, g: 0.25, b: 0.2, a: 1}
@@ -28,21 +32,49 @@ MonoBehaviour:
     - {fileID: 8232131972889852803, guid: c344dd2e9c34fb74eb0d3036abc45f7b, type: 3}
     - {fileID: 81561046083542254, guid: 455efc524ee0aac428780248144c2e01, type: 3}
     - {fileID: 6399613419502658874, guid: c2ce3b98b61de68459001622751451de, type: 3}
+    PixelIdle: {fileID: 0}
+    WalkFront: []
+    WalkBack: []
+    WalkSide: []
   - Id: boss
     Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
     Tint: {r: 0.55, g: 0.1, b: 0.45, a: 1}
     Prefab: {fileID: 7214064826023461617, guid: 67694bad125e0b24eaa98a5c0edb7b5b, type: 3}
     Height: 1.8
     Variants: []
+    PixelIdle: {fileID: 0}
+    WalkFront: []
+    WalkBack: []
+    WalkSide: []
   - Id: hero_blond
     Sprite: {fileID: 21300000, guid: daf974b677614ce4eb1093f7dc58cde1, type: 3}
-    Tint: {r: 0.3, g: 0.85, b: 0.4, a: 1}
+    Tint: {r: 1, g: 1, b: 1, a: 1}
     Prefab: {fileID: 728124216887604353, guid: 6a2daa709e8d65546b3f2e5f5b55f6c1, type: 3}
     Height: 0.9
     Variants: []
+    PixelIdle: {fileID: 21300000, guid: daf974b677614ce4eb1093f7dc58cde1, type: 3}
+    WalkFront:
+    - {fileID: 21300000, guid: f800d4515fb29f446914c781fcbdf5b3, type: 3}
+    - {fileID: 21300000, guid: 5128a47fac4a756499b520a2dfc75d58, type: 3}
+    - {fileID: 21300000, guid: 5a7d2cb0fb5dd4b46866e93b768cdf71, type: 3}
+    - {fileID: 21300000, guid: 139d2962732721b49926f2961b624815, type: 3}
+    WalkBack:
+    - {fileID: 21300000, guid: e53076e1cce33f84d920dde8556e945b, type: 3}
+    - {fileID: 21300000, guid: 4bed997546f3a0e42918b3fb0a9d82f5, type: 3}
+    - {fileID: 21300000, guid: 34dfff2dc87bee741b38df55dc9ee97e, type: 3}
+    - {fileID: 21300000, guid: 9c69c43db3ed9da4f8ba5bc012167718, type: 3}
+    WalkSide:
+    - {fileID: 21300000, guid: f5e54f8a48b653649a4ed70d430dfee5, type: 3}
+    - {fileID: 21300000, guid: 8675a52fad343314a8e40a9dc42874e4, type: 3}
+    - {fileID: 21300000, guid: a3fa63276f1775349a7a4a61f5fa0f1a, type: 3}
+    - {fileID: 21300000, guid: 362bdf8e894b1844d98175b38afadd48, type: 3}
   - Id: hero_black
     Sprite: {fileID: 21300000, guid: 84bbeccd5bccd0c488c067fdd3d4c051, type: 3}
-    Tint: {r: 0.3, g: 0.85, b: 0.4, a: 1}
+    Tint: {r: 1, g: 1, b: 1, a: 1}
     Prefab: {fileID: 728124216887604353, guid: 6a2daa709e8d65546b3f2e5f5b55f6c1, type: 3}
     Height: 0.9
     Variants: []
+    PixelIdle: {fileID: 0}
+    WalkFront: []
+    WalkBack: []
+    WalkSide: []

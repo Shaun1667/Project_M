@@ -33,6 +33,14 @@ namespace ProjectM.Presentation
         /// <summary>지금 걷는 중으로 보이는지 (Walk 재생 · 테스트 확인용).</summary>
         public bool Walking { get; internal set; }
 
+        // ── P-3 ⓑ 2D 픽셀 (표시 전용) ──
+        /// <summary>2D 모드의 스프라이트 렌더러 (3D면 null).</summary>
+        public SpriteRenderer PixelRenderer { get; internal set; }
+        /// <summary>2D: 바라보는 쪽 (이동 · 공격 · 시전 방향으로 바뀜).</summary>
+        public PixelFacing Facing { get; internal set; } = PixelFacing.Front;
+        internal EntityVisualCatalog.Entry Pixel;   // 걷기 · 대기 그림 (HasPixel이면)
+        internal float WalkClock;                   // 걷는 동안 흐르는 시간 (프레임 고르기)
+
         public EntityView(Transform root, Renderer[] renderers)
         {
             Root = root;
@@ -43,8 +51,14 @@ namespace ProjectM.Presentation
         public bool IsSettled => MoveT >= 1f && LungeT >= 1f && HitT >= 1f && CastT >= 1f && DeathT < 0f;
     }
 
+    /// <summary>2D 픽셀 유닛이 바라보는 쪽 (P-3 ⓑ) — 앞 = 화면 아래, 뒤 = 위, 옆 = 오른쪽 · 왼쪽(뒤집기).</summary>
+    public enum PixelFacing { Front, Back, Right, Left }
+
     /// <summary>
     /// 엔티티 이벤트(Spawned · Moved · Removed) → 3D 모습 (G-1, 결정 2026-10-18).
+    /// P-3 ⓑ (2D 픽셀, 2026-10-23): _pixel2D면 프리팹 대신 스프라이트 하나 — 카탈로그 픽셀 그림(걷기 앞 · 뒤 · 옆 4장, 대기 = 걷기 2번째 장)이 있으면 그것,
+    /// 없으면 그레이박스 Sprite를 Tint로. 발은 칸 아래 끝에서 _footPixels 위 → 64px 스프라이트의 머리가 위 칸으로 올라온다(결정 2026-10-22).
+    /// 아래 줄 유닛이 앞에 그려지게 z를 칸 y로 조금씩 당긴다. 회전 대신 바라보는 쪽(앞 · 뒤 · 옆)을 바꾼다.
     /// VisualId의 프리팹(변형이 있으면 ID로 하나 — G-2a)이 있으면 그것, 없으면 그레이박스 캡슐(카탈로그 색 · 키). 충돌체는 붙이지 않는다 (규칙 2).
     /// 시야(VisibilityChangedEvent)를 받은 뒤로는 지금 보이는 칸에 있는 엔티티만 그린다 (1-7). 시야 이벤트가 없으면 전부 그린다.
     /// 상태 이상은 몸 색 틴트 하나 (우선순위 표) — 3D 이펙트는 G-3.
@@ -75,6 +89,14 @@ namespace ProjectM.Presentation
         [SerializeField] [Range(0.1f, 6f)] private float _idleSpeed = 2.4f;
         [Tooltip("이보다 먼 이동(칸)은 보간 없이 옮긴다 — 층 이동 · 순간 이동")] [SerializeField] private float _teleportCells = 1.6f;
         [Tooltip("한 칸 이동이 끝난 뒤에도 Walk를 유지하는 시간 (초) — 이어 걸을 때 Idle로 깜빡이지 않게")] [SerializeField] [Range(0f, 1f)] private float _walkHold = 0.2f;
+
+        [Header("2D 픽셀 (P-3 ⓑ)")]
+        [SerializeField] private bool _pixel2D;
+        [Tooltip("스프라이트 재질 (조명 없음 — MainSceneSetup의 SpriteUnlit)")] [SerializeField] private Material _spriteMaterial;
+        [SerializeField] private int _pixelsPerUnit = 64;
+        [Tooltip("발이 칸 아래 끝에서 올라온 픽셀 — 스프라이트(64px)가 칸 위로 넘어 머리가 위 칸에 겹친다 (결정 2026-10-22)")] [SerializeField] [Range(0, 32)] private int _footPixels = 14;
+        [Tooltip("유닛 정렬 — 지형 효과(5) 위, 안개(20) 아래")] [SerializeField] private int _sortingOrder = 10;
+        [Tooltip("걷기 프레임 속도 (장/초)")] [SerializeField] [Range(2f, 16f)] private float _walkFps = 10f;
 
         /// <summary>애니메이션 컨트롤러의 이동 중 bool 파라미터 (VarcoModelSetup이 만든 컨트롤러와 같은 이름).</summary>
         public const string MovingParameter = "Moving";
@@ -127,6 +149,16 @@ namespace ProjectM.Presentation
             _ground = ground;
         }
 
+        /// <summary>2D 픽셀 모드 (P-3 ⓑ — Setup · 테스트).</summary>
+        public void ConfigurePixel2D(bool on, Material spriteMaterial, int pixelsPerUnit = 64)
+        {
+            _pixel2D = on;
+            _spriteMaterial = spriteMaterial;
+            _pixelsPerUnit = pixelsPerUnit;
+        }
+
+        public bool IsPixel2D => _pixel2D;
+
         public bool TryGetView(EntityId id, out EntityView view) => _views.TryGetValue(id, out view);
 
         /// <summary>칸 중앙의 월드 좌표 (바닥 높이). Grid가 X축 90° 돌아 있으면 바닥 평면(XZ) 위 (G-1).</summary>
@@ -136,8 +168,37 @@ namespace ProjectM.Presentation
         public Vector3 StandPoint(GridPos pos)
         {
             var p = CellCenter(pos);
+            if (_pixel2D)
+            {
+                p.y += -0.5f + (float)_footPixels / _pixelsPerUnit; // 칸 아래 끝 + 발 높이
+                p.z = -0.5f + pos.Y * 0.001f; // 아래 줄(작은 y)이 카메라에 가까움 = 앞에 그려짐
+                return p;
+            }
             if (_ground != null) p.y += _ground.StandHeight(pos);
             return p;
+        }
+
+        /// <summary>방향 벡터를 바닥 평면으로 — 3D는 높이(y)를, 2D는 깊이(z)를 버린다.</summary>
+        private Vector3 Flat(Vector3 d)
+        {
+            if (_pixel2D) d.z = 0f;
+            else d.y = 0f;
+            return d;
+        }
+
+        /// <summary>그 방향을 본다 — 3D는 회전, 2D는 앞 · 뒤 · 옆 그림.</summary>
+        private void Face(EntityView view, Vector3 dir)
+        {
+            if (dir.sqrMagnitude < 0.0001f) return;
+            if (!_pixel2D)
+            {
+                view.Root.rotation = Quaternion.LookRotation(dir, Vector3.up);
+                return;
+            }
+            view.Facing = Mathf.Abs(dir.x) >= Mathf.Abs(dir.y)
+                ? (dir.x < 0f ? PixelFacing.Left : PixelFacing.Right)
+                : (dir.y > 0f ? PixelFacing.Back : PixelFacing.Front);
+            UpdateSpriteFrame(view);
         }
 
         public void Bind(SimEventBus bus)
@@ -204,7 +265,16 @@ namespace ProjectM.Presentation
             var root = new GameObject($"{e.VisualId} {e.Id}").transform;
             root.SetParent(transform, false);
             var tint = Color.white;
-            if (_catalog != null && _catalog.TryGet(e.VisualId, out var visual))
+            SpriteRenderer pixelRenderer = null;
+            var pixel = default(EntityVisualCatalog.Entry);
+            if (_pixel2D)
+            {
+                bool known = _catalog != null && _catalog.TryGet(e.VisualId, out pixel);
+                if (!known) Debug.LogWarning($"[EntityPresenter] VisualId '{e.VisualId}'가 카탈로그에 없다 ({e.Id})");
+                pixelRenderer = CreateSprite(root, known && pixel.HasPixel ? null : pixel.Sprite);
+                if (known && !pixel.HasPixel) tint = pixel.Tint; // 그레이박스 스프라이트는 카탈로그 색
+            }
+            else if (_catalog != null && _catalog.TryGet(e.VisualId, out var visual))
             {
                 var prefab = EntityVisualCatalog.PickPrefab(visual, e.Id.Value);
                 if (prefab != null) Instantiate(prefab, root, false); // 텍스처 그대로 (틴트는 상태만)
@@ -228,7 +298,10 @@ namespace ProjectM.Presentation
                 To = at,
                 IdlePhase = (e.Id.Value * 0.618f) % 1f * Mathf.PI * 2f, // 엔티티마다 숨쉬기 박자를 어긋나게
                 Animator = FindAnimator(root),
+                PixelRenderer = pixelRenderer,
+                Pixel = pixel,
             };
+            if (pixelRenderer != null && pixel.HasPixel) UpdateSpriteFrame(view);
             _views.Add(e.Id, view);
             _positions[e.Id] = e.Pos;
             _baseTints[e.Id] = tint;
@@ -286,6 +359,46 @@ namespace ProjectM.Presentation
             return null;
         }
 
+        /// <summary>2D: 루트(발밑) 아래 스프라이트 하나. sprite가 null이면 그림은 프레임이 정한다. 그림 아래 끝이 발밑에 오게 둔다.</summary>
+        private SpriteRenderer CreateSprite(Transform root, Sprite sprite)
+        {
+            var go = new GameObject("Sprite");
+            go.transform.SetParent(root, false);
+            var sr = go.AddComponent<SpriteRenderer>();
+            if (_spriteMaterial != null) sr.sharedMaterial = _spriteMaterial;
+            sr.sortingOrder = _sortingOrder;
+            if (sprite != null)
+            {
+                sr.sprite = sprite;
+                go.transform.localPosition = new Vector3(0f, -sprite.bounds.min.y, 0f); // 그레이박스 그림은 가운데 피벗일 수 있음
+            }
+            return sr;
+        }
+
+        /// <summary>2D: 바라보는 쪽 · 걷는 중인지로 그림 한 장 (걷기 = 시간으로 4장 돌림, 대기 = 그 방향 2번째 장).</summary>
+        private void UpdateSpriteFrame(EntityView view)
+        {
+            var sr = view.PixelRenderer;
+            if (sr == null || !view.Pixel.HasPixel) return;
+            Sprite[] frames;
+            switch (view.Facing)
+            {
+                case PixelFacing.Back: frames = view.Pixel.WalkBack; break;
+                case PixelFacing.Right:
+                case PixelFacing.Left: frames = view.Pixel.WalkSide; break;
+                default: frames = view.Pixel.WalkFront; break;
+            }
+            if (frames == null || frames.Length == 0) frames = view.Pixel.WalkFront;
+            Sprite sprite = null;
+            if (frames != null && frames.Length > 0)
+            {
+                int index = view.Walking ? (int)(view.WalkClock * _walkFps) % frames.Length : Mathf.Min(1, frames.Length - 1);
+                sprite = frames[index];
+            }
+            sr.sprite = sprite != null ? sprite : view.Pixel.PixelIdle;
+            sr.flipX = view.Facing == PixelFacing.Left;
+        }
+
         /// <summary>그레이박스: 발밑이 바닥에 닿는 캡슐 (충돌체 제거). 재질은 URP Lit — CreatePrimitive 기본 재질은 빌드에서 깨진다.</summary>
         private void CreateCapsule(Transform root, float height)
         {
@@ -304,15 +417,12 @@ namespace ProjectM.Presentation
             _positions[e.Id] = e.To;
             if (!_views.TryGetValue(e.Id, out var view)) return;
             var to = StandPoint(e.To);
-            var dir = CellCenter(e.To) - CellCenter(e.From);
-            dir.y = 0f;
-            if (dir.sqrMagnitude > 0.0001f) view.Root.rotation = Quaternion.LookRotation(dir, Vector3.up); // 이동 방향을 바라봄
+            Face(view, Flat(CellCenter(e.To) - CellCenter(e.From))); // 이동 방향을 바라봄
 
             var shown = BasePosition(view);
             // 순간 이동 판정은 칸 사이 거리(From → To)로 — 보이는 위치는 앞 걸음 보간 중이라 뒤처져 있어,
             // 그것으로 재면 꾹 누른 직선 이동 뒤 대각선 한 걸음이 1.6칸을 넘어 툭 끊기고 순간 이동했다 (버그 수정 2026-10-19)
-            var step = CellCenter(e.To) - CellCenter(e.From);
-            step.y = 0f;
+            var step = Flat(CellCenter(e.To) - CellCenter(e.From));
             bool teleport = e.From == e.To || step.magnitude > _teleportCells; // 층 이동 · 먼 이동은 바로
             view.From = teleport ? to : shown;
             view.To = to;
@@ -358,12 +468,11 @@ namespace ProjectM.Presentation
         {
             if (!_views.TryGetValue(attackerId, out var attacker)) return;
             if (!_positions.TryGetValue(attackerId, out var from) || !_positions.TryGetValue(targetId, out var to)) return;
-            var dir = CellCenter(to) - CellCenter(from);
-            dir.y = 0f;
+            var dir = Flat(CellCenter(to) - CellCenter(from));
             if (dir.sqrMagnitude < 0.0001f) return;
             attacker.LungeDir = dir.normalized;
             attacker.LungeT = 0f;
-            attacker.Root.rotation = Quaternion.LookRotation(attacker.LungeDir, Vector3.up); // 대상을 바라봄
+            Face(attacker, attacker.LungeDir); // 대상을 바라봄
         }
 
         private void OnSpellCast(SpellCastEvent e)
@@ -371,9 +480,7 @@ namespace ProjectM.Presentation
             if (!_views.TryGetValue(e.Caster, out var caster)) return;
             caster.CastT = 0f;
             if (!_positions.TryGetValue(e.Caster, out var from)) return;
-            var dir = CellCenter(e.Target) - CellCenter(from);
-            dir.y = 0f;
-            if (dir.sqrMagnitude > 0.0001f) caster.Root.rotation = Quaternion.LookRotation(dir, Vector3.up);
+            Face(caster, Flat(CellCenter(e.Target) - CellCenter(from)));
         }
 
         // ── G-2b 프레임 연출 ──
@@ -389,6 +496,11 @@ namespace ProjectM.Presentation
                 Step(view, dt);
                 Pose(view);
                 UpdateWalk(view);
+                if (view.PixelRenderer != null)
+                {
+                    view.WalkClock = view.Walking ? view.WalkClock + dt : 0f;
+                    UpdateSpriteFrame(view);
+                }
                 if (view.Flashing) ApplyTint(pair.Key, view);
             }
             for (int i = _dying.Count - 1; i >= 0; i--)
@@ -451,7 +563,7 @@ namespace ProjectM.Presentation
         {
             if (view.Root == null) return;
             var pos = BasePosition(view);
-            bool animated = view.Animator != null; // 애니메이션 모델은 통통 튐 · 숨쉬기를 클립(Walk · Idle)이 맡는다
+            bool animated = view.Animator != null || (view.PixelRenderer != null && view.Pixel.HasPixel); // 애니메이션 모델 · 걷기 그림은 통통 튐 · 숨쉬기를 그림이 맡는다
             if (!animated) pos.y += _moveHop * Mathf.Sin(Mathf.PI * view.MoveT);
             pos += view.LungeDir * (_lungeDistance * Mathf.Sin(Mathf.PI * view.LungeT));
             pos.y += _castHop * Mathf.Sin(Mathf.PI * view.CastT);
@@ -505,6 +617,7 @@ namespace ProjectM.Presentation
         };
 
         private const float StatusTintStrength = 0.65f;
+        private static readonly Color PixelHitColor = new Color(1f, 0.35f, 0.35f);
 
         public static Color StatusTint(StatusType type)
         {
@@ -548,6 +661,11 @@ namespace ProjectM.Presentation
             if (_block == null) _block = new MaterialPropertyBlock();
             float flash = view.HitT < 1f ? Mathf.Lerp(_hitFlash, 1f, view.HitT) : 1f;
             var color = new Color(tint.r * flash, tint.g * flash, tint.b * flash, tint.a);
+            if (view.PixelRenderer != null) // 2D: 스프라이트 색은 곱하기라 밝게 못 함 → 피격 = 붉게
+            {
+                view.PixelRenderer.color = view.HitT < 1f ? Color.Lerp(PixelHitColor, tint, view.HitT) : tint;
+                return;
+            }
             foreach (var r in view.Renderers)
             {
                 if (r == null) continue;
