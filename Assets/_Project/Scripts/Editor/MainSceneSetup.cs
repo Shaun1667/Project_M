@@ -58,6 +58,7 @@ namespace ProjectM.Editor
         private static readonly (string Id, string Name)[] Characters = { ("hero_blond", "금발의 마법사"), ("hero_black", "흑발의 마법사") };
         private const string ProgressionConfigPath = "Assets/_Project/Data/Units/ProgressionConfig.asset";
         private const string ItemVisualCatalogPath = "Assets/_Project/Data/Visuals/ItemVisualCatalog.asset";
+        private const string ItemArtDir = "Assets/_Project/Art/Pixel/Items";
 
         /// <summary>플레이어 시작 주문 (BALANCE 4번). 3-1부터 빈 칸 — 주문은 게임 중에 얻고, 테스트는 디버그 창에서 넣는다 (REACTIONS.md D8).</summary>
         private static readonly string[] PlayerStartingSpells = new string[0];
@@ -220,8 +221,11 @@ namespace ProjectM.Editor
             var consumableConfig = LoadOrCreate<ConsumableConfigAsset>(ConsumableConfigPath); // 3-9: 새로 만들면 필드 초기값 = BALANCE 14번
             var floorItemsGo = FindOrCreate("FloorItems", null);
             var floorItems = GetOrAdd<FloorItemPresenter>(floorItemsGo);
+            var itemVisuals = EnsureItemIcons(); // P-3 ⓒ: 아이템 픽셀 그림 (Art/Pixel/Items — 파일 이름 = 아이템 ID 또는 겉모습 키)
             SetRefs(floorItems, ("_entities", entityPresenter), ("_bookMaterial", EnsureShapeMaterial()),
-                ("_models", LoadOrCreate<ItemVisualCatalog>(ItemVisualCatalogPath))); // 3-7a 무기 모델 (Varco Models 메뉴가 채움)
+                ("_models", itemVisuals)); // 3-7a 무기 모델 (Varco Models 메뉴가 채움)
+            floorItems.ConfigurePixel2D(Pixel2D, EnsureSpriteUnlitMaterial(), PixelsPerUnit); // P-3 ⓒ: 바닥 아이템 = 픽셀 그림
+            EditorUtility.SetDirty(floorItems);
             // 임시 보스 (3-4b) — 없을 때만 BALANCE 3번 값으로
             var bossDef = EnsureAsset<UnitDefAsset>(BossDefPath,
                 ("_visualId", BossVisualId), ("_maxHp", 60), ("_attackDamage", 5), ("_sightRange", 10));
@@ -668,14 +672,15 @@ namespace ProjectM.Editor
             GetOrAdd<Image>(inventoryGo).raycastTarget = false;
             inventoryGo.transform.SetAsLastSibling();
             var inventoryView = GetOrAdd<InventoryPresenter>(canvasGo);
-            SetRefs(inventoryView, ("_panel", inventoryPanel), ("_font", font));
+            SetRefs(inventoryView, ("_panel", inventoryPanel), ("_font", font), ("_itemIcons", LoadOrCreate<ItemVisualCatalog>(ItemVisualCatalogPath)));
 
             var hud = GetOrAdd<HudPresenter>(canvasGo);
             SetRefs(hud,
                 ("_hpFill", hpFill), ("_hpLabel", hpLabel),
                 ("_mpFill", mpFill), ("_mpLabel", mpLabel),
                 ("_xpFill", xpFill), ("_xpLabel", xpLabel), ("_weaponLabel", weaponLabel), ("_armorLabel", armorLabel),
-                ("_statusIcons", icons), ("_quickSlots", quick), ("_hintText", hint), ("_logText", log));
+                ("_statusIcons", icons), ("_quickSlots", quick), ("_hintText", hint), ("_logText", log),
+                ("_itemIcons", LoadOrCreate<ItemVisualCatalog>(ItemVisualCatalogPath))); // P-3 ⓒ 빠른 칸 아이템 그림
             // 로그 줄 수 (결정 2026-10-16: 8줄). 2-4까지 씬에 저장된 6을 덮어쓴다
             var hudSo = new SerializedObject(hud);
             hudSo.FindProperty("_logLines").intValue = 8;
@@ -799,6 +804,24 @@ namespace ProjectM.Editor
             var presenter = GetOrAdd<PixelMapPresenter>(go);
             SetRefs(presenter, ("_tilemap", tilemap), ("_tiles", set), ("_caps", capMap));
             return presenter;
+        }
+
+        /// <summary>
+        /// P-3 ⓒ 아이템 픽셀 그림 (2026-10-26): Art/Pixel/Items/*.png(64px · 가운데 피벗)를 ItemVisualCatalog의 Icon으로 — 파일 이름 = 아이템 ID(무기 · 갑옷 · 마법서 · 융합기)
+        /// 또는 겉모습 키(potion_crimson · scroll_tyr). 그림은 Tools/items_cut.py가 만든다. 3D 프리팹은 건드리지 않는다. 여러 번 실행해도 같음.
+        /// </summary>
+        private static ItemVisualCatalog EnsureItemIcons()
+        {
+            var catalog = LoadOrCreate<ItemVisualCatalog>(ItemVisualCatalogPath);
+            foreach (var guid in AssetDatabase.FindAssets("t:Texture2D", new[] { ItemArtDir }))
+            {
+                string png = AssetDatabase.GUIDToAssetPath(guid);
+                PixelTestSetup.ImportPixelSprite(png, SpriteAlignment.Center);
+                var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(png);
+                if (sprite != null) catalog.SetIcon(System.IO.Path.GetFileNameWithoutExtension(png), sprite);
+            }
+            EditorUtility.SetDirty(catalog);
+            return catalog;
         }
 
         /// <summary>

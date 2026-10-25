@@ -4,6 +4,7 @@ using ProjectM.Core;
 using ProjectM.Magic;
 using ProjectM.Presentation;
 using ProjectM.Units;
+using ProjectM.Items;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -32,6 +33,7 @@ namespace ProjectM.UI
         [Min(1)] [SerializeField] private int _logLines = 8;
         [Tooltip("상태 아이콘 한 개 크기")] [SerializeField] private Vector2 _iconSize = new Vector2(110, 30);
         [Tooltip("빠른 칸 상자 한 개 크기")] [SerializeField] private Vector2 _quickSlotSize = new Vector2(230, 40);
+        [Tooltip("아이템 픽셀 그림 (P-3 ⓒ) — 빠른 칸 오른쪽에. 비면 글자만")] [SerializeField] private ProjectM.Presentation.ItemVisualCatalog _itemIcons;
 
         private static readonly Color HintColor = new Color(1f, 0.84f, 0.31f);
         private static readonly Color DeadColor = new Color(1f, 0.4f, 0.35f);
@@ -40,6 +42,7 @@ namespace ProjectM.UI
         private string _hint = string.Empty;
         private readonly List<(Image box, TMP_Text label)> _icons = new List<(Image, TMP_Text)>();
         private readonly List<(Image box, TMP_Text label)> _slotBoxes = new List<(Image, TMP_Text)>();
+        private readonly List<Image> _slotIcons = new List<Image>();
         private int _highlightSlot = -1;
 
         private static readonly Color SlotColor = new Color(0.12f, 0.12f, 0.12f, 0.85f);
@@ -163,8 +166,13 @@ namespace ProjectM.UI
             var slots = _model.QuickSlots;
             for (int i = 0; i < slots.Count; i++)
             {
-                if (i >= _slotBoxes.Count) _slotBoxes.Add(CreateBox(_quickSlots, "QuickSlot", _quickSlotSize, TextAlignmentOptions.Left, Color.white));
+                if (i >= _slotBoxes.Count)
+                {
+                    _slotBoxes.Add(CreateBox(_quickSlots, "QuickSlot", _quickSlotSize, TextAlignmentOptions.Left, Color.white));
+                    _slotIcons.Add(CreateSlotIcon((RectTransform)_slotBoxes[i].box.transform));
+                }
                 var (box, label) = _slotBoxes[i];
+                SetSlotIcon(_slotIcons[i], label, slots[i]);
                 box.gameObject.SetActive(true);
                 box.color = i == _highlightSlot ? SlotHighlightColor : SlotColor;
                 var sb = new StringBuilder($" {i + 1} ");
@@ -175,6 +183,32 @@ namespace ProjectM.UI
                 label.text = sb.ToString();
             }
             for (int i = slots.Count; i < _slotBoxes.Count; i++) _slotBoxes[i].box.gameObject.SetActive(false);
+        }
+
+        /// <summary>빠른 칸 오른쪽 정사각 아이콘 (P-3 ⓒ).</summary>
+        private Image CreateSlotIcon(RectTransform box)
+        {
+            var go = new GameObject("Icon", typeof(RectTransform), typeof(Image));
+            go.transform.SetParent(box, false);
+            var rect = (RectTransform)go.transform;
+            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(1f, 0.5f);
+            rect.anchoredPosition = new Vector2(-2f, 0f);
+            rect.sizeDelta = new Vector2(_quickSlotSize.y, _quickSlotSize.y);
+            var image = go.GetComponent<Image>();
+            image.raycastTarget = false;
+            image.preserveAspect = true;
+            image.enabled = false;
+            return image;
+        }
+
+        private void SetSlotIcon(Image icon, TMP_Text label, InventoryRef entry)
+        {
+            Sprite sprite = null;
+            if (_itemIcons != null && !entry.IsEmpty && entry.Kind == InventoryKind.Item && !_itemIcons.TryGetIcon(_model.Text.VisualOf(entry.Id), out sprite))
+                _itemIcons.TryGetIcon(entry.Id, out sprite);
+            icon.sprite = sprite;
+            icon.enabled = sprite != null;
+            label.rectTransform.offsetMax = new Vector2(sprite != null ? -_quickSlotSize.y : 0f, 0f);
         }
 
         private (Image, TMP_Text) CreateIcon() =>

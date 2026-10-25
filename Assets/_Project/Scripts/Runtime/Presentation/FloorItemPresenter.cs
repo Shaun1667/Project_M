@@ -10,6 +10,8 @@ namespace ProjectM.Presentation
     /// 바닥 아이템 (3-5 마법서): FloorItemPlacedEvent → 칸 위에 떠서 천천히 도는 책(그레이박스 납작한 상자, 색 = FxCatalog "item.&lt;ID&gt;" 틴트)
     /// + 같은 키의 반짝임 루프 효과. 주우면(ItemPickedUpEvent) 지우고, MapLoaded(새 판 · 층 이동)에 모두 지운다.
     /// 지금 보이는 칸만 그린다 (디버그 밝히기 = 전부). 규칙은 모른다 — 모델이 생기면 FxCatalog 프리팹 대신 모델로 바꾼다.
+    /// P-3 ⓒ (2D 픽셀, 2026-10-26): _pixel2D면 모델 대신 ItemVisualCatalog의 픽셀 그림(겉모습 키 → 없으면 아이템 ID)을 칸 가운데에 띄워
+    /// 위아래로 살짝 흔든다(도는 것 없음, 픽셀 단위로 맞춤). 정렬은 유닛(10) 바로 아래. 반짝임 효과는 이펙트 2D 단계에서.
     /// </summary>
     public sealed class FloorItemPresenter : MonoBehaviour
     {
@@ -23,6 +25,13 @@ namespace ProjectM.Presentation
         [SerializeField] private float _bobAmount = 0.06f;
         [Tooltip("도는 속도 (도/초)")] [SerializeField] private float _spinSpeed = 45f;
 
+        [Header("2D 픽셀 (P-3 ⓒ)")]
+        [SerializeField] private bool _pixel2D;
+        [SerializeField] private Material _spriteMaterial;
+        [SerializeField] private int _pixelsPerUnit = 64;
+        [Tooltip("위아래 흔들림 (픽셀)")] [SerializeField] [Range(0, 8)] private int _pixelBob = 2;
+        [Tooltip("정렬 — 유닛(10) 아래, 지형 효과(5) 위")] [SerializeField] private int _sortingOrder = 9;
+
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
         private static readonly int ColorId = Shader.PropertyToID("_Color");
 
@@ -33,6 +42,7 @@ namespace ProjectM.Presentation
             public Transform Root;
             public Transform Book;
             public float Phase;
+            public bool Pixel;
         }
 
         private readonly List<View> _views = new List<View>();
@@ -62,6 +72,14 @@ namespace ProjectM.Presentation
             _catalog = catalog;
             _bookMaterial = bookMaterial;
             _models = models;
+        }
+
+        /// <summary>2D 픽셀 모드 (P-3 ⓒ — Setup · 테스트).</summary>
+        public void ConfigurePixel2D(bool on, Material spriteMaterial, int pixelsPerUnit = 64)
+        {
+            _pixel2D = on;
+            _spriteMaterial = spriteMaterial;
+            _pixelsPerUnit = pixelsPerUnit;
         }
 
         public bool Has(GridPos pos, string itemId) => _views.Exists(v => v.Pos == pos && v.ItemId == itemId);
@@ -112,6 +130,22 @@ namespace ProjectM.Presentation
             var root = new GameObject($"item {e.ItemId}").transform;
             root.SetParent(transform, false);
             root.position = CellCenter(e.Pos);
+
+            if (_pixel2D && _models != null && (_models.TryGetIcon(e.VisualId, out var icon) || _models.TryGetIcon(e.ItemId, out icon)))
+            {
+                root.position += new Vector3(0f, 0f, -0.4f + e.Pos.Y * 0.001f); // 유닛과 같은 깊이 규칙 (정렬은 sortingOrder가 정함)
+                var spriteGo = new GameObject("Book");
+                spriteGo.transform.SetParent(root, false);
+                var sr = spriteGo.AddComponent<SpriteRenderer>();
+                sr.sprite = icon;
+                if (_spriteMaterial != null) sr.sharedMaterial = _spriteMaterial;
+                sr.sortingOrder = _sortingOrder;
+                var pixelView = new View { Pos = e.Pos, ItemId = e.ItemId, Root = root, Book = spriteGo.transform, Phase = (e.Pos.X * 0.37f + e.Pos.Y * 0.61f) % 1f * Mathf.PI * 2f, Pixel = true };
+                _views.Add(pixelView);
+                Pose(pixelView);
+                ApplyVisibility(pixelView);
+                return;
+            }
 
             // 3-9: 물약 · 주문서는 판마다 정한 겉모습(VisualId)으로 그린다 — 아이템 ID로 찾으면 정체가 드러난다
             if (_models != null && _models.TryGet(e.VisualId, out var modelPrefab, out bool upright))
@@ -222,6 +256,12 @@ namespace ProjectM.Presentation
         private void Pose(View v)
         {
             if (v.Book == null) return;
+            if (v.Pixel) // 2D: 위아래로만, 픽셀 단위로 (도는 것 없음)
+            {
+                float bob = Mathf.Round(_pixelBob * Mathf.Sin(_time * 2.2f + v.Phase)) / _pixelsPerUnit;
+                v.Book.localPosition = new Vector3(0f, bob, 0f);
+                return;
+            }
             v.Book.localPosition = Vector3.up * (_hoverHeight + _bobAmount * Mathf.Sin(_time * 2.2f + v.Phase));
             v.Book.localRotation = Quaternion.Euler(0f, _time * _spinSpeed + v.Phase * Mathf.Rad2Deg, 0f);
         }

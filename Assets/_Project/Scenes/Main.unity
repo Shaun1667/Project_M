@@ -3150,6 +3150,11 @@ MonoBehaviour:
   _hoverHeight: 0.35
   _bobAmount: 0.06
   _spinSpeed: 45
+  _pixel2D: 1
+  _spriteMaterial: {fileID: 2100000, guid: 86f15b1ede84ed747a44e692fd5e5ea7, type: 2}
+  _pixelsPerUnit: 64
+  _pixelBob: 2
+  _sortingOrder: 9
 --- !u!4 &1918597510
 Transform:
   m_ObjectHideFlags: 0
@@ -3798,6 +3803,7 @@ MonoBehaviour:
   _logLines: 8
   _iconSize: {x: 110, y: 30}
   _quickSlotSize: {x: 230, y: 40}
+  _itemIcons: {fileID: 11400000, guid: 481eb5d51281c1848a2a10324a470689, type: 2}
 --- !u!114 &2085256666
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3893,6 +3899,7 @@ MonoBehaviour:
   _cellSize: {x: 170, y: 56}
   _spacing: 8
   _menuItemSize: {x: 150, y: 40}
+  _itemIcons: {fileID: 11400000, guid: 481eb5d51281c1848a2a10324a470689, type: 2}
 --- !u!114 &2085256670
 MonoBehaviour:
   m_ObjectHideFlags: 0

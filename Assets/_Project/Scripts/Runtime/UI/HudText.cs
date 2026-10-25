@@ -48,6 +48,9 @@ namespace ProjectM.UI
         /// <summary>이번 판 기록 (3-9 식별) — 있으면 모르는 물약 · 주문서는 겉모습 이름("진홍 물약")으로. GameRoot가 판마다 넣는다.</summary>
         public RunState Run { get; set; }
 
+        /// <summary>그림을 고를 키 (P-3 ⓒ) — 모르든 알든 물약 · 주문서는 겉모습 키(그림은 식별돼도 같은 병), 나머지는 아이템 ID.</summary>
+        public string VisualOf(string id) => Run?.LookOf(id) ?? id;
+
         public string Item(string id)
         {
             if (string.IsNullOrEmpty(id)) return "-";

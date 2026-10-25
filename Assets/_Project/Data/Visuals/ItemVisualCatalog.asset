@@ -16,90 +16,164 @@ MonoBehaviour:
   - ItemId: shortsword
     Prefab: {fileID: 8192922997588066181, guid: 47984cc36b347894bb459ab632e2cf13, type: 3}
     Upright: 0
+    Icon: {fileID: 21300000, guid: 322064611ced5a841b664d1628f79889, type: 3}
   - ItemId: hand_axe
     Prefab: {fileID: 5532462945212376050, guid: 619c03e136892f64b8e17c1492004db0, type: 3}
     Upright: 0
+    Icon: {fileID: 21300000, guid: 2e6b53d8d483fb8408b4a74edc8c59c1, type: 3}
   - ItemId: spear
     Prefab: {fileID: 1417899640532911181, guid: 715eeebfeb389574bb384ff56f17385b, type: 3}
     Upright: 0
+    Icon: {fileID: 21300000, guid: e7256e51ec241164fb5810d953e6edc0, type: 3}
   - ItemId: quarterstaff
     Prefab: {fileID: 3214055739092215042, guid: 03bc9e49328d50748974e66ae8b621b2, type: 3}
     Upright: 0
+    Icon: {fileID: 21300000, guid: 19ee1ddd3ce611f40b8639419b2e238f, type: 3}
   - ItemId: dirk
     Prefab: {fileID: 6921370684022954228, guid: e4c9fe7725de42d45a9ebd66d585d8cd, type: 3}
     Upright: 0
+    Icon: {fileID: 21300000, guid: 4a4e3209f75b89145b625a556ee15529, type: 3}
   - ItemId: sickle
     Prefab: {fileID: 1248244440567604610, guid: f9cd6b87868024e4998b41f10c161409, type: 3}
     Upright: 0
+    Icon: {fileID: 21300000, guid: 6d76170363bf3034ca30a7845806a27a, type: 3}
   - ItemId: potion_crimson
     Prefab: {fileID: 6597522984230732604, guid: ffbbd87cae874c342ae004f016629bf2, type: 3}
     Upright: 1
+    Icon: {fileID: 21300000, guid: 1fbdeb66417209740be1ab6abe9a2859, type: 3}
   - ItemId: potion_amber
     Prefab: {fileID: 7534083070186696182, guid: f796e5873a7a0494d97a4a031808d195, type: 3}
     Upright: 1
+    Icon: {fileID: 21300000, guid: 57c89ce1e04f8b74e88461b55e9be819, type: 3}
   - ItemId: potion_golden
     Prefab: {fileID: 4598724213237714419, guid: 7f6cba2eddce8224893093a790ac0638, type: 3}
     Upright: 1
+    Icon: {fileID: 21300000, guid: 8c67ce8a0616d7148a02ac4b3a6fde9e, type: 3}
   - ItemId: potion_jade
     Prefab: {fileID: 8394832719078201787, guid: 1c8eea466e5eba94ba27c3323cf776cd, type: 3}
     Upright: 1
+    Icon: {fileID: 21300000, guid: 8604f85446a682e43b1cc191c52e7647, type: 3}
   - ItemId: potion_blue
     Prefab: {fileID: 5273005031227786031, guid: b6f73f68441845f4e81e943564f040b8, type: 3}
     Upright: 1
+    Icon: {fileID: 21300000, guid: 2cb2d7386c642c844b85d776d6537671, type: 3}
   - ItemId: potion_sky
     Prefab: {fileID: 9076644700592483096, guid: 1f28c19066cc2484093516dc7da33311, type: 3}
     Upright: 1
+    Icon: {fileID: 21300000, guid: 9ce0e4f30683d5a438789a325675687c, type: 3}
   - ItemId: potion_navy
     Prefab: {fileID: 3041479173221862600, guid: 61a250516cc40d848b0550e94458ac9b, type: 3}
     Upright: 1
+    Icon: {fileID: 21300000, guid: 9cba42c53c2baa349912da82396cef72, type: 3}
   - ItemId: potion_magenta
     Prefab: {fileID: 4143275637953525772, guid: 9392e571b7f71f240968bd90be2a5a2f, type: 3}
     Upright: 1
+    Icon: {fileID: 21300000, guid: 1d3daff55e8e03d45b97057a4254ee7e, type: 3}
   - ItemId: potion_bistre
     Prefab: {fileID: 1822610211986188296, guid: 4f40262133b67724f87a0fb6e0557dcf, type: 3}
     Upright: 1
+    Icon: {fileID: 21300000, guid: 34fd50e9b11f2394395d6854ba67a206, type: 3}
   - ItemId: potion_charcoal
     Prefab: {fileID: 1995222269433277961, guid: 3fa6a5389b718e14f8185ccbaed43ca2, type: 3}
     Upright: 1
+    Icon: {fileID: 21300000, guid: 273eb49156a56bb4aa9ac65928bb9d93, type: 3}
   - ItemId: potion_silver
     Prefab: {fileID: 2713790082131987742, guid: c9db5afa4c08c4b47b0a24d02771c288, type: 3}
     Upright: 1
+    Icon: {fileID: 21300000, guid: ac0055f1bea953c4b9f9ad559f9cc818, type: 3}
   - ItemId: potion_ivory
     Prefab: {fileID: 4508321067190977029, guid: 13f4224ee9427614ba5e0e7daa24096d, type: 3}
     Upright: 1
+    Icon: {fileID: 21300000, guid: fef5cec7efdd22541aac51a677062dc5, type: 3}
   - ItemId: scroll_tyr
     Prefab: {fileID: 3235129944693728020, guid: 14c54e00f99416449887c949f9f3fd5d, type: 3}
     Upright: 1
+    Icon: {fileID: 21300000, guid: 3a3be2c4da48ac44b88905d08c850498, type: 3}
   - ItemId: scroll_feoh
     Prefab: {fileID: 4520822192821734519, guid: fc43509b2b42c5c429b5a5be9e2c700c, type: 3}
     Upright: 1
+    Icon: {fileID: 21300000, guid: 137b541b65b6ebe45ada4a1e92a74d88, type: 3}
   - ItemId: scroll_ur
     Prefab: {fileID: 5225568866316347728, guid: 4aaa85966498f9445bf5e10616ba4006, type: 3}
     Upright: 1
+    Icon: {fileID: 21300000, guid: 6254d6a594b141243bf2b0e7e4a1191b, type: 3}
   - ItemId: scroll_thorn
     Prefab: {fileID: 6123407152707051515, guid: eb8aa3b07b759a845918e8b52cb3ff7c, type: 3}
     Upright: 1
+    Icon: {fileID: 21300000, guid: 83da8ab8127d28d45ba0c06d8196dcf8, type: 3}
   - ItemId: scroll_rad
     Prefab: {fileID: 1381091846170657240, guid: 3773e1f1776eb21479c5029451a7b034, type: 3}
     Upright: 1
+    Icon: {fileID: 21300000, guid: 6f9bc3e84aff0f54c84849147e986b2e, type: 3}
   - ItemId: scroll_gyfu
     Prefab: {fileID: 7270887390887432546, guid: 8a3bf65b7ed83644595e83faf183949c, type: 3}
     Upright: 1
+    Icon: {fileID: 21300000, guid: 9586d4f2285070f40a29e793b1b27925, type: 3}
   - ItemId: scroll_wynn
     Prefab: {fileID: 2033104481032747264, guid: 7ffcb7e9ac4fd2640ae1a779c435a4ef, type: 3}
     Upright: 1
+    Icon: {fileID: 21300000, guid: 5224eb87cfcd50f4b9c0d177ac03d5c3, type: 3}
   - ItemId: scroll_haegl
     Prefab: {fileID: 3510233505417282668, guid: 8a76472869951ac4b9477859967e5ea1, type: 3}
     Upright: 1
+    Icon: {fileID: 21300000, guid: af1d35489d663354a872362bb0af1ce7, type: 3}
   - ItemId: scroll_is
     Prefab: {fileID: 7816636836359137867, guid: fb1ccbab1ea116c449d4be3894de67d1, type: 3}
     Upright: 1
+    Icon: {fileID: 21300000, guid: 1dc5894f61ed2934bb120ceee5f4bee4, type: 3}
   - ItemId: scroll_sigel
     Prefab: {fileID: 2208613667171944522, guid: acda1eed3763d7a4dbe4020883e8da6a, type: 3}
     Upright: 1
+    Icon: {fileID: 21300000, guid: df2c29b3de247934f8cab9b3460de632, type: 3}
   - ItemId: scroll_beorc
     Prefab: {fileID: 3819441828811450668, guid: 06e223a2d52d6e84aaa723b437a5705c, type: 3}
     Upright: 1
+    Icon: {fileID: 21300000, guid: f375e96b05bcb984f96fffcb5fcf602c, type: 3}
   - ItemId: scroll_oethel
     Prefab: {fileID: 9111982496064111048, guid: 4e85913d0c2b5b241a07285bd7d18050, type: 3}
     Upright: 1
+    Icon: {fileID: 21300000, guid: 5433edf8a36d8914bac7e89a32a758d7, type: 3}
+  - ItemId: armor_cloth
+    Prefab: {fileID: 0}
+    Upright: 0
+    Icon: {fileID: 21300000, guid: 2ae7b99c62672744a9b4bd224a6575a3, type: 3}
+  - ItemId: armor_leather
+    Prefab: {fileID: 0}
+    Upright: 0
+    Icon: {fileID: 21300000, guid: 47b6bec333e4c9a4c85731ab57c6aa12, type: 3}
+  - ItemId: armor_mail
+    Prefab: {fileID: 0}
+    Upright: 0
+    Icon: {fileID: 21300000, guid: b5a90176ae86a194282045578775e137, type: 3}
+  - ItemId: armor_plate
+    Prefab: {fileID: 0}
+    Upright: 0
+    Icon: {fileID: 21300000, guid: 0293d8fbe8b02314bbbdc9197172441b, type: 3}
+  - ItemId: armor_scale
+    Prefab: {fileID: 0}
+    Upright: 0
+    Icon: {fileID: 21300000, guid: e683631ae1ce99c4b924e14cb4d9f937, type: 3}
+  - ItemId: fusion_device
+    Prefab: {fileID: 0}
+    Upright: 0
+    Icon: {fileID: 21300000, guid: bfae76ea4c45bd146a414b5b6c4ff855, type: 3}
+  - ItemId: spellbook_fire
+    Prefab: {fileID: 0}
+    Upright: 0
+    Icon: {fileID: 21300000, guid: e5a15c93895fa4a4b80c9ed4ad99db87, type: 3}
+  - ItemId: spellbook_ice
+    Prefab: {fileID: 0}
+    Upright: 0
+    Icon: {fileID: 21300000, guid: 4e0cd15e79c25e84597f8782763ba0d1, type: 3}
+  - ItemId: spellbook_lightning
+    Prefab: {fileID: 0}
+    Upright: 0
+    Icon: {fileID: 21300000, guid: e6c5329a91cc1524caf2741def04c288, type: 3}
+  - ItemId: spellbook_poison
+    Prefab: {fileID: 0}
+    Upright: 0
+    Icon: {fileID: 21300000, guid: 0c62f1f77bc4cae41ab00ae42b6ce31e, type: 3}
+  - ItemId: spellbook_water
+    Prefab: {fileID: 0}
+    Upright: 0
+    Icon: {fileID: 21300000, guid: 8beacbd5647d8024b87ca0fc32a6a8dd, type: 3}

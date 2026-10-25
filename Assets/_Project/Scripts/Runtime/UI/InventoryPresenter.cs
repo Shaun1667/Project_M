@@ -20,6 +20,7 @@ namespace ProjectM.UI
         [SerializeField] private Vector2 _cellSize = new Vector2(170, 56);
         [SerializeField] private float _spacing = 8;
         [SerializeField] private Vector2 _menuItemSize = new Vector2(150, 40);
+        [Tooltip("아이템 픽셀 그림 (P-3 ⓒ) — 칸 왼쪽에. 비면 글자만")] [SerializeField] private ProjectM.Presentation.ItemVisualCatalog _itemIcons;
 
         private static readonly Color PanelColor = new Color(0.06f, 0.06f, 0.08f, 0.94f);
         private static readonly Color CellColor = new Color(0.18f, 0.18f, 0.2f, 1f);
@@ -33,6 +34,7 @@ namespace ProjectM.UI
 
         private TMP_Text _title;
         private readonly List<(Image box, TMP_Text label)> _cells = new List<(Image, TMP_Text)>();
+        private readonly List<Image> _cellIcons = new List<Image>();
         private RectTransform _menu;
         private readonly List<(Image box, TMP_Text label)> _menuItems = new List<(Image, TMP_Text)>();
 
@@ -80,6 +82,7 @@ namespace ProjectM.UI
                 if (i == menu.Selected) box.color = SelectedColor;
                 else if (fusion && i == menu.FusionFirst) box.color = FusionFirstColor;
                 else box.color = entry.IsEmpty || (fusion && entry.Kind != InventoryKind.Spell) ? CellEmptyColor : CellColor;
+                SetIcon(i < _cellIcons.Count ? _cellIcons[i] : null, label, entry, text);
                 if (entry.IsEmpty)
                 {
                     label.text = string.Empty;
@@ -181,6 +184,7 @@ namespace ProjectM.UI
 
             foreach (var (box, _) in _cells) Destroy(box.gameObject);
             _cells.Clear();
+            _cellIcons.Clear();
             for (int i = 0; i < slotCount; i++)
             {
                 var cell = CreateBox(_panel, "Cell" + i, _cellSize);
@@ -188,6 +192,7 @@ namespace ProjectM.UI
                 rect.anchoredPosition = new Vector2(Padding + i % columns * (_cellSize.x + _spacing),
                     -(Padding + TitleHeight + i / columns * (_cellSize.y + _spacing)));
                 _cells.Add(cell);
+                _cellIcons.Add(CreateIcon(rect, _cellSize.y));
             }
 
             if (_menu == null)
@@ -196,6 +201,34 @@ namespace ProjectM.UI
                 menuGo.transform.SetParent(_panel, false);
                 _menu = TopLeft((RectTransform)menuGo.transform, Vector2.zero, _menuItemSize);
             }
+        }
+
+        /// <summary>칸 왼쪽 정사각 아이콘 (P-3 ⓒ, 점 필터 그림을 정수 배로 — 64px 그림을 칸 높이에 맞춤).</summary>
+        private static Image CreateIcon(RectTransform cell, float height)
+        {
+            var go = new GameObject("Icon", typeof(RectTransform), typeof(Image));
+            go.transform.SetParent(cell, false);
+            var rect = (RectTransform)go.transform;
+            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0f, 0.5f);
+            rect.anchoredPosition = new Vector2(2f, 0f);
+            rect.sizeDelta = new Vector2(height, height);
+            var image = go.GetComponent<Image>();
+            image.raycastTarget = false;
+            image.preserveAspect = true;
+            image.enabled = false;
+            return image;
+        }
+
+        /// <summary>아이템 칸이면 그림을 켜고 글자를 그림 오른쪽으로 민다. 주문 · 빈 칸 · 그림 없음 = 글자만.</summary>
+        private void SetIcon(Image icon, TMP_Text label, InventoryRef entry, HudText text)
+        {
+            if (icon == null) return;
+            Sprite sprite = null;
+            if (_itemIcons != null && !entry.IsEmpty && entry.Kind == InventoryKind.Item && !_itemIcons.TryGetIcon(text.VisualOf(entry.Id), out sprite))
+                _itemIcons.TryGetIcon(entry.Id, out sprite);
+            icon.sprite = sprite;
+            icon.enabled = sprite != null;
+            label.rectTransform.offsetMin = new Vector2(sprite != null ? _cellSize.y + 2f : 8f, 0f);
         }
 
         private (Image, TMP_Text) CreateBox(RectTransform parent, string name, Vector2 size)
