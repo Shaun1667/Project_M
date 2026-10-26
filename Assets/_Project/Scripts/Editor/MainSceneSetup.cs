@@ -43,7 +43,7 @@ namespace ProjectM.Editor
         private const string LootConfigPath = "Assets/_Project/Data/Items/LootConfig.asset";
         private const string ConsumableConfigPath = "Assets/_Project/Data/Items/ConsumableConfig.asset";
         // P-3a (결정 2026-10-21): 2D 픽셀 그래픽 — Grid를 눕히지 않고 정사영 카메라, 맵은 PixelMapPresenter. false면 G-1 3D 그대로
-        private const bool Pixel2D = true;
+        internal const bool Pixel2D = true;
         private const int PixelsPerUnit = 64;
         private const string PixelWallTilePath = "Assets/_Project/Art/Pixel/Tiles/Wall/PixelWallTile.asset";
         private const int UnitFootPixels = 26; // 유닛 발 = 칸 아래 끝 + 26px (칸 가운데쯤 — 머리는 위 칸으로, 2026-10-23 사용자 SPD 스크린샷)

@@ -20,6 +20,14 @@ MonoBehaviour:
     Speed: 1
     Lifetime: 0
     Height: 0
+    Frames:
+    - {fileID: 21300000, guid: 17ef8603321f0db4292dd99e2345a76f, type: 3}
+    - {fileID: 21300000, guid: f970590924ba7814b992d2fecf22c618, type: 3}
+    - {fileID: 21300000, guid: 80441b6e21a185c4c9f1764d8e8d2ff7, type: 3}
+    - {fileID: 21300000, guid: 088db352033cafa479505be69ba48f62, type: 3}
+    Fps: 6
+    PixelCells: 1
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: terrain.PoisonCloud
     Prefab: {fileID: 2886950366143268859, guid: 253510ecf8d65454aa4d811cffb5a8f8, type: 3}
     Scale: 0.16
@@ -27,6 +35,14 @@ MonoBehaviour:
     Speed: 0.8
     Lifetime: 0
     Height: 0
+    Frames:
+    - {fileID: 21300000, guid: 848158a225653b840a7baef16a216356, type: 3}
+    - {fileID: 21300000, guid: 3f7afa09be3d0434a94d436322fa48b1, type: 3}
+    - {fileID: 21300000, guid: 8ea4240abafe09b4b82e2dd8a136b017, type: 3}
+    - {fileID: 21300000, guid: 5a65a366ddcf07145b8da64dd168315e, type: 3}
+    Fps: 5
+    PixelCells: 1
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: terrain.ContaminatedWater
     Prefab: {fileID: 1758640513163058458, guid: 9b99dafe7fbb348489619e9393e4bcfa, type: 3}
     Scale: 0.45
@@ -34,6 +50,14 @@ MonoBehaviour:
     Speed: 1
     Lifetime: 0
     Height: 0
+    Frames:
+    - {fileID: 21300000, guid: a34cc403667b9ae45a7e3642d83680fe, type: 3}
+    - {fileID: 21300000, guid: 8fb8219740667c541b3d96ccdd351aa2, type: 3}
+    - {fileID: 21300000, guid: b473ea560d3a0e9488680bffbbdc9498, type: 3}
+    - {fileID: 21300000, guid: e3cae53514530b04495abad3edc65882, type: 3}
+    Fps: 4
+    PixelCells: 1
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: status.Frozen
     Prefab: {fileID: 683182934616091483, guid: 491bd2f8e55e1db45a195465b18740bd, type: 3}
     Scale: 0.55
@@ -41,6 +65,14 @@ MonoBehaviour:
     Speed: 1
     Lifetime: 0
     Height: 0.45
+    Frames:
+    - {fileID: 21300000, guid: 7555b72016dcb294bab633ac464338c3, type: 3}
+    - {fileID: 21300000, guid: 0d36e660ee4ecbd488187334f7b74133, type: 3}
+    - {fileID: 21300000, guid: 53016be605d115b4593d88fb002510f2, type: 3}
+    - {fileID: 21300000, guid: f0713577f76e3404ebb4f248d528fb6f, type: 3}
+    Fps: 4
+    PixelCells: 1
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: status.Paralyze
     Prefab: {fileID: 7131401307255788800, guid: 4d9a3b35b3bc07649b697df7fb497b6d, type: 3}
     Scale: 0.32
@@ -48,6 +80,14 @@ MonoBehaviour:
     Speed: 1
     Lifetime: 0
     Height: 0.4
+    Frames:
+    - {fileID: 21300000, guid: 6b1e7767dcf362d45923d29510a1499e, type: 3}
+    - {fileID: 21300000, guid: 407e8c0296e4d2e46bdbbe57e111209b, type: 3}
+    - {fileID: 21300000, guid: c00c357381265724c8cab926ab711193, type: 3}
+    - {fileID: 21300000, guid: cff963a241deacf4eade7210bdcbc535, type: 3}
+    Fps: 8
+    PixelCells: 0.8
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: status.Burn
     Prefab: {fileID: 3438277244574041817, guid: 6fec832863289f04a854167bc2650d9b, type: 3}
     Scale: 0.5
@@ -55,6 +95,14 @@ MonoBehaviour:
     Speed: 1
     Lifetime: 0
     Height: 0.3
+    Frames:
+    - {fileID: 21300000, guid: 444bf725656c62b439bd673781d9f04d, type: 3}
+    - {fileID: 21300000, guid: 7a0a347e5f0f3064ca26dbb64c2db3bd, type: 3}
+    - {fileID: 21300000, guid: 21102b97c98e242469b8e4e2e48589c6, type: 3}
+    - {fileID: 21300000, guid: 20a7ef2414b3e3048bdc1499280d20aa, type: 3}
+    Fps: 8
+    PixelCells: 0.8
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: status.Poison
     Prefab: {fileID: 7053385775836331393, guid: 354b6251e950209409c75ab984acf000, type: 3}
     Scale: 0.3
@@ -62,6 +110,14 @@ MonoBehaviour:
     Speed: 1
     Lifetime: 0
     Height: 0.4
+    Frames:
+    - {fileID: 21300000, guid: 24343d42ea91464439721fefc21fc6b1, type: 3}
+    - {fileID: 21300000, guid: 34e856efaf7d04d4dae2b6cc23c45fd8, type: 3}
+    - {fileID: 21300000, guid: 6b810320319158e4798438fef03bff89, type: 3}
+    - {fileID: 21300000, guid: 9b64bec454be5144bb1ba3745a2f383b, type: 3}
+    Fps: 6
+    PixelCells: 0.8
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: status.Slow
     Prefab: {fileID: 8860363494751517875, guid: 010733280c7cd0b4294a9867b26a13f4, type: 3}
     Scale: 0.45
@@ -69,6 +125,14 @@ MonoBehaviour:
     Speed: 1
     Lifetime: 0
     Height: 0.05
+    Frames:
+    - {fileID: 21300000, guid: c057cdf0b4f6dc04abb65d734b6285bf, type: 3}
+    - {fileID: 21300000, guid: 3fb2906e5d37d6144bf256f51de5248b, type: 3}
+    - {fileID: 21300000, guid: 2d5fb8e7564ab8a45ab7908a64ee2a44, type: 3}
+    - {fileID: 21300000, guid: 15ac8a6648667184aa0c8827ef080dee, type: 3}
+    Fps: 6
+    PixelCells: 0.9
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: status.Wet
     Prefab: {fileID: 7045889733438899885, guid: 14078f8f7064d894fad9a68275c46f31, type: 3}
     Scale: 0.4
@@ -76,6 +140,14 @@ MonoBehaviour:
     Speed: 1
     Lifetime: 0
     Height: 0.5
+    Frames:
+    - {fileID: 21300000, guid: 2c8996507cb663840bd8c3d30bfd8928, type: 3}
+    - {fileID: 21300000, guid: 0aaced681544647409fe0589c6a72fa5, type: 3}
+    - {fileID: 21300000, guid: afe50e97527a6bc489eda820690de2e2, type: 3}
+    - {fileID: 21300000, guid: 6492deadf66b19941aaa28b17abdf3a5, type: 3}
+    Fps: 6
+    PixelCells: 0.8
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: cast.Fire
     Prefab: {fileID: 2944396702758532163, guid: e190bf97c041e58448af6b043116cba0, type: 3}
     Scale: 0.14
@@ -83,6 +155,14 @@ MonoBehaviour:
     Speed: 1.5
     Lifetime: 0.6
     Height: 0
+    Frames:
+    - {fileID: 21300000, guid: d938a3392b7ea054a83dd0c7be9864ce, type: 3}
+    - {fileID: 21300000, guid: 652245789c2556548b178ada52a90f98, type: 3}
+    - {fileID: 21300000, guid: b556b25d29238da438a2c9c8c56d0b01, type: 3}
+    - {fileID: 21300000, guid: c4b92bf089b2c2244bb51cb742021390, type: 3}
+    Fps: 14
+    PixelCells: 0.6
+    PixelTint: {r: 1, g: 0.75, b: 0.5, a: 1}
   - Key: cast.Ice
     Prefab: {fileID: 2944396702758532163, guid: e190bf97c041e58448af6b043116cba0, type: 3}
     Scale: 0.14
@@ -90,6 +170,14 @@ MonoBehaviour:
     Speed: 1.5
     Lifetime: 0.6
     Height: 0
+    Frames:
+    - {fileID: 21300000, guid: d938a3392b7ea054a83dd0c7be9864ce, type: 3}
+    - {fileID: 21300000, guid: 652245789c2556548b178ada52a90f98, type: 3}
+    - {fileID: 21300000, guid: b556b25d29238da438a2c9c8c56d0b01, type: 3}
+    - {fileID: 21300000, guid: c4b92bf089b2c2244bb51cb742021390, type: 3}
+    Fps: 14
+    PixelCells: 0.6
+    PixelTint: {r: 0.7, g: 0.92, b: 1, a: 1}
   - Key: cast.Lightning
     Prefab: {fileID: 2944396702758532163, guid: e190bf97c041e58448af6b043116cba0, type: 3}
     Scale: 0.14
@@ -97,6 +185,14 @@ MonoBehaviour:
     Speed: 1.5
     Lifetime: 0.6
     Height: 0
+    Frames:
+    - {fileID: 21300000, guid: d938a3392b7ea054a83dd0c7be9864ce, type: 3}
+    - {fileID: 21300000, guid: 652245789c2556548b178ada52a90f98, type: 3}
+    - {fileID: 21300000, guid: b556b25d29238da438a2c9c8c56d0b01, type: 3}
+    - {fileID: 21300000, guid: c4b92bf089b2c2244bb51cb742021390, type: 3}
+    Fps: 14
+    PixelCells: 0.6
+    PixelTint: {r: 1, g: 0.97, b: 0.6, a: 1}
   - Key: cast.Poison
     Prefab: {fileID: 2944396702758532163, guid: e190bf97c041e58448af6b043116cba0, type: 3}
     Scale: 0.14
@@ -104,6 +200,14 @@ MonoBehaviour:
     Speed: 1.5
     Lifetime: 0.6
     Height: 0
+    Frames:
+    - {fileID: 21300000, guid: d938a3392b7ea054a83dd0c7be9864ce, type: 3}
+    - {fileID: 21300000, guid: 652245789c2556548b178ada52a90f98, type: 3}
+    - {fileID: 21300000, guid: b556b25d29238da438a2c9c8c56d0b01, type: 3}
+    - {fileID: 21300000, guid: c4b92bf089b2c2244bb51cb742021390, type: 3}
+    Fps: 14
+    PixelCells: 0.6
+    PixelTint: {r: 0.85, g: 0.65, b: 1, a: 1}
   - Key: cast.Water
     Prefab: {fileID: 2944396702758532163, guid: e190bf97c041e58448af6b043116cba0, type: 3}
     Scale: 0.14
@@ -111,6 +215,14 @@ MonoBehaviour:
     Speed: 1.5
     Lifetime: 0.6
     Height: 0
+    Frames:
+    - {fileID: 21300000, guid: d938a3392b7ea054a83dd0c7be9864ce, type: 3}
+    - {fileID: 21300000, guid: 652245789c2556548b178ada52a90f98, type: 3}
+    - {fileID: 21300000, guid: b556b25d29238da438a2c9c8c56d0b01, type: 3}
+    - {fileID: 21300000, guid: c4b92bf089b2c2244bb51cb742021390, type: 3}
+    Fps: 14
+    PixelCells: 0.6
+    PixelTint: {r: 0.6, g: 0.75, b: 1, a: 1}
   - Key: projectile.Fire
     Prefab: {fileID: 3226506910322988314, guid: eccbc655050af0b4f81d8db39f84a58e, type: 3}
     Scale: 0.09
@@ -118,6 +230,14 @@ MonoBehaviour:
     Speed: 1
     Lifetime: 0
     Height: 0
+    Frames:
+    - {fileID: 21300000, guid: e067250ca522b5b498015eb98f4232ce, type: 3}
+    - {fileID: 21300000, guid: bf4cf4301b8700547827992df2ab90db, type: 3}
+    - {fileID: 21300000, guid: 7e1d81545aa4da7479d21b11bc12a82c, type: 3}
+    - {fileID: 21300000, guid: c60a3d4ca516b42449723d8b81c586ba, type: 3}
+    Fps: 12
+    PixelCells: 0.7
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: projectile.Ice
     Prefab: {fileID: 8860363494751517875, guid: 010733280c7cd0b4294a9867b26a13f4, type: 3}
     Scale: 1.2
@@ -125,6 +245,14 @@ MonoBehaviour:
     Speed: 1
     Lifetime: 0
     Height: 0
+    Frames:
+    - {fileID: 21300000, guid: 9e787dd537d79dd449c22b2b68e2b2b4, type: 3}
+    - {fileID: 21300000, guid: 55aec9b7bd83c7f4caa73541c329f402, type: 3}
+    - {fileID: 21300000, guid: 4fef17b75871b8f4fb89129409f86b34, type: 3}
+    - {fileID: 21300000, guid: 660f40562dea5c64598835e1fc23b9ec, type: 3}
+    Fps: 12
+    PixelCells: 0.7
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: projectile.Poison
     Prefab: {fileID: 919012162133337528, guid: e4a831baccba453479bb744202efc891, type: 3}
     Scale: 1.2
@@ -132,6 +260,14 @@ MonoBehaviour:
     Speed: 1
     Lifetime: 0
     Height: 0
+    Frames:
+    - {fileID: 21300000, guid: 0c86b6b11a0df374db90e8d9a616710f, type: 3}
+    - {fileID: 21300000, guid: f3b1ae54dd9295e40b13d8a9046017cd, type: 3}
+    - {fileID: 21300000, guid: 6d310c7764454c042a71c8da0f1f0d8d, type: 3}
+    - {fileID: 21300000, guid: 1766c2b792a475a488c020380ca04457, type: 3}
+    Fps: 12
+    PixelCells: 0.7
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: projectile.Water
     Prefab: {fileID: 7045889733438899885, guid: 14078f8f7064d894fad9a68275c46f31, type: 3}
     Scale: 1.2
@@ -139,6 +275,14 @@ MonoBehaviour:
     Speed: 1
     Lifetime: 0
     Height: 0
+    Frames:
+    - {fileID: 21300000, guid: 3019f88d6f8556f4c84a0680798a9c02, type: 3}
+    - {fileID: 21300000, guid: ec770719b4ea17a47968da420fa9f817, type: 3}
+    - {fileID: 21300000, guid: 5664394748c69c04f821ae2b0e09a71d, type: 3}
+    - {fileID: 21300000, guid: 0b6b924e196e888438393d5a4b07dac2, type: 3}
+    Fps: 12
+    PixelCells: 0.7
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: impact.Fire
     Prefab: {fileID: 358637981425055526, guid: 8eb503696b886e04faff8fc0f480d473, type: 3}
     Scale: 0.16
@@ -146,6 +290,14 @@ MonoBehaviour:
     Speed: 1.5
     Lifetime: 1
     Height: 0
+    Frames:
+    - {fileID: 21300000, guid: 5ee1de3535d6f6e49841f7f6ec352ca6, type: 3}
+    - {fileID: 21300000, guid: 4ad0765ed24771b4092e47d3ada31d71, type: 3}
+    - {fileID: 21300000, guid: dac138df57ace3f488c0c54477c3e659, type: 3}
+    - {fileID: 21300000, guid: ec9ca6743b671f5468d50762a1ecf41a, type: 3}
+    Fps: 12
+    PixelCells: 1
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: impact.Ice
     Prefab: {fileID: 4924508274929071776, guid: 0edef91621bb6b34384ccc9dbb98729c, type: 3}
     Scale: 0.35
@@ -153,6 +305,14 @@ MonoBehaviour:
     Speed: 1.3
     Lifetime: 0.9
     Height: 0
+    Frames:
+    - {fileID: 21300000, guid: 3ddf84c970c855b4089e26c9c08b98ef, type: 3}
+    - {fileID: 21300000, guid: ad0190a70f4184247b543b147e68a075, type: 3}
+    - {fileID: 21300000, guid: 44d71b64c31690b4fa9bcdc20a47471b, type: 3}
+    - {fileID: 21300000, guid: 96273de8c78ea8f4498be94385e2a79c, type: 3}
+    Fps: 12
+    PixelCells: 1
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: impact.Lightning
     Prefab: {fileID: 2965222256817593503, guid: a164e676dbbd6e54587237e619372c98, type: 3}
     Scale: 0.5
@@ -160,6 +320,14 @@ MonoBehaviour:
     Speed: 1.3
     Lifetime: 0.8
     Height: 0
+    Frames:
+    - {fileID: 21300000, guid: 188b15614ec72b94b80bc39216fcfa3c, type: 3}
+    - {fileID: 21300000, guid: 8c86ffc2ad9d13d4dad3869325a7af9a, type: 3}
+    - {fileID: 21300000, guid: c099a565d3ec0c24085eb4124bddaaf1, type: 3}
+    - {fileID: 21300000, guid: bfa92c466a045144f97471b1c965fa5a, type: 3}
+    Fps: 12
+    PixelCells: 1
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: impact.Poison
     Prefab: {fileID: 7904898002847524615, guid: a2ccf81a1d5b163448ebdf66b5e746d6, type: 3}
     Scale: 0.15
@@ -167,6 +335,14 @@ MonoBehaviour:
     Speed: 1
     Lifetime: 0.7
     Height: 0
+    Frames:
+    - {fileID: 21300000, guid: d160a12672b28f64196b5e9746ee44b4, type: 3}
+    - {fileID: 21300000, guid: 5dde3f82983df104d90f8167f318e39f, type: 3}
+    - {fileID: 21300000, guid: 0099c314140cb6d40a0643b790f245cd, type: 3}
+    - {fileID: 21300000, guid: cbcad7f92d0ba234a80c1eaa56e6bf42, type: 3}
+    Fps: 12
+    PixelCells: 1
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: impact.Water
     Prefab: {fileID: 952961124639765284, guid: 1095a5c9f65bfbe4383f63d5d1886c65, type: 3}
     Scale: 0.25
@@ -174,6 +350,14 @@ MonoBehaviour:
     Speed: 1.3
     Lifetime: 0.9
     Height: 0
+    Frames:
+    - {fileID: 21300000, guid: b05f145d0b51ca8419e928a12169493c, type: 3}
+    - {fileID: 21300000, guid: a273307af2abca34886bd107a701728c, type: 3}
+    - {fileID: 21300000, guid: 68385e15f92c44d48927d80a63ee8f2c, type: 3}
+    - {fileID: 21300000, guid: f00f3a3859124b94ca776c9029c42da6, type: 3}
+    Fps: 12
+    PixelCells: 1
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: burst.Fire
     Prefab: {fileID: 4994997792314849709, guid: 3dd50886582244645be87adb42aa8528, type: 3}
     Scale: 0.33
@@ -181,6 +365,14 @@ MonoBehaviour:
     Speed: 1.6
     Lifetime: 1
     Height: 0.02
+    Frames:
+    - {fileID: 21300000, guid: a1d2932aef3b3b44e954203a41e6e32b, type: 3}
+    - {fileID: 21300000, guid: 784744dcc7e558145bec2d2c5a8ca7a1, type: 3}
+    - {fileID: 21300000, guid: 768b8cc70f3f1444b83c06d30954f7a3, type: 3}
+    - {fileID: 21300000, guid: ab1a8fd420eadf9418b6beb47b5f7a0f, type: 3}
+    Fps: 10
+    PixelCells: 3
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: burst.Ice
     Prefab: {fileID: 161766660727748596, guid: 05ce920d629922a4eb4795ef7494ce5c, type: 3}
     Scale: 0.33
@@ -188,6 +380,14 @@ MonoBehaviour:
     Speed: 2
     Lifetime: 1
     Height: 0.02
+    Frames:
+    - {fileID: 21300000, guid: d90facfd95933674e8111277a681c063, type: 3}
+    - {fileID: 21300000, guid: 6d1716996b24e8e438be8f14bafc637c, type: 3}
+    - {fileID: 21300000, guid: 6c5ba723829e76f478614b37c39f6a79, type: 3}
+    - {fileID: 21300000, guid: 0a15052328eab4d49ad19bbc716b4f56, type: 3}
+    Fps: 10
+    PixelCells: 3
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: burst.Poison
     Prefab: {fileID: 8378648546881499446, guid: 867c572a5be680d42a042d2349f10143, type: 3}
     Scale: 0.4
@@ -195,6 +395,14 @@ MonoBehaviour:
     Speed: 1.6
     Lifetime: 1
     Height: 0.02
+    Frames:
+    - {fileID: 21300000, guid: 91b474217c2088d469636827c0d42ddc, type: 3}
+    - {fileID: 21300000, guid: 6552c8bbfeab0b244a5db53a77b472e4, type: 3}
+    - {fileID: 21300000, guid: 509344c0849466141a9dcdb74d2a5039, type: 3}
+    - {fileID: 21300000, guid: 8731ffb26f98c1940acba617e27b3e26, type: 3}
+    Fps: 10
+    PixelCells: 3
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: burst.Water
     Prefab: {fileID: 5034656251238326012, guid: 9de2fa19f0390d44491264d9cab8cec5, type: 3}
     Scale: 0.33
@@ -202,6 +410,14 @@ MonoBehaviour:
     Speed: 1.6
     Lifetime: 1
     Height: 0.02
+    Frames:
+    - {fileID: 21300000, guid: ccd86bc7d93c02043af5ee31cc13e65d, type: 3}
+    - {fileID: 21300000, guid: 90b2e9475f74bb341b8848f7e5d3de89, type: 3}
+    - {fileID: 21300000, guid: 8d9ba3fb33590f646ab3a71a67903b1c, type: 3}
+    - {fileID: 21300000, guid: 47075ead94cd98a48b84bf1bc0805fc0, type: 3}
+    Fps: 10
+    PixelCells: 3
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: burst.Lightning
     Prefab: {fileID: 2965222256817593503, guid: a164e676dbbd6e54587237e619372c98, type: 3}
     Scale: 1
@@ -209,6 +425,14 @@ MonoBehaviour:
     Speed: 1.3
     Lifetime: 0.8
     Height: 0.02
+    Frames:
+    - {fileID: 21300000, guid: e5ee294bab8f29b4881e0e588c5663b5, type: 3}
+    - {fileID: 21300000, guid: 8495ddaba4aa3d349aad89498f2ef38f, type: 3}
+    - {fileID: 21300000, guid: c7069bf783853b848b27c12c6154deec, type: 3}
+    - {fileID: 21300000, guid: e39ef648d6588294cba2161ae07975bf, type: 3}
+    Fps: 10
+    PixelCells: 3
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: fusion.fusion_fire_water
     Prefab: {fileID: 7957833072274404953, guid: 3355f6bfa6db8b24281b827de929694c, type: 3}
     Scale: 0.33
@@ -216,6 +440,14 @@ MonoBehaviour:
     Speed: 2
     Lifetime: 1
     Height: 0.02
+    Frames:
+    - {fileID: 21300000, guid: 3f73cc2bdec14764fa4dca840077afb3, type: 3}
+    - {fileID: 21300000, guid: ac5f77dedf0ad7a47a6ba391bd45b89b, type: 3}
+    - {fileID: 21300000, guid: 630484a5f40acb547b7e058df8c0edf4, type: 3}
+    - {fileID: 21300000, guid: 9a2fa3441044bf049a3337695cf789e2, type: 3}
+    Fps: 9
+    PixelCells: 3
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: fusion.fusion_water_poison
     Prefab: {fileID: 5034656251238326012, guid: 9de2fa19f0390d44491264d9cab8cec5, type: 3}
     Scale: 0.33
@@ -223,6 +455,14 @@ MonoBehaviour:
     Speed: 1.6
     Lifetime: 1
     Height: 0.02
+    Frames:
+    - {fileID: 21300000, guid: 44fb9041f0978cf40bd601b9fed06bb6, type: 3}
+    - {fileID: 21300000, guid: 1741c53355cb2654992ca0ec1d176c12, type: 3}
+    - {fileID: 21300000, guid: e8151c29fff8f1e4ca17d641192736fc, type: 3}
+    - {fileID: 21300000, guid: f62710738c572894aac6a7fe5143c675, type: 3}
+    Fps: 9
+    PixelCells: 3
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: fusion.fusion_fire_lightning
     Prefab: {fileID: 358637981425055526, guid: 8eb503696b886e04faff8fc0f480d473, type: 3}
     Scale: 0.22
@@ -230,6 +470,14 @@ MonoBehaviour:
     Speed: 1.5
     Lifetime: 1
     Height: 0
+    Frames:
+    - {fileID: 21300000, guid: 39866e9be3e9d814c9e1b45f2090702b, type: 3}
+    - {fileID: 21300000, guid: cd2057b4aeb5a884898ef551a50ca557, type: 3}
+    - {fileID: 21300000, guid: 0197e8b5492b4584091d18dd1ee1b71a, type: 3}
+    - {fileID: 21300000, guid: 0fa01152726bdba4685a0b0ae7a734ed, type: 3}
+    Fps: 10
+    PixelCells: 1.5
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: fusion.fusion_ice_water
     Prefab: {fileID: 4932088507883938021, guid: 0e5709a7ddb77924090c112cf73bb98a, type: 3}
     Scale: 0.38
@@ -237,6 +485,14 @@ MonoBehaviour:
     Speed: 2
     Lifetime: 1
     Height: 0.02
+    Frames:
+    - {fileID: 21300000, guid: d2cc733d235eb8a438eec5627ad6c646, type: 3}
+    - {fileID: 21300000, guid: e247168fec2854b43bd3277f96324cc1, type: 3}
+    - {fileID: 21300000, guid: 3be71584f0e89e34286829caac208bf4, type: 3}
+    - {fileID: 21300000, guid: 5b108ca97f1d5c942a6ac2048dc5dbbb, type: 3}
+    Fps: 9
+    PixelCells: 3
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: reaction.toxic_ignite
     Prefab: {fileID: 7904898002847524615, guid: a2ccf81a1d5b163448ebdf66b5e746d6, type: 3}
     Scale: 0.2
@@ -244,6 +500,14 @@ MonoBehaviour:
     Speed: 1
     Lifetime: 0.7
     Height: 0
+    Frames:
+    - {fileID: 21300000, guid: 8d370ab95684e8d498397b2627c5f024, type: 3}
+    - {fileID: 21300000, guid: 843d5b80c5e90bf46891fc03275e4eaa, type: 3}
+    - {fileID: 21300000, guid: d22095bd4c280064bbc77461f5cce207, type: 3}
+    - {fileID: 21300000, guid: 8eafa77e877ab7f4d95cbb16e6c908df, type: 3}
+    Fps: 10
+    PixelCells: 1
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: reaction.toxic_ignite_cloud
     Prefab: {fileID: 7904898002847524615, guid: a2ccf81a1d5b163448ebdf66b5e746d6, type: 3}
     Scale: 0.2
@@ -251,6 +515,14 @@ MonoBehaviour:
     Speed: 1
     Lifetime: 0.7
     Height: 0
+    Frames:
+    - {fileID: 21300000, guid: 8d370ab95684e8d498397b2627c5f024, type: 3}
+    - {fileID: 21300000, guid: 843d5b80c5e90bf46891fc03275e4eaa, type: 3}
+    - {fileID: 21300000, guid: d22095bd4c280064bbc77461f5cce207, type: 3}
+    - {fileID: 21300000, guid: 8eafa77e877ab7f4d95cbb16e6c908df, type: 3}
+    Fps: 10
+    PixelCells: 1
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: reaction.toxic_burst
     Prefab: {fileID: 8378648546881499446, guid: 867c572a5be680d42a042d2349f10143, type: 3}
     Scale: 0.4
@@ -258,6 +530,14 @@ MonoBehaviour:
     Speed: 1.6
     Lifetime: 1
     Height: 0.02
+    Frames:
+    - {fileID: 21300000, guid: 86d6d2fad12418a4fb4b0cea3af7f26f, type: 3}
+    - {fileID: 21300000, guid: f1270df0df1b6af49ba7e93e44278ea4, type: 3}
+    - {fileID: 21300000, guid: f67759199fee69c4e97792b424816b3f, type: 3}
+    - {fileID: 21300000, guid: ce2714c698ed90a41b5efbb77f7caa02, type: 3}
+    Fps: 10
+    PixelCells: 3
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: reaction.gas_explosion
     Prefab: {fileID: 4994997792314849709, guid: 3dd50886582244645be87adb42aa8528, type: 3}
     Scale: 0.33
@@ -265,6 +545,14 @@ MonoBehaviour:
     Speed: 1.6
     Lifetime: 1
     Height: 0.02
+    Frames:
+    - {fileID: 21300000, guid: 4e016a233ab5b3642bb056f7898a9352, type: 3}
+    - {fileID: 21300000, guid: fcbab7f4f4f80b943b931526abd03090, type: 3}
+    - {fileID: 21300000, guid: f29587b39d51d94499f0d80f4d44bce0, type: 3}
+    - {fileID: 21300000, guid: f28d085a6cfa2e047abec1e735a495c7, type: 3}
+    Fps: 10
+    PixelCells: 3
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: reaction.evaporate
     Prefab: {fileID: 4809171458859421548, guid: 4e91ed1a8efe7044785b9bd97a47d87f, type: 3}
     Scale: 0.1
@@ -272,6 +560,14 @@ MonoBehaviour:
     Speed: 1.5
     Lifetime: 1
     Height: 0
+    Frames:
+    - {fileID: 21300000, guid: bad666d0074e1804cadffd0ce7d6150b, type: 3}
+    - {fileID: 21300000, guid: a727e4546f7af2f498583274d8c0910f, type: 3}
+    - {fileID: 21300000, guid: 6eeecfc3be1317848b1158a5423a59a7, type: 3}
+    - {fileID: 21300000, guid: 9a45eeacb00df9840b793a51523dee15, type: 3}
+    Fps: 8
+    PixelCells: 1
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: reaction.evaporate_water
     Prefab: {fileID: 4809171458859421548, guid: 4e91ed1a8efe7044785b9bd97a47d87f, type: 3}
     Scale: 0.12
@@ -279,6 +575,14 @@ MonoBehaviour:
     Speed: 1.5
     Lifetime: 1
     Height: 0.02
+    Frames:
+    - {fileID: 21300000, guid: bad666d0074e1804cadffd0ce7d6150b, type: 3}
+    - {fileID: 21300000, guid: a727e4546f7af2f498583274d8c0910f, type: 3}
+    - {fileID: 21300000, guid: 6eeecfc3be1317848b1158a5423a59a7, type: 3}
+    - {fileID: 21300000, guid: 9a45eeacb00df9840b793a51523dee15, type: 3}
+    Fps: 8
+    PixelCells: 1
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: reaction.evaporate_contaminated
     Prefab: {fileID: 4809171458859421548, guid: 4e91ed1a8efe7044785b9bd97a47d87f, type: 3}
     Scale: 0.12
@@ -286,6 +590,14 @@ MonoBehaviour:
     Speed: 1.5
     Lifetime: 1
     Height: 0.02
+    Frames:
+    - {fileID: 21300000, guid: bad666d0074e1804cadffd0ce7d6150b, type: 3}
+    - {fileID: 21300000, guid: a727e4546f7af2f498583274d8c0910f, type: 3}
+    - {fileID: 21300000, guid: 6eeecfc3be1317848b1158a5423a59a7, type: 3}
+    - {fileID: 21300000, guid: 9a45eeacb00df9840b793a51523dee15, type: 3}
+    Fps: 8
+    PixelCells: 1
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: reaction.evaporate_fire_zone
     Prefab: {fileID: 4809171458859421548, guid: 4e91ed1a8efe7044785b9bd97a47d87f, type: 3}
     Scale: 0.12
@@ -293,6 +605,14 @@ MonoBehaviour:
     Speed: 1.5
     Lifetime: 1
     Height: 0.02
+    Frames:
+    - {fileID: 21300000, guid: bad666d0074e1804cadffd0ce7d6150b, type: 3}
+    - {fileID: 21300000, guid: a727e4546f7af2f498583274d8c0910f, type: 3}
+    - {fileID: 21300000, guid: 6eeecfc3be1317848b1158a5423a59a7, type: 3}
+    - {fileID: 21300000, guid: 9a45eeacb00df9840b793a51523dee15, type: 3}
+    Fps: 8
+    PixelCells: 1
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: reaction.extinguish
     Prefab: {fileID: 4809171458859421548, guid: 4e91ed1a8efe7044785b9bd97a47d87f, type: 3}
     Scale: 0.09
@@ -300,6 +620,14 @@ MonoBehaviour:
     Speed: 1.5
     Lifetime: 1
     Height: 0
+    Frames:
+    - {fileID: 21300000, guid: bad666d0074e1804cadffd0ce7d6150b, type: 3}
+    - {fileID: 21300000, guid: a727e4546f7af2f498583274d8c0910f, type: 3}
+    - {fileID: 21300000, guid: 6eeecfc3be1317848b1158a5423a59a7, type: 3}
+    - {fileID: 21300000, guid: 9a45eeacb00df9840b793a51523dee15, type: 3}
+    Fps: 8
+    PixelCells: 1
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: reaction.contaminate
     Prefab: {fileID: 6361997728236094490, guid: fd25cbdb7c54fa4478d443fd2bea4ef1, type: 3}
     Scale: 0.18
@@ -307,6 +635,14 @@ MonoBehaviour:
     Speed: 1
     Lifetime: 0.7
     Height: 0.02
+    Frames:
+    - {fileID: 21300000, guid: 393a54a2cf1e3a546b86cc58c2c4a429, type: 3}
+    - {fileID: 21300000, guid: 2cdca8dc93ad66943a03320ac8ac0fc9, type: 3}
+    - {fileID: 21300000, guid: b71260239849f7f4eaace496a4b9881d, type: 3}
+    - {fileID: 21300000, guid: 7fd9202d297e30048854e89843b0c00b, type: 3}
+    Fps: 10
+    PixelCells: 1
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: reaction.freeze
     Prefab: {fileID: 4932088507883938021, guid: 0e5709a7ddb77924090c112cf73bb98a, type: 3}
     Scale: 0.13
@@ -314,6 +650,14 @@ MonoBehaviour:
     Speed: 2
     Lifetime: 1
     Height: 0.02
+    Frames:
+    - {fileID: 21300000, guid: d3e9323242fc0d14aa0c2fda0a824dca, type: 3}
+    - {fileID: 21300000, guid: 72e15e4d3178eab4c868954aa62d6246, type: 3}
+    - {fileID: 21300000, guid: 4c505edc329129949b8e200f55e5053a, type: 3}
+    - {fileID: 21300000, guid: 45025ed041f1a904c99c89ae429099d7, type: 3}
+    Fps: 10
+    PixelCells: 1
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: reaction.freeze_water
     Prefab: {fileID: 4932088507883938021, guid: 0e5709a7ddb77924090c112cf73bb98a, type: 3}
     Scale: 0.13
@@ -321,6 +665,14 @@ MonoBehaviour:
     Speed: 2
     Lifetime: 1
     Height: 0.02
+    Frames:
+    - {fileID: 21300000, guid: d3e9323242fc0d14aa0c2fda0a824dca, type: 3}
+    - {fileID: 21300000, guid: 72e15e4d3178eab4c868954aa62d6246, type: 3}
+    - {fileID: 21300000, guid: 4c505edc329129949b8e200f55e5053a, type: 3}
+    - {fileID: 21300000, guid: 45025ed041f1a904c99c89ae429099d7, type: 3}
+    Fps: 10
+    PixelCells: 1
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: reaction.freeze_contaminated
     Prefab: {fileID: 4932088507883938021, guid: 0e5709a7ddb77924090c112cf73bb98a, type: 3}
     Scale: 0.13
@@ -328,6 +680,14 @@ MonoBehaviour:
     Speed: 2
     Lifetime: 1
     Height: 0.02
+    Frames:
+    - {fileID: 21300000, guid: d3e9323242fc0d14aa0c2fda0a824dca, type: 3}
+    - {fileID: 21300000, guid: 72e15e4d3178eab4c868954aa62d6246, type: 3}
+    - {fileID: 21300000, guid: 4c505edc329129949b8e200f55e5053a, type: 3}
+    - {fileID: 21300000, guid: 45025ed041f1a904c99c89ae429099d7, type: 3}
+    Fps: 10
+    PixelCells: 1
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: reaction.thaw
     Prefab: {fileID: 952961124639765284, guid: 1095a5c9f65bfbe4383f63d5d1886c65, type: 3}
     Scale: 0.15
@@ -335,6 +695,14 @@ MonoBehaviour:
     Speed: 1.3
     Lifetime: 0.9
     Height: 0
+    Frames:
+    - {fileID: 21300000, guid: d7aaf9d82e338de47b3912de5af567e1, type: 3}
+    - {fileID: 21300000, guid: 418ccba01890ad441aba9e17d695c24c, type: 3}
+    - {fileID: 21300000, guid: cb7433ef9d838364ba387b3ec8f7893f, type: 3}
+    - {fileID: 21300000, guid: 8cbddbb07c8933d429b1eb1a7dcd3189, type: 3}
+    Fps: 10
+    PixelCells: 1
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: reaction.thaw_ice
     Prefab: {fileID: 952961124639765284, guid: 1095a5c9f65bfbe4383f63d5d1886c65, type: 3}
     Scale: 0.15
@@ -342,6 +710,14 @@ MonoBehaviour:
     Speed: 1.3
     Lifetime: 0.9
     Height: 0.02
+    Frames:
+    - {fileID: 21300000, guid: d7aaf9d82e338de47b3912de5af567e1, type: 3}
+    - {fileID: 21300000, guid: 418ccba01890ad441aba9e17d695c24c, type: 3}
+    - {fileID: 21300000, guid: cb7433ef9d838364ba387b3ec8f7893f, type: 3}
+    - {fileID: 21300000, guid: 8cbddbb07c8933d429b1eb1a7dcd3189, type: 3}
+    Fps: 10
+    PixelCells: 1
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: reaction.shatter
     Prefab: {fileID: 4924508274929071776, guid: 0edef91621bb6b34384ccc9dbb98729c, type: 3}
     Scale: 0.45
@@ -349,6 +725,14 @@ MonoBehaviour:
     Speed: 1.3
     Lifetime: 0.9
     Height: 0
+    Frames:
+    - {fileID: 21300000, guid: bbcf2774096d35140b29a9fdd0ee6f10, type: 3}
+    - {fileID: 21300000, guid: 62334e9af06125144aff1c0cc57c9e8a, type: 3}
+    - {fileID: 21300000, guid: 4bfbe4fe88448ce41b3ed65ca4f7a7ab, type: 3}
+    - {fileID: 21300000, guid: 42496a9bf96ecdc4880201b0c3281281, type: 3}
+    Fps: 12
+    PixelCells: 1
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: reaction.shock
     Prefab: {fileID: 2965222256817593503, guid: a164e676dbbd6e54587237e619372c98, type: 3}
     Scale: 0.5
@@ -356,6 +740,14 @@ MonoBehaviour:
     Speed: 1.3
     Lifetime: 0.8
     Height: 0
+    Frames:
+    - {fileID: 21300000, guid: 2e38084ffea4e334daad7be0619ff947, type: 3}
+    - {fileID: 21300000, guid: 288e9c0d763e4ad49ad76ca25ac4b39e, type: 3}
+    - {fileID: 21300000, guid: 88331f5a64198a14f8891bcb40412675, type: 3}
+    - {fileID: 21300000, guid: d826e757044a26c4c8aa5abe063cc3e9, type: 3}
+    Fps: 12
+    PixelCells: 1
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: reaction.shock_water
     Prefab: {fileID: 2965222256817593503, guid: a164e676dbbd6e54587237e619372c98, type: 3}
     Scale: 0.5
@@ -363,6 +755,14 @@ MonoBehaviour:
     Speed: 1.3
     Lifetime: 0.8
     Height: 0
+    Frames:
+    - {fileID: 21300000, guid: 2e38084ffea4e334daad7be0619ff947, type: 3}
+    - {fileID: 21300000, guid: 288e9c0d763e4ad49ad76ca25ac4b39e, type: 3}
+    - {fileID: 21300000, guid: 88331f5a64198a14f8891bcb40412675, type: 3}
+    - {fileID: 21300000, guid: d826e757044a26c4c8aa5abe063cc3e9, type: 3}
+    Fps: 12
+    PixelCells: 1
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: reaction.shock_contaminated
     Prefab: {fileID: 2965222256817593503, guid: a164e676dbbd6e54587237e619372c98, type: 3}
     Scale: 0.5
@@ -370,6 +770,14 @@ MonoBehaviour:
     Speed: 1.3
     Lifetime: 0.8
     Height: 0
+    Frames:
+    - {fileID: 21300000, guid: 2e38084ffea4e334daad7be0619ff947, type: 3}
+    - {fileID: 21300000, guid: 288e9c0d763e4ad49ad76ca25ac4b39e, type: 3}
+    - {fileID: 21300000, guid: 88331f5a64198a14f8891bcb40412675, type: 3}
+    - {fileID: 21300000, guid: d826e757044a26c4c8aa5abe063cc3e9, type: 3}
+    Fps: 12
+    PixelCells: 1
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: line.Lightning
     Prefab: {fileID: 0}
     Scale: 1
@@ -377,6 +785,14 @@ MonoBehaviour:
     Speed: 1
     Lifetime: 0
     Height: 0
+    Frames:
+    - {fileID: 21300000, guid: e5e664ade3e97c24fa1674b6dc2ab507, type: 3}
+    - {fileID: 21300000, guid: 38512901f112a0e42959446afcc4f5b2, type: 3}
+    - {fileID: 21300000, guid: 65b42fd96d2319849888a0511df3533c, type: 3}
+    - {fileID: 21300000, guid: 1d0aa9b0faaf4a34e907b5cf968ec8f3, type: 3}
+    Fps: 16
+    PixelCells: 1
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: line.Fire
     Prefab: {fileID: 0}
     Scale: 1
@@ -384,6 +800,14 @@ MonoBehaviour:
     Speed: 1
     Lifetime: 0
     Height: 0
+    Frames:
+    - {fileID: 21300000, guid: e5e664ade3e97c24fa1674b6dc2ab507, type: 3}
+    - {fileID: 21300000, guid: 38512901f112a0e42959446afcc4f5b2, type: 3}
+    - {fileID: 21300000, guid: 65b42fd96d2319849888a0511df3533c, type: 3}
+    - {fileID: 21300000, guid: 1d0aa9b0faaf4a34e907b5cf968ec8f3, type: 3}
+    Fps: 16
+    PixelCells: 1
+    PixelTint: {r: 1, g: 0.6, b: 0.3, a: 1}
   - Key: item.spellbook_fire
     Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
     Scale: 0.35
@@ -391,6 +815,10 @@ MonoBehaviour:
     Speed: 1
     Lifetime: 0
     Height: 0.25
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: item.spellbook_ice
     Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
     Scale: 0.35
@@ -398,6 +826,10 @@ MonoBehaviour:
     Speed: 1
     Lifetime: 0
     Height: 0.25
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: item.spellbook_lightning
     Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
     Scale: 0.35
@@ -405,6 +837,10 @@ MonoBehaviour:
     Speed: 1
     Lifetime: 0
     Height: 0.25
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: item.spellbook_poison
     Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
     Scale: 0.35
@@ -412,6 +848,10 @@ MonoBehaviour:
     Speed: 1
     Lifetime: 0
     Height: 0.25
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: item.spellbook_water
     Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
     Scale: 0.35
@@ -419,6 +859,10 @@ MonoBehaviour:
     Speed: 1
     Lifetime: 0
     Height: 0.25
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: item.shortsword
     Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
     Scale: 0.35
@@ -426,6 +870,10 @@ MonoBehaviour:
     Speed: 1
     Lifetime: 0
     Height: 0.25
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: item.hand_axe
     Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
     Scale: 0.35
@@ -433,6 +881,10 @@ MonoBehaviour:
     Speed: 1
     Lifetime: 0
     Height: 0.25
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: item.spear
     Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
     Scale: 0.35
@@ -440,6 +892,10 @@ MonoBehaviour:
     Speed: 1
     Lifetime: 0
     Height: 0.25
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: item.quarterstaff
     Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
     Scale: 0.35
@@ -447,6 +903,10 @@ MonoBehaviour:
     Speed: 1
     Lifetime: 0
     Height: 0.25
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: item.dirk
     Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
     Scale: 0.35
@@ -454,6 +914,10 @@ MonoBehaviour:
     Speed: 1
     Lifetime: 0
     Height: 0.25
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: item.sickle
     Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
     Scale: 0.35
@@ -461,6 +925,10 @@ MonoBehaviour:
     Speed: 1
     Lifetime: 0
     Height: 0.25
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: item.potion_strength
     Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
     Scale: 0.35
@@ -468,6 +936,10 @@ MonoBehaviour:
     Speed: 1
     Lifetime: 0
     Height: 0.25
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: item.scroll_upgrade
     Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
     Scale: 0.35
@@ -475,6 +947,10 @@ MonoBehaviour:
     Speed: 1
     Lifetime: 0
     Height: 0.25
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: item.potion
     Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
     Scale: 0.35
@@ -482,6 +958,10 @@ MonoBehaviour:
     Speed: 1
     Lifetime: 0
     Height: 0.25
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
   - Key: item.scroll
     Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
     Scale: 0.35
@@ -489,3 +969,22 @@ MonoBehaviour:
     Speed: 1
     Lifetime: 0
     Height: 0.25
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: terrain.Water
+    Prefab: {fileID: 0}
+    Scale: 1
+    Tint: {r: 0, g: 0, b: 0, a: 0}
+    Speed: 1
+    Lifetime: 0
+    Height: 0
+    Frames:
+    - {fileID: 21300000, guid: 52413cef86fa30d479c744d2ec1cc154, type: 3}
+    - {fileID: 21300000, guid: 77145696d26840745a928bbb6f017435, type: 3}
+    - {fileID: 21300000, guid: b33197efb3bef0c4fb0f8f9b1e3ddd43, type: 3}
+    - {fileID: 21300000, guid: fe8f8402c5540cf4ea28a31ba1b49250, type: 3}
+    Fps: 4
+    PixelCells: 1
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}

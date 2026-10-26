@@ -1991,6 +1991,13 @@ MonoBehaviour:
   _castHeight: 0.75
   _bodyHeight: 0.45
   _stopFade: 1.2
+  _pixel2D: 1
+  _spriteMaterial: {fileID: 2100000, guid: 86f15b1ede84ed747a44e692fd5e5ea7, type: 2}
+  _pixelsPerUnit: 64
+  _castHeight2D: 0.45
+  _bodyHeight2D: 0.3
+  _terrainOrder: 6
+  _effectOrder: 12
 --- !u!4 &1360970459
 Transform:
   m_ObjectHideFlags: 0

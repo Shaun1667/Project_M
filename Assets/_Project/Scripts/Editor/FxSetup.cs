@@ -141,6 +141,110 @@ namespace ProjectM.Editor
             new Row("item.scroll", Hovl + "Sparks/Sparks flashing yellow", 0.35f, ScrollGold, 1f, 0f, 0.25f),
         };
 
+        // ── 2D 픽셀 그림 (P-3 ⓓ, 2026-10-26) — 키 → Art/Pixel/Fx/<그림>_0~3 · 화면 너비(칸) · 프레임/초 · 색 (a = 0이면 그대로) ──
+        // 그림은 Varco 시트를 Tools/fx_cut.py로 자른 것 (Docs/PixelTest/fx_src/README.md). 3D 표에 없는 키(물 지형 · 번개 선)는 그림만 있는 줄로 만든다.
+        private const string PixelFxDir = "Assets/_Project/Art/Pixel/Fx";
+
+        private struct PixelRow
+        {
+            public string Key, Art;
+            public float Cells, Fps;
+            public Color Tint;
+
+            public PixelRow(string key, string art, float cells, float fps, Color tint = default)
+            {
+                Key = key; Art = art; Cells = cells; Fps = fps; Tint = tint;
+            }
+        }
+
+        private static readonly Color CastFire = new Color(1f, 0.75f, 0.5f);
+        private static readonly Color CastIce = new Color(0.7f, 0.92f, 1f);
+        private static readonly Color CastLightning = new Color(1f, 0.97f, 0.6f);
+        private static readonly Color CastPoison = new Color(0.85f, 0.65f, 1f);
+        private static readonly Color CastWater = new Color(0.6f, 0.75f, 1f);
+
+        private static readonly PixelRow[] PixelTable =
+        {
+            new PixelRow("terrain.FireZone", "terrain_fire", 1f, 6f),
+            new PixelRow("terrain.PoisonCloud", "terrain_poison_cloud", 1f, 5f),
+            new PixelRow("terrain.Water", "terrain_water", 1f, 4f),
+            new PixelRow("terrain.ContaminatedWater", "terrain_contaminated_water", 1f, 4f),
+
+            new PixelRow("status.Frozen", "status_frozen", 1f, 4f),
+            new PixelRow("status.Paralyze", "status_paralyze", 1f, 8f),
+            new PixelRow("status.Burn", "status_burn", 1f, 8f),
+            new PixelRow("status.Poison", "status_poison", 1f, 6f),
+            new PixelRow("status.Slow", "status_slow", 0.9f, 6f),
+            new PixelRow("status.Wet", "status_wet", 1f, 6f),
+
+            new PixelRow("cast.Fire", "cast", 0.8f, 14f, CastFire),
+            new PixelRow("cast.Ice", "cast", 0.8f, 14f, CastIce),
+            new PixelRow("cast.Lightning", "cast", 0.8f, 14f, CastLightning),
+            new PixelRow("cast.Poison", "cast", 0.8f, 14f, CastPoison),
+            new PixelRow("cast.Water", "cast", 0.8f, 14f, CastWater),
+
+            new PixelRow("projectile.Fire", "projectile_fire", 1.2f, 12f),
+            new PixelRow("projectile.Ice", "projectile_ice", 1.2f, 12f),
+            new PixelRow("projectile.Poison", "projectile_poison", 1.2f, 12f),
+            new PixelRow("projectile.Water", "projectile_water", 1.2f, 12f),
+
+            new PixelRow("impact.Fire", "impact_fire", 1.5f, 12f),
+            new PixelRow("impact.Ice", "impact_ice", 1.5f, 12f),
+            new PixelRow("impact.Lightning", "impact_lightning", 1.5f, 12f),
+            new PixelRow("impact.Poison", "impact_poison", 1.5f, 12f),
+            new PixelRow("impact.Water", "impact_water", 1.5f, 12f),
+
+            new PixelRow("burst.Fire", "burst_fire", 3f, 10f),
+            new PixelRow("burst.Ice", "burst_ice", 3f, 10f),
+            new PixelRow("burst.Poison", "burst_poison", 3f, 10f),
+            new PixelRow("burst.Water", "burst_water", 3f, 10f),
+            new PixelRow("burst.Lightning", "burst_lightning", 3f, 10f),
+
+            new PixelRow("fusion.fusion_fire_water", "lava_eruption", 3f, 9f),
+            new PixelRow("fusion.fusion_water_poison", "contaminated_wave", 3f, 9f),
+            new PixelRow("fusion.fusion_fire_lightning", "big_explosion", 1.5f, 10f),
+            new PixelRow("fusion.fusion_ice_water", "frost_wave", 3f, 9f),
+
+            new PixelRow("reaction.toxic_ignite", "toxic_ignite", 1.5f, 10f),
+            new PixelRow("reaction.toxic_ignite_cloud", "toxic_ignite", 1.5f, 10f),
+            new PixelRow("reaction.toxic_burst", "toxic_burst", 3f, 10f),
+            new PixelRow("reaction.gas_explosion", "gas_explosion", 3f, 10f),
+            new PixelRow("reaction.evaporate", "steam", 1.5f, 8f),
+            new PixelRow("reaction.evaporate_water", "steam", 1.5f, 8f),
+            new PixelRow("reaction.evaporate_contaminated", "steam", 1.5f, 8f),
+            new PixelRow("reaction.evaporate_fire_zone", "steam", 1.5f, 8f),
+            new PixelRow("reaction.extinguish", "steam", 1.5f, 8f),
+            new PixelRow("reaction.contaminate", "contaminate", 1.5f, 10f),
+            new PixelRow("reaction.freeze", "freeze_circle", 1.5f, 10f),
+            new PixelRow("reaction.freeze_water", "freeze_circle", 1.5f, 10f),
+            new PixelRow("reaction.freeze_contaminated", "freeze_circle", 1.5f, 10f),
+            new PixelRow("reaction.thaw", "thaw", 1.5f, 10f),
+            new PixelRow("reaction.thaw_ice", "thaw", 1.5f, 10f),
+            new PixelRow("reaction.shatter", "shatter", 1.5f, 12f),
+            new PixelRow("reaction.shock", "shock", 1.5f, 12f),
+            new PixelRow("reaction.shock_water", "shock", 1.5f, 12f),
+            new PixelRow("reaction.shock_contaminated", "shock", 1.5f, 12f),
+
+            new PixelRow("line.Lightning", "line_lightning", 1f, 16f),
+            new PixelRow("line.Fire", "line_lightning", 1f, 16f, new Color(1f, 0.6f, 0.3f)),
+        };
+
+        /// <summary>그림 4장을 픽셀 스프라이트로 가져와 순서대로 (없으면 빈 배열 + 경고).</summary>
+        private static Sprite[] LoadPixelFrames(string art)
+        {
+            var frames = new List<Sprite>();
+            for (int i = 0; ; i++)
+            {
+                string path = $"{PixelFxDir}/{art}_{i}.png";
+                if (AssetDatabase.LoadMainAssetAtPath(path) == null) break;
+                PixelTestSetup.ImportPixelSprite(path, SpriteAlignment.Center);
+                var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                if (sprite != null) frames.Add(sprite);
+            }
+            if (frames.Count == 0) Debug.LogWarning($"[FxSetup] 2D 그림 없음: {PixelFxDir}/{art}_0.png");
+            return frames.ToArray();
+        }
+
         [MenuItem("ProjectM/Setup/FX")]
         public static void Run()
         {
@@ -163,6 +267,8 @@ namespace ProjectM.Editor
             var fx = fxGo.GetComponent<FxPresenter>();
             if (fx == null) fx = fxGo.AddComponent<FxPresenter>();
             SetRefs(fx, ("_catalog", catalog), ("_entities", entities), ("_lineMaterial", lineMaterial));
+            fx.ConfigurePixel2D(MainSceneSetup.Pixel2D, MainSceneSetup.EnsureSpriteUnlitMaterial()); // P-3 ⓓ: 2D면 그림 스프라이트
+            EditorUtility.SetDirty(fx);
 
             var overlay = UnityEngine.Object.FindAnyObjectByType<TerrainOverlayPresenter>();
             if (overlay != null)
@@ -388,6 +494,14 @@ namespace ProjectM.Editor
             }
             missing = 0;
             var keys = new HashSet<string>();
+            var pixel = new Dictionary<string, FxCatalog.Entry>();
+            var frameCache = new Dictionary<string, Sprite[]>();
+            foreach (var p in PixelTable)
+            {
+                if (!frameCache.TryGetValue(p.Art, out var frames)) frameCache[p.Art] = frames = LoadPixelFrames(p.Art);
+                pixel[p.Key] = new FxCatalog.Entry { Key = p.Key, Frames = frames, Fps = p.Fps, PixelCells = p.Cells, PixelTint = p.Tint, Scale = 1f, Speed = 1f };
+            }
+
             foreach (var row in Table)
             {
                 var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(row.Prefab + ".prefab");
@@ -397,15 +511,20 @@ namespace ProjectM.Editor
                     missing++;
                 }
                 keys.Add(row.Key);
-                catalog.Set(new FxCatalog.Entry
-                {
-                    Key = row.Key, Prefab = prefab, Scale = row.Scale, Tint = row.Tint, Speed = row.Speed, Lifetime = row.Lifetime, Height = row.Height,
-                });
+                var entry = pixel.TryGetValue(row.Key, out var px) ? px : new FxCatalog.Entry();
+                pixel.Remove(row.Key);
+                entry.Key = row.Key; entry.Prefab = prefab; entry.Scale = row.Scale; entry.Tint = row.Tint;
+                entry.Speed = row.Speed; entry.Lifetime = row.Lifetime; entry.Height = row.Height;
+                catalog.Set(entry);
             }
-            catalog.Set(new FxCatalog.Entry { Key = "line.Lightning", Tint = new Color(1f, 0.92f, 0.35f, 1f), Scale = 1f, Speed = 1f });
-            catalog.Set(new FxCatalog.Entry { Key = "line.Fire", Tint = new Color(1f, 0.55f, 0.2f, 1f), Scale = 1f, Speed = 1f });
-            keys.Add("line.Lightning");
-            keys.Add("line.Fire");
+            var lineTints = new Dictionary<string, Color> { { "line.Lightning", new Color(1f, 0.92f, 0.35f, 1f) }, { "line.Fire", new Color(1f, 0.55f, 0.2f, 1f) } };
+            foreach (var pair in pixel) // 3D 표에 없는 키: 그림만 (번개 선은 3D 선 색도)
+            {
+                var entry = pair.Value;
+                if (lineTints.TryGetValue(pair.Key, out var tint)) entry.Tint = tint;
+                catalog.Set(entry);
+                keys.Add(pair.Key);
+            }
             catalog.RemoveExcept(keys);
             EditorUtility.SetDirty(catalog);
             return catalog;

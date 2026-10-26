@@ -25,6 +25,14 @@ namespace ProjectM.Presentation
             [Tooltip("재생 속도 배율 (1초 규칙에 맞춰 빠르게)")] [Min(0.01f)] public float Speed;
             [Tooltip("한 번 재생 후 지우기까지 초. 0 = 루프 (지형 · 상태 · 투사체)")] [Min(0f)] public float Lifetime;
             [Tooltip("바닥 · 발밑에서 띄우는 높이 (m)")] public float Height;
+
+            [Header("2D 픽셀 (P-3 ⓓ)")]
+            [Tooltip("프레임 그림 (Art/Pixel/Fx/<이름>_0~3). 비어 있으면 2D에서는 이 키를 건너뛴다")] public Sprite[] Frames;
+            [Tooltip("프레임/초")] [Min(0f)] public float Fps;
+            [Tooltip("화면 너비 (칸) — 그림 픽셀을 정수 배로 키워 가장 가까운 크기")] [Min(0f)] public float PixelCells;
+            [Tooltip("그림에 곱하는 색. a = 0이면 그대로")] public Color PixelTint;
+
+            public bool HasFrames => Frames != null && Frames.Length > 0 && Frames[0] != null;
         }
 
         [SerializeField] private List<Entry> _entries = new List<Entry>();
@@ -32,11 +40,12 @@ namespace ProjectM.Presentation
         public int Count => _entries.Count;
         public IReadOnlyList<Entry> Entries => _entries;
 
-        public bool TryGet(string key, out Entry entry)
+        /// <summary>3D = 프리팹이 있는 줄, 2D(pixel2D) = 프레임 그림이 있는 줄만.</summary>
+        public bool TryGet(string key, out Entry entry, bool pixel2D = false)
         {
             foreach (var e in _entries)
             {
-                if (e.Key != key || e.Prefab == null) continue;
+                if (e.Key != key || (pixel2D ? !e.HasFrames : e.Prefab == null)) continue;
                 entry = e;
                 return true;
             }

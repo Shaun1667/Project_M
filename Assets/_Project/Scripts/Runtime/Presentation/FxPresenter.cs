@@ -16,6 +16,8 @@ namespace ProjectM.Presentation
     ///   같은 순간에 온 반응(ReactionTriggeredEvent)도 도착에 맞춰 늦춰 보인다 (최대 0.35초 — 실시간 1초 규칙 안).
     /// - 감전 사슬: 같은 순간의 감전 반응을 차례로 번개 선으로 잇는다.
     /// 무엇을 띄울지는 FxCatalog 표(키 → 프리팹 · 크기 · 색 · 속도 · 길이), 없는 키는 조용히 건너뛴다. 프레임마다 Advance(dt) — 테스트는 직접 부른다.
+    /// P-3 ⓓ (2D 픽셀, 2026-10-26): _pixel2D면 같은 키의 프레임 그림(Frames · Fps · PixelCells)을 스프라이트로 돌린다 — 투사체 · 번개 선만 방향으로 돌리고,
+    /// 터지는 그림은 바로 세운다. 높이는 화면 위쪽(발밑 + 칸). 그림이 없는 키는 2D에서 건너뛴다(파티클을 섞지 않음).
     /// </summary>
     public sealed class FxPresenter : MonoBehaviour
     {
@@ -34,7 +36,25 @@ namespace ProjectM.Presentation
         [Tooltip("맞는 효과 높이 (몸 가운데)")] [SerializeField] private float _bodyHeight = 0.45f;
         [Tooltip("루프를 끈 뒤 남은 파티클이 사라질 때까지")] [SerializeField] [Range(0f, 3f)] private float _stopFade = 1.2f;
 
+        [Header("2D 픽셀 (P-3 ⓓ)")]
+        [SerializeField] private bool _pixel2D;
+        [Tooltip("스프라이트 재질 (조명 없음 — MainSceneSetup의 SpriteUnlit)")] [SerializeField] private Material _spriteMaterial;
+        [Tooltip("그림 픽셀 → 월드 (스프라이트 PPU와 같게)")] [SerializeField] private int _pixelsPerUnit = 64;
+        [Tooltip("2D: 지팡이 끝 높이 (발밑에서 칸)")] [SerializeField] private float _castHeight2D = 0.45f;
+        [Tooltip("2D: 몸 가운데 높이 (발밑에서 칸)")] [SerializeField] private float _bodyHeight2D = 0.3f;
+        [Tooltip("정렬: 지형 효과 — 지형 오버레이(5) 위, 바닥 아이템(9) · 유닛(10) 아래")] [SerializeField] private int _terrainOrder = 6;
+        [Tooltip("정렬: 상태 · 주문 · 반응 — 유닛 위, 안개(20) 아래")] [SerializeField] private int _effectOrder = 12;
+
         private const float LoopPrewarm = 0.8f;
+
+        /// <summary>2D 프레임 애니메이션 하나 (루프 = 끌 때까지 돌림, 한 번 = 마지막 장에서 멈춤 — 지우는 건 _timed).</summary>
+        private sealed class SpriteAnim
+        {
+            public SpriteRenderer Renderer;
+            public Sprite[] Frames;
+            public float Start, Fps;
+            public bool Loop;
+        }
 
         private struct Timed
         {
@@ -51,7 +71,8 @@ namespace ProjectM.Presentation
 
         private sealed class Line
         {
-            public LineRenderer Renderer;
+            public GameObject Go;
+            public LineRenderer Renderer; // 3D만 (2D는 늘린 스프라이트)
             public float Start;
         }
 
@@ -61,6 +82,7 @@ namespace ProjectM.Presentation
         private readonly List<Projectile> _projectiles = new List<Projectile>();
         private readonly List<Line> _lines = new List<Line>();
         private readonly List<Timed> _timed = new List<Timed>();
+        private readonly List<SpriteAnim> _anims = new List<SpriteAnim>();
         private readonly List<(EntityId, StatusType)> _keyBuffer = new List<(EntityId, StatusType)>();
         private SimEventBus _bus;
         private VisibilityChangedEvent _visibility;
@@ -93,6 +115,26 @@ namespace ProjectM.Presentation
             _entities = entities;
             _lineMaterial = lineMaterial;
         }
+
+        /// <summary>P-3 ⓓ: 2D면 파티클 프리팹 대신 FxCatalog 프레임 그림(Art/Pixel/Fx)을 스프라이트로 돌린다. 에디터 Setup · 테스트용.</summary>
+        public void ConfigurePixel2D(bool on, Material spriteMaterial, int pixelsPerUnit = 64)
+        {
+            _pixel2D = on;
+            _spriteMaterial = spriteMaterial;
+            _pixelsPerUnit = Mathf.Max(1, pixelsPerUnit);
+        }
+
+        public bool IsPixel2D => _pixel2D;
+
+        private bool TryGetFx(string key, out FxCatalog.Entry entry)
+        {
+            if (_catalog != null) return _catalog.TryGet(key, out entry, _pixel2D);
+            entry = default;
+            return false;
+        }
+
+        private float CastHeight => _pixel2D ? _castHeight2D : _castHeight;
+        private float BodyHeight => _pixel2D ? _bodyHeight2D : _bodyHeight;
 
         public bool HasTerrainFx(GridPos pos, TerrainEffectType type) => _terrainFx.ContainsKey((pos, type));
         public bool HasStatusFx(EntityId id, StatusType type) => _statusFx.ContainsKey((id, type));
@@ -165,8 +207,8 @@ namespace ProjectM.Presentation
                 _terrainFx.Remove(key);
                 return;
             }
-            if (_terrainFx.ContainsKey(key) || _catalog == null || !_catalog.TryGet("terrain." + e.Type, out var entry)) return;
-            var go = Spawn(entry, CellCenter(e.Pos), Quaternion.identity, transform, false);
+            if (_terrainFx.ContainsKey(key) || !TryGetFx("terrain." + e.Type, out var entry)) return;
+            var go = Spawn(entry, CellCenter(e.Pos), Quaternion.identity, transform, false, _terrainOrder);
             go.SetActive(IsCellVisible(e.Pos));
             _terrainFx[key] = go;
         }
@@ -182,9 +224,11 @@ namespace ProjectM.Presentation
                 _statusFx.Remove(key);
                 return;
             }
-            if (_statusFx.ContainsKey(key) || _catalog == null || !_catalog.TryGet("status." + e.Type, out var entry)) return;
+            if (_statusFx.ContainsKey(key) || !TryGetFx("status." + e.Type, out var entry)) return;
             if (_entities == null || !_entities.TryGetView(e.Id, out var view) || view.Root == null) return;
-            var go = Spawn(entry, view.Root.position, view.Root.rotation, view.Root, false);
+            var go = _pixel2D
+                ? Spawn(entry, view.Root.position + Vector3.up * _bodyHeight2D, Quaternion.identity, view.Root, false, _effectOrder) // 2D: 몸 가운데, 회전 없음
+                : Spawn(entry, view.Root.position, view.Root.rotation, view.Root, false, _effectOrder);
             go.SetActive(view.Visible);
             _statusFx[key] = go;
         }
@@ -215,38 +259,37 @@ namespace ProjectM.Presentation
             EntityView caster = null;
             bool hasCaster = _entities != null && _entities.TryGetView(e.Caster, out caster) && caster.Root != null;
             bool casterVisible = hasCaster && caster.Visible;
-            var from = (hasCaster ? caster.Root.position : CellCenter(e.Target)) + Vector3.up * _castHeight;
+            var from = (hasCaster ? caster.Root.position : CellCenter(e.Target)) + Vector3.up * CastHeight;
             bool visible = casterVisible || IsCellVisible(end) || IsCellVisible(e.Target);
             if (!visible) return;
 
-            var endPoint = CellCenter(end) + Vector3.up * _bodyHeight;
-            var dir = endPoint - from;
-            dir.y = 0f;
-            var facing = dir.sqrMagnitude > 0.0001f ? Quaternion.LookRotation(dir.normalized, Vector3.up) : Quaternion.identity;
+            var endPoint = BodyPoint(end);
+            var facing = Facing(endPoint - from);
+            var upright = _pixel2D ? Quaternion.identity : facing; // 2D: 투사체 · 선만 돌리고 터지는 그림은 바로 세운다
 
-            if (_catalog.TryGet("cast." + element, out var castFx)) SpawnOnce(castFx, from, facing);
+            if (TryGetFx("cast." + element, out var castFx)) SpawnOnce(castFx, from, upright);
 
             bool beam = IsBeam(path, affected);
             bool burst = !beam && affected != null && affected.Count > 1;
             float travel = 0f;
             if (beam)
             {
-                DrawLightning(from, endPoint, ElementColor(e.Element));
+                DrawLightning(from, endPoint, e.Element);
             }
-            else if (_catalog.TryGet("projectile." + element, out var projectileFx))
+            else if (TryGetFx("projectile." + element, out var projectileFx))
             {
                 travel = Mathf.Clamp(Vector3.Distance(from, endPoint) / _projectileSpeed, 0.05f, _maxTravel);
-                var go = Spawn(projectileFx, from, facing, transform, false);
+                var go = Spawn(projectileFx, from, facing, transform, false, _effectOrder);
                 _projectiles.Add(new Projectile { Go = go, From = from, To = endPoint, Start = _time, Duration = travel });
             }
 
             // 맞는 효과: 융합 전용 키 → 모양별 속성 키
             string impactKey = burst ? "burst." + element : "impact." + element;
-            if (_catalog.TryGet("fusion." + e.SpellId, out var impactFx) || _catalog.TryGet(impactKey, out impactFx))
+            if (TryGetFx("fusion." + e.SpellId, out var impactFx) || TryGetFx(impactKey, out impactFx))
             {
                 var at = burst ? CellCenter(end) : endPoint;
                 var fx = impactFx;
-                Schedule(travel, () => SpawnOnce(fx, at, facing));
+                Schedule(travel, () => SpawnOnce(fx, at, upright));
             }
 
             _lastCastTime = _time;
@@ -273,9 +316,9 @@ namespace ProjectM.Presentation
         {
             if (_catalog == null || !IsCellVisible(e.Pos)) return;
             float delay = Mathf.Approximately(_lastCastTime, _time) ? _lastCastDelay : 0f; // 같은 순간의 주문이 도착할 때
-            var point = CellCenter(e.Pos) + Vector3.up * _bodyHeight;
+            var point = BodyPoint(e.Pos);
             if (e.Target.IsValid && _entities != null && _entities.TryGetView(e.Target, out var view) && view.Root != null)
-                point = view.Root.position + Vector3.up * _bodyHeight;
+                point = view.Root.position + Vector3.up * BodyHeight;
 
             if (e.ReactionId != null && e.ReactionId.StartsWith("shock"))
             {
@@ -283,13 +326,13 @@ namespace ProjectM.Presentation
                 {
                     var a = _lastShockPoint;
                     var b = point;
-                    Schedule(delay, () => DrawLightning(a, b, _lightningColor)); // 감전 사슬: 앞 대상 → 이 대상
+                    Schedule(delay, () => DrawLightning(a, b, Element.Lightning)); // 감전 사슬: 앞 대상 → 이 대상
                 }
                 _lastShockTime = _time;
                 _lastShockPoint = point;
             }
 
-            if (!_catalog.TryGet("reaction." + e.ReactionId, out var entry)) return;
+            if (!TryGetFx("reaction." + e.ReactionId, out var entry)) return;
             var ground = CellCenter(e.Pos);
             var at = entry.Height > 0f ? ground : point; // 바닥 효과(높이 지정)는 칸 바닥 기준
             Schedule(delay, () => SpawnOnce(entry, at, Quaternion.identity));
@@ -325,12 +368,13 @@ namespace ProjectM.Presentation
             {
                 var line = _lines[i];
                 float t = (_time - line.Start) / _lineDuration;
-                if (line.Renderer == null || t >= 1f)
+                if (line.Go == null || t >= 1f)
                 {
-                    if (line.Renderer != null) DestroySafe(line.Renderer.gameObject);
+                    DestroySafe(line.Go);
                     _lines.RemoveAt(i);
                     continue;
                 }
+                if (line.Renderer == null) continue; // 2D 스프라이트 선은 프레임만 돈다
                 float w = _lineWidth * (1f - t);
                 line.Renderer.startWidth = w;
                 line.Renderer.endWidth = w;
@@ -341,6 +385,20 @@ namespace ProjectM.Presentation
                 if (_timed[i].Go != null && _timed[i].Until > _time) continue;
                 if (_timed[i].Go != null) DestroySafe(_timed[i].Go);
                 _timed.RemoveAt(i);
+            }
+
+            for (int i = _anims.Count - 1; i >= 0; i--)
+            {
+                var anim = _anims[i];
+                if (anim.Renderer == null)
+                {
+                    _anims.RemoveAt(i);
+                    continue;
+                }
+                int frame = Mathf.FloorToInt((_time - anim.Start) * anim.Fps);
+                int n = anim.Frames.Length;
+                frame = anim.Loop ? ((frame % n) + n) % n : Mathf.Clamp(frame, 0, n - 1);
+                anim.Renderer.sprite = anim.Frames[frame];
             }
 
             if (_entities == null) return;
@@ -363,6 +421,25 @@ namespace ProjectM.Presentation
 
         private Vector3 CellCenter(GridPos pos) => _entities != null ? _entities.CellCenter(pos) : new Vector3(pos.X + 0.5f, 0f, pos.Y + 0.5f);
 
+        /// <summary>그 칸에 선 유닛의 몸 가운데 (3D = 칸 중앙 위, 2D = 발밑 위 — 화면 위쪽).</summary>
+        private Vector3 BodyPoint(GridPos pos)
+        {
+            if (_pixel2D && _entities != null) return _entities.StandPoint(pos) + Vector3.up * _bodyHeight2D;
+            return CellCenter(pos) + Vector3.up * _bodyHeight;
+        }
+
+        /// <summary>그 방향을 보는 회전 — 3D는 바닥 평면에서 LookRotation, 2D는 화면 평면에서 z축 회전(그림은 오른쪽을 봄).</summary>
+        private Quaternion Facing(Vector3 dir)
+        {
+            if (_pixel2D)
+            {
+                dir.z = 0f;
+                return dir.sqrMagnitude > 0.0001f ? Quaternion.Euler(0f, 0f, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg) : Quaternion.identity;
+            }
+            dir.y = 0f;
+            return dir.sqrMagnitude > 0.0001f ? Quaternion.LookRotation(dir.normalized, Vector3.up) : Quaternion.identity;
+        }
+
         private void Schedule(float delay, Action action)
         {
             if (delay <= 0f) action();
@@ -371,12 +448,50 @@ namespace ProjectM.Presentation
 
         private void SpawnOnce(FxCatalog.Entry entry, Vector3 position, Quaternion rotation)
         {
-            var go = Spawn(entry, position, rotation, transform, true);
-            _timed.Add(new Timed { Go = go, Until = _time + (entry.Lifetime > 0f ? entry.Lifetime : 1f) });
+            var go = Spawn(entry, position, rotation, transform, true, _effectOrder);
+            float life = _pixel2D ? entry.Frames.Length / FpsOf(entry) : (entry.Lifetime > 0f ? entry.Lifetime : 1f); // 2D: 마지막 장까지
+            _timed.Add(new Timed { Go = go, Until = _time + life });
+        }
+
+        private static float FpsOf(FxCatalog.Entry entry) => entry.Fps > 0f ? entry.Fps : 10f;
+
+        private GameObject Spawn(FxCatalog.Entry entry, Vector3 position, Quaternion rotation, Transform parent, bool once, int sortingOrder)
+            => _pixel2D ? SpawnSprite(entry, position, rotation, parent, once, sortingOrder) : SpawnParticles(entry, position, rotation, parent, once);
+
+        /// <summary>
+        /// 2D: 프레임 그림 스프라이트 하나. 크기 = PixelCells 칸에 가장 가까운 정수 배(픽셀이 고르게), 루프면 첫 장을 시간으로 어긋나게(여럿이 함께 깜빡이지 않게).
+        /// 깊이는 유닛과 같은 규칙(-0.5 + 줄 × 0.001)보다 살짝 앞 — 정렬은 sortingOrder가 정한다.
+        /// </summary>
+        private GameObject SpawnSprite(FxCatalog.Entry entry, Vector3 position, Quaternion rotation, Transform parent, bool once, int sortingOrder)
+        {
+            var go = new GameObject(entry.Key);
+            go.transform.SetParent(parent, false);
+            position.z = -0.55f + Mathf.Floor(position.y) * 0.001f;
+            go.transform.SetPositionAndRotation(position, rotation);
+            var sr = go.AddComponent<SpriteRenderer>();
+            if (_spriteMaterial != null) sr.sharedMaterial = _spriteMaterial;
+            sr.sortingOrder = sortingOrder;
+            sr.sprite = entry.Frames[0];
+            if (entry.PixelTint.a > 0f) sr.color = entry.PixelTint;
+            float scale = PixelScale(entry);
+            go.transform.localScale = new Vector3(scale, scale, 1f);
+            if (parent != transform && parent.lossyScale.x != 0f) go.transform.localScale /= parent.lossyScale.x; // 유닛에 붙은 상태 효과
+            float start = once ? _time : _time - (position.x * 0.37f + position.y * 0.61f) % 1f; // 루프는 위치로 어긋나게 (난수 아님 — 규칙 7)
+            _anims.Add(new SpriteAnim { Renderer = sr, Frames = entry.Frames, Start = start, Fps = FpsOf(entry), Loop = !once });
+            return go;
+        }
+
+        /// <summary>그림 너비(픽셀)를 PixelCells 칸에 가장 가까운 정수 배로 — 스프라이트 PPU가 _pixelsPerUnit이라 배수 = 월드 배율.</summary>
+        private float PixelScale(FxCatalog.Entry entry)
+        {
+            float width = entry.Frames[0].rect.width;
+            float cells = entry.PixelCells > 0f ? entry.PixelCells : 1f;
+            float multiple = Mathf.Max(1f, Mathf.Round(cells * _pixelsPerUnit / Mathf.Max(1f, width)));
+            return multiple * entry.Frames[0].pixelsPerUnit / _pixelsPerUnit; // 그림 PPU가 다르면 맞춤
         }
 
         /// <summary>프리팹을 놓고 크기 · 속도 · 색을 맞춘다. once = 반복을 끄고 한 번만 낸다 (팩 효과가 모두 반복 데모 설정).</summary>
-        private static GameObject Spawn(FxCatalog.Entry entry, Vector3 position, Quaternion rotation, Transform parent, bool once)
+        private static GameObject SpawnParticles(FxCatalog.Entry entry, Vector3 position, Quaternion rotation, Transform parent, bool once)
         {
             var go = Instantiate(entry.Prefab, parent);
             go.name = entry.Key;
@@ -424,14 +539,37 @@ namespace ProjectM.Presentation
         private void StopLoop(GameObject go)
         {
             if (go == null) return;
+            if (_pixel2D) // 그림은 남은 입자가 없으니 바로 지운다
+            {
+                DestroySafe(go);
+                return;
+            }
             go.transform.SetParent(transform, true); // 유닛이 지워져도 남은 파티클이 자연스럽게 사라지게
             foreach (var ps in go.GetComponentsInChildren<ParticleSystem>(true))
                 ps.Stop(false, ParticleSystemStopBehavior.StopEmitting);
             _timed.Add(new Timed { Go = go, Until = _time + _stopFade });
         }
 
-        private void DrawLightning(Vector3 from, Vector3 to, Color color)
+        /// <summary>2D 번개 선: line.&lt;속성&gt; 그림(가로 한 칸 번개)을 두 점 사이로 늘리고 돌린다. 굵기는 정수 배 그대로.</summary>
+        private bool DrawLightning2D(Vector3 from, Vector3 to, string key)
         {
+            if (!TryGetFx(key, out var entry) && !TryGetFx("line.Lightning", out entry)) return false;
+            var dir = to - from;
+            dir.z = 0f;
+            float length = dir.magnitude;
+            if (length < 0.01f) return true;
+            var go = SpawnSprite(entry, (from + to) * 0.5f, Facing(dir), transform, false, _effectOrder);
+            float thick = go.transform.localScale.y;
+            float width = entry.Frames[0].rect.width / entry.Frames[0].pixelsPerUnit;
+            go.transform.localScale = new Vector3(length / width, thick, 1f);
+            _lines.Add(new Line { Go = go, Start = _time });
+            return true;
+        }
+
+        private void DrawLightning(Vector3 from, Vector3 to, Element element)
+        {
+            if (_pixel2D && DrawLightning2D(from, to, "line." + element)) return;
+            var color = element == Element.Lightning ? _lightningColor : ElementColor(element);
             var go = new GameObject("Lightning");
             go.transform.SetParent(transform, false);
             var line = go.AddComponent<LineRenderer>();
@@ -461,7 +599,7 @@ namespace ProjectM.Presentation
                 }
                 line.SetPosition(i, p);
             }
-            _lines.Add(new Line { Renderer = line, Start = _time });
+            _lines.Add(new Line { Go = go, Renderer = line, Start = _time });
         }
 
         private Color ElementColor(Element element)
@@ -475,13 +613,14 @@ namespace ProjectM.Presentation
             foreach (var go in _terrainFx.Values) DestroySafe(go);
             foreach (var go in _statusFx.Values) DestroySafe(go);
             foreach (var p in _projectiles) DestroySafe(p.Go);
-            foreach (var l in _lines) if (l.Renderer != null) DestroySafe(l.Renderer.gameObject);
+            foreach (var l in _lines) DestroySafe(l.Go);
             foreach (var t in _timed) DestroySafe(t.Go);
             _terrainFx.Clear();
             _statusFx.Clear();
             _projectiles.Clear();
             _lines.Clear();
             _timed.Clear();
+            _anims.Clear();
             _pending.Clear();
             _visibility = null;
             _lastCastTime = -1f;
