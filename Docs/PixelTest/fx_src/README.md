@@ -28,4 +28,4 @@ Varco(GPT Image 2.5)로 시트 10장 = 이펙트 40종. 시트 하나 = **4줄 �
 - 고른 시트: fx01 · 02 · 04 · 05 · 06 · 07 · 08 · 09 · 10 = `_a`, fx03 = `_b` (Varco 플로우 f679a6c8, y 62600~68000 노드). 나머지 후보도 이 폴더에 둠.
 - 자른 프레임 160장: `Assets/_Project/Art/Pixel/Fx/<이름>_<0~3>.png` (원래 픽셀 1개 = 1px, 한 프레임 28~42px — 시트마다 픽셀 크기가 달라 게임에서 크기를 맞춰야 함).
 - 미리보기: `fxNN_cut.png`(시트별), `Docs/PixelTest/67_fx_all.gif`(40종 애니메이션).
-- 아직 게임에 연결 안 함 (Unity 가져오기 설정 · FxPresenter 2D는 다음 단계).
+- 게임 연결: 019aa5b (`FxSetup.PixelTable` · `FxPresenter` 2D) — TASKS "P-3 ⓓ".
