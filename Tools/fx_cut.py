@@ -1,6 +1,7 @@
 """AI 이펙트 시트(검정 배경, 4줄 × 4프레임) → 프레임 PNG. 픽셀 간격 · 시작 위치를 찾아(grid64.py와 같은 점수) 칸마다 가운데 영역의
 가장 흔한 색을 집고, 어두운 칸(배경 검정)은 투명으로. 출력 = 원래 픽셀 1개 = 1px (보통 한 칸 32px 안팎).
-사용: python fx_cut.py <sheet.png> <시트 ID(fx01~fx10)> <출력 폴더> [미리보기.png]"""
+사용: python fx_cut.py <sheet.png> <시트 ID(fx01~fx10)> <출력 폴더> [미리보기.png]
+16프레임 시트(시트 하나 = 이펙트 하나): 시트 ID 자리에 이펙트 이름(예: impact_fire) → <이름>_0~15.png"""
 import sys
 from collections import Counter
 from PIL import Image
@@ -38,12 +39,17 @@ def score(p, ox, oy):
     return s / max(n, 1)
 
 
-best = None
+single = sheet not in ROWS  # 16프레임 시트 (아래 참고)
+per_p = {}
 for p in range(6, 13):  # 1024 시트에서 원래 픽셀 6~12px
     for ox in range(p):
         for oy in range(p):
             sc = score(p, ox, oy)
-            if best is None or sc < best[0]: best = (sc, p, ox, oy)
+            if p not in per_p or sc < per_p[p][0]: per_p[p] = (sc, p, ox, oy)
+best = min(per_p.values())
+if single:
+    # 배수 간격(6 → 12)도 점수가 비슷하게 나와 큰 쪽이 뽑히면 해상도가 반이 된다 → 가장 좋은 점수의 15% 안이면 가장 작은 간격
+    best = min((v for v in per_p.values() if v[0] <= best[0] * 1.15), key=lambda v: v[1])
 _, cell, ox, oy = best
 cols = (W - ox) // cell; rows = (H - oy) // cell
 grid = Image.new('RGBA', (cols, rows))
@@ -56,12 +62,13 @@ for r in range(rows):
         gp[c, r] = (0, 0, 0, 0) if max(col) < DARK else (*col, 255)
 
 fw, fh = cols // 4, rows // 4  # 시트를 4 × 4로 똑같이 나눔
-names = ROWS[sheet]
+# 시트 ID가 ROWS에 없으면 = 16프레임 시트 (시트 하나 = 이펙트 하나, 칸 순서 = 왼쪽 → 오른쪽, 위 → 아래) → <이름>_0~15
+names = None if single else ROWS[sheet]
 frames = []
 for r in range(4):
     for c in range(4):
         f = grid.crop((c * fw, r * fh, (c + 1) * fw, (r + 1) * fh))
-        f.save(f'{outdir}/{names[r]}_{c}.png')
+        f.save(f'{outdir}/{sheet}_{r * 4 + c}.png' if single else f'{outdir}/{names[r]}_{c}.png')
         frames.append(f)
 if preview:
     k = 6
