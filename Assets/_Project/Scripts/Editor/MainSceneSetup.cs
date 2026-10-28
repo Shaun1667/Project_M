@@ -43,7 +43,7 @@ namespace ProjectM.Editor
         private const string LootConfigPath = "Assets/_Project/Data/Items/LootConfig.asset";
         private const string ConsumableConfigPath = "Assets/_Project/Data/Items/ConsumableConfig.asset";
         // P-3a (결정 2026-10-21): 2D 픽셀 그래픽 — Grid를 눕히지 않고 정사영 카메라, 맵은 PixelMapPresenter. false면 G-1 3D 그대로
-        internal const bool Pixel2D = true;
+        internal static readonly bool Pixel2D = false; // 결정 2026-10-28 (사용자): 3D로 되돌림 — 2D 코드 · 그림은 남겨 두고 이 스위치로만 끔
         private const int PixelsPerUnit = 64;
         private const string PixelWallTilePath = "Assets/_Project/Art/Pixel/Tiles/Wall/PixelWallTile.asset";
         private const int UnitFootPixels = 26; // 유닛 발 = 칸 아래 끝 + 26px (칸 가운데쯤 — 머리는 위 칸으로, 2026-10-23 사용자 SPD 스크린샷)
@@ -159,6 +159,7 @@ namespace ProjectM.Editor
             entityPresenter.ConfigurePixel2D(Pixel2D, EnsureSpriteUnlitMaterial(), PixelsPerUnit, UnitFootPixels); // P-3 ⓑ: 유닛 = 스프라이트
             EditorUtility.SetDirty(entityPresenter);
             var pixelMap = Pixel2D ? EnsurePixelMap(gridGo) : null; // P-3a 2D 맵 (3D TilemapPresenter는 남겨 두되 묶지 않음)
+            if (!Pixel2D) RemoveChild(gridGo.transform, "PixelMap"); // 2026-10-28 3D로 되돌림: 2D 맵 · 벽 덮개 오브젝트를 씬에서 뺀다 (그림 · 코드는 남김)
 
             // 지형 효과 오버레이: 바닥 위 1 cm · 유닛 아래
             var terrainFxGo = FindOrCreate("TerrainFx", gridGo.transform);
@@ -185,6 +186,11 @@ namespace ProjectM.Editor
                 GetOrAdd<TilemapRenderer>(fogGo).sortingOrder = 21; // 안 본 칸 검정은 부드러운 안개 위 (번짐 없음)
                 SetRefs(fogPresenter, ("_soft", softRenderer));
             }
+            else
+            {
+                RemoveChild(fogGo.transform, "FogSoft");
+                SetRefs(fogPresenter, ("_soft", (Object)null));
+            }
 
             // 주문 조준 미리보기: 안개(20) 위
             var aimGo = FindOrCreate("Aim", gridGo.transform);
@@ -208,6 +214,7 @@ namespace ProjectM.Editor
                     cam.clearFlags = CameraClearFlags.SolidColor;
                     cam.backgroundColor = Color.black; // 2026-10-22 얇은 벽: 벽 속(투명)이 안 본 곳(안개 검정)과 같은 색
                 }
+                else cam.clearFlags = CameraClearFlags.Skybox; // G-1 3D 기본
             }
             else Debug.LogWarning("[MainSceneSetup] MainCamera 태그 카메라 없음");
 
@@ -1231,6 +1238,13 @@ namespace ProjectM.Editor
             var created = new GameObject(name);
             if (parent != null) created.transform.SetParent(parent, false);
             return created;
+        }
+
+        /// <summary>그 이름의 자식이 있으면 지운다 (2D ↔ 3D 스위치 — 없으면 아무것도 안 함).</summary>
+        private static void RemoveChild(Transform parent, string name)
+        {
+            var child = parent.Find(name);
+            if (child != null) Object.DestroyImmediate(child.gameObject);
         }
 
         private static T GetOrAdd<T>(GameObject go) where T : Component
