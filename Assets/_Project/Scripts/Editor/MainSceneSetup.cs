@@ -159,7 +159,11 @@ namespace ProjectM.Editor
             entityPresenter.ConfigurePixel2D(Pixel2D, EnsureSpriteUnlitMaterial(), PixelsPerUnit, UnitFootPixels); // P-3 ⓑ: 유닛 = 스프라이트
             EditorUtility.SetDirty(entityPresenter);
             var pixelMap = Pixel2D ? EnsurePixelMap(gridGo) : null; // P-3a 2D 맵 (3D TilemapPresenter는 남겨 두되 묶지 않음)
-            if (!Pixel2D) RemoveChild(gridGo.transform, "PixelMap"); // 2026-10-28 3D로 되돌림: 2D 맵 · 벽 덮개 오브젝트를 씬에서 뺀다 (그림 · 코드는 남김)
+            if (!Pixel2D) // 2026-10-28 3D로 되돌림: 2D 맵 · 벽 덮개 오브젝트를 씬에서 뺀다 (그림 · 코드는 남김)
+            {
+                RemoveChild(gridGo.transform, "PixelMap");
+                RemoveChild(gridGo.transform, "PixelWallCaps");
+            }
 
             // 지형 효과 오버레이: 바닥 위 1 cm · 유닛 아래
             var terrainFxGo = FindOrCreate("TerrainFx", gridGo.transform);
