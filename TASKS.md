@@ -746,6 +746,11 @@
   - 피드백: ① 클립 FBX(Mixamo)와 Varco 모델의 뼈 이름이 다르면 Generic 클립은 움직이지 않는다 → 둘 다 Humanoid로 리타깃 (검사: 아바타 `isHuman` · `isValid`, Varco Models 로그). ② 편집 모드에서 애니메이션 미리보기는 Animator 컬링 때문에 포즈가 안 바뀜 → 미리보기 동안 `AlwaysAnimate` + `Rebind`. ③ Idle.fbx · Walk.fbx에 함께 든 검 메시(법선 없음)가 가져올 때 탄젠트 경고를 낸다 — 동작엔 문제없음
   - 수정 (2026-10-19, 사용자 피드백 — "빌드만 하면 책이 마젠타"): 원인 = `GameObject.CreatePrimitive`가 붙이는 기본 재질(Built-in Standard 셰이더)은 에디터에서는 보이지만 URP 빌드에 셰이더가 들어가지 않아 마젠타. 코드로 만드는 바닥 책(`FloorItemPresenter`)과 그레이박스 캡슐(`EntityPresenter`)이 해당 (벽은 이미 `_wallMaterial`). 해결 = 흰 URP Lit `Data/Visuals/Materials/ShapeGreybox.mat`(Main Scene Setup이 없을 때만 만듦)을 씬이 참조(`_bookMaterial` · `_greyboxMaterial`)해 빌드에 포함, 색은 지금처럼 PropertyBlock. 확인: Setup 뒤 책 셰이더 = Universal Render Pipeline/Lit
   - 피드백: 런타임에 `CreatePrimitive` · `new Material(Shader.Find(...))`를 쓰면 빌드에서 셰이더가 빠질 수 있다 → 재질은 씬 · 프리팹이 참조하는 URP 에셋으로 넘긴다. 검사: `Scripts/Runtime`에서 `CreatePrimitive` 검색 → 모두 재질 필드로 바꿔 끼우는지
+- [~] **G-6. 회색 던전** (2026-10-28 사용자 "1~5층 던전이 너무 황토색 → SPD 하수도처럼 회색 빛깔로") — 플레이 확인 대기
+  - 원인: Varco 타일 텍스처가 누런 색(바닥 평균 (111, 109, 93) · 색상 52° · 채도 0.17) + 해 색이 따뜻함 (1, 0.96, 0.9). 1~5층은 모두 같은 재질
+  - 구현: `Tools/tex_gray.py` — 원본(`Docs/Varco3D_src/`, 바닥 · 벽 · 기둥 · 계단 2)에서 채도 25%만 남기고 살짝 차갑게(R −4% · B +4%) 다시 만들어 `Art/Varco3D/Textures/Tile_*_base_color.png`에 씀(여러 번 돌려도 같음, 인자로 정도 조절). 해 색 = (0.96, 0.98, 1) (`MainSceneSetup.EnsureLight`). 결과 바닥 평균 (104, 108, 108) · 채도 0.04
+  - 확인한 것: 컴파일 오류 0, Setup/Main Scene 실행, 플레이 모드 렌더에서 바닥 · 벽이 회색 돌. 확인 못 한 것: 직접 플레이 · 2~5층. 테스트 없음(표시만 바뀜)
+  - 확인 방법: `Main.unity` 플레이 → 바닥 · 벽이 누런 기 없이 회색. 더 어둡게 · 더 회색으로 하려면 `python Tools/tex_gray.py <남길 채도> <차가운 정도>` 후 Unity Refresh
 - [ ] **G-4. UI 아트** — 아이콘 12(모델 렌더) · 막대 · 빠른 칸 · 인벤토리 · 로그 바탕 · 결과 화면 · (폰트 결정) — **일시중지 (2026-10-19, 사용자): 아트 에셋이 없음.** 재개 조건: ART_ASSETS.md 9번 목록의 1차 에셋(아이콘 · 틀)을 받거나, Varco 모델 렌더로 아이콘을 만들기로 정할 때. 재개 시 먼저 물을 것: 아이콘 출처(직접 렌더 / 에셋) · 폰트(Galmuri11 유지 / 한글 일반 폰트) · 범위
 
 ## Phase 4 — 재미 검증 (멈추고 플레이)

@@ -328,7 +328,7 @@ namespace ProjectM.Editor
             var lightGo = FindOrCreate("Sun", null);
             var light = GetOrAdd<Light>(lightGo);
             light.type = LightType.Directional;
-            light.color = new Color(1f, 0.96f, 0.9f);
+            light.color = new Color(0.96f, 0.98f, 1f); // 2026-10-28 회색 던전: 누런 해 (1, 0.96, 0.9) → 살짝 차가운 흰색
             light.intensity = 1.1f;
             light.shadows = LightShadows.Soft;
             lightGo.transform.rotation = Quaternion.Euler(55f, -35f, 0f);
