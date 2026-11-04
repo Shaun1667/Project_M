@@ -23,6 +23,12 @@ namespace ProjectM.Data
 
         [SerializeField] private List<Entry> _terrains = new List<Entry>();
 
+        [Header("불 번짐 (3-11b — BALANCE.md 7번)")]
+        [Tooltip("풀이 타는 동안 놓이는 화염 지대 지속 (틱) — 풀 점화 반응의 지속과 같게")] [Min(1)] [SerializeField] private int _grassBurnTicks = 3;
+        [Tooltip("한 틱에 새로 불이 붙는 최대 칸 수")] [Min(1)] [SerializeField] private int _fireSpreadMaxPerTick = 8;
+
+        public FireSpreadConfig ToFireSpread() => new FireSpreadConfig(_grassBurnTicks, _fireSpreadMaxPerTick);
+
         public TerrainBook ToBook(StatusBook statuses)
         {
             var defs = new List<TerrainDef>(_terrains.Count);

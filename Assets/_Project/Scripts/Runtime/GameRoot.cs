@@ -198,7 +198,7 @@ namespace ProjectM
             Floor = floor;
             var sight = new ShadowcastSightRule();
             var progression = _progressionConfig != null ? _progressionConfig.ToConfig() : null;
-            var vision = World.InstallCoreSystems(sight, Magic, Statuses, Terrains, progression);
+            var vision = World.InstallCoreSystems(sight, Magic, Statuses, Terrains, progression, _terrainCatalog.ToFireSpread()); // 3-11b 불 번짐
             var consumableConfig = _consumableConfig != null ? _consumableConfig.ToConfig() : ConsumableConfig.Default;
             var consumables = new ConsumableRules(Items, consumableConfig, Statuses, Terrains, progression, sight); // 3-9 물약 · 주문서 효과
 

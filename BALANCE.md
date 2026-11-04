@@ -208,7 +208,19 @@
 필드 `SpellCatalog` 항목의 `LeavesTerrain`: `poison_basic` → PoisonCloud, `water_basic` → Water (3-2). (`fire_basic` → FireZone은 2026-10-17 3-1 D2로 삭제)
 지형이 매 턴 거는 상태는 **100%** (2026-10-17 사용자 확인 — 요청표의 50%는 쓰지 않음).
 
-검산 (`TerrainTests.ProjectAsset_MatchesBalanceTable`): 에셋 값이 위 표와 같다.
+**불 번짐 (3-11b, 결정 2026-11-04 — SPD)** — `TerrainCatalog.asset`의 공통 값, `FireSpreadSystem`(③ 지형 처리 다음)
+
+| 값 | 필드 | 값 | 뜻 |
+|---|---|---|---|
+| 풀이 타는 시간 | `_grassBurnTicks` | **3** 틱 | 번져 붙은 칸의 화염 지대 지속 (점화 반응 지속과 같게) [임시] |
+| 한 틱 번짐 상한 | `_fireSpreadMaxPerTick` | **8** 칸 | 넘는 칸은 다음 틱 (칸 인덱스 순) — 규칙 10 안전장치 [임시] |
+
+- 화염 지대가 있는 칸마다: 그 칸의 풀은 바닥이 되고, **상하좌우** 이웃 풀에 불이 붙는다. 이번 틱에 붙은 불은 다음 틱부터 번짐 → 한 틱에 한 칸씩 퍼진다.
+- 젖게 하는 지형(물 · 오염된 물 — `AppliesStatus = Wet`)이 있는 칸은 타지 않는다 (웅덩이가 불을 막음).
+- 풀이 다 타면 불이 꺼진다 (풀은 다시 자라지 않음). 화염 지대 위 유닛은 매 틱 화상 — 플레이어도.
+- 융합 용암 분출(화염 지대 6틱)도 이웃 풀로 번진다.
+
+검산 (`TerrainTests.ProjectAsset_MatchesBalanceTable`, `FireSpreadTests.ProjectAsset_MatchesBalanceTable`): 에셋 값이 위 표와 같다.
 결과:
 - 화염 지대에 4틱 내내 서 있으면 화상이 매 틱 갱신 → 지대 4틱 + 사라진 뒤 화상 2틱 = 피해 **6** — `TerrainTests.StandingInFireZone_KeepsBurning`
 - 독구름은 놓인 틱에 이미 중독(5틱)이 걸려 있으므로, 머물면 중독이 계속 5로 갱신 → 떠난 뒤에도 최대 5틱
@@ -268,6 +280,15 @@
 | `shock_contaminated` | 수면 감전 | 오염된 물(지형) × 번개 | 20 | — | 물 타일과 같음 |
 
 결과 (3-3b): 물보라 3×3로 적 무리를 적시고 번개(마나 2 + 4 = 6) → 직접 맞은 적 3 + 2, 사슬로 이어진 젖은 적마다 2. 내가 젖어 있고 3칸 안이면 나도 2 — `ShockTests`
+
+**3-11b 풀 점화 2종** (한 그룹 `grass_ignite`, 칸 반응 `Trigger = Tile` — 결정 2026-11-04)
+
+| ID | 이름 | 대상 × 속성 | 우선 | 결과 |
+|---|---|---|---|---|
+| `grass_ignite` | 풀에 불이 붙음 | 짧은 풀(칸) × 불 | 0 | 칸 → 바닥 (`TransformTileTo`) + 화염 지대 **3**틱 (`PlaceTerrain` · `TransformDurationTicks`) |
+| `tallgrass_ignite` | 풀에 불이 붙음 | 높은 풀(칸) × 불 | 0 | 같음 |
+
+칸만 바꾸는 줄이라 4회 상한에 세지 않는다(지형만 바꾸는 줄과 같음). 불 투사체는 **맞은 칸만** 점화 (지나간 칸은 아님 — 주문의 지형 칸 규칙). 번짐은 7번 "불 번짐".
 
 엔진 규칙 보강 (3-3a): 대상 상태를 거는 지형 줄은 그 칸에 유닛이 있으면 "지형만 바꾸는 줄"이 아니다 (4회 상한에 셈, 유닛마다 그룹 1회).
 

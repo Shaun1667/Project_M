@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ProjectM.Core;
 using ProjectM.Magic;
 using ProjectM.Status;
 using UnityEngine;
@@ -39,6 +40,9 @@ namespace ProjectM.Data
             [Tooltip("사슬: 한 번에 건너가는 거리 · 지형: 따라가는 최대 칸 수")] [Min(0)] public int SpreadRange;
             [Tooltip("전이로 맞는 최대 유닛 수. 0 = 제한 없음")] [Min(0)] public int SpreadMaxTargets;
             [Tooltip("전이 피해 = 첫 대상이 받은 피해 × % 내림 (1 ~ 99)")] [Range(0, 99)] public int SpreadDamagePercent;
+            [Tooltip("Trigger = Tile일 때 대상 칸 종류 (3-11b 풀)")] public TileType Tile;
+            [Tooltip("칸 반응: 칸을 이 종류로 (Empty = 그대로)")] public TileType TransformTileTo;
+            [Tooltip("칸 반응: 그 칸에 놓는 지형 (지속 = TransformDurationTicks)")] public TerrainEffectType PlaceTerrain;
         }
 
         [Header("안전장치 (REACTIONS.md 2-5)")]
@@ -58,7 +62,8 @@ namespace ProjectM.Data
                 defs.Add(new ReactionDef(e.Id, e.Trigger, e.Status, e.Terrain, e.Element, e.Priority,
                     e.ExtraDamage, e.ConsumeTrigger, e.ExplosionRadius, e.ExplosionDamage, e.ExplosionDamageFromRemaining,
                     e.ExplosionStatus, e.ExplosionStatusChancePercent, e.Group, e.TransformTerrainTo, e.TransformDurationTicks,
-                    e.TargetStatus, e.TargetStatusChancePercent, e.Spread, e.SpreadRange, e.SpreadMaxTargets, e.SpreadDamagePercent));
+                    e.TargetStatus, e.TargetStatusChancePercent, e.Spread, e.SpreadRange, e.SpreadMaxTargets, e.SpreadDamagePercent,
+                    e.Tile, e.TransformTileTo, e.PlaceTerrain));
             }
             return new ReactionBook(defs, new ReactionConfig(_maxReactionsPerCast, _extraDamageCapMin, _explosionDamageCapMin), statuses);
         }

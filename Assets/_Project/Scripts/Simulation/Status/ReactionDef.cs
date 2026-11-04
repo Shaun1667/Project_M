@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ProjectM.Core;
 using ProjectM.Magic;
 
 namespace ProjectM.Status
@@ -11,6 +12,8 @@ namespace ProjectM.Status
         Status = 0,
         /// <summary>주문이 닿은 칸의 지형 효과.</summary>
         Terrain = 1,
+        /// <summary>주문이 닿은 칸의 칸 종류 (3-11b 풀 × 불).</summary>
+        Tile = 2,
     }
 
     /// <summary>
@@ -39,6 +42,8 @@ namespace ProjectM.Status
         public StatusType Status { get; }
         /// <summary>Trigger = Terrain일 때 대상 지형.</summary>
         public TerrainEffectType Terrain { get; }
+        /// <summary>Trigger = Tile일 때 대상 칸 종류 (3-11b).</summary>
+        public TileType Tile { get; }
         /// <summary>반응을 일으키는 주문 속성.</summary>
         public Element Element { get; }
         /// <summary>발동 순서 (큰 것 먼저, 원본 4-3).</summary>
@@ -60,8 +65,12 @@ namespace ProjectM.Status
         public int ExplosionStatusChancePercent { get; }
         /// <summary>지형 반응: 트리거 지형을 이 지형으로 바꾼다 — 남은 틱 유지 (3-2 오염: 물 → 오염된 물). None = 없음.</summary>
         public TerrainEffectType TransformTerrainTo { get; }
-        /// <summary>지형 변환 뒤 지속 (틱). 0 = 남은 틱 유지 (3-3a 결빙: 물 → 빙판 8틱).</summary>
+        /// <summary>지형 변환 뒤 지속 (틱). 0 = 남은 틱 유지 (3-3a 결빙: 물 → 빙판 8틱). 칸 반응의 PlaceTerrain 지속도 이 값 (3-11b).</summary>
         public int TransformDurationTicks { get; }
+        /// <summary>칸 반응: 칸을 이 종류로 바꾼다 (3-11b 풀 → 바닥). Empty = 바꾸지 않음.</summary>
+        public TileType TransformTileTo { get; }
+        /// <summary>칸 반응: 그 칸에 이 지형을 TransformDurationTicks만큼 놓는다 (3-11b 화염 지대). None = 없음.</summary>
+        public TerrainEffectType PlaceTerrain { get; }
         /// <summary>대상(상태 반응) · 그 칸 유닛(지형 반응)에 거는 상태 (None = 없음) · 확률 (3-3a 빙결 확정).</summary>
         public StatusType TargetStatus { get; }
         public int TargetStatusChancePercent { get; }
@@ -80,8 +89,16 @@ namespace ProjectM.Status
             StatusType explosionStatus = StatusType.None, int explosionStatusChancePercent = 100, string group = null,
             TerrainEffectType transformTerrainTo = TerrainEffectType.None, int transformDurationTicks = 0,
             StatusType targetStatus = StatusType.None, int targetStatusChancePercent = 100,
-            ReactionSpread spread = ReactionSpread.None, int spreadRange = 0, int spreadMaxTargets = 0, int spreadDamagePercent = 50)
+            ReactionSpread spread = ReactionSpread.None, int spreadRange = 0, int spreadMaxTargets = 0, int spreadDamagePercent = 50,
+            TileType tile = TileType.Empty, TileType transformTileTo = TileType.Empty, TerrainEffectType placeTerrain = TerrainEffectType.None)
         {
+            if (trigger == ReactionTrigger.Tile && tile == TileType.Empty) throw new ArgumentException("칸 반응에 칸 종류가 없다: " + id);
+            if ((transformTileTo != TileType.Empty || placeTerrain != TerrainEffectType.None) && trigger != ReactionTrigger.Tile)
+                throw new ArgumentException("칸 바꾸기 · 지형 놓기는 칸 반응에서만: " + id);
+            if (trigger == ReactionTrigger.Tile && (spread != ReactionSpread.None || consumeTrigger || transformTileTo == tile))
+                throw new ArgumentException("칸 반응은 전이 · 소모 없이, 다른 칸 종류로만: " + id);
+            if (placeTerrain != TerrainEffectType.None && transformDurationTicks < 1)
+                throw new ArgumentOutOfRangeException(nameof(transformDurationTicks), "놓는 지형의 지속은 1 이상: " + id);
             if (spread == ReactionSpread.StatusChain && trigger != ReactionTrigger.Status)
                 throw new ArgumentException("사슬 전이는 상태 반응에서만: " + id);
             if (spread == ReactionSpread.TerrainFlood && trigger != ReactionTrigger.Terrain)
@@ -91,7 +108,7 @@ namespace ProjectM.Status
             if (spread != ReactionSpread.None && consumeTrigger)
                 throw new ArgumentException("전이는 트리거를 따라 퍼지므로 소모와 함께 쓸 수 없다: " + id);
             if (transformDurationTicks < 0) throw new ArgumentOutOfRangeException(nameof(transformDurationTicks), "지속은 0 이상: " + id);
-            if (transformDurationTicks > 0 && transformTerrainTo == TerrainEffectType.None)
+            if (transformDurationTicks > 0 && transformTerrainTo == TerrainEffectType.None && placeTerrain == TerrainEffectType.None)
                 throw new ArgumentException("변환 지속은 지형 변환과 함께만: " + id);
             if (targetStatusChancePercent < 0 || targetStatusChancePercent > 100)
                 throw new ArgumentOutOfRangeException(nameof(targetStatusChancePercent), "확률은 0 ~ 100: " + id);
@@ -110,6 +127,9 @@ namespace ProjectM.Status
             Trigger = trigger;
             Status = status;
             Terrain = terrain;
+            Tile = tile;
+            TransformTileTo = transformTileTo;
+            PlaceTerrain = placeTerrain;
             Element = element;
             Priority = priority;
             ExtraDamage = extraDamage;
@@ -174,7 +194,7 @@ namespace ProjectM.Status
             {
                 if (r == null) throw new ArgumentException("null 반응", nameof(reactions));
                 if (_reactions.Exists(x => x.Id == r.Id)) throw new ArgumentException("같은 반응 ID가 두 번: " + r.Id, nameof(reactions));
-                if (_reactions.Exists(x => x.Trigger == r.Trigger && x.Status == r.Status && x.Terrain == r.Terrain && x.Element == r.Element))
+                if (_reactions.Exists(x => x.Trigger == r.Trigger && x.Status == r.Status && x.Terrain == r.Terrain && x.Tile == r.Tile && x.Element == r.Element))
                     throw new ArgumentException("같은 대상 · 속성 조합이 두 번: " + r.Id, nameof(reactions));
                 if (r.ExplosionStatus != StatusType.None && !statuses.TryGet(r.ExplosionStatus, out _))
                     throw new ArgumentException($"반응 {r.Id}의 상태 {r.ExplosionStatus}가 StatusBook에 없다.", nameof(reactions));
@@ -191,5 +211,8 @@ namespace ProjectM.Status
 
         public ReactionDef FindTerrain(TerrainEffectType terrain, Element element) =>
             _reactions.Find(r => r.Trigger == ReactionTrigger.Terrain && r.Terrain == terrain && r.Element == element);
+
+        public ReactionDef FindTile(TileType tile, Element element) =>
+            _reactions.Find(r => r.Trigger == ReactionTrigger.Tile && r.Tile == tile && r.Element == element);
     }
 }

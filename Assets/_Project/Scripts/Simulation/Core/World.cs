@@ -108,8 +108,9 @@ namespace ProjectM.Core
         /// 적 재생성(EnemyRespawnSystem)은 적 데이터가 필요해 부른 쪽이 따로 등록한다. 층 이동(FloorTransition)은 틱 밖 동작이라 시스템이 아니다 (3-4a).
         /// </summary>
         /// <param name="progression">경험치 · 레벨업 수치 (3-6). null이면 경험치를 주지 않는다 (테스트 기본).</param>
+        /// <param name="fireSpread">불 번짐 수치 (3-11b). null이면 불이 번지지 않는다 (테스트 기본).</param>
         public PlayerVisionSystem InstallCoreSystems(ISightRule sight, MagicConfig magic, StatusBook statuses, TerrainBook terrains,
-            ProgressionConfig progression = null)
+            ProgressionConfig progression = null, FireSpreadConfig fireSpread = null)
         {
             if (statuses == null) throw new ArgumentNullException(nameof(statuses));
             if (terrains == null) throw new ArgumentNullException(nameof(terrains));
@@ -117,6 +118,7 @@ namespace ProjectM.Core
             Scheduler.SetActionRules(id => StatusEffects.CanAct(this, statuses, id),
                 (id, cost) => StatusEffects.AdjustCost(this, statuses, id, cost));
             Scheduler.AddSystem(TickPhase.Terrain, new TerrainSystem(this, terrains, statuses));
+            if (fireSpread != null) Scheduler.AddSystem(TickPhase.Terrain, new FireSpreadSystem(this, terrains, fireSpread)); // 3-11b: 지형 처리 다음
             Scheduler.AddSystem(TickPhase.Status, new StatusSystem(this, statuses));
             Scheduler.AddSystem(TickPhase.ManaRegen, new ManaRegenSystem(this, magic));
             Scheduler.AddSystem(TickPhase.ManaRegen, new HpRegenSystem(this, magic));

@@ -194,6 +194,20 @@ namespace ProjectM.Status
         }
 
         /// <summary>
+        /// 규칙 없이 종류 · 지속만으로 놓는다 (3-11b 칸 반응 · 불 번짐 — 반응 엔진은 지형 규칙을 모른다). 걸을 수 없는 칸에는 놓지 않는다.
+        /// BlockedBy는 보지 않으므로 부른 쪽이 막는 조건을 확인한다.
+        /// </summary>
+        public static void Place(World world, GridPos pos, TerrainEffectType type, int durationTicks)
+        {
+            if (world == null) throw new ArgumentNullException(nameof(world));
+            if (type == TerrainEffectType.None) throw new ArgumentException("None은 지형 효과가 아니다.", nameof(type));
+            if (durationTicks < 1) throw new ArgumentOutOfRangeException(nameof(durationTicks));
+            if (!world.Map.IsWalkable(pos)) return;
+            int remaining = world.Terrain.Place(pos, type, durationTicks);
+            world.Events.Publish(new TerrainChangedEvent(pos, type, remaining));
+        }
+
+        /// <summary>
         /// 그 칸의 from을 to로 바꾼다 — durationTicks가 0이면 남은 틱 유지 (3-2 오염: 물 → 오염된 물), 아니면 그 지속
         /// (3-3a 결빙: 물 → 빙판 8틱, 해동: 빙판 → 물 12틱). to가 이미 있으면 남은 틱이 긴 쪽. from이 없으면 아무 일 없음.
         /// </summary>

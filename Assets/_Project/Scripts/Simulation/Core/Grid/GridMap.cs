@@ -59,6 +59,9 @@ namespace ProjectM.Core
             return null;
         }
 
+        /// <summary>불에 타는 칸 (3-11b): 짧은 풀 · 높은 풀. 타면 바닥이 된다 (FireSpreadSystem).</summary>
+        public static bool IsFlammableType(TileType type) => type == TileType.Grass || type == TileType.TallGrass;
+
         /// <summary>시야를 막는 칸인지: 벽 · 빈칸 · 맵 밖 · 높은 풀(3-11a). 바닥 · 계단 · 짧은 풀은 보인다.</summary>
         public bool BlocksSight(GridPos pos) => !InBounds(pos) || !IsWalkableType(_cells[IndexOf(pos)]) || _cells[IndexOf(pos)] == TileType.TallGrass;
 

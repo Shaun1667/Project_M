@@ -8,7 +8,7 @@ namespace ProjectM.Status
 {
     /// <summary>
     /// 반응 규칙 엔진 (3-1, REACTIONS.md 2번). 주문 시전 중 "원래 피해 → 반응 → 새 상태 → 지형" 순서의 반응 단계에서 한 번 부른다.
-    /// 1) 후보 모으기: 맞은 유닛의 상태 × 주문 속성, 주문이 닿은 칸의 지형 × 주문 속성.
+    /// 1) 후보 모으기: 맞은 유닛의 상태 × 주문 속성, 주문이 닿은 칸의 지형 × 주문 속성, 칸 종류 × 주문 속성(3-11b — 상한에 안 셈).
     /// 2) 우선순위(큰 것 먼저) → 상태 반응 먼저 → 모은 순서로 정렬.
     /// 3) 같은 그룹은 대상(유닛, 유닛이 없으면 칸)당 1회, 주문당 최대 N회. 그룹 중복으로 건너뛴 줄도 트리거 소모 · 지형 변환은 한다 (3-2).
     /// 4) 발동: 추가 피해(상한) · 대상 상태(3-3a) · 전이 예약(3-3b) · 트리거 소모 / 지형 변환 · 폭발 예약.
@@ -61,6 +61,14 @@ namespace ProjectM.Status
                     world.Units.TryGetAt(cell, out var unitOnCell);
                     candidates.Add(new Candidate { Reaction = r, Unit = unitOnCell, Pos = cell, Remaining = t.Remaining, Order = candidates.Count });
                 }
+                // 칸 종류 (3-11b 풀 × 불)
+                if (!world.Map.InBounds(cell)) continue;
+                var tileReaction = book.FindTile(world.Map.Get(cell), spell.Element);
+                if (tileReaction != null)
+                {
+                    world.Units.TryGetAt(cell, out var unitOnTile);
+                    candidates.Add(new Candidate { Reaction = tileReaction, Unit = unitOnTile, Pos = cell, Order = candidates.Count });
+                }
             }
             if (candidates.Count == 0) return 0;
 
@@ -88,7 +96,7 @@ namespace ProjectM.Status
                 if (r.Spread == ReactionSpread.TerrainFlood && flooded.Contains(r.Group + "|" + c.Pos.X + "," + c.Pos.Y)) continue;
                 // 지형만 바꾸는 반응(폭발 · 전이 없음, 빈 칸이거나 유닛에게 아무것도 안 함 — 오염 · 빈 칸의 증발 · 소화 · 빈 칸의 결빙)은
                 // 4회 상한에 세지 않고 로그는 반응당 한 줄 (3-2 ✎ — 물 3×3에 독을 쏘면 9칸이 다 오염)
-                if (r.Trigger == ReactionTrigger.Terrain && r.ExplosionRadius == 0 && r.Spread == ReactionSpread.None
+                if (r.Trigger != ReactionTrigger.Status && r.ExplosionRadius == 0 && r.Spread == ReactionSpread.None
                     && (c.Unit == null || (r.ExtraDamage == 0 && r.TargetStatus == StatusType.None)))
                 {
                     if (cellOnlyLogged.Add(r.Id))
@@ -219,9 +227,16 @@ namespace ProjectM.Status
             return result;
         }
 
-        /// <summary>트리거 소모 · 지형 변환 (3-2).</summary>
+        /// <summary>트리거 소모 · 지형 변환 (3-2) · 칸 바꾸기 · 지형 놓기 (3-11b).</summary>
         private static void ApplyTriggerChange(World world, ReactionDef r, Candidate c)
         {
+            if (r.Trigger == ReactionTrigger.Tile)
+            {
+                if (world.Map.Get(c.Pos) != r.Tile) return; // 같은 칸이 이미 바뀜
+                if (r.TransformTileTo != TileType.Empty) world.SetTile(c.Pos, r.TransformTileTo);
+                if (r.PlaceTerrain != TerrainEffectType.None) TerrainEffects.Place(world, c.Pos, r.PlaceTerrain, r.TransformDurationTicks);
+                return;
+            }
             if (r.ConsumeTrigger)
             {
                 if (r.Trigger == ReactionTrigger.Status && c.Unit != null) StatusEffects.Remove(world, c.Unit, r.Status);

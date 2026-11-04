@@ -616,6 +616,14 @@ namespace ProjectM.Editor
                 Terrain = TerrainEffectType.ContaminatedWater, Element = Element.Lightning, Priority = 20, ExplosionStatusChancePercent = 100,
                 Spread = ReactionSpread.TerrainFlood, SpreadRange = 8, SpreadMaxTargets = 4, SpreadDamagePercent = 50,
             });
+            // 3-11b: 풀 점화 (짧은 · 높은 풀 × 불 → 바닥 + 화염 지대 3틱, 한 그룹). 번짐은 FireSpreadSystem (TerrainCatalog 수치)
+            foreach (var (id, tile) in new[] { ("grass_ignite", TileType.Grass), ("tallgrass_ignite", TileType.TallGrass) })
+                changed |= catalog.AddIfMissing(new ReactionCatalogAsset.Entry
+                {
+                    Id = id, DisplayName = "풀에 불이 붙음", Group = "grass_ignite", Trigger = ReactionTrigger.Tile, Tile = tile,
+                    Element = Element.Fire, Priority = 0, TransformTileTo = TileType.Floor, PlaceTerrain = TerrainEffectType.FireZone,
+                    TransformDurationTicks = 3, ExplosionStatusChancePercent = 100,
+                });
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }

@@ -66,6 +66,11 @@ namespace ProjectM.Tests
                 group: "shock", spread: ReactionSpread.TerrainFlood, spreadRange: 8, spreadMaxTargets: 4, spreadDamagePercent: 50),
             new ReactionDef("shock_contaminated", ReactionTrigger.Terrain, StatusType.None, TerrainEffectType.ContaminatedWater, Element.Lightning, 20,
                 group: "shock", spread: ReactionSpread.TerrainFlood, spreadRange: 8, spreadMaxTargets: 4, spreadDamagePercent: 50),
+            // 3-11b: 풀 점화 (짧은 · 높은 풀 × 불 → 바닥 + 화염 지대 3틱) — 한 그룹
+            new ReactionDef("grass_ignite", ReactionTrigger.Tile, StatusType.None, TerrainEffectType.None, Element.Fire, 0,
+                group: "grass_ignite", transformDurationTicks: 3, tile: TileType.Grass, transformTileTo: TileType.Floor, placeTerrain: TerrainEffectType.FireZone),
+            new ReactionDef("tallgrass_ignite", ReactionTrigger.Tile, StatusType.None, TerrainEffectType.None, Element.Fire, 0,
+                group: "grass_ignite", transformDurationTicks: 3, tile: TileType.TallGrass, transformTileTo: TileType.Floor, placeTerrain: TerrainEffectType.FireZone),
         }, new ReactionConfig(4, 3, 5), statuses);
 
         // 주문 자체는 상태 · 지형 없이 (반응만 보려고). 상태 · 지형 규칙은 BALANCE 값
@@ -344,6 +349,8 @@ namespace ProjectM.Tests
                 // 3-3a: 변환 지속 · 대상 상태 (대상 상태가 없으면 확률은 보지 않음 — 이전 줄은 에셋에 0으로 저장됨)
                 Assert.That((a.TransformDurationTicks, a.TargetStatus), Is.EqualTo((e.TransformDurationTicks, e.TargetStatus)), e.Id);
                 if (e.TargetStatus != StatusType.None) Assert.That(a.TargetStatusChancePercent, Is.EqualTo(e.TargetStatusChancePercent), e.Id);
+                // 3-11b: 칸 반응
+                Assert.That((a.Tile, a.TransformTileTo, a.PlaceTerrain), Is.EqualTo((e.Tile, e.TransformTileTo, e.PlaceTerrain)), e.Id);
                 // 3-3b: 전이 (전이가 없으면 거리 · 수 · %는 보지 않음)
                 Assert.That(a.Spread, Is.EqualTo(e.Spread), e.Id);
                 if (e.Spread != ReactionSpread.None)
