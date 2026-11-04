@@ -186,7 +186,7 @@ namespace ProjectM.Presentation
         /// <summary>Tilemap에 그릴 타일: 3D로 그리는 타입(3D 모드의 벽 · 모듈이 있는 타입)은 비운다.</summary>
         private TileBase TileFor(TileType type)
         {
-            if (type == TileType.HiddenDoor) type = TileType.Wall; // 3-12b: 찾기 전엔 벽으로 그림
+            if (type == TileType.HiddenDoor || type == TileType.SealedStairs) type = TileType.Wall; // 3-12b: 찾기 전엔 벽으로 그림 · 3-17a 봉인된 계단
             if (_walls3D && (type == TileType.Wall || (_visuals != null && _visuals.TryGetModule(type, out _, out _)))) return null;
             return _visuals != null ? _visuals.Get(type) : null;
         }

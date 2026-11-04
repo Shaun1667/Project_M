@@ -155,6 +155,8 @@ namespace ProjectM.UI
         /// <summary>연금 솥 (3-16c).</summary>
         public static string BrewTitle(int picked) => $"연금 솥 — 씨앗 {picked + 1}/3 고르기  <size=70%><color=#AAAAAA>Esc 그만두기</color></size>";
         public const string NotEnoughSeeds = "씨앗이 3개 있어야 한다";
+        /// <summary>3-17a 중간 보스.</summary>
+        public const string StairsUnsealed = "보스를 쓰러뜨렸다 — 내려가는 계단이 열렸다";
         public string Brewed(string id) => $"연금 솥에서 {Item(id)}이(가) 만들어졌다";
 
         /// <summary>상점 (3-15c).</summary>

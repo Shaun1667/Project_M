@@ -70,6 +70,15 @@ namespace ProjectM.Units
             StartingSpells = spells;
         }
 
+        /// <summary>구역 세기 (3-17a): 체력 · 피해 · 명중 · 회피를 percent%로 (내림, 체력 최소 1). 100이면 그대로.</summary>
+        public UnitDef Scaled(int percent)
+        {
+            if (percent == 100) return this;
+            int S(int v) => (int)((long)v * percent / 100);
+            return new UnitDef(VisualId, Math.Max(1, S(MaxHp)), S(AttackDamage), SightRange, MaxMana, StartingSpells,
+                S(Accuracy), S(Evasion), ExpReward, ExpMaxLevel, Strength, StartingArmor);
+        }
+
         /// <summary>모습만 바꾼 사본 (캐릭터 선택 — 결정 2026-10-21: 지금은 외형만 다름). 수치 · 시작 주문 · 갑옷은 그대로.</summary>
         public UnitDef WithVisualId(string visualId) => new UnitDef(visualId, MaxHp, AttackDamage, SightRange, MaxMana, StartingSpells,
             Accuracy, Evasion, ExpReward, ExpMaxLevel, Strength, StartingArmor);

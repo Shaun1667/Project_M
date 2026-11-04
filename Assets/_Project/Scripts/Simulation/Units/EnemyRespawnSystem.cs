@@ -19,8 +19,13 @@ namespace ProjectM.Units
         private readonly ISightRule _sight;
         private readonly int _bossFloor;
 
-        public EnemyRespawnSystem(World world, SpawnConfig spawn, UnitDef enemyDef, ICommandSource ai, ISightRule sight, int bossFloor)
+        private readonly ProjectM.Dungeon.ZoneBook _zones;
+
+        /// <param name="zones">3-17a 구역 표 — 있으면 보스 층 판정 · 적 종류를 구역에서 (난수 RngStream.EnemyKind). null이면 enemyDef · bossFloor.</param>
+        public EnemyRespawnSystem(World world, SpawnConfig spawn, UnitDef enemyDef, ICommandSource ai, ISightRule sight, int bossFloor,
+            ProjectM.Dungeon.ZoneBook zones = null)
         {
+            _zones = zones;
             _world = world ?? throw new ArgumentNullException(nameof(world));
             _spawn = spawn ?? throw new ArgumentNullException(nameof(spawn));
             _enemyDef = enemyDef ?? throw new ArgumentNullException(nameof(enemyDef));
@@ -33,7 +38,7 @@ namespace ProjectM.Units
         {
             int interval = _spawn.RespawnIntervalTicks;
             if (interval <= 0 || (context.Tick + 1) % interval != 0) return;
-            if (_world.Floor == _bossFloor) return;
+            if (_zones != null ? _zones.IsBossFloor(_world.Floor) : _world.Floor == _bossFloor) return;
             if (!PlayerActions.TryGetPlayer(_world, out var player) || !player.IsAlive) return;
 
             int alive = 0;
@@ -44,7 +49,8 @@ namespace ProjectM.Units
             var cells = Candidates(player);
             if (cells.Count == 0) return;
             var cell = cells[_world.Rng.Get(RngStream.Spawn).Range(0, cells.Count)];
-            UnitSpawner.SpawnEnemy(_world, _enemyDef, cell, _ai);
+            var def = _zones != null ? _zones.PickEnemy(_world.Floor, _world.Rng.Get(RngStream.EnemyKind)) : _enemyDef;
+            UnitSpawner.SpawnEnemy(_world, def, cell, _ai);
         }
 
         /// <summary>후보 칸 (y → x 순): 바닥 · 비어 있음 · 지금 플레이어에게 안 보임.</summary>

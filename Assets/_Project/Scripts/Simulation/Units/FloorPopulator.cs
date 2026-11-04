@@ -31,6 +31,17 @@ namespace ProjectM.Units
                 UnitSpawner.SpawnEnemy(world, enemyDef, cell, enemyAi);
         }
 
+        /// <summary>적만 놓는다 — 종류를 칸마다 고른다 (3-17a 구역 표, 난수는 부른 쪽 — RngStream.EnemyKind). 칸 뽑기는 위와 같다.</summary>
+        public static void PopulateEnemies(World world, GridPos start, Func<UnitDef> pick, SpawnConfig spawn, ICommandSource enemyAi)
+        {
+            if (world == null) throw new ArgumentNullException(nameof(world));
+            if (pick == null) throw new ArgumentNullException(nameof(pick));
+            if (spawn == null) throw new ArgumentNullException(nameof(spawn));
+            var cells = PickEnemyCells(world.Map, start, spawn.EnemyCount, spawn.EnemyMinDistanceFromStart, world.Rng.Get(RngStream.MapGen), world.Traps.Has);
+            foreach (var cell in cells)
+                UnitSpawner.SpawnEnemy(world, pick(), cell, enemyAi);
+        }
+
         /// <summary>후보 칸에서 count개를 겹치지 않게 뽑는다 (부분 Fisher-Yates, 후보는 y → x 순).</summary>
         /// <param name="exclude">빼는 칸 (3-12a 함정). null이면 없음.</param>
         public static List<GridPos> PickEnemyCells(GridMap map, GridPos start, int count, int minDistance, IRng rng, Func<GridPos, bool> exclude = null)

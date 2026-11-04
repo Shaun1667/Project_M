@@ -50,7 +50,7 @@ namespace ProjectM.Core
             || IsDoorType(type);
 
         /// <summary>벽처럼 보이는 칸 (3-12b): 벽 · 숨겨진 문 — 화면 · 벽 모양 판정용.</summary>
-        public static bool IsWallLikeType(TileType type) => type == TileType.Wall || type == TileType.HiddenDoor;
+        public static bool IsWallLikeType(TileType type) => type == TileType.Wall || type == TileType.HiddenDoor || type == TileType.SealedStairs; // 3-17a
 
         /// <summary>문 (3-11c): 닫힌 문 · 열린 문 (숨겨진 문은 찾기 전까지 벽).</summary>
         public static bool IsDoorType(TileType type) => type == TileType.Door || type == TileType.OpenDoor;

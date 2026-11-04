@@ -24,6 +24,7 @@ namespace ProjectM
         [SerializeField] private UnitDefAsset _playerDef;
         [SerializeField] private UnitDefAsset _enemyDef;
         [Tooltip("마지막 층(보스 층)의 임시 보스 (3-4b)")] [SerializeField] private UnitDefAsset _bossDef;
+        [Tooltip("구역 표 (3-17a) — 있으면 층마다 적 종류 · 보스 층을 여기서. 없으면 위 적 · 보스")] [SerializeField] private ZoneCatalogAsset _zoneCatalog;
         [SerializeField] private SpawnConfigAsset _spawnConfig;
         [SerializeField] private MagicConfigAsset _magicConfig;
         [SerializeField] private SpellCatalogAsset _spellCatalog;
@@ -219,11 +220,15 @@ namespace ProjectM
             // 3-4a: 적 재생성(⑤) · 계단 사용(틱 밖 — 입력이 부른다)
             var spawn = _spawnConfig.ToConfig();
             var enemyDef = _enemyDef.ToDef();
+            var zones = _zoneCatalog != null ? _zoneCatalog.ToBook() : null; // 3-17a
+            if (zones != null && zones.FloorCount != dungeonConfig.FloorCount)
+                Debug.LogWarning($"[GameRoot] 구역 표의 층 수 {zones.FloorCount} ≠ DungeonGenConfig 층 수 {dungeonConfig.FloorCount}", this);
+            var kindRng = World.Rng.Get(RngStream.EnemyKind);
             var enemyAi = new MeleeChaserAi(World, Config, sight, Statuses); // 3-13a: 투명
             System.Func<World, EntityId, ICommandSource> aiFactory = (w, id) =>
                 !w.Units.TryGet(id, out var u) ? enemyAi : u.Faction == Faction.Ally ? allyAi
                 : u.Faction == Faction.Neutral ? new ProjectM.Dungeon.IdleNeutralAi() : (ICommandSource)enemyAi; // 떠났던 층의 분신 · 상인
-            World.Scheduler.AddSystem(TickPhase.ManaRegen, new EnemyRespawnSystem(World, spawn, enemyDef, enemyAi, sight, dungeonConfig.FloorCount));
+            World.Scheduler.AddSystem(TickPhase.ManaRegen, new EnemyRespawnSystem(World, spawn, enemyDef, enemyAi, sight, dungeonConfig.FloorCount, zones));
             var loot = _lootConfig != null ? _lootConfig.ToConfig() : null;
             if (loot != null) World.Scheduler.AddSystem(TickPhase.ManaRegen, new ItemPickupSystem(World, Items)); // 3-5: 걸어 들어가면 줍기
             var decor = _floorDecorConfig != null ? _floorDecorConfig.ToConfig() : null;
@@ -233,7 +238,7 @@ namespace ProjectM
             if (traps != null) World.Scheduler.AddSystem(TickPhase.ManaRegen, new TrapSystem(World, traps, Spells)); // ⑤ 밟으면 발동
             Terrains.TryGet(TerrainEffectType.Water, out var water); // 3-11a: 물 웅덩이 = 사라지지 않는 물 지형
             var stairs = new FloorTransition(World, generator, dungeonConfig.FloorCount, enemyDef, spawn, aiFactory, vision, _bossDef.ToDef(), loot,
-                decor, water, traps, _floorDecorConfig != null ? _floorDecorConfig.ToShop() : null, Items); // 3-15c 상점
+                decor, water, traps, _floorDecorConfig != null ? _floorDecorConfig.ToShop() : null, Items, zones); // 3-15c 상점 · 3-17a 구역
 
             if (_pixelMap != null) _pixelMap.Bind(World.Events); // P-3a 2D 맵 — 3D 맵은 묶지 않음
             else _tilemapPresenter.Bind(World.Events);
@@ -251,7 +256,13 @@ namespace ProjectM
             if (decor != null) FloorDecor.Apply(World, Floor, decor, water, traps); // 3-11a · 3-12a: MapLoaded 뒤에 (화면이 지우지 않게), 적 배치 전
             var playerDef = _playerDef.ToDef();
             if (!string.IsNullOrEmpty(visualId)) playerDef = playerDef.WithVisualId(visualId); // 2026-10-21 캐릭터 선택 — 지금은 외형만
-            var player = FloorPopulator.Populate(World, Floor.Start, playerDef, enemyDef, spawn, enemyAi,
+            Unit player;
+            if (zones != null) // 3-17a: 1층 적 종류도 구역 표에서
+            {
+                player = UnitSpawner.SpawnPlayer(World, playerDef, Floor.Start, Magic.QuickSlotCount, Magic.InventorySlotCount);
+                FloorPopulator.PopulateEnemies(World, Floor.Start, () => zones.PickEnemy(1, kindRng), spawn, enemyAi);
+            }
+            else player = FloorPopulator.Populate(World, Floor.Start, playerDef, enemyDef, spawn, enemyAi,
                 Magic.QuickSlotCount, Magic.InventorySlotCount);
             _playerId = player.Id;
             var startingArmor = playerDef.StartingArmor;
@@ -265,11 +276,13 @@ namespace ProjectM
             if (loot != null)
             {
                 // 3-5: 한 판의 마법서 배치 계획(1~마지막 전 층) → 1층 몫을 놓는다 (Loot 난수 — 맵 · 적 배치는 그대로)
-                Loot.PlanSpellbooks(World, Items, loot, dungeonConfig.FloorCount);
-                Loot.PlanWeapons(World, Items, loot, dungeonConfig.FloorCount); // 3-7a: 책 계획 뒤에 붙인다
-                Loot.PlanConsumables(World, Items, loot, dungeonConfig.FloorCount); // 3-7b: 강화 주문서 · 힘 물약 (무기 계획 뒤)
+                // 3-17a: 한 번만 놓는 것(책 · 무기 · 갑옷 · 강화)은 앞 층(LootPlanFloors)에만 — 계획 함수는 '층 수 − 1'개 층에 나눈다
+                int planFloors = zones != null && _zoneCatalog.LootPlanFloors > 0 ? System.Math.Min(dungeonConfig.FloorCount, _zoneCatalog.LootPlanFloors + 1) : dungeonConfig.FloorCount;
+                Loot.PlanSpellbooks(World, Items, loot, planFloors);
+                Loot.PlanWeapons(World, Items, loot, planFloors); // 3-7a: 책 계획 뒤에 붙인다
+                Loot.PlanConsumables(World, Items, loot, planFloors); // 3-7b: 강화 주문서 · 힘 물약 (무기 계획 뒤)
                 Loot.PlanRandomConsumables(World, Items, consumableConfig, dungeonConfig.FloorCount); // 3-9: 층마다 무작위 물약 · 주문서
-                Loot.PlanArmors(World, Items, loot, dungeonConfig.FloorCount); // 3-10a: 갑옷 (앞 계획 뒤)
+                Loot.PlanArmors(World, Items, loot, planFloors); // 3-10a: 갑옷 (앞 계획 뒤)
                 if (hunger != null) Loot.PlanFood(World, Items, hunger, dungeonConfig.FloorCount); // 3-14: 층마다 식량 1 + 가끔 빵 (앞 계획 뒤)
             }
             Identification.AssignLooks(World, Items, consumableConfig); // 3-9: 판마다 겉모습 (배치 계획 모두 뒤 — 앞 계획은 그대로)

@@ -107,7 +107,8 @@ namespace ProjectM.Dungeon
         /// 왼쪽 끝 가운데 = 올라가는 계단(Start), 오른쪽 끝 가운데 = 보스 자리(Exit, 바닥). 기둥 4개 — 방을 가로 · 세로로 4등분한 점 ✎.
         /// 난수를 쓰지 않는다 (맵 생성 수열을 건드리지 않음).
         /// </summary>
-        public DungeonFloor GenerateBossRoom()
+        /// <param name="sealedExit">3-17a 중간 보스 방: 보스 자리 뒤 벽에 봉인된 계단(보스가 죽으면 내려가는 계단).</param>
+        public DungeonFloor GenerateBossRoom(bool sealedExit = false)
         {
             var c = _config;
             var map = new GridMap(c.Width, c.Height);
@@ -130,6 +131,7 @@ namespace ProjectM.Dungeon
             var start = new GridPos(left, midY);
             var boss = new GridPos(right, midY);
             map.Set(start, TileType.StairsUp);
+            if (sealedExit) map.Set(new GridPos(right + 1, midY), TileType.SealedStairs);
             return new DungeonFloor(map, start, boss);
         }
 

@@ -40,7 +40,17 @@ namespace ProjectM.Units
                 }
                 if (run.Outcome != RunOutcome.None) continue;
                 if (unit.Faction == Faction.Player) End(RunOutcome.Defeat);
-                else if (run.BossId.IsValid && unit.Id == run.BossId) End(RunOutcome.Victory);
+                else if (run.BossId.IsValid && unit.Id == run.BossId)
+                {
+                    // 3-17a: 중간 보스 방(봉인된 계단이 있음)이면 계단이 열리고, 없으면(마지막 보스) 승리
+                    var sealedStairs = _world.Map.Find(TileType.SealedStairs);
+                    if (sealedStairs.HasValue)
+                    {
+                        _world.SetTile(sealedStairs.Value, TileType.StairsDown);
+                        _world.Events.Publish(new ProjectM.Dungeon.StairsUnsealedEvent(sealedStairs.Value));
+                    }
+                    else End(RunOutcome.Victory);
+                }
             }
         }
 

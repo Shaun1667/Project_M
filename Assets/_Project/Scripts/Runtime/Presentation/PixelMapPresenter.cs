@@ -102,7 +102,8 @@ namespace ProjectM.Presentation
                 case TileType.StairsDown: return _tiles.StairsDown;
                 case TileType.StairsUp: return _tiles.StairsUp;
                 case TileType.Wall:
-                case TileType.HiddenDoor: return _tiles.Wall; // 3-12b: 찾기 전엔 벽
+                case TileType.HiddenDoor: // 3-12b: 찾기 전엔 벽
+                case TileType.SealedStairs: return _tiles.Wall; // 3-17a
                 default: return null;
             }
         }

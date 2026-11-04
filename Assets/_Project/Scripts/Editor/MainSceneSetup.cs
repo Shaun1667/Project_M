@@ -44,6 +44,7 @@ namespace ProjectM.Editor
         private const string LootConfigPath = "Assets/_Project/Data/Items/LootConfig.asset";
         private const string FloorDecorConfigPath = "Assets/_Project/Data/Dungeon/FloorDecorConfig.asset";
         private const string TrapCatalogPath = "Assets/_Project/Data/Dungeon/TrapCatalog.asset";
+        private const string ZoneCatalogPath = "Assets/_Project/Data/Units/ZoneCatalog.asset";
         private const string ConsumableConfigPath = "Assets/_Project/Data/Items/ConsumableConfig.asset";
         private const string HungerConfigPath = "Assets/_Project/Data/Units/HungerConfig.asset";
         // P-3a (결정 2026-10-21): 2D 픽셀 그래픽 — Grid를 눕히지 않고 정사영 카메라, 맵은 PixelMapPresenter. false면 G-1 3D 그대로
@@ -251,6 +252,7 @@ namespace ProjectM.Editor
             var floorDecorConfig = LoadOrCreate<FloorDecorConfigAsset>(FloorDecorConfigPath); // 3-11a: 풀 · 물 웅덩이, 새로 만들면 필드 초기값 = BALANCE 16번
             var trapCatalog = EnsureTrapCatalog(); // 3-12a
             var hungerConfig = LoadOrCreate<HungerConfigAsset>(HungerConfigPath); // 3-14: 새로 만들면 필드 초기값 = BALANCE 18번
+            var zoneCatalog = EnsureZoneCatalog(); // 3-17a: 적 종류 · 구역 표 (BALANCE 20번)
             var floorItemsGo = FindOrCreate("FloorItems", null);
             var floorItems = GetOrAdd<FloorItemPresenter>(floorItemsGo);
             var itemVisuals = EnsureItemIcons(); // P-3 ⓒ: 아이템 픽셀 그림 (Art/Pixel/Items — 파일 이름 = 아이템 ID 또는 겉모습 키)
@@ -293,6 +295,7 @@ namespace ProjectM.Editor
                 ("_floorDecorConfig", floorDecorConfig),
                 ("_trapCatalog", trapCatalog),
                 ("_hungerConfig", hungerConfig),
+                ("_zoneCatalog", zoneCatalog),
                 ("_traps", trapPresenter),
                 ("_consumableConfig", consumableConfig),
                 ("_characters", characterCatalog),
@@ -559,6 +562,30 @@ namespace ProjectM.Editor
 
         /// <summary>반응 규칙 표: 없는 ID만 REACTIONS.md 3-1 표 · BALANCE 8번 값으로 추가한다.</summary>
         /// <summary>함정 7종 (3-12a, BALANCE 17번): 없는 종류만 추가 (사용자가 고친 값은 그대로). 배치 수치는 새 에셋의 필드 초기값.</summary>
+        /// <summary>3-17a 적 종류 · 구역 표 (BALANCE 20번) — 없는 줄만 더한다 (사용자가 고친 값은 그대로).</summary>
+        private static ZoneCatalogAsset EnsureZoneCatalog()
+        {
+            var catalog = LoadOrCreate<ZoneCatalogAsset>(ZoneCatalogPath);
+            bool changed = false;
+            ZoneCatalogAsset.Enemy E(string id, string name, int hp, int dmg, int sight, int acc, int eva, int exp, int maxLvl) =>
+                new ZoneCatalogAsset.Enemy { Id = id, DisplayName = name, MaxHp = hp, AttackDamage = dmg, SightRange = sight, Accuracy = acc, Evasion = eva, ExpReward = exp, ExpMaxLevel = maxLvl };
+            changed |= catalog.AddIfMissing(E("enemy_melee", "적", 8, 2, 6, 8, 2, 1, 5)); // 3-17a 전 적 (MeleeEnemy.asset 값)
+            changed |= catalog.AddIfMissing(E(BossVisualId, "보스", 60, 5, 10, 10, 8, 10, 30)); // 3-4b 임시 보스 (Boss.asset 값)
+            ZoneCatalogAsset.Zone Z(string name, int first, int last, int percent, string boss, params (string id, int weight)[] enemies)
+            {
+                var rows = new System.Collections.Generic.List<ZoneCatalogAsset.ZoneEnemyRow>();
+                foreach (var (id, weight) in enemies) rows.Add(new ZoneCatalogAsset.ZoneEnemyRow { EnemyId = id, Weight = weight });
+                return new ZoneCatalogAsset.Zone { Name = name, FirstFloor = first, LastFloor = last, StatPercent = percent, BossId = boss, Enemies = rows };
+            }
+            changed |= catalog.AddIfMissing(Z("숲 속 동굴", 1, 5, 100, BossVisualId, ("enemy_melee", 1)));
+            changed |= catalog.AddIfMissing(Z("사막 피라미드", 6, 10, 150, BossVisualId, ("enemy_melee", 1)));
+            changed |= catalog.AddIfMissing(Z("3구역 (임시)", 11, 15, 200, null, ("enemy_melee", 1)));
+            changed |= catalog.AddIfMissing(Z("4구역 (임시)", 16, 20, 250, null, ("enemy_melee", 1)));
+            changed |= catalog.AddIfMissing(Z("5구역 (임시)", 21, 25, 300, BossVisualId, ("enemy_melee", 1)));
+            if (changed) EditorUtility.SetDirty(catalog);
+            return catalog;
+        }
+
         private static TrapCatalogAsset EnsureTrapCatalog()
         {
             var catalog = LoadOrCreate<TrapCatalogAsset>(TrapCatalogPath);

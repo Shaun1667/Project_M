@@ -17,5 +17,7 @@ namespace ProjectM.Core
         Decor = 5,
         /// <summary>저절로 발견 (3-12b). 전투 난수와 따로 — 찾기가 전투 결과를 바꾸지 않게.</summary>
         Search = 6,
+        /// <summary>적 종류 고르기 (3-17a 구역 표). 맵 생성과 따로 — 적 칸 · 다음 층 모양이 그대로.</summary>
+        EnemyKind = 7,
     }
 }
