@@ -34,6 +34,11 @@ namespace ProjectM.Data
             [Header("물약 · 주문서 (3-9, BALANCE 14번)")]
             [Tooltip("Potion · Scroll만: 효과")] public ConsumableEffect Effect;
             [Tooltip("층마다 무작위로 놓을 때의 무게 (SPD). 0 = 무작위로 안 놓음 (힘 · 강화는 보장 수로만)")] public int Weight;
+            [Header("음식 (3-14)")]
+            [Tooltip("Food만: 먹으면 줄어드는 허기 — 식량 300 · 빵 · 고기 150")] public int Food;
+            [Tooltip("먹으면 나쁜 상태가 걸릴 수 있음 (정체불명 고기)")] public bool Risky;
+            [Tooltip("바닥에서 불을 맞으면 바뀌는 아이템 (구운 고기)")] public string FireTransformsTo;
+            [Tooltip("바닥에서 얼음을 맞으면 바뀌는 아이템 (얼린 고기)")] public string IceTransformsTo;
         }
 
         [SerializeField] private List<Entry> _items = new List<Entry>();
@@ -57,7 +62,7 @@ namespace ProjectM.Data
                     ? new WeaponDef(e.MaxDamage, e.UpgradeEfficiency, Mathf.RoundToInt(e.Accuracy * 100f), e.AttackCostTicks, e.Reach, e.StrengthRequirement, e.SurpriseMinPercent, e.Defense)
                     : null;
                 var armor = e.Use == ItemUse.EquipArmor ? new ArmorDef(e.Tier, e.StrengthRequirement) : null;
-                defs.Add(new ItemDef(e.Id, e.Use, e.SpellId, weapon, e.Amount, e.Effect, e.Weight, armor));
+                defs.Add(new ItemDef(e.Id, e.Use, e.SpellId, weapon, e.Amount, e.Effect, e.Weight, armor, e.Food, e.Risky, e.FireTransformsTo, e.IceTransformsTo));
             }
             return new ItemBook(defs, new WeaponRules(_weaponDamageDivisor, _weaponMinDamage), new ArmorRules(_armorDefenseDivisor, _armorDeficitPenalty));
         }

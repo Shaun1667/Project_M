@@ -72,6 +72,8 @@ namespace ProjectM.Input
         private ProjectM.Dungeon.FloorTransition _stairs;
         /// <summary>찾기 수치 (3-12b). null이면 찾기 키를 무시.</summary>
         private ProjectM.Dungeon.SearchConfig _search;
+        /// <summary>허기 수치 (3-14). null이면 음식을 먹을 수 없음.</summary>
+        private HungerConfig _hunger;
         /// <summary>찾기 키 (3-12b) — S는 이동(WASD)이라 Z.</summary>
         private const Key SearchKey = Key.Z;
         private bool _stairsHintShown;
@@ -134,10 +136,11 @@ namespace ProjectM.Input
 
         public void Bind(World world, GameConfig config, ITickClock clock, ISightRule sight, SpellBook spells, ITargetingRule targeting,
             ItemBook items, FusionBook fusions, ProjectM.Dungeon.FloorTransition stairs = null, ConsumableRules consumables = null,
-            ProjectM.Dungeon.SearchConfig search = null)
+            ProjectM.Dungeon.SearchConfig search = null, HungerConfig hunger = null)
         {
             Unbind();
             _search = search;
+            _hunger = hunger;
             _world = world;
             _config = config;
             _clock = clock;
@@ -359,6 +362,14 @@ namespace ProjectM.Input
                 int index = System.Array.IndexOf(holder.InventorySlots, entry);
                 CloseInventory();
                 _clock.SubmitPlayerCommand(new EquipWeaponCommand(_world, _items, index, entry, _config.DefaultActionCostTicks));
+                return;
+            }
+            if (_hunger != null && _items.TryGet(entry.Id, out var food) && food.Use == ItemUse.Food && PlayerActions.TryGetPlayer(_world, out var eater))
+            {
+                // 3-14: 먹기 = 차례 EatTicks (SPD 3)
+                int index = System.Array.IndexOf(eater.InventorySlots, entry);
+                CloseInventory();
+                _clock.SubmitPlayerCommand(new EatCommand(_world, _items, _spells.Statuses, _hunger, index, entry));
                 return;
             }
             if (_items.TryGet(entry.Id, out var consumable) && consumable.IsConsumable && PlayerActions.TryGetPlayer(_world, out var user))

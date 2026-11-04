@@ -24,6 +24,7 @@
 | 13 | 무기 (3-7a) | `ItemCatalog.asset`의 무기 줄 · 공통 값 (`ItemCatalogAsset`) — 9번과 같은 에셋 | `ProjectM.Items.WeaponDef` · `WeaponRules` · `Weapons` · `ProjectM.Units.EquippedWeapon` | 사용 중 (3-7a) |
 | 12 | 경험치 · 레벨업 | `Assets/_Project/Data/Units/ProgressionConfig.asset` (`ProgressionConfigAsset`) + 유닛 에셋의 명중 · 회피 · 경험치 (3번) | `ProjectM.Units.ProgressionConfig` · `Progression` | 사용 중 (3-6) |
 | 15 | 갑옷 (3-10a) | `ItemCatalog.asset`의 갑옷 줄 · 갑옷 공통 값 + `Player.asset`의 `_startingArmor` + `LootConfig.asset`의 `_armorsPerRun` | `ProjectM.Items.ArmorDef` · `ArmorRules` · `Armors` · `ProjectM.Units.EquippedArmor` | 사용 중 (3-10a) |
+| 18 | 허기 · 음식 (3-14) | `Assets/_Project/Data/Units/HungerConfig.asset` (`HungerConfigAsset`) + `ItemCatalog.asset`의 음식 5줄 | `ProjectM.Units.HungerConfig` · `Hunger` · `HungerSystem` · `EatCommand` | 사용 중 (3-14) |
 | 17 | 함정 (3-12a) | `Assets/_Project/Data/Dungeon/TrapCatalog.asset` (`TrapCatalogAsset`) + `SpellCatalog.asset`의 `trap_*` 5줄 | `ProjectM.Dungeon.TrapBook` · `Traps` · `TrapSystem` | 사용 중 (3-12a) |
 | 16 | 층 꾸미기 (풀 · 물 웅덩이) | `Assets/_Project/Data/Dungeon/FloorDecorConfig.asset` (`FloorDecorConfigAsset`) | `ProjectM.Dungeon.FloorDecorConfig` · `FloorDecor` · `GrassTrampleSystem` | 사용 중 (3-11a) |
 | 14 | 물약 · 주문서 (효과 · 식별 · 무작위 배치 · 던지기) | `Assets/_Project/Data/Items/ConsumableConfig.asset` (`ConsumableConfigAsset`) + `ItemCatalog.asset`의 `Effect` · `Weight` (9번) | `ProjectM.Items.ConsumableConfig` · `Consumables` · `Identification` · `Throwing` | 사용 중 (3-9) |
@@ -585,6 +586,34 @@ SPD 규칙 그대로: 방어 굴림 = 강화 ~ 티어 × (2 + 강화) (SPD Armor
 - 결과: 10%면 숨겨진 함정 옆에 한 턴 서 있을 때 찾을 확률 10%, 지나가며 옆을 2턴 스치면 약 19%. 의심되면 찾기(2턴)로 확실히.
 
 검산 (`TrapTests.ProjectAssets_MatchBalanceTable`).
+
+---
+
+## 18. 허기 · 음식 — `Data/Units/HungerConfig.asset` + `ItemCatalog.asset`의 음식 줄 (3-14)
+
+결정 (2026-11-04, 사용자 — 모두 추천안): 수치 **SPD 그대로** · 음식 = **식량 · 작은 빵 · 정체불명 고기 + 불 요리** · 배치 = **층마다 식량 1 보장 + 가끔 빵**, 판 시작 배낭에 식량 1.
+
+| 값 | 필드 | 값 | 뜻 |
+|---|---|---|---|
+| 배고픔 | `_hungryAt` | **300** | 허기(플레이어만, 매 턴 +1)가 이 값 이상 — 알림만 |
+| 굶주림 | `_starvingAt` | **450** | 이 값에서 멈춤 · 매 턴 피해 `_starveDamage` **1** · 자동 회복 멈춤 |
+| 먹기 비용 | `_eatTicks` | **3** 턴 | SPD |
+| 정체불명 고기 | `_riskyFoodBadPercent` · `_riskyFoodStatuses` | **60**% · 화상 · 둔화 · 중독 중 하나 | [임시] (SPD는 5가지 중 하나 · 없음) |
+| 고기 떨어뜨리기 | `_enemyDropItem` · `_enemyDropPercent` | 정체불명 고기 · **15**% | 적이 죽을 때 그 칸 [임시] |
+| 층 음식 | `_floorFoodItem` · `_bonusFoodItem` · `_bonusFoodPercent` | 식량 · 작은 빵 · **50**% | 1~마지막 전 층 (Loot 난수, 계획 끝) |
+| 시작 음식 | `_startingFood` | 식량 | |
+
+| 음식 | ID | 허기 감소 | 비고 |
+|---|---|---|---|
+| 식량 | `food_ration` | **300** | |
+| 작은 빵 | `food_bread` | **150** | |
+| 정체불명 고기 | `food_mystery_meat` | **150** | 위험 — 바닥에서 **불**을 맞으면 구운 고기, **얼음**이면 얼린 고기 (주문 · 함정 효과 칸) |
+| 구운 고기 | `food_cooked_meat` | **150** | 안전 |
+| 얼린 고기 | `food_frozen_meat` | **150** | 안전 |
+
+결과: 450턴(약 층 2~3개)을 안 먹으면 굶주림 — 층마다 식량 1(300)이라 서두르지 않아도 모자라지 않음. 음식은 겹친다(배낭 한 칸).
+
+검산 (`HungerTests.ProjectAsset_MatchesBalanceTable`).
 
 ---
 

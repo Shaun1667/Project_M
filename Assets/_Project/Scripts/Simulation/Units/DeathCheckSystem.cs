@@ -31,6 +31,7 @@ namespace ProjectM.Units
                 _world.Scheduler.Unregister(unit.Id);
                 _world.Events.Publish(new UnitDiedEvent(unit.Id, unit.Faction));
                 _world.Events.Publish(new EntityRemovedEvent(unit.Id));
+                _world.OnUnitDied?.Invoke(unit); // 3-14: 고기 떨어뜨리기
 
                 if (unit.Faction == Faction.Enemy)
                 {

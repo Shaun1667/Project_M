@@ -70,9 +70,12 @@ namespace ProjectM.Magic
     {
         private readonly World _world;
         private readonly MagicConfig _config;
+        private readonly HungerConfig _hunger;
 
-        public HpRegenSystem(World world, MagicConfig config)
+        /// <param name="hunger">3-14: 굶주림이면 회복하지 않는다. null이면 허기 없음.</param>
+        public HpRegenSystem(World world, MagicConfig config, HungerConfig hunger = null)
         {
+            _hunger = hunger;
             _world = world ?? throw new ArgumentNullException(nameof(world));
             _config = config ?? throw new ArgumentNullException(nameof(config));
         }
@@ -84,6 +87,7 @@ namespace ProjectM.Magic
             foreach (var unit in _world.Units.ToSortedList())
             {
                 if (unit.Faction != Faction.Player || !unit.IsAlive || unit.Hp >= unit.MaxHp) continue;
+                if (_hunger != null && Hunger.StateOf(_hunger, unit.Hunger) == HungerState.Starving) continue;
                 int healed = Math.Min(_config.HpRegenAmount(unit.MaxHp), unit.MaxHp - unit.Hp);
                 if (healed <= 0) continue;
                 unit.Hp += healed;

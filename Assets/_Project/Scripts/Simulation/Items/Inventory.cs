@@ -73,6 +73,8 @@ namespace ProjectM.Items
         Scroll = 5,
         /// <summary>갑옷 (3-10a): 쓰면 입는다 — 차례 1 (EquipWeaponCommand 공용), 입던 갑옷은 인벤토리로.</summary>
         EquipArmor = 6,
+        /// <summary>음식 (3-14): 먹으면 허기 −Food — 차례 HungerConfig.EatTicks (EatCommand). 겹친다.</summary>
+        Food = 7,
     }
 
     /// <summary>
@@ -150,9 +152,23 @@ namespace ProjectM.Items
         /// <summary>갑옷(EquipArmor)의 수치 (3-10a). 그 밖에는 null.</summary>
         public ArmorDef Armor { get; }
 
+        /// <summary>음식(Food)이 줄이는 허기 (3-14). 그 밖에는 0.</summary>
+        public int Food { get; }
+        /// <summary>먹으면 나쁜 상태가 걸릴 수 있다 (3-14 정체불명 고기).</summary>
+        public bool Risky { get; }
+        /// <summary>바닥에서 불 · 얼음을 맞으면 바뀌는 아이템 (3-14 요리). 없으면 null.</summary>
+        public string FireTransformsTo { get; }
+        public string IceTransformsTo { get; }
+
         public ItemDef(string id, ItemUse use, string spellId = null, WeaponDef weapon = null, int amount = 0,
-            ConsumableEffect effect = ConsumableEffect.None, int weight = 0, ArmorDef armor = null)
+            ConsumableEffect effect = ConsumableEffect.None, int weight = 0, ArmorDef armor = null,
+            int food = 0, bool risky = false, string fireTransformsTo = null, string iceTransformsTo = null)
         {
+            if (use == ItemUse.Food && food < 1) throw new ArgumentOutOfRangeException(nameof(food), food, "음식의 허기 감소는 1 이상: " + id);
+            Food = use == ItemUse.Food ? food : 0;
+            Risky = use == ItemUse.Food && risky;
+            FireTransformsTo = string.IsNullOrEmpty(fireTransformsTo) ? null : fireTransformsTo;
+            IceTransformsTo = string.IsNullOrEmpty(iceTransformsTo) ? null : iceTransformsTo;
             if (use == ItemUse.EquipArmor && armor == null) throw new ArgumentException("갑옷 수치가 없다: " + id, nameof(armor));
             Armor = use == ItemUse.EquipArmor ? armor : null;
             bool consumable = use == ItemUse.Potion || use == ItemUse.Scroll;
@@ -250,7 +266,7 @@ namespace ProjectM.Items
 
         /// <summary>겹치는 항목인지 (3-10b): 물약 · 주문서.</summary>
         public static bool IsStackable(ItemBook items, InventoryRef entry) =>
-            entry.Kind == InventoryKind.Item && items != null && items.TryGet(entry.Id, out var def) && def.IsConsumable;
+            entry.Kind == InventoryKind.Item && items != null && items.TryGet(entry.Id, out var def) && (def.IsConsumable || def.Use == ItemUse.Food); // 3-14 음식도
 
         /// <summary>인벤토리 칸에서 하나를 뺀다 (겹친 칸은 개수 −1). 칸이 비었고 그 항목이 인벤토리에 더 없으면 가리키던 빠른 칸도 비운다.</summary>
         public static void RemoveAt(World world, Unit unit, int index)

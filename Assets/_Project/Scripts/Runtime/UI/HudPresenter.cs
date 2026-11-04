@@ -105,7 +105,8 @@ namespace ProjectM.UI
             SetBar(_xpFill, _xpLabel, null, _model.ExpToNext > 0 ? _model.Exp : 1, _model.ExpToNext > 0 ? _model.ExpToNext : 1);
             if (_xpLabel != null) _xpLabel.text = HudText.ExpLabel(_model.Level, _model.Exp, _model.ExpToNext);
             if (_weaponLabel != null) _weaponLabel.text = _model.Text.WeaponLabel(_model.Weapon, _model.UnarmedDamage, _model.Strength);
-            if (_armorLabel != null) _armorLabel.text = _model.Text.ArmorLabel(_model.Armor, _model.Strength);
+            if (_armorLabel != null) _armorLabel.text = _model.Text.ArmorLabel(_model.Armor, _model.Strength)
+                + (_model.Hunger != HungerState.None ? "  " + HudText.HungerLabel(_model.Hunger) : string.Empty); // 3-14
             DrawStatusIcons();
             DrawQuickSlots();
 

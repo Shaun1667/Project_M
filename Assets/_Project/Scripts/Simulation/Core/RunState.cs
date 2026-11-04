@@ -18,6 +18,8 @@ namespace ProjectM.Core
         Terrain = 5,
         /// <summary>물약 · 주문서 (3-9 응징 등) — Id = 아이템 ID.</summary>
         Item = 6,
+        /// <summary>굶주림 (3-14).</summary>
+        Hunger = 7,
     }
 
     /// <summary>피해 하나의 출처 (3-4b). 값 타입 — 이벤트 · 저장에 그대로 쓴다.</summary>
@@ -42,6 +44,7 @@ namespace ProjectM.Core
         public static DamageCause FromStatus(StatusType type) => new DamageCause(DamageKind.Status, status: type);
         public static DamageCause FromTerrain(TerrainEffectType type) => new DamageCause(DamageKind.Terrain, terrain: type);
         public static DamageCause Item(string id) => new DamageCause(DamageKind.Item, id);
+        public static DamageCause Hunger => new DamageCause(DamageKind.Hunger);
     }
 
     /// <summary>한 판의 결과 (3-4b). 끝에만 추가한다.</summary>

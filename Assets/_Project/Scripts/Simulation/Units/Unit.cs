@@ -40,6 +40,8 @@ namespace ProjectM.Units
         public int Strength { get; internal set; }
         /// <summary>입은 갑옷 (3-10a). Empty = 맨몸. Items.Armors로만 바꾼다.</summary>
         public EquippedArmor Armor { get; internal set; }
+        /// <summary>허기 (3-14 — 플레이어만 오름, HungerSystem). 0 = 배부름.</summary>
+        public int Hunger { get; internal set; }
 
         public GridPos Pos { get; internal set; }
         public int Hp { get; internal set; }
@@ -82,8 +84,9 @@ namespace ProjectM.Units
             GridPos? lastSeenTargetPos = null, int maxMana = 0, int mana = 0, InventoryRef[] inventorySlots = null, InventoryRef[] quickSlots = null,
             GridPos? previousPos = null, GridPos? wanderTarget = null,
             int accuracy = 0, int evasion = 0, int expReward = 0, int expMaxLevel = 0, int level = 1, int exp = 0,
-            EquippedWeapon weapon = default, int strength = 0, EquippedArmor armor = default)
+            EquippedWeapon weapon = default, int strength = 0, EquippedArmor armor = default, int hunger = 0)
         {
+            Hunger = hunger;
             Armor = armor;
             Weapon = weapon;
             Strength = strength;

@@ -45,6 +45,7 @@ namespace ProjectM.Editor
         private const string FloorDecorConfigPath = "Assets/_Project/Data/Dungeon/FloorDecorConfig.asset";
         private const string TrapCatalogPath = "Assets/_Project/Data/Dungeon/TrapCatalog.asset";
         private const string ConsumableConfigPath = "Assets/_Project/Data/Items/ConsumableConfig.asset";
+        private const string HungerConfigPath = "Assets/_Project/Data/Units/HungerConfig.asset";
         // P-3a (결정 2026-10-21): 2D 픽셀 그래픽 — Grid를 눕히지 않고 정사영 카메라, 맵은 PixelMapPresenter. false면 G-1 3D 그대로
         internal static readonly bool Pixel2D = false; // 결정 2026-10-28 (사용자): 3D로 되돌림 — 2D 코드 · 그림은 남겨 두고 이 스위치로만 끔
         private const int PixelsPerUnit = 64;
@@ -247,6 +248,7 @@ namespace ProjectM.Editor
             var consumableConfig = LoadOrCreate<ConsumableConfigAsset>(ConsumableConfigPath); // 3-9: 새로 만들면 필드 초기값 = BALANCE 14번
             var floorDecorConfig = LoadOrCreate<FloorDecorConfigAsset>(FloorDecorConfigPath); // 3-11a: 풀 · 물 웅덩이, 새로 만들면 필드 초기값 = BALANCE 16번
             var trapCatalog = EnsureTrapCatalog(); // 3-12a
+            var hungerConfig = LoadOrCreate<HungerConfigAsset>(HungerConfigPath); // 3-14: 새로 만들면 필드 초기값 = BALANCE 18번
             var floorItemsGo = FindOrCreate("FloorItems", null);
             var floorItems = GetOrAdd<FloorItemPresenter>(floorItemsGo);
             var itemVisuals = EnsureItemIcons(); // P-3 ⓒ: 아이템 픽셀 그림 (Art/Pixel/Items — 파일 이름 = 아이템 ID 또는 겉모습 키)
@@ -288,6 +290,7 @@ namespace ProjectM.Editor
                 ("_lootConfig", lootConfig),
                 ("_floorDecorConfig", floorDecorConfig),
                 ("_trapCatalog", trapCatalog),
+                ("_hungerConfig", hungerConfig),
                 ("_traps", trapPresenter),
                 ("_consumableConfig", consumableConfig),
                 ("_characters", characterCatalog),
@@ -860,6 +863,13 @@ namespace ProjectM.Editor
             changed |= catalog.AddIfMissing(Consumable("scroll_terror", "공포 주문서", ItemUse.Scroll, ConsumableEffect.Terror, 1));
             changed |= catalog.AddIfMissing(Consumable("scroll_lullaby", "자장가 주문서", ItemUse.Scroll, ConsumableEffect.Lullaby, 1));
             changed |= catalog.AddIfMissing(Consumable("scroll_transmutation", "변환 주문서", ItemUse.Scroll, ConsumableEffect.Transmutation, 1));
+            // 3-14 음식 (SPD): 식량 300 · 작은 빵 · 고기 150. 정체불명 고기는 불 = 구운 고기, 얼음 = 얼린 고기 (BALANCE 18번)
+            changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "food_ration", DisplayName = "식량", Use = ItemUse.Food, Food = 300 });
+            changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "food_bread", DisplayName = "작은 빵", Use = ItemUse.Food, Food = 150 });
+            changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "food_mystery_meat", DisplayName = "정체불명 고기", Use = ItemUse.Food, Food = 150, Risky = true,
+                FireTransformsTo = "food_cooked_meat", IceTransformsTo = "food_frozen_meat" });
+            changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "food_cooked_meat", DisplayName = "구운 고기", Use = ItemUse.Food, Food = 150 });
+            changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "food_frozen_meat", DisplayName = "얼린 고기", Use = ItemUse.Food, Food = 150 });
             changed |= catalog.AddIfMissing(Consumable("scroll_identify", "식별 주문서", ItemUse.Scroll, ConsumableEffect.Identify, 3));
             changed |= catalog.AddIfMissing(Consumable("scroll_magic_mapping", "지도 주문서", ItemUse.Scroll, ConsumableEffect.MagicMapping, 1));
             changed |= catalog.AddIfMissing(Consumable("scroll_teleportation", "순간이동 주문서", ItemUse.Scroll, ConsumableEffect.Teleportation, 1));

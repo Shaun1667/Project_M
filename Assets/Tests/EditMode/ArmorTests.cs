@@ -224,7 +224,7 @@ namespace ProjectM.Tests
             var restored = World.Restore(WorldSnapshotCodec.Decode(WorldSnapshotCodec.Encode(s.World.Capture())), (w, id) => new Idle());
             PlayerActions.TryGetPlayer(restored, out var p);
             Assert.That(p.Armor, Is.EqualTo(s.Player.Armor));
-            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.GreaterThanOrEqualTo(17), "3-10a 갑옷 (정확한 값은 BackpackTests — 19)");
+            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.GreaterThanOrEqualTo(17), "3-10a 갑옷 (정확한 값은 HungerTests — 20)");
         }
 
         [Test]

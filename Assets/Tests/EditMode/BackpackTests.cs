@@ -73,7 +73,7 @@ namespace ProjectM.Tests
         [Test]
         public void Snapshot_RoundTripsCounts()
         {
-            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.EqualTo(19), "3-10b 겹치기");
+            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.GreaterThanOrEqualTo(19), "3-10b 겹치기 (정확한 값은 HungerTests — 20)");
             var (world, player) = Start();
             for (int i = 0; i < 3; i++) Inventory.TryAdd(world, null, Items, player, InventoryRef.Item("potion_healing"));
             world.Events.Flush();

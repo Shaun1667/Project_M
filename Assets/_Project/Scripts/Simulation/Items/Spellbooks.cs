@@ -232,6 +232,24 @@ namespace ProjectM.Items
         }
 
         /// <summary>
+        /// 음식 (3-14, 결정 2026-11-04 — SPD): 1~마지막 전 층마다 FloorFoodItem 1개 + BonusFoodPercent로 BonusFoodItem 1개 (RngStream.Loot). 계획 끝에 붙인다.
+        /// </summary>
+        public static void PlanFood(World world, ItemBook items, HungerConfig config, int floorCount)
+        {
+            if (world == null) throw new ArgumentNullException(nameof(world));
+            if (items == null || config == null) return;
+            var rng = world.Rng.Get(RngStream.Loot);
+            var plan = new List<PendingFloorItem>();
+            for (int floor = 1; floor <= Math.Max(1, floorCount - 1); floor++)
+            {
+                if (config.FloorFoodItem != null && items.TryGet(config.FloorFoodItem, out _)) plan.Add(new PendingFloorItem(floor, config.FloorFoodItem));
+                if (config.BonusFoodItem != null && items.TryGet(config.BonusFoodItem, out _) && rng.Range(0, 100) < config.BonusFoodPercent)
+                    plan.Add(new PendingFloorItem(floor, config.BonusFoodItem));
+            }
+            if (plan.Count > 0) world.Run.AddPendingFloorItems(plan);
+        }
+
+        /// <summary>
         /// 층마다 무작위 물약 · 주문서 (3-9, 결정 2026-10-20 — SPD 무게): 1~마지막 전 층마다 물약 RandomPotionsPerFloor개 · 주문서 RandomScrollsPerFloor개를
         /// ItemDef.Weight 무게로 뽑아(RngStream.Loot, 같은 종류 겹칠 수 있음) 계획 끝에 붙인다. 무게 0(힘 · 강화)은 뽑지 않는다 — 보장 수로만.
         /// PlanConsumables 다음에 부른다 — 앞의 계획 · 맵 · 적 배치는 바뀌지 않는다.
@@ -434,6 +452,19 @@ namespace ProjectM.Items
     }
 
     /// <summary>바닥 아이템을 주웠다 (3-5).</summary>
+    /// <summary>바닥 아이템이 사라졌다 — 줍기가 아닌 경우 (3-14 요리로 바뀜). 화면만 지운다.</summary>
+    public sealed class FloorItemRemovedEvent : ISimEvent
+    {
+        public GridPos Pos { get; }
+        public string ItemId { get; }
+
+        public FloorItemRemovedEvent(GridPos pos, string itemId)
+        {
+            Pos = pos;
+            ItemId = itemId;
+        }
+    }
+
     public sealed class ItemPickedUpEvent : ISimEvent
     {
         public EntityId Unit { get; }

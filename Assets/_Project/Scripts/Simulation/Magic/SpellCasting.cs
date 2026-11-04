@@ -203,6 +203,8 @@ namespace ProjectM.Magic
                 }
             }
 
+            world.OnCellsHit?.Invoke(spell.Element, preview.AffectedCells); // 3-14: 바닥 고기 요리 (불 · 얼음)
+
             // 지형 효과 (2-4): 놓인 틱의 ③에서 바로 그 칸 유닛에게 상태를 건다
             if (book.Terrains.TryGet(spell.LeavesTerrain, out var terrain))
             {

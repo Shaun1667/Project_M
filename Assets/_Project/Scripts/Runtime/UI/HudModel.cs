@@ -119,6 +119,9 @@ namespace ProjectM.UI
             _bus.Subscribe<ProjectM.Dungeon.TrapRevealedEvent>(OnTrapRevealed);
             _bus.Subscribe<ProjectM.Dungeon.SearchedEvent>(OnSearched);
             _bus.Subscribe<ItemTransmutedEvent>(OnTransmuted);
+            _bus.Subscribe<HungerChangedEvent>(OnHungerChanged);
+            _bus.Subscribe<FoodEatenEvent>(OnFoodEaten);
+            _bus.Subscribe<FoodCookedEvent>(OnFoodCooked);
             _bus.Subscribe<ProjectM.Dungeon.HiddenDoorFoundEvent>(OnHiddenDoorFound);
             _lastPickupFail = null;
             Changed?.Invoke();
@@ -299,6 +302,30 @@ namespace ProjectM.UI
             Changed?.Invoke();
         }
 
+        /// <summary>플레이어 허기 단계 (3-14 — HUD 갑옷 줄 옆에).</summary>
+        public HungerState Hunger { get; private set; }
+
+        private void OnHungerChanged(HungerChangedEvent e)
+        {
+            if (e.Unit != _playerId) return;
+            Hunger = e.State;
+            AddLog(HudText.HungerLog(e.State));
+            Changed?.Invoke();
+        }
+
+        private void OnFoodEaten(FoodEatenEvent e)
+        {
+            if (e.Unit != _playerId) return;
+            AddLog(Text.Eaten(e.ItemId));
+            Changed?.Invoke();
+        }
+
+        private void OnFoodCooked(FoodCookedEvent e)
+        {
+            AddLog(Text.Cooked(e.From, e.To));
+            Changed?.Invoke();
+        }
+
         private void OnTransmuted(ItemTransmutedEvent e)
         {
             AddLog(Text.Transmuted(e.From, e.To));
@@ -356,6 +383,9 @@ namespace ProjectM.UI
             _bus.Unsubscribe<ProjectM.Dungeon.TrapRevealedEvent>(OnTrapRevealed);
             _bus.Unsubscribe<ProjectM.Dungeon.SearchedEvent>(OnSearched);
             _bus.Unsubscribe<ItemTransmutedEvent>(OnTransmuted);
+            _bus.Unsubscribe<HungerChangedEvent>(OnHungerChanged);
+            _bus.Unsubscribe<FoodEatenEvent>(OnFoodEaten);
+            _bus.Unsubscribe<FoodCookedEvent>(OnFoodCooked);
             _bus.Unsubscribe<ProjectM.Dungeon.HiddenDoorFoundEvent>(OnHiddenDoorFound);
             _bus = null;
         }

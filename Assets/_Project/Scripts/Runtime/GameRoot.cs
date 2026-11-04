@@ -35,6 +35,7 @@ namespace ProjectM
         [Tooltip("마법서 배치 수치 (3-5). 비우면 바닥에 마법서를 놓지 않는다")] [SerializeField] private LootConfigAsset _lootConfig;
         [Tooltip("층 꾸미기 수치 (3-11a — 풀 · 물 웅덩이). 비우면 꾸미지 않는다")] [SerializeField] private FloorDecorConfigAsset _floorDecorConfig;
         [Tooltip("함정 표 (3-12a). 비우면 함정을 놓지 않는다")] [SerializeField] private TrapCatalogAsset _trapCatalog;
+        [Tooltip("허기 · 음식 (3-14). 비우면 허기 없음")] [SerializeField] private HungerConfigAsset _hungerConfig;
         [Tooltip("경험치 · 레벨업 수치 (3-6). 비우면 경험치를 주지 않는다")] [SerializeField] private ProgressionConfigAsset _progressionConfig;
         [Tooltip("물약 · 주문서 수치 · 겉모습 (3-9). 비우면 식별 · 무작위 배치 없음")] [SerializeField] private ConsumableConfigAsset _consumableConfig;
         [Tooltip("고를 수 있는 캐릭터 (2026-10-21). 비우거나 창이 없으면 고르지 않고 Player.asset 모습으로 시작")] [SerializeField] private CharacterCatalogAsset _characters;
@@ -200,7 +201,11 @@ namespace ProjectM
             Floor = floor;
             var sight = new ShadowcastSightRule();
             var progression = _progressionConfig != null ? _progressionConfig.ToConfig() : null;
-            var vision = World.InstallCoreSystems(sight, Magic, Statuses, Terrains, progression, _terrainCatalog.ToFireSpread()); // 3-11b 불 번짐
+            var hunger = _hungerConfig != null ? _hungerConfig.ToConfig() : null; // 3-14
+            var vision = World.InstallCoreSystems(sight, Magic, Statuses, Terrains, progression, _terrainCatalog.ToFireSpread(), hunger); // 3-11b 불 번짐 · 3-14 허기
+            if (hunger != null) // 3-14: 바닥 고기 요리 · 적이 고기 떨어뜨리기 (규칙 연결)
+                World.SetItemRules((element, cells) => ProjectM.Units.Hunger.TransformFloorItems(World, Items, element, cells),
+                    dead => ProjectM.Units.Hunger.DropFood(World, hunger, dead));
             var consumableConfig = _consumableConfig != null ? _consumableConfig.ToConfig() : ConsumableConfig.Default;
             var allyAi = new AllyAi(World, Config, sight); // 3-13b 분신
             var consumables = new ConsumableRules(Items, consumableConfig, Statuses, Terrains, progression, sight, allyAi, Spells); // 3-9 물약 · 주문서 효과
@@ -245,6 +250,8 @@ namespace ProjectM
             var startingArmor = playerDef.StartingArmor;
             if (startingArmor != null && !Armors.Wear(World, Items, player, startingArmor)) // 3-10a: 천 갑옷을 입고 시작 (SPD)
                 Debug.LogWarning($"[GameRoot] 시작 갑옷 '{startingArmor}'가 ItemCatalog에 없다.", this);
+            if (hunger?.StartingFood != null && Items.TryGet(hunger.StartingFood, out _))
+                Inventory.TryAdd(World, Spells, Items, player, InventoryRef.Item(hunger.StartingFood)); // 3-14: 식량 1개로 시작 (SPD)
             _player = player;
             _playerDead = false;
             _runEnded = false;
@@ -256,6 +263,7 @@ namespace ProjectM
                 Loot.PlanConsumables(World, Items, loot, dungeonConfig.FloorCount); // 3-7b: 강화 주문서 · 힘 물약 (무기 계획 뒤)
                 Loot.PlanRandomConsumables(World, Items, consumableConfig, dungeonConfig.FloorCount); // 3-9: 층마다 무작위 물약 · 주문서
                 Loot.PlanArmors(World, Items, loot, dungeonConfig.FloorCount); // 3-10a: 갑옷 (앞 계획 뒤)
+                if (hunger != null) Loot.PlanFood(World, Items, hunger, dungeonConfig.FloorCount); // 3-14: 층마다 식량 1 + 가끔 빵 (앞 계획 뒤)
             }
             Identification.AssignLooks(World, Items, consumableConfig); // 3-9: 판마다 겉모습 (배치 계획 모두 뒤 — 앞 계획은 그대로)
             if (loot != null)
@@ -266,7 +274,7 @@ namespace ProjectM
 
             _hudText.Run = World.Run; // 3-9: 모르는 물약 · 주문서는 겉모습 이름으로
             _hud.Bind(World.Events, player, Spells, _hudText, progression);
-            _input.Bind(World, Config, new TurnClock(World.Scheduler, World.PlayerInput), sight, Spells, new BresenhamTargetingRule(), Items, Fusions, stairs, consumables, search);
+            _input.Bind(World, Config, new TurnClock(World.Scheduler, World.PlayerInput), sight, Spells, new BresenhamTargetingRule(), Items, Fusions, stairs, consumables, search, hunger);
             World.Events.Flush();
 
             if (_camera != null)

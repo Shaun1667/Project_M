@@ -93,6 +93,7 @@ namespace ProjectM.Presentation
             _bus.Subscribe<VisibilityChangedEvent>(OnVisibilityChanged);
             _bus.Subscribe<FloorItemPlacedEvent>(OnPlaced);
             _bus.Subscribe<ItemPickedUpEvent>(OnPickedUp);
+            _bus.Subscribe<FloorItemRemovedEvent>(OnRemoved); // 3-14 요리
         }
 
         public void Unbind()
@@ -102,6 +103,7 @@ namespace ProjectM.Presentation
             _bus.Unsubscribe<VisibilityChangedEvent>(OnVisibilityChanged);
             _bus.Unsubscribe<FloorItemPlacedEvent>(OnPlaced);
             _bus.Unsubscribe<ItemPickedUpEvent>(OnPickedUp);
+            _bus.Unsubscribe<FloorItemRemovedEvent>(OnRemoved);
             _bus = null;
         }
 
@@ -238,9 +240,13 @@ namespace ProjectM.Presentation
             return false;
         }
 
-        private void OnPickedUp(ItemPickedUpEvent e)
+        private void OnRemoved(FloorItemRemovedEvent e) => RemoveView(e.Pos, e.ItemId);
+
+        private void OnPickedUp(ItemPickedUpEvent e) => RemoveView(e.Pos, e.ItemId);
+
+        private void RemoveView(GridPos pos, string itemId)
         {
-            int index = _views.FindIndex(v => v.Pos == e.Pos && v.ItemId == e.ItemId);
+            int index = _views.FindIndex(v => v.Pos == pos && v.ItemId == itemId);
             if (index < 0) return;
             if (_views[index].Root != null) DestroySafe(_views[index].Root.gameObject);
             _views.RemoveAt(index);

@@ -90,6 +90,16 @@ namespace ProjectM.Core
         /// <summary>피해를 받은 유닛에게 붙는 규칙 (3-13b — 잠이 깸). InstallCoreSystems가 넣는다. 상태가 아니라 규칙 연결이라 저장하지 않는다.</summary>
         internal Action<Unit> OnUnitDamaged { get; private set; }
 
+        /// <summary>원소가 칸들에 닿았다 · 유닛이 죽어 빠졌다 (3-14 요리 · 음식 떨어뜨리기). GameRoot가 SetItemRules로 넣는다 — 규칙 연결이라 저장하지 않는다.</summary>
+        internal Action<ProjectM.Magic.Element, IReadOnlyList<GridPos>> OnCellsHit { get; private set; }
+        internal Action<Unit> OnUnitDied { get; private set; }
+
+        public void SetItemRules(Action<ProjectM.Magic.Element, IReadOnlyList<GridPos>> onCellsHit, Action<Unit> onUnitDied)
+        {
+            OnCellsHit = onCellsHit;
+            OnUnitDied = onUnitDied;
+        }
+
         /// <summary>지금 층의 칸 종류를 바꾸고 TileChangedEvent를 낸다 (3-11a 풀 놓기 · 밟기). 같은 종류면 아무 일 없음.</summary>
         public void SetTile(GridPos pos, TileType type)
         {
@@ -116,7 +126,7 @@ namespace ProjectM.Core
         /// <param name="progression">경험치 · 레벨업 수치 (3-6). null이면 경험치를 주지 않는다 (테스트 기본).</param>
         /// <param name="fireSpread">불 번짐 수치 (3-11b). null이면 불이 번지지 않는다 (테스트 기본).</param>
         public PlayerVisionSystem InstallCoreSystems(ISightRule sight, MagicConfig magic, StatusBook statuses, TerrainBook terrains,
-            ProgressionConfig progression = null, FireSpreadConfig fireSpread = null)
+            ProgressionConfig progression = null, FireSpreadConfig fireSpread = null, HungerConfig hunger = null)
         {
             if (statuses == null) throw new ArgumentNullException(nameof(statuses));
             if (terrains == null) throw new ArgumentNullException(nameof(terrains));
@@ -128,7 +138,8 @@ namespace ProjectM.Core
             if (fireSpread != null) Scheduler.AddSystem(TickPhase.Terrain, new FireSpreadSystem(this, terrains, fireSpread)); // 3-11b: 지형 처리 다음
             Scheduler.AddSystem(TickPhase.Status, new StatusSystem(this, statuses));
             Scheduler.AddSystem(TickPhase.ManaRegen, new ManaRegenSystem(this, magic));
-            Scheduler.AddSystem(TickPhase.ManaRegen, new HpRegenSystem(this, magic));
+            Scheduler.AddSystem(TickPhase.ManaRegen, new HpRegenSystem(this, magic, hunger)); // 3-14: 굶주림이면 회복 멈춤
+            if (hunger != null) Scheduler.AddSystem(TickPhase.ManaRegen, new HungerSystem(this, hunger)); // 3-14
             Scheduler.AddSystem(TickPhase.ManaRegen, new GrassTrampleSystem(this, statuses)); // 3-11a: 시야 갱신(⑥) 전에
             Scheduler.AddSystem(TickPhase.ManaRegen, new DoorSystem(this)); // 3-11c: 문 열고 닫기 (시야 갱신 전)
             Scheduler.AddSystem(TickPhase.DeathCheck, new DeathCheckSystem(this, progression));
@@ -282,7 +293,7 @@ namespace ProjectM.Core
             return new UnitState(u.Id, u.Faction, u.VisualId, u.MaxHp, u.AttackDamage, u.SightRange, u.Pos.X, u.Pos.Y, u.Hp,
                 seen.HasValue, seen?.X ?? 0, seen?.Y ?? 0, u.MaxMana, u.Mana, (InventoryRef[])u.InventorySlots.Clone(), (InventoryRef[])u.QuickSlots.Clone(),
                 u.PreviousPos, u.WanderTarget, u.Statuses.ConvertAll(s => new UnitStatusState(s.Type, s.Remaining)).ToArray(),
-                u.Accuracy, u.Evasion, u.ExpReward, u.ExpMaxLevel, u.Level, u.Exp, u.Weapon, u.Strength, u.Armor);
+                u.Accuracy, u.Evasion, u.ExpReward, u.ExpMaxLevel, u.Level, u.Exp, u.Weapon, u.Strength, u.Armor, u.Hunger);
         }
 
         private static Unit ToUnit(UnitState u)
@@ -290,7 +301,7 @@ namespace ProjectM.Core
             GridPos? seen = u.HasLastSeen ? new GridPos(u.LastSeenX, u.LastSeenY) : (GridPos?)null;
             var unit = new Unit(u.Id, u.Faction, u.VisualId, u.MaxHp, u.AttackDamage, u.SightRange, new GridPos(u.X, u.Y), u.Hp, seen,
                 u.MaxMana, u.Mana, (InventoryRef[])u.InventorySlots.Clone(), (InventoryRef[])u.QuickSlots.Clone(), u.PreviousPos, u.WanderTarget,
-                u.Accuracy, u.Evasion, u.ExpReward, u.ExpMaxLevel, u.Level, u.Exp, u.Weapon, u.Strength, u.Armor);
+                u.Accuracy, u.Evasion, u.ExpReward, u.ExpMaxLevel, u.Level, u.Exp, u.Weapon, u.Strength, u.Armor, u.Hunger);
             foreach (var st in u.Statuses)
                 unit.Statuses.Add(new StatusInstance(st.Type, st.Remaining));
             return unit;

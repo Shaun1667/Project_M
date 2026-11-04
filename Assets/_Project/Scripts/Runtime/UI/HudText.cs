@@ -141,9 +141,18 @@ namespace ProjectM.UI
                 case ItemUse.Scroll: return $"{text.Entry(entry)}{count} — 주문서. 읽기" + (known ? string.Empty : " · 정체를 모름");
                 case ItemUse.LearnSpell: return $"{text.Entry(entry)} — 마법서. 읽으면 주문을 배운다";
                 case ItemUse.Fusion: return $"{text.Entry(entry)} — 마법 융합기. 주문 두 개를 합쳐 한 번에 시전";
+                case ItemUse.Food: return $"{text.Entry(entry)}{count} — 음식. 먹으면 허기 −{def.Food}" + (def.Risky ? " · 탈이 날 수 있음 (불에 구우면 안전)" : string.Empty);
                 default: return text.Entry(entry);
             }
         }
+
+        /// <summary>허기 단계 로그 · HUD 표시 (3-14).</summary>
+        public static string HungerLog(HungerState state) =>
+            state == HungerState.Starving ? "굶주리고 있다! 무언가 먹어야 한다" : state == HungerState.Hungry ? "배가 고프다" : "배가 부르다";
+        public static string HungerLabel(HungerState state) =>
+            state == HungerState.Starving ? "<color=#FF5050>굶주림</color>" : state == HungerState.Hungry ? "<color=#FFC46B>배고픔</color>" : string.Empty;
+        public string Eaten(string itemId) => $"{Item(itemId)}을(를) 먹었다";
+        public string Cooked(string from, string to) => $"{Item(from)} → {Item(to)}";
 
         /// <summary>변환 로그 (3-13b): "변환: 소검 → 손도끼" · 바꿀 것 없음.</summary>
         public string Transmuted(string from, string to) =>
@@ -372,6 +381,7 @@ namespace ProjectM.UI
                 case DamageKind.Status: return Status(cause.Status);
                 case DamageKind.Terrain: return Terrain(cause.Terrain);
                 case DamageKind.Item: return KnownItem(cause.Id);
+                case DamageKind.Hunger: return "굶주림";
                 default: return "알 수 없음";
             }
         }
