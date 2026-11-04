@@ -864,6 +864,7 @@ namespace ProjectM.Editor
             changed |= catalog.AddIfMissing(Consumable("scroll_lullaby", "자장가 주문서", ItemUse.Scroll, ConsumableEffect.Lullaby, 1));
             changed |= catalog.AddIfMissing(Consumable("scroll_transmutation", "변환 주문서", ItemUse.Scroll, ConsumableEffect.Transmutation, 1));
             // 3-14 음식 (SPD): 식량 300 · 작은 빵 · 고기 150. 정체불명 고기는 불 = 구운 고기, 얼음 = 얼린 고기 (BALANCE 18번)
+            changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "gold", DisplayName = "금화", Use = ItemUse.Gold }); // 3-15a
             changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "food_ration", DisplayName = "식량", Use = ItemUse.Food, Food = 300 });
             changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "food_bread", DisplayName = "작은 빵", Use = ItemUse.Food, Food = 150 });
             changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "food_mystery_meat", DisplayName = "정체불명 고기", Use = ItemUse.Food, Food = 150, Risky = true,

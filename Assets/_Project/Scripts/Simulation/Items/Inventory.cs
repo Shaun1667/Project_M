@@ -75,6 +75,8 @@ namespace ProjectM.Items
         EquipArmor = 6,
         /// <summary>음식 (3-14): 먹으면 허기 −Food — 차례 HungerConfig.EatTicks (EatCommand). 겹친다.</summary>
         Food = 7,
+        /// <summary>금화 (3-15a): 주우면 배낭이 아니라 RunState.Gold로 — 바닥 무더기의 Quantity가 금액.</summary>
+        Gold = 8,
     }
 
     /// <summary>

@@ -258,6 +258,7 @@ namespace ProjectM.Core
                 ItemLooks = new List<ItemLook>(Run.Looks).ToArray(),
                 IdentifiedItems = new List<string>(Run.Identified).ToArray(),
                 Traps = CaptureTraps(),
+                Gold = Run.Gold,
             };
         }
 
@@ -274,7 +275,7 @@ namespace ProjectM.Core
         {
             var items = new FloorItemState[FloorItems.Count];
             for (int i = 0; i < items.Length; i++)
-                items[i] = new FloorItemState(FloorItems.All[i].Pos.X, FloorItems.All[i].Pos.Y, FloorItems.All[i].ItemId);
+                items[i] = new FloorItemState(FloorItems.All[i].Pos.X, FloorItems.All[i].Pos.Y, FloorItems.All[i].ItemId, FloorItems.All[i].Quantity);
             return items;
         }
 
@@ -320,7 +321,7 @@ namespace ProjectM.Core
             foreach (var u in units)
                 world.Units.Add(ToUnit(u));
             foreach (var item in floorItems ?? Array.Empty<FloorItemState>())
-                world.FloorItems.Add(new GridPos(item.X, item.Y), item.ItemId);
+                world.FloorItems.Add(new GridPos(item.X, item.Y), item.ItemId, item.Quantity);
             foreach (var t in traps ?? Array.Empty<TrapCellState>())
                 world.Traps.Set(world.Traps.PosOf(t.CellIndex), new TrapInstance(t.Type, t.Hidden));
         }
@@ -353,6 +354,7 @@ namespace ProjectM.Core
             world.Floor = snapshot.Floor;
             world._storedFloors.AddRange(snapshot.StoredFloors);
             world.Run.Kills = snapshot.Kills;
+            world.Run.Gold = snapshot.Gold;
             world.Run.Outcome = snapshot.Outcome;
             world.Run.BossId = snapshot.BossId;
             world.Run.LastPlayerDamage = snapshot.LastPlayerDamage;

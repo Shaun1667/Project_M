@@ -98,6 +98,7 @@ namespace ProjectM.Core
 
                 // 18 (3-12a): 함정
                 WriteTraps(w, snapshot.Traps);
+                w.Write(snapshot.Gold); // 21 (3-15a)
 
                 w.Flush();
                 return stream.ToArray();
@@ -189,6 +190,7 @@ namespace ProjectM.Core
                     s.IdentifiedItems[i] = r.ReadString();
 
                 s.Traps = ReadTraps(r);
+                s.Gold = r.ReadInt32();
 
                 if (stream.Position != stream.Length)
                     throw new InvalidDataException("스냅샷 끝에 남는 데이터가 있다.");
@@ -425,6 +427,7 @@ namespace ProjectM.Core
                 w.Write(item.X);
                 w.Write(item.Y);
                 w.Write(item.ItemId ?? string.Empty);
+                w.Write(item.Quantity); // 21 (3-15a)
             }
         }
 
@@ -435,7 +438,8 @@ namespace ProjectM.Core
             {
                 int x = r.ReadInt32();
                 int y = r.ReadInt32();
-                items[i] = new FloorItemState(x, y, r.ReadString());
+                var itemId = r.ReadString();
+                items[i] = new FloorItemState(x, y, itemId, r.ReadInt32()); // 21 (3-15a)
             }
             return items;
         }

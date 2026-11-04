@@ -120,6 +120,7 @@ namespace ProjectM.UI
             _bus.Subscribe<ProjectM.Dungeon.SearchedEvent>(OnSearched);
             _bus.Subscribe<ItemTransmutedEvent>(OnTransmuted);
             _bus.Subscribe<HungerChangedEvent>(OnHungerChanged);
+            _bus.Subscribe<GoldChangedEvent>(OnGoldChanged);
             _bus.Subscribe<FoodEatenEvent>(OnFoodEaten);
             _bus.Subscribe<FoodCookedEvent>(OnFoodCooked);
             _bus.Subscribe<ProjectM.Dungeon.HiddenDoorFoundEvent>(OnHiddenDoorFound);
@@ -132,6 +133,7 @@ namespace ProjectM.UI
         {
             if (e.Unit != _playerId) return;
             _lastPickupFail = null;
+            if (e.ItemId == Loot.GoldItemId) return; // 3-15a: 금화는 GoldChangedEvent가 "금화 n개" 로그
             AddLog(Text.PickedUp(e.ItemId));
             Changed?.Invoke();
         }
@@ -302,6 +304,16 @@ namespace ProjectM.UI
             Changed?.Invoke();
         }
 
+        /// <summary>가진 금화 (3-15a — HUD 갑옷 줄 옆에).</summary>
+        public int Gold { get; private set; }
+
+        private void OnGoldChanged(GoldChangedEvent e)
+        {
+            Gold = e.Gold;
+            if (e.Delta > 0) AddLog(HudText.GoldPicked(e.Delta));
+            Changed?.Invoke();
+        }
+
         /// <summary>플레이어 허기 단계 (3-14 — HUD 갑옷 줄 옆에).</summary>
         public HungerState Hunger { get; private set; }
 
@@ -384,6 +396,7 @@ namespace ProjectM.UI
             _bus.Unsubscribe<ProjectM.Dungeon.SearchedEvent>(OnSearched);
             _bus.Unsubscribe<ItemTransmutedEvent>(OnTransmuted);
             _bus.Unsubscribe<HungerChangedEvent>(OnHungerChanged);
+            _bus.Unsubscribe<GoldChangedEvent>(OnGoldChanged);
             _bus.Unsubscribe<FoodEatenEvent>(OnFoodEaten);
             _bus.Unsubscribe<FoodCookedEvent>(OnFoodCooked);
             _bus.Unsubscribe<ProjectM.Dungeon.HiddenDoorFoundEvent>(OnHiddenDoorFound);

@@ -913,6 +913,26 @@ MonoBehaviour:
     Risky: 0
     FireTransformsTo: 
     IceTransformsTo: 
+  - Id: gold
+    DisplayName: "\uAE08\uD654"
+    Use: 8
+    SpellId: 
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
+    Tier: 0
+    Amount: 0
+    Effect: 0
+    Weight: 0
+    Food: 0
+    Risky: 0
+    FireTransformsTo: 
+    IceTransformsTo: 
   _weaponDamageDivisor: 3
   _weaponMinDamage: 2
   _armorDefenseDivisor: 3

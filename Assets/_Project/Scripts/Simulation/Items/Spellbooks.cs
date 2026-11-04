@@ -23,9 +23,32 @@ namespace ProjectM.Items
         /// <summary>한 판에 놓는 갑옷 수 (3-10a) — 2티어 이상 중 시드로 고름(같은 종 안 겹침), 1~마지막 전 층.</summary>
         public int ArmorsPerRun { get; }
 
+        /// <summary>금화 (3-15a, SPD): 층마다 무더기 수 · 무더기 금액 = [GoldMinBase + GoldMinPerFloor × 층, GoldMaxBase + GoldMaxPerFloor × 층].</summary>
+        public int GoldPilesPerFloor { get; }
+        public int GoldMinBase { get; }
+        public int GoldMinPerFloor { get; }
+        public int GoldMaxBase { get; }
+        public int GoldMaxPerFloor { get; }
+        /// <summary>적이 죽을 때 금화를 떨어뜨릴 확률 (%) · 금액 범위.</summary>
+        public int EnemyGoldPercent { get; }
+        public int EnemyGoldMin { get; }
+        public int EnemyGoldMax { get; }
+
         public LootConfig(int maxBooksPerFloor, int minDistanceFromStart, int weaponsPerRun = 0, int upgradeScrollsPerRun = 0, int strengthPotionsPerRun = 0,
-            int armorsPerRun = 0)
+            int armorsPerRun = 0, int goldPilesPerFloor = 0, int goldMinBase = 0, int goldMinPerFloor = 0, int goldMaxBase = 0, int goldMaxPerFloor = 0,
+            int enemyGoldPercent = 0, int enemyGoldMin = 0, int enemyGoldMax = 0)
         {
+            if (goldPilesPerFloor < 0 || goldMinBase < 0 || goldMinPerFloor < 0 || goldMaxBase < goldMinBase || goldMaxPerFloor < goldMinPerFloor
+                || enemyGoldPercent < 0 || enemyGoldPercent > 100 || enemyGoldMin < 0 || enemyGoldMax < enemyGoldMin)
+                throw new ArgumentOutOfRangeException(nameof(goldPilesPerFloor), "금화 수치: 0 이상, 최소 ≤ 최대, 확률 0 ~ 100");
+            GoldPilesPerFloor = goldPilesPerFloor;
+            GoldMinBase = goldMinBase;
+            GoldMinPerFloor = goldMinPerFloor;
+            GoldMaxBase = goldMaxBase;
+            GoldMaxPerFloor = goldMaxPerFloor;
+            EnemyGoldPercent = enemyGoldPercent;
+            EnemyGoldMin = enemyGoldMin;
+            EnemyGoldMax = enemyGoldMax;
             if (armorsPerRun < 0) throw new ArgumentOutOfRangeException(nameof(armorsPerRun));
             ArmorsPerRun = armorsPerRun;
             if (upgradeScrollsPerRun < 0) throw new ArgumentOutOfRangeException(nameof(upgradeScrollsPerRun));
@@ -46,11 +69,14 @@ namespace ProjectM.Items
     {
         public readonly GridPos Pos;
         public readonly string ItemId;
+        /// <summary>개수 (3-15a 금화 무더기의 금액). 그 밖 1.</summary>
+        public readonly int Quantity;
 
-        public FloorItem(GridPos pos, string itemId)
+        public FloorItem(GridPos pos, string itemId, int quantity = 1)
         {
             Pos = pos;
             ItemId = itemId;
+            Quantity = Math.Max(1, quantity);
         }
     }
 
@@ -65,13 +91,16 @@ namespace ProjectM.Items
         public int Count => _items.Count;
         public IReadOnlyList<FloorItem> All => _items;
 
-        public void Add(GridPos pos, string itemId)
+        public void Add(GridPos pos, string itemId, int quantity = 1)
         {
             if (string.IsNullOrEmpty(itemId)) throw new ArgumentException("아이템 ID가 비어 있다.", nameof(itemId));
             int index = _items.Count;
             while (index > 0 && Compare(_items[index - 1].Pos, pos) > 0) index--;
-            _items.Insert(index, new FloorItem(pos, itemId));
+            _items.Insert(index, new FloorItem(pos, itemId, quantity));
         }
+
+        /// <summary>그 칸의 아이템들 (놓은 순서, 개수 포함 — 3-15a).</summary>
+        public List<FloorItem> ItemsAt(GridPos pos) => _items.FindAll(i => i.Pos == pos);
 
         public bool Any(GridPos pos)
         {
@@ -324,6 +353,51 @@ namespace ProjectM.Items
         }
 
         /// <summary>지금 층 몫을 바닥에 놓고 FloorItemPlacedEvent를 낸다 (처음 가는 층 — 맵 · 적을 놓고 화면에 알린 뒤).</summary>
+        /// <summary>
+        /// 금화 무더기 (3-15a, SPD): 처음 가는 층에 GoldPilesPerFloor개 — 맨땅 · 아이템 없는 칸 · 시작 칸에서 MinDistanceFromStart 이상, 금액은 층이 깊을수록 (RngStream.Loot).
+        /// PlaceFloorItems 다음에 부른다 (MapLoaded 뒤).
+        /// </summary>
+        public static void PlaceGold(World world, GridPos start, LootConfig config)
+        {
+            if (world == null) throw new ArgumentNullException(nameof(world));
+            if (config == null || config.GoldPilesPerFloor == 0) return;
+            var map = world.Map;
+            var candidates = new List<GridPos>();
+            for (int y = 0; y < map.Height; y++)
+                for (int x = 0; x < map.Width; x++)
+                {
+                    var pos = new GridPos(x, y);
+                    if (GridMap.IsGroundType(map.Get(pos)) && GridMovement.Chebyshev(pos, start) >= config.MinDistanceFromStart && !world.FloorItems.Any(pos))
+                        candidates.Add(pos);
+                }
+            var rng = world.Rng.Get(RngStream.Loot);
+            int min = config.GoldMinBase + config.GoldMinPerFloor * world.Floor, max = config.GoldMaxBase + config.GoldMaxPerFloor * world.Floor;
+            for (int i = 0; i < config.GoldPilesPerFloor && candidates.Count > 0; i++)
+            {
+                int pick = rng.Range(0, candidates.Count);
+                var pos = candidates[pick];
+                candidates.RemoveAt(pick);
+                int amount = rng.Range(min, max + 1);
+                world.FloorItems.Add(pos, GoldItemId, amount);
+                world.Events.Publish(new FloorItemPlacedEvent(pos, GoldItemId, GoldItemId));
+            }
+        }
+
+        /// <summary>금화 아이템 ID (ItemCatalog의 ItemUse.Gold 줄).</summary>
+        public const string GoldItemId = "gold";
+
+        /// <summary>적이 죽으면 EnemyGoldPercent로 그 칸에 금화 (3-15a — World.OnUnitDied, RngStream.Loot).</summary>
+        public static void DropGold(World world, LootConfig config, Unit dead)
+        {
+            if (config == null || config.EnemyGoldPercent == 0 || dead.Faction != Faction.Enemy) return;
+            var rng = world.Rng.Get(RngStream.Loot);
+            if (rng.Range(0, 100) >= config.EnemyGoldPercent) return;
+            int amount = rng.Range(config.EnemyGoldMin, config.EnemyGoldMax + 1);
+            if (amount <= 0) return;
+            world.FloorItems.Add(dead.Pos, GoldItemId, amount);
+            world.Events.Publish(new FloorItemPlacedEvent(dead.Pos, GoldItemId, GoldItemId));
+        }
+
         public static void PlaceFloorItems(World world, GridPos start, LootConfig config)
         {
             if (world == null) throw new ArgumentNullException(nameof(world));
@@ -381,9 +455,19 @@ namespace ProjectM.Items
         {
             if (world.FloorItems.Count == 0 || !PlayerActions.TryGetPlayer(world, out var player) || !player.IsAlive) return 0;
             int picked = 0;
-            foreach (var id in world.FloorItems.At(player.Pos))
+            foreach (var floorItem in world.FloorItems.ItemsAt(player.Pos))
             {
-                if (!items.TryGet(id, out _)) continue; // 데이터에서 빠진 아이템은 바닥에 남긴다
+                var id = floorItem.ItemId;
+                if (!items.TryGet(id, out var def)) continue; // 데이터에서 빠진 아이템은 바닥에 남긴다
+                if (def.Use == ItemUse.Gold) // 3-15a: 금화는 배낭이 아니라 지갑으로
+                {
+                    world.FloorItems.Remove(player.Pos, id);
+                    world.Run.Gold += floorItem.Quantity;
+                    world.Events.Publish(new ItemPickedUpEvent(player.Id, player.Pos, id));
+                    world.Events.Publish(new GoldChangedEvent(world.Run.Gold, floorItem.Quantity));
+                    picked++;
+                    continue;
+                }
                 if (Inventory.TryAdd(world, null, items, player, InventoryRef.Item(id)) < 0)
                 {
                     world.Events.Publish(new ItemPickupFailedEvent(player.Id, player.Pos, id));
@@ -452,6 +536,19 @@ namespace ProjectM.Items
     }
 
     /// <summary>바닥 아이템을 주웠다 (3-5).</summary>
+    /// <summary>금화가 바뀌었다 (3-15a). Delta = 바뀐 양 (주우면 +, 사면 −).</summary>
+    public sealed class GoldChangedEvent : ISimEvent
+    {
+        public int Gold { get; }
+        public int Delta { get; }
+
+        public GoldChangedEvent(int gold, int delta)
+        {
+            Gold = gold;
+            Delta = delta;
+        }
+    }
+
     /// <summary>바닥 아이템이 사라졌다 — 줍기가 아닌 경우 (3-14 요리로 바뀜). 화면만 지운다.</summary>
     public sealed class FloorItemRemovedEvent : ISimEvent
     {

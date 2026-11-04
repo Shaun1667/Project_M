@@ -114,7 +114,11 @@ namespace ProjectM.Dungeon
             }
 
             Announce(player, restored: stored != null);
-            if (newFloorStart.HasValue && _loot != null) Loot.PlaceFloorItems(_world, newFloorStart.Value, _loot); // 3-5: MapLoaded 뒤에 놓아야 화면이 지우지 않는다
+            if (newFloorStart.HasValue && _loot != null)
+            {
+                Loot.PlaceFloorItems(_world, newFloorStart.Value, _loot); // 3-5: MapLoaded 뒤에 놓아야 화면이 지우지 않는다
+                Loot.PlaceGold(_world, newFloorStart.Value, _loot); // 3-15a
+            }
             _world.Events.Publish(new FloorChangedEvent(from, target));
             _vision.Refresh();
         }

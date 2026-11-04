@@ -19,7 +19,17 @@ namespace ProjectM.Data
         [Tooltip("한 판에 놓는 강화 주문서 수 (3-7b)")] [Min(0)] [SerializeField] private int _upgradeScrollsPerRun = 3;
         [Tooltip("한 판에 놓는 힘 물약 수 (3-7b)")] [Min(0)] [SerializeField] private int _strengthPotionsPerRun = 2;
         [Tooltip("한 판에 놓는 갑옷 수 (3-10a) — 2티어 이상 중 시드로")] [Min(0)] [SerializeField] private int _armorsPerRun = 2;
+        [Header("금화 (3-15a, SPD — BALANCE 11번)")]
+        [Tooltip("층마다 금화 무더기 수")] [Min(0)] [SerializeField] private int _goldPilesPerFloor = 3;
+        [Tooltip("무더기 금액 최소 = 기본 + 층 × 증가")] [Min(0)] [SerializeField] private int _goldMinBase = 30;
+        [Min(0)] [SerializeField] private int _goldMinPerFloor = 10;
+        [Tooltip("무더기 금액 최대 = 기본 + 층 × 증가")] [Min(0)] [SerializeField] private int _goldMaxBase = 60;
+        [Min(0)] [SerializeField] private int _goldMaxPerFloor = 20;
+        [Tooltip("적이 금화를 떨어뜨릴 확률 %")] [Range(0, 100)] [SerializeField] private int _enemyGoldPercent = 20;
+        [Min(0)] [SerializeField] private int _enemyGoldMin = 5;
+        [Min(0)] [SerializeField] private int _enemyGoldMax = 15;
 
-        public LootConfig ToConfig() => new LootConfig(_maxBooksPerFloor, _minDistanceFromStart, _weaponsPerRun, _upgradeScrollsPerRun, _strengthPotionsPerRun, _armorsPerRun);
+        public LootConfig ToConfig() => new LootConfig(_maxBooksPerFloor, _minDistanceFromStart, _weaponsPerRun, _upgradeScrollsPerRun, _strengthPotionsPerRun, _armorsPerRun,
+            _goldPilesPerFloor, _goldMinBase, _goldMinPerFloor, _goldMaxBase, _goldMaxPerFloor, _enemyGoldPercent, _enemyGoldMin, _enemyGoldMax);
     }
 }

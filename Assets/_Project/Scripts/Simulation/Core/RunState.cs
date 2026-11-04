@@ -66,6 +66,8 @@ namespace ProjectM.Core
     {
         /// <summary>죽은 적 수 (보스 포함, 플레이어가 잡지 않은 것도 — 폭발 · 지형 포함).</summary>
         public int Kills { get; internal set; }
+        /// <summary>가진 금화 (3-15a — 플레이어 지갑, 스냅샷 v21).</summary>
+        public int Gold { get; internal set; }
         public RunOutcome Outcome { get; internal set; }
         /// <summary>보스 층에 놓인 보스 (없으면 None). 이 유닛이 죽으면 승리.</summary>
         public EntityId BossId { get; internal set; }

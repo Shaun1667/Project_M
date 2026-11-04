@@ -390,6 +390,16 @@
 
 ---
 
+**금화 (3-15a, 결정 2026-11-04 — 바닥 무더기 + 적, SPD)** — `LootConfig.asset`의 금화 값 [임시]
+
+| 값 | 필드 | 값 |
+|---|---|---|
+| 층마다 무더기 | `_goldPilesPerFloor` | **3** (처음 가는 층, 시작 칸에서 `_minDistanceFromStart` 이상 · 아이템 없는 맨땅) |
+| 무더기 금액 | `_goldMinBase` + `_goldMinPerFloor` × 층 ~ `_goldMaxBase` + `_goldMaxPerFloor` × 층 | **30 + 10 × 층 ~ 60 + 20 × 층** (1층 40~80, 4층 70~140) |
+| 적이 떨어뜨림 | `_enemyGoldPercent` · `_enemyGoldMin` ~ `_enemyGoldMax` | **20**% · **5 ~ 15** |
+
+금화(`gold`, `ItemUse.Gold`)는 걸어 들어가면 배낭이 아니라 지갑(`RunState.Gold`, 스냅샷 v21)으로. HUD 갑옷 줄 옆에 표시. 검산 (`GoldTests.ProjectAsset_MatchesBalanceTable`).
+
 ## 12. 경험치 · 레벨업 — `Data/Units/ProgressionConfig.asset`
 
 결정 (2026-10-19, 3-6 사용자 결정): Shattered Pixel Dungeon 방식 — 필요 경험치 = 5 + 5 × 레벨, 레벨업마다 최대 체력 +5 · 최대 마나 +1 · 명중 +1 · 회피 +1(현재 체력 · 마나도 같은 만큼 오름). 적마다 최고 레벨이 있어 플레이어 레벨이 그보다 높으면 경험치 0 (반복 사냥 방지 — 적 재생성 때문에 필요).

@@ -203,9 +203,14 @@ namespace ProjectM
             var progression = _progressionConfig != null ? _progressionConfig.ToConfig() : null;
             var hunger = _hungerConfig != null ? _hungerConfig.ToConfig() : null; // 3-14
             var vision = World.InstallCoreSystems(sight, Magic, Statuses, Terrains, progression, _terrainCatalog.ToFireSpread(), hunger); // 3-11b 불 번짐 · 3-14 허기
-            if (hunger != null) // 3-14: 바닥 고기 요리 · 적이 고기 떨어뜨리기 (규칙 연결)
-                World.SetItemRules((element, cells) => ProjectM.Units.Hunger.TransformFloorItems(World, Items, element, cells),
-                    dead => ProjectM.Units.Hunger.DropFood(World, hunger, dead));
+            var lootRules = _lootConfig != null ? _lootConfig.ToConfig() : null;
+            // 3-14 · 3-15a: 바닥 고기 요리 · 적이 고기 · 금화 떨어뜨리기 (규칙 연결)
+            World.SetItemRules((element, cells) => { if (hunger != null) ProjectM.Units.Hunger.TransformFloorItems(World, Items, element, cells); },
+                dead =>
+                {
+                    if (hunger != null) ProjectM.Units.Hunger.DropFood(World, hunger, dead);
+                    if (lootRules != null) Loot.DropGold(World, lootRules, dead);
+                });
             var consumableConfig = _consumableConfig != null ? _consumableConfig.ToConfig() : ConsumableConfig.Default;
             var allyAi = new AllyAi(World, Config, sight); // 3-13b 분신
             var consumables = new ConsumableRules(Items, consumableConfig, Statuses, Terrains, progression, sight, allyAi, Spells); // 3-9 물약 · 주문서 효과
@@ -269,6 +274,7 @@ namespace ProjectM
             if (loot != null)
             {
                 Loot.PlaceFloorItems(World, Floor.Start, loot);
+                Loot.PlaceGold(World, Floor.Start, loot); // 3-15a
             }
             vision.Refresh(); // 첫 시야 — 이후는 매 틱 ⑥ 단계에서
 

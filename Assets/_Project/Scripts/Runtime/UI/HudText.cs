@@ -146,6 +146,10 @@ namespace ProjectM.UI
             }
         }
 
+        /// <summary>금화 (3-15a): HUD 표시 · 주웠을 때 로그.</summary>
+        public static string GoldLabel(int gold) => $"<color=#FFD54F>금화 {gold}</color>";
+        public static string GoldPicked(int amount) => $"금화 {amount}개를 주웠다";
+
         /// <summary>허기 단계 로그 · HUD 표시 (3-14).</summary>
         public static string HungerLog(HungerState state) =>
             state == HungerState.Starving ? "굶주리고 있다! 무언가 먹어야 한다" : state == HungerState.Hungry ? "배가 고프다" : "배가 부르다";
