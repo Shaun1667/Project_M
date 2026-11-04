@@ -19,6 +19,8 @@ namespace ProjectM.Status
         IcePatch = 5,
         /// <summary>마비 가스 (3-9 마비 가스 물약): 위 유닛 마비.</summary>
         ParalyticGas = 6,
+        /// <summary>예고 칸 (3-17d 패턴 보스): 효과 없음 — 다음 차례에 보스 주문이 터질 칸을 보여 준다.</summary>
+        Warning = 7,
     }
 
     /// <summary>

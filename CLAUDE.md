@@ -131,6 +131,7 @@ Assets/
 - 허기 · 음식 (3-14): 허기는 `Unit.Hunger` + ⑤ `HungerSystem`, 먹기 `EatCommand` → `Hunger.Eat`, 수치 `HungerConfig.asset`(BALANCE 18번). 원소가 칸에 닿은 일 · 유닛이 죽은 일에 아이템 규칙을 붙일 때는 `World.SetItemRules`(OnCellsHit · OnUnitDied) — 시뮬레이션 안에서 ItemBook을 직접 들고 다니지 않는다
 - 구역 (3-17a): 층 → 구역 · 적 종류 · 보스는 `ZoneBook`(`ZoneCatalog.asset`) 한 곳 — 적 종류 ID = 유닛 VisualId, 종류 뽑기 난수는 `RngStream.EnemyKind`, 세기는 `UnitDef.Scaled`. 중간 보스 방은 `TileType.SealedStairs`(보스가 죽으면 `DeathCheckSystem`이 계단으로), 봉인 계단이 없는 보스 방의 보스 = 승리
 - 적 종류 행동 (3-17b): `EnemyTraits`(`ZoneCatalog.asset` 적 줄) 필드 조합으로만 — 빠름 · 느림 · 명중 시 상태 · 맞으면 지형 · 원거리 주문 · 거리 벌림 · 속성 배수. 전투 쪽 연결은 `World.SetEnemyRules`(`EnemyRules` — `Combat.ApplyDamage` · `AttackCommand`), 행동은 `MeleeChaserAi` 하나(적 주문 판정은 플레이어와 같은 `SpellCasting.CheckDef`). 종류별 분기 코드를 늘리지 않는다
+- 패턴 보스 (3-17d): 보스 행동도 `EnemyTraits` 필드(힘 모으기 주문 · 순간이동 · 소환)로만, 커맨드는 `BossActions.cs`. 예고 칸 = 지형 `Warning` + `Unit.ChargeTarget`(스냅샷 v23), 소환 여부 = `Unit.Summoned`
 - 진영 (3-13b): 적대 판정은 `Factions.AreHostile` 하나(적 ↔ 플레이어 · 아군) — `Faction == player.Faction`으로 적을 고르지 않는다. 아군은 `UnitSpawner.SpawnAlly` + `AllyAi`, 복원 · 층 이동의 AI 공장은 진영으로 고른다
 - 싱글턴 + `DontDestroyOnLoad` 남발을 피한다. 순수 로직은 생성자 주입, 어댑터는 씬 컴포지션 루트 하나에서 연결한다.
 

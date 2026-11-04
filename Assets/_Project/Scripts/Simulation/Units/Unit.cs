@@ -72,6 +72,12 @@ namespace ProjectM.Units
         /// <summary>AI 배회 목적지 (2026-10-16). 플레이어를 못 봤고 기억도 없을 때 가는 칸. 없으면 null.</summary>
         public GridPos? WanderTarget { get; set; }
 
+        /// <summary>패턴 보스 (3-17d, v23): 힘을 모아 다음 차례에 주문을 터뜨릴 중심 칸. null = 모으지 않음.</summary>
+        public GridPos? ChargeTarget { get; set; }
+
+        /// <summary>패턴 보스 (3-17d, v23): 소환을 이미 했다.</summary>
+        public bool Summoned { get; set; }
+
         /// <summary>걸려 있는 상태 이상 (2-3). 종류 순으로 정렬, 종류마다 하나. StatusEffects로만 바꾼다.</summary>
         public List<StatusInstance> Statuses { get; } = new List<StatusInstance>();
 

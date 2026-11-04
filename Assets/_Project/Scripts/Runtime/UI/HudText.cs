@@ -158,6 +158,11 @@ namespace ProjectM.UI
         /// <summary>연금 솥 (3-16c).</summary>
         public static string BrewTitle(int picked) => $"연금 솥 — 씨앗 {picked + 1}/3 고르기  <size=70%><color=#AAAAAA>Esc 그만두기</color></size>";
         public const string NotEnoughSeeds = "씨앗이 3개 있어야 한다";
+        /// <summary>3-17d 패턴 보스.</summary>
+        public static string BossCharging(EntityId boss) => $"{Enemy(boss)}이(가) 힘을 모은다! 붉은 칸에서 벗어나라";
+        public static string BossTeleported(EntityId boss) => $"{Enemy(boss)}이(가) 순간이동했다";
+        public static string BossSummoned(EntityId boss, int count) => $"{Enemy(boss)}이(가) 부하 {count}을(를) 불러냈다";
+
         /// <summary>3-17a 중간 보스.</summary>
         public const string StairsUnsealed = "보스를 쓰러뜨렸다 — 내려가는 계단이 열렸다";
         public string Brewed(string id) => $"연금 솥에서 {Item(id)}이(가) 만들어졌다";

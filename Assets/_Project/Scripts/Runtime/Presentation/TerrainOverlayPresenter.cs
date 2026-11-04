@@ -21,6 +21,7 @@ namespace ProjectM.Presentation
         [SerializeField] private Color _contaminatedWaterColor = new Color(0.4f, 0.6f, 0.15f, 0.5f);
         [SerializeField] private Color _icePatchColor = new Color(0.75f, 0.92f, 1f, 0.55f);
         [SerializeField] private Color _paralyticGasColor = new Color(0.95f, 0.85f, 0.2f, 0.45f); // 3-9 마비 가스
+        [SerializeField] private Color _warningColor = new Color(1f, 0.1f, 0.1f, 0.5f); // 3-17d 보스 예고 칸
 
         [Header("G-3 바닥 무늬 (비면 흰 사각형)")]
         [SerializeField] private TileBase _fireZoneTile;
@@ -68,6 +69,7 @@ namespace ProjectM.Presentation
                 case TerrainEffectType.ContaminatedWater: return _contaminatedWaterColor;
                 case TerrainEffectType.IcePatch: return _icePatchColor;
                 case TerrainEffectType.ParalyticGas: return _paralyticGasColor;
+                case TerrainEffectType.Warning: return _warningColor; // 3-17d
                 default: return Color.clear;
             }
         }

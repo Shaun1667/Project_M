@@ -303,7 +303,8 @@ namespace ProjectM.Core
             return new UnitState(u.Id, u.Faction, u.VisualId, u.MaxHp, u.AttackDamage, u.SightRange, u.Pos.X, u.Pos.Y, u.Hp,
                 seen.HasValue, seen?.X ?? 0, seen?.Y ?? 0, u.MaxMana, u.Mana, (InventoryRef[])u.InventorySlots.Clone(), (InventoryRef[])u.QuickSlots.Clone(),
                 u.PreviousPos, u.WanderTarget, u.Statuses.ConvertAll(s => new UnitStatusState(s.Type, s.Remaining)).ToArray(),
-                u.Accuracy, u.Evasion, u.ExpReward, u.ExpMaxLevel, u.Level, u.Exp, u.Weapon, u.Strength, u.Armor, u.Hunger);
+                u.Accuracy, u.Evasion, u.ExpReward, u.ExpMaxLevel, u.Level, u.Exp, u.Weapon, u.Strength, u.Armor, u.Hunger,
+                u.ChargeTarget, u.Summoned);
         }
 
         private static Unit ToUnit(UnitState u)
@@ -314,6 +315,8 @@ namespace ProjectM.Core
                 u.Accuracy, u.Evasion, u.ExpReward, u.ExpMaxLevel, u.Level, u.Exp, u.Weapon, u.Strength, u.Armor, u.Hunger);
             foreach (var st in u.Statuses)
                 unit.Statuses.Add(new StatusInstance(st.Type, st.Remaining));
+            unit.ChargeTarget = u.ChargeTarget; // 3-17d
+            unit.Summoned = u.Summoned;
             return unit;
         }
 

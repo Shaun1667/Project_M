@@ -57,6 +57,13 @@ namespace ProjectM.Units
                 return StepToward(self, ally.Pos, cost) ?? new WaitCommand(cost);
             }
 
+            // 3-17d 패턴 보스: 모은 힘은 보이든 말든 다음 차례에 푼다 · 체력이 줄면 한 번 소환
+            var boss = TraitsOf(self);
+            if (self.ChargeTarget.HasValue && boss?.ChargeSpellId != null && _spells != null)
+                return new ReleaseChargeCommand(_world, _spells, boss.ChargeSpellId, cost);
+            if (boss?.SummonDef != null && !self.Summoned && boss.SummonCount > 0 && (long)self.Hp * 100 <= (long)self.MaxHp * boss.SummonAtHpPercent)
+                return new SummonCommand(_world, boss.SummonDef, boss.SummonCount, this, cost);
+
             // ① 보임
             if (PlayerActions.TryGetPlayer(_world, out var player) && player.IsAlive
                 && _sight.CanSee(_world.Map, self.Pos, player.Pos, self.SightRange)
@@ -65,6 +72,13 @@ namespace ProjectM.Units
                 self.LastSeenTargetPos = player.Pos;
                 self.WanderTarget = null;
                 var traits = TraitsOf(self);
+                if (traits != null && traits.TeleportPercent > 0 && GridMovement.Chebyshev(self.Pos, player.Pos) <= 1
+                    && _world.Rng.Get(RngStream.Ai).Range(0, 100) < traits.TeleportPercent)
+                    return new TeleportCommand(_world, player.Pos, 4, cost); // 3-17d 파라오: 붙으면 순간이동
+                if (traits != null && traits.ChargeSpellId != null && _spells != null && _spells.TryGet(traits.ChargeSpellId, out var charge)
+                    && GridMovement.Chebyshev(self.Pos, player.Pos) <= Math.Max(1, charge.Range)
+                    && _world.Rng.Get(RngStream.Ai).Range(0, 100) < traits.ChargePercent)
+                    return new ChargeCommand(_world, _spells, charge.Id, player.Pos, cost); // 3-17d 예고 강타
                 if (traits != null && traits.SpellId != null && TryCast(self, traits, player.Pos, cost, out var cast)) return cast; // 3-17b 주술사
                 if (traits != null && traits.KeepDistance > 0 && GridMovement.Chebyshev(self.Pos, player.Pos) < traits.KeepDistance
                     && self.Mana > 0) // 마나가 있으면 거리를 벌림 (없으면 붙어 싸움)

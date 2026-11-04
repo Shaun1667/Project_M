@@ -43,3 +43,10 @@ MonoBehaviour:
     AppliesStatus: 4
     DamagePerTick: 0
     BlockedBy: 0
+  - Type: 7
+    DurationTicks: 2
+    AppliesStatus: 0
+    DamagePerTick: 0
+    BlockedBy: 0
+  _grassBurnTicks: 3
+  _fireSpreadMaxPerTick: 8

@@ -178,3 +178,25 @@ MonoBehaviour:
     StatusChancePercent: 30
     LeavesTerrain: 0
     DisplayName: "\uBAA8\uB798 \uD654\uC0B4"
+  - Id: boss_slime_slam
+    Element: 6
+    Shape: 2
+    Range: 3
+    Damage: 6
+    ManaCost: 0
+    Radius: 1
+    AppliesStatus: 5
+    StatusChancePercent: 100
+    LeavesTerrain: 3
+    DisplayName: "\uC2AC\uB77C\uC784 \uAC15\uD0C0"
+  - Id: boss_sand_storm
+    Element: 4
+    Shape: 2
+    Range: 6
+    Damage: 7
+    ManaCost: 0
+    Radius: 1
+    AppliesStatus: 2
+    StatusChancePercent: 50
+    LeavesTerrain: 0
+    DisplayName: "\uBAA8\uB798 \uD3ED\uD48D"

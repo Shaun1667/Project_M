@@ -28,11 +28,29 @@ namespace ProjectM.Units
         /// <summary>플레이어와 이 거리보다 가까우면 물러난다 (0 = 안 물러남, 주술사).</summary>
         public int KeepDistance { get; }
         private readonly int[] _damagePercent = new int[7];
+        /// <summary>3-17d 패턴 보스: 힘 모으기 주문 · 차례마다 시작 확률 % (예고 칸 → 다음 차례에 터짐).</summary>
+        public string ChargeSpellId { get; }
+        public int ChargePercent { get; }
+        /// <summary>플레이어가 붙어 있을 때 순간이동 확률 %.</summary>
+        public int TeleportPercent { get; }
+        /// <summary>체력이 SummonAtHpPercent% 이하가 되면 한 번 소환 (종류 · 수).</summary>
+        public UnitDef SummonDef { get; }
+        public int SummonCount { get; }
+        public int SummonAtHpPercent { get; }
 
         public EnemyTraits(string id, string displayName = null, int moveSteps = 1, int moveCostTicks = 1,
             StatusType hitStatus = StatusType.None, int hitStatusPercent = 0, TerrainEffectType hurtTerrain = TerrainEffectType.None,
-            string spellId = null, int keepDistance = 0, IReadOnlyDictionary<Element, int> damagePercent = null)
+            string spellId = null, int keepDistance = 0, IReadOnlyDictionary<Element, int> damagePercent = null,
+            string chargeSpellId = null, int chargePercent = 0, int teleportPercent = 0, UnitDef summonDef = null, int summonCount = 0, int summonAtHpPercent = 0)
         {
+            if (chargePercent < 0 || chargePercent > 100) throw new ArgumentOutOfRangeException(nameof(chargePercent));
+            if (teleportPercent < 0 || teleportPercent > 100) throw new ArgumentOutOfRangeException(nameof(teleportPercent));
+            ChargeSpellId = string.IsNullOrEmpty(chargeSpellId) ? null : chargeSpellId;
+            ChargePercent = chargePercent;
+            TeleportPercent = teleportPercent;
+            SummonDef = summonDef;
+            SummonCount = Math.Max(0, summonCount);
+            SummonAtHpPercent = Math.Max(0, summonAtHpPercent);
             if (string.IsNullOrEmpty(id)) throw new ArgumentException("적 종류 ID가 비어 있다.", nameof(id));
             if (moveSteps < 1 || moveSteps > 2) throw new ArgumentOutOfRangeException(nameof(moveSteps), moveSteps, "이동 칸은 1 · 2");
             if (moveCostTicks < 1) throw new ArgumentOutOfRangeException(nameof(moveCostTicks));

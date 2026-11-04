@@ -109,7 +109,7 @@ namespace ProjectM.Tests
         [Test]
         public void Snapshot_RoundTripsPrice()
         {
-            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.EqualTo(22), "3-15c 상점");
+            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.GreaterThanOrEqualTo(22), "3-15c 상점");
             var (world, _, _) = Start();
             world.FloorItems.Add(new GridPos(4, 1), "shortsword", 1, 60);
             var restored = World.Restore(WorldSnapshotCodec.Decode(WorldSnapshotCodec.Encode(world.Capture())), (w, id) => null);

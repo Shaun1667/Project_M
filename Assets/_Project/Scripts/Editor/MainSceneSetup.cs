@@ -450,6 +450,8 @@ namespace ProjectM.Editor
                 ("enemy_jackal", new Color(0.7f, 0.55f, 0.3f), 0.7f),
                 ("enemy_mummy", new Color(0.88f, 0.85f, 0.72f), 1.1f),
                 ("enemy_desert_shaman", new Color(0.95f, 0.7f, 0.2f), 1f),
+                ("boss_slime_girl", new Color(0.4f, 0.7f, 1f), 1.8f), // 3-17d 보스 (모델은 Varco Models가 붙임)
+                ("boss_pharaoh", new Color(1f, 0.82f, 0.2f), 1.8f),
             })
                 catalog.Set(id, AssetDatabase.LoadAssetAtPath<Sprite>(UnitCircleSpritePath), color, height);
             // 3-4b 임시 보스: 짙은 자주색, 두 배 키 (판정은 1칸)
@@ -513,6 +515,16 @@ namespace ProjectM.Editor
                 { Id = "enemy_sand_bolt", Element = Element.Earth, Shape = SpellShape.Bolt, Range = 6, Damage = 3, ManaCost = 3 });
             changed |= catalog.SetStatusIfNone("enemy_sand_bolt", StatusType.Slow, 30);
             changed |= catalog.SetDisplayNameIfEmpty("enemy_sand_bolt", "모래 화살");
+            // 3-17d 보스 힘 모으기 주문 (예고 칸 3×3 → 다음 차례, 마나 0)
+            changed |= catalog.AddIfMissing(new SpellCatalogAsset.Entry
+                { Id = "boss_slime_slam", Element = Element.Water, Shape = SpellShape.Burst, Range = 3, Damage = 6, ManaCost = 0, Radius = 1 });
+            changed |= catalog.SetStatusIfNone("boss_slime_slam", StatusType.Wet, 100);
+            changed |= catalog.SetTerrainIfNone("boss_slime_slam", TerrainEffectType.Water);
+            changed |= catalog.SetDisplayNameIfEmpty("boss_slime_slam", "슬라임 강타");
+            changed |= catalog.AddIfMissing(new SpellCatalogAsset.Entry
+                { Id = "boss_sand_storm", Element = Element.Earth, Shape = SpellShape.Burst, Range = 6, Damage = 7, ManaCost = 0, Radius = 1 });
+            changed |= catalog.SetStatusIfNone("boss_sand_storm", StatusType.Slow, 50);
+            changed |= catalog.SetDisplayNameIfEmpty("boss_sand_storm", "모래 폭풍");
             // 3-12a 함정 효과 주문 (BALANCE 17번): 함정 칸 중심 3×3, 시전자 없음 · 마나 0 · 배우지 않음. 마비 가스는 바람 속성(반응 없음)
             foreach (var (id, name, element, damage, status, chance, terrain) in new[]
             {
@@ -580,6 +592,8 @@ namespace ProjectM.Editor
             // 3-9: 마비 가스 4틱 · 위 유닛 마비 (마비 가스 물약, BALANCE 7번)
             changed |= catalog.AddIfMissing(new TerrainCatalogAsset.Entry
                 { Type = TerrainEffectType.ParalyticGas, DurationTicks = 4, AppliesStatus = StatusType.Paralyze });
+            // 3-17d 보스 예고 칸: 효과 없음 · 2틱 (플레이어 한 차례 동안 보임)
+            changed |= catalog.AddIfMissing(new TerrainCatalogAsset.Entry { Type = TerrainEffectType.Warning, DurationTicks = 2 });
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }
@@ -623,6 +637,14 @@ namespace ProjectM.Editor
             };
             var sandShaman = E("enemy_desert_shaman", "사막 주술사", 10, 2, 8, 10, 5, 4, 12); sandShaman.SpellId = "enemy_sand_bolt"; sandShaman.MaxMana = 6; sandShaman.KeepDistance = 3;
             foreach (var row in new[] { scorpion, jackal, mummy, sandShaman }) changed |= catalog.AddIfMissing(row);
+            // 3-17d 패턴 보스 (BALANCE 20-2)
+            var slimeGirl = E("boss_slime_girl", "슬라임 소녀", 60, 4, 10, 10, 8, 10, 30);
+            slimeGirl.HurtTerrain = TerrainEffectType.Water; slimeGirl.ChargeSpellId = "boss_slime_slam"; slimeGirl.ChargePercent = 35;
+            var pharaoh = E("boss_pharaoh", "파라오 술사", 80, 4, 10, 14, 10, 20, 30);
+            pharaoh.SpellId = "enemy_sand_bolt"; pharaoh.MaxMana = 9; pharaoh.KeepDistance = 2;
+            pharaoh.ChargeSpellId = "boss_sand_storm"; pharaoh.ChargePercent = 30; pharaoh.TeleportPercent = 40;
+            pharaoh.SummonId = "enemy_mummy"; pharaoh.SummonCount = 2; pharaoh.SummonAtHpPercent = 50;
+            foreach (var row in new[] { slimeGirl, pharaoh }) changed |= catalog.AddIfMissing(row);
             ZoneCatalogAsset.Zone Z(string name, int first, int last, int percent, string boss, params (string id, int weight)[] enemies)
             {
                 var rows = new System.Collections.Generic.List<ZoneCatalogAsset.ZoneEnemyRow>();
@@ -639,6 +661,8 @@ namespace ProjectM.Editor
             foreach (int first in new[] { 6, 11, 16, 21 })
                 changed |= catalog.ReplacePlaceholderEnemies(first, ("enemy_scorpion", 3), ("enemy_jackal", 2), ("enemy_mummy", 2), ("enemy_desert_shaman", 1));
             changed |= catalog.ReplaceStatPercent(6, 150, 100);
+            changed |= catalog.ReplaceBoss(1, BossVisualId, "boss_slime_girl"); // 3-17d
+            changed |= catalog.ReplaceBoss(6, BossVisualId, "boss_pharaoh");
             changed |= catalog.ReplaceStatPercent(11, 200, 130);
             changed |= catalog.ReplaceStatPercent(16, 250, 160);
             changed |= catalog.ReplaceStatPercent(21, 300, 200);

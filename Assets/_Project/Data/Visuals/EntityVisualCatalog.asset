@@ -186,3 +186,25 @@ MonoBehaviour:
     WalkBack: []
     WalkSide: []
     PixelVariants: []
+  - Id: boss_slime_girl
+    Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
+    Tint: {r: 0.4, g: 0.7, b: 1, a: 1}
+    Prefab: {fileID: 7214064826023461617, guid: 67694bad125e0b24eaa98a5c0edb7b5b, type: 3}
+    Height: 1.8
+    Variants: []
+    PixelIdle: {fileID: 0}
+    WalkFront: []
+    WalkBack: []
+    WalkSide: []
+    PixelVariants: []
+  - Id: boss_pharaoh
+    Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
+    Tint: {r: 1, g: 0.82, b: 0.2, a: 1}
+    Prefab: {fileID: 0}
+    Height: 1.8
+    Variants: []
+    PixelIdle: {fileID: 0}
+    WalkFront: []
+    WalkBack: []
+    WalkSide: []
+    PixelVariants: []

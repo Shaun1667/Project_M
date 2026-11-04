@@ -147,7 +147,9 @@ namespace ProjectM.Editor
             catalog.SetPrefab("enemy_bunny", variants[0]); // 3-17b 적 종류마다 한 모델
             catalog.SetPrefab("enemy_rat", variants[1]);
             catalog.SetPrefab("enemy_slime", variants[2]);
-            catalog.SetPrefab("boss", BuildPrefab(Boss, null));
+            var bossPrefab = BuildPrefab(Boss, null);
+            catalog.SetPrefab("boss", bossPrefab);
+            catalog.SetPrefab("boss_slime_girl", bossPrefab); // 3-17d 5층 보스 = 슬라임 소녀 모델
             EditorUtility.SetDirty(catalog);
 
             var floorPrefab = BuildPrefab(Floor, SinkToGround);

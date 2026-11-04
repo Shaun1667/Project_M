@@ -37,6 +37,13 @@ namespace ProjectM.Data
             [Min(0)] public int MaxMana;
             [Tooltip("플레이어가 이보다 가까우면 물러남 (마나가 있을 때)")] [Min(0)] public int KeepDistance;
             [Tooltip("속성 피해 배수 % (약점 · 저항) — 없는 속성은 100")] public List<ElementPercent> DamagePercents;
+            [Header("패턴 보스 (3-17d)")]
+            [Tooltip("힘 모으기 주문 — 예고 칸 표시 후 다음 차례에 터짐 (사거리 = 주문 Range)")] public string ChargeSpellId;
+            [Range(0, 100)] public int ChargePercent;
+            [Tooltip("플레이어가 붙으면 순간이동 확률 %")] [Range(0, 100)] public int TeleportPercent;
+            [Tooltip("소환할 적 ID (이 표) · 수 · 체력 % 이하에서 한 번")] public string SummonId;
+            [Min(0)] public int SummonCount;
+            [Range(0, 100)] public int SummonAtHpPercent;
         }
 
         [System.Serializable]
@@ -119,8 +126,15 @@ namespace ProjectM.Data
             {
                 var percents = new Dictionary<Element, int>();
                 if (e.DamagePercents != null) foreach (var p in e.DamagePercents) percents[p.Element] = p.Percent;
+                UnitDef summon = null;
+                if (!string.IsNullOrEmpty(e.SummonId))
+                {
+                    if (!TryGetEnemy(e.SummonId, out var s)) throw new System.ArgumentException($"적 '{e.Id}': 소환 '{e.SummonId}'이 적 표에 없다.");
+                    summon = ToDef(s);
+                }
                 list.Add(new EnemyTraits(e.Id, e.DisplayName, System.Math.Max(1, e.MoveSteps), System.Math.Max(1, e.MoveCostTicks),
-                    e.HitStatus, e.HitStatusPercent, e.HurtTerrain, e.SpellId, e.KeepDistance, percents));
+                    e.HitStatus, e.HitStatusPercent, e.HurtTerrain, e.SpellId, e.KeepDistance, percents,
+                    e.ChargeSpellId, e.ChargePercent, e.TeleportPercent, summon, e.SummonCount, e.SummonAtHpPercent));
             }
             return new EnemyBook(list);
         }

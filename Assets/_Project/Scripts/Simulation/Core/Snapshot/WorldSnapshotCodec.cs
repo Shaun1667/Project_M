@@ -336,6 +336,8 @@ namespace ProjectM.Core
                     w.Write(u.Armor.DefenseDivisor);
                 }
                 w.Write(u.Hunger); // 20 (3-14)
+                WriteOptionalPos(w, u.ChargeTarget); // 23 (3-17d)
+                w.Write(u.Summoned);
             }
         }
 
@@ -388,8 +390,11 @@ namespace ProjectM.Core
                     armor = new EquippedArmor(armorId, aTier, aUpgrade, aStr, aMin, aMax, aPenalty, aDivisor);
                 }
                 int hunger = r.ReadInt32(); // 20 (3-14)
+                var chargeTarget = ReadOptionalPos(r); // 23 (3-17d)
+                bool summoned = r.ReadBoolean();
                 units[i] = new UnitState(id, faction, visualId, maxHp, attackDamage, sightRange, x, y, hp, hasLastSeen, lastSeenX, lastSeenY,
-                    maxMana, mana, inventory, quick, previousPos, wanderTarget, statuses, accuracy, evasion, expReward, expMaxLevel, level, exp, weapon, strength, armor, hunger);
+                    maxMana, mana, inventory, quick, previousPos, wanderTarget, statuses, accuracy, evasion, expReward, expMaxLevel, level, exp, weapon, strength, armor, hunger,
+                    chargeTarget, summoned);
             }
             return units;
         }

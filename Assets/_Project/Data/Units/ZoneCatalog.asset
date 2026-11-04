@@ -31,6 +31,12 @@ MonoBehaviour:
     MaxMana: 0
     KeepDistance: 0
     DamagePercents: []
+    ChargeSpellId: 
+    ChargePercent: 0
+    TeleportPercent: 0
+    SummonId: 
+    SummonCount: 0
+    SummonAtHpPercent: 0
   - Id: boss
     DisplayName: "\uBCF4\uC2A4"
     MaxHp: 60
@@ -49,6 +55,12 @@ MonoBehaviour:
     MaxMana: 0
     KeepDistance: 0
     DamagePercents: []
+    ChargeSpellId: 
+    ChargePercent: 0
+    TeleportPercent: 0
+    SummonId: 
+    SummonCount: 0
+    SummonAtHpPercent: 0
   - Id: enemy_rat
     DisplayName: "\uC950"
     MaxHp: 8
@@ -67,6 +79,12 @@ MonoBehaviour:
     MaxMana: 0
     KeepDistance: 0
     DamagePercents: []
+    ChargeSpellId: 
+    ChargePercent: 0
+    TeleportPercent: 0
+    SummonId: 
+    SummonCount: 0
+    SummonAtHpPercent: 0
   - Id: enemy_bunny
     DisplayName: "\uD1A0\uB07C"
     MaxHp: 5
@@ -85,6 +103,12 @@ MonoBehaviour:
     MaxMana: 0
     KeepDistance: 0
     DamagePercents: []
+    ChargeSpellId: 
+    ChargePercent: 0
+    TeleportPercent: 0
+    SummonId: 
+    SummonCount: 0
+    SummonAtHpPercent: 0
   - Id: enemy_slime
     DisplayName: "\uC2AC\uB77C\uC784"
     MaxHp: 12
@@ -105,6 +129,12 @@ MonoBehaviour:
     DamagePercents:
     - Element: 0
       Percent: 50
+    ChargeSpellId: 
+    ChargePercent: 0
+    TeleportPercent: 0
+    SummonId: 
+    SummonCount: 0
+    SummonAtHpPercent: 0
   - Id: enemy_goblin_shaman
     DisplayName: "\uACE0\uBE14\uB9B0 \uC8FC\uC220\uC0AC"
     MaxHp: 6
@@ -123,6 +153,12 @@ MonoBehaviour:
     MaxMana: 4
     KeepDistance: 3
     DamagePercents: []
+    ChargeSpellId: 
+    ChargePercent: 0
+    TeleportPercent: 0
+    SummonId: 
+    SummonCount: 0
+    SummonAtHpPercent: 0
   - Id: enemy_scorpion
     DisplayName: "\uC804\uAC08"
     MaxHp: 12
@@ -141,6 +177,12 @@ MonoBehaviour:
     MaxMana: 0
     KeepDistance: 0
     DamagePercents: []
+    ChargeSpellId: 
+    ChargePercent: 0
+    TeleportPercent: 0
+    SummonId: 
+    SummonCount: 0
+    SummonAtHpPercent: 0
   - Id: enemy_jackal
     DisplayName: "\uC790\uCE7C"
     MaxHp: 9
@@ -159,6 +201,12 @@ MonoBehaviour:
     MaxMana: 0
     KeepDistance: 0
     DamagePercents: []
+    ChargeSpellId: 
+    ChargePercent: 0
+    TeleportPercent: 0
+    SummonId: 
+    SummonCount: 0
+    SummonAtHpPercent: 0
   - Id: enemy_mummy
     DisplayName: "\uBBF8\uB77C"
     MaxHp: 22
@@ -181,6 +229,12 @@ MonoBehaviour:
       Percent: 150
     - Element: 3
       Percent: 50
+    ChargeSpellId: 
+    ChargePercent: 0
+    TeleportPercent: 0
+    SummonId: 
+    SummonCount: 0
+    SummonAtHpPercent: 0
   - Id: enemy_desert_shaman
     DisplayName: "\uC0AC\uB9C9 \uC8FC\uC220\uC0AC"
     MaxHp: 10
@@ -199,6 +253,60 @@ MonoBehaviour:
     MaxMana: 6
     KeepDistance: 3
     DamagePercents: []
+    ChargeSpellId: 
+    ChargePercent: 0
+    TeleportPercent: 0
+    SummonId: 
+    SummonCount: 0
+    SummonAtHpPercent: 0
+  - Id: boss_slime_girl
+    DisplayName: "\uC2AC\uB77C\uC784 \uC18C\uB140"
+    MaxHp: 60
+    AttackDamage: 4
+    SightRange: 10
+    Accuracy: 10
+    Evasion: 8
+    ExpReward: 10
+    ExpMaxLevel: 30
+    MoveSteps: 0
+    MoveCostTicks: 0
+    HitStatus: 0
+    HitStatusPercent: 0
+    HurtTerrain: 3
+    SpellId: 
+    MaxMana: 0
+    KeepDistance: 0
+    DamagePercents: []
+    ChargeSpellId: boss_slime_slam
+    ChargePercent: 35
+    TeleportPercent: 0
+    SummonId: 
+    SummonCount: 0
+    SummonAtHpPercent: 0
+  - Id: boss_pharaoh
+    DisplayName: "\uD30C\uB77C\uC624 \uC220\uC0AC"
+    MaxHp: 80
+    AttackDamage: 4
+    SightRange: 10
+    Accuracy: 14
+    Evasion: 10
+    ExpReward: 20
+    ExpMaxLevel: 30
+    MoveSteps: 0
+    MoveCostTicks: 0
+    HitStatus: 0
+    HitStatusPercent: 0
+    HurtTerrain: 0
+    SpellId: enemy_sand_bolt
+    MaxMana: 9
+    KeepDistance: 2
+    DamagePercents: []
+    ChargeSpellId: boss_sand_storm
+    ChargePercent: 30
+    TeleportPercent: 40
+    SummonId: enemy_mummy
+    SummonCount: 2
+    SummonAtHpPercent: 50
   _zones:
   - Name: "\uC232 \uC18D \uB3D9\uAD74"
     FirstFloor: 1
@@ -213,7 +321,7 @@ MonoBehaviour:
       Weight: 2
     - EnemyId: enemy_goblin_shaman
       Weight: 1
-    BossId: boss
+    BossId: boss_slime_girl
     LightColor: {r: 0.85, g: 1, b: 0.88, a: 1}
   - Name: "\uC0AC\uB9C9 \uD53C\uB77C\uBBF8\uB4DC"
     FirstFloor: 6
@@ -228,7 +336,7 @@ MonoBehaviour:
       Weight: 2
     - EnemyId: enemy_desert_shaman
       Weight: 1
-    BossId: boss
+    BossId: boss_pharaoh
     LightColor: {r: 1, g: 0.84, b: 0.58, a: 1}
   - Name: "3\uAD6C\uC5ED (\uC784\uC2DC)"
     FirstFloor: 11

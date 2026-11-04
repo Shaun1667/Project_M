@@ -125,6 +125,9 @@ namespace ProjectM.UI
             _bus.Subscribe<ProjectM.Dungeon.ItemBoughtEvent>(OnBought);
             _bus.Subscribe<ThrownBrokeEvent>(OnThrownBroke);
             _bus.Subscribe<ProjectM.Dungeon.StairsUnsealedEvent>(OnStairsUnsealed);
+            _bus.Subscribe<BossChargingEvent>(OnBossCharging);
+            _bus.Subscribe<BossTeleportedEvent>(OnBossTeleported);
+            _bus.Subscribe<BossSummonedEvent>(OnBossSummoned);
             _bus.Subscribe<PotionBrewedEvent>(OnBrewed);
             _bus.Subscribe<ProjectM.Dungeon.SeedPlantedEvent>(OnPlanted);
             _bus.Subscribe<ProjectM.Dungeon.ItemSoldEvent>(OnSold);
@@ -323,6 +326,10 @@ namespace ProjectM.UI
             Changed?.Invoke();
         }
 
+        private void OnBossCharging(BossChargingEvent e) { AddLog(HudText.BossCharging(e.Boss)); Changed?.Invoke(); }
+        private void OnBossTeleported(BossTeleportedEvent e) { AddLog(HudText.BossTeleported(e.Boss)); Changed?.Invoke(); }
+        private void OnBossSummoned(BossSummonedEvent e) { AddLog(HudText.BossSummoned(e.Boss, e.Count)); Changed?.Invoke(); }
+
         private void OnStairsUnsealed(ProjectM.Dungeon.StairsUnsealedEvent e)
         {
             AddLog(HudText.StairsUnsealed);
@@ -462,6 +469,9 @@ namespace ProjectM.UI
             _bus.Unsubscribe<ProjectM.Dungeon.ItemBoughtEvent>(OnBought);
             _bus.Unsubscribe<ThrownBrokeEvent>(OnThrownBroke);
             _bus.Unsubscribe<ProjectM.Dungeon.StairsUnsealedEvent>(OnStairsUnsealed);
+            _bus.Unsubscribe<BossChargingEvent>(OnBossCharging);
+            _bus.Unsubscribe<BossTeleportedEvent>(OnBossTeleported);
+            _bus.Unsubscribe<BossSummonedEvent>(OnBossSummoned);
             _bus.Unsubscribe<PotionBrewedEvent>(OnBrewed);
             _bus.Unsubscribe<ProjectM.Dungeon.SeedPlantedEvent>(OnPlanted);
             _bus.Unsubscribe<ProjectM.Dungeon.ItemSoldEvent>(OnSold);
