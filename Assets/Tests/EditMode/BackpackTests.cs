@@ -82,6 +82,45 @@ namespace ProjectM.Tests
             Assert.That(p.InventorySlots[0].Count, Is.EqualTo(3));
         }
 
+        // 대상 고르기 (3-10b): 조건에 맞는 칸만 고를 수 있고, 고르면 닫히며 (주문서, 대상)을 넘긴다
+        [Test]
+        public void ItemPick_OnlyFilteredEntries()
+        {
+            var (world, player) = Start();
+            Inventory.TryAdd(world, null, Items, player, InventoryRef.Item("fusion_device"));
+            Inventory.TryAdd(world, null, Items, player, InventoryRef.Item("potion_healing"));
+            Inventory.TryAdd(world, null, Items, player, InventoryRef.Item("scroll_rage"));
+            var menu = new InventoryMenu();
+            menu.OpenForPick(player.InventorySlots[2], e => e.Id == "potion_healing", player.InventorySlots);
+            Assert.That(menu.State, Is.EqualTo(InventoryMenuState.ItemPick));
+            Assert.That(menu.Selected, Is.EqualTo(1), "고를 수 있는 첫 칸");
+            menu.Select(0, player.InventorySlots.Length);
+            Assert.That(menu.Confirm(world, player).Kind, Is.EqualTo(InventoryActionKind.None), "조건 밖 칸");
+            menu.Select(1, player.InventorySlots.Length);
+            var action = menu.Confirm(world, player);
+            Assert.That(action.Kind, Is.EqualTo(InventoryActionKind.PickedItem));
+            Assert.That((action.Entry.Id, action.Second.Id), Is.EqualTo(("scroll_rage", "potion_healing")));
+            Assert.That(menu.IsOpen, Is.False);
+        }
+
+        // 식별 주문서의 고르기 조건 = 아직 모르는 아이템 (주문서 자신 제외)
+        [Test]
+        public void IdentifyPickFilter_UnknownItemsOnly()
+        {
+            var items = new ItemBook(new[]
+            {
+                new ItemDef("scroll_identify", ItemUse.Scroll, effect: ConsumableEffect.Identify, weight: 1),
+                new ItemDef("potion_healing", ItemUse.Potion, effect: ConsumableEffect.Healing, weight: 3),
+            });
+            var (world, _) = Start();
+            Identification.AssignLooks(world, items, ConsumableTests.BalanceConfig());
+            var filter = Consumables.PickFilter(world, items, InventoryRef.Item("scroll_identify"));
+            Assert.That(filter, Is.Not.Null);
+            Assert.That(filter(InventoryRef.Item("potion_healing")), Is.True);
+            Assert.That(filter(InventoryRef.Item("scroll_identify")), Is.False, "자기 자신");
+            Assert.That(Consumables.PickFilter(world, items, InventoryRef.Item("potion_healing")), Is.Null, "고르기 없는 물약");
+        }
+
         [Test]
         public void Texts()
         {

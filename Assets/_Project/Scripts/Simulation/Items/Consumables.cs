@@ -181,6 +181,21 @@ namespace ProjectM.Items
     /// </summary>
     public static class Consumables
     {
+        /// <summary>
+        /// 쓰기 전에 배낭에서 대상을 고르는 주문서면 고를 수 있는 항목 조건, 아니면 null (3-10b). 지금은 식별 = 아직 모르는 아이템.
+        /// </summary>
+        public static Func<InventoryRef, bool> PickFilter(World world, ItemBook items, InventoryRef entry)
+        {
+            if (world == null || items == null || !items.TryGet(entry.Id, out var def) || !def.IsConsumable) return null;
+            switch (def.Effect)
+            {
+                case ConsumableEffect.Identify:
+                    return e => !e.IsEmpty && e.Kind == InventoryKind.Item && e != entry && !world.Run.IsKnown(e.Id);
+                default:
+                    return null;
+            }
+        }
+
         /// <summary>쓸 수 있는지 미리 본다 (입력이 차례를 쓰기 전에 — 든 무기 없이 강화 주문서를 읽으려 하면 NoWeapon).</summary>
         public static ConsumeResult Check(ItemBook items, Unit unit, InventoryRef entry, UpgradeTarget target = UpgradeTarget.Auto)
         {
@@ -215,7 +230,9 @@ namespace ProjectM.Items
             Use(world, new ConsumableRules(items), unit, inventoryIndex);
 
         /// <summary>인벤토리 칸 index의 물약을 마시거나 주문서를 읽는다 (틱 안 — UseConsumableCommand가 부름).</summary>
-        public static ConsumeResult Use(World world, ConsumableRules rules, Unit unit, int inventoryIndex, UpgradeTarget upgradeTarget = UpgradeTarget.Auto)
+        /// <param name="pick">배낭에서 고른 대상 (3-10b — 식별 주문서 등, PickFilter). 비면 예전처럼 알아서 고른다.</param>
+        public static ConsumeResult Use(World world, ConsumableRules rules, Unit unit, int inventoryIndex, UpgradeTarget upgradeTarget = UpgradeTarget.Auto,
+            InventoryRef pick = default)
         {
             if (world == null) throw new ArgumentNullException(nameof(world));
             if (rules == null) throw new ArgumentNullException(nameof(rules));
@@ -229,7 +246,7 @@ namespace ProjectM.Items
             Inventory.RemoveAt(world, unit, inventoryIndex);
             var mode = def.Use == ItemUse.Potion ? ConsumeMode.Drink : ConsumeMode.Read;
             Announce(world, unit, def, mode, unit.Pos, identify: true);
-            Apply(world, rules, unit, def, unit.Pos, upgradeTarget);
+            Apply(world, rules, unit, def, unit.Pos, upgradeTarget, pick);
             return result;
         }
 
@@ -266,7 +283,8 @@ namespace ProjectM.Items
             world.Events.Publish(new ConsumableUsedEvent(unit.Id, def.Id, def.Effect, mode, at, look, wasKnown, world.Run.IsKnown(def.Id)));
         }
 
-        private static void Apply(World world, ConsumableRules rules, Unit unit, ItemDef def, GridPos at, UpgradeTarget upgradeTarget = UpgradeTarget.Auto)
+        private static void Apply(World world, ConsumableRules rules, Unit unit, ItemDef def, GridPos at, UpgradeTarget upgradeTarget = UpgradeTarget.Auto,
+            InventoryRef pick = default)
         {
             var config = rules.Config;
             switch (def.Effect)
@@ -320,7 +338,7 @@ namespace ProjectM.Items
                     Frost(world, rules, at);
                     break;
                 case ConsumableEffect.Identify:
-                    IdentifyOne(world, rules.Items, unit);
+                    IdentifyOne(world, rules.Items, unit, pick);
                     break;
                 case ConsumableEffect.MagicMapping:
                     RevealFloor(world);
@@ -387,8 +405,18 @@ namespace ProjectM.Items
         }
 
         /// <summary>식별 주문서: 인벤토리 앞 칸부터 모르는 물약 · 주문서 한 종류를 식별한다 (SPD는 고르기 — 고르는 창은 나중에).</summary>
-        private static void IdentifyOne(World world, ItemBook items, Unit unit)
+        private static void IdentifyOne(World world, ItemBook items, Unit unit, InventoryRef pick)
         {
+            // 3-10b: 고른 것이 아직 모르는 것이면 그것을, 아니면 앞 칸부터
+            if (!pick.IsEmpty && pick.Kind == InventoryKind.Item && !world.Run.IsKnown(pick.Id) && Array.IndexOf(unit.InventorySlots, pick) >= 0)
+            {
+                var pickLook = world.Run.LookOf(pick.Id);
+                if (Identification.Identify(world, pick.Id))
+                {
+                    world.Events.Publish(new ItemIdentifiedEvent(pick.Id, pickLook));
+                    return;
+                }
+            }
             foreach (var entry in unit.InventorySlots)
             {
                 if (entry.Kind != InventoryKind.Item || world.Run.IsKnown(entry.Id)) continue;
@@ -486,6 +514,7 @@ namespace ProjectM.Items
         private readonly ConsumableRules _rules;
         private readonly int _inventoryIndex;
         private readonly InventoryRef _entry;
+        private readonly InventoryRef _pick;
 
         public int CostTicks { get; }
 
@@ -496,9 +525,11 @@ namespace ProjectM.Items
 
         private readonly UpgradeTarget _upgradeTarget;
 
+        /// <param name="pick">배낭에서 고른 대상 (3-10b). 비면 알아서.</param>
         public UseConsumableCommand(World world, ConsumableRules rules, int inventoryIndex, InventoryRef entry, int costTicks,
-            UpgradeTarget upgradeTarget = UpgradeTarget.Auto)
+            UpgradeTarget upgradeTarget = UpgradeTarget.Auto, InventoryRef pick = default)
         {
+            _pick = pick;
             _upgradeTarget = upgradeTarget;
             if (costTicks < 1) throw new ArgumentOutOfRangeException(nameof(costTicks));
             _world = world ?? throw new ArgumentNullException(nameof(world));
@@ -512,7 +543,7 @@ namespace ProjectM.Items
         {
             if (!_world.Units.TryGet(context.Actor, out var unit) || !unit.IsAlive) return;
             if (_inventoryIndex < 0 || _inventoryIndex >= unit.InventorySlots.Length || unit.InventorySlots[_inventoryIndex] != _entry) return;
-            Consumables.Use(_world, _rules, unit, _inventoryIndex, _upgradeTarget);
+            Consumables.Use(_world, _rules, unit, _inventoryIndex, _upgradeTarget, _pick);
         }
     }
 

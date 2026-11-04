@@ -369,6 +369,14 @@ namespace ProjectM.Input
                     Hint(HudText.NoWeaponToUpgrade);
                     return;
                 }
+                // 3-10b: 대상을 고르는 주문서(식별)는 고를 것이 있으면 배낭을 "대상 고르기"로 — 고른 뒤 차례 1
+                var filter = Consumables.PickFilter(_world, _items, entry);
+                if (filter != null && System.Array.Exists(user.InventorySlots, e => filter(e)))
+                {
+                    CancelAim();
+                    _inventory.OpenForPick(entry, filter, user.InventorySlots);
+                    return;
+                }
                 int index = System.Array.IndexOf(user.InventorySlots, entry);
                 CloseInventory();
                 _clock.SubmitPlayerCommand(new UseConsumableCommand(_world, _consumables, index, entry, _config.DefaultActionCostTicks));
@@ -477,6 +485,10 @@ namespace ProjectM.Input
                     break;
                 case InventoryActionKind.ThrowItem:
                     BeginThrowAim(player, action.Entry);
+                    break;
+                case InventoryActionKind.PickedItem: // 3-10b: 고른 대상에 주문서 쓰기 = 차례 1
+                    _clock.SubmitPlayerCommand(new UseConsumableCommand(_world, _consumables, System.Array.IndexOf(player.InventorySlots, action.Entry),
+                        action.Entry, _config.DefaultActionCostTicks, UpgradeTarget.Auto, action.Second));
                     break;
                 default:
                     Hint(InventoryHint(player));

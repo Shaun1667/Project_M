@@ -75,7 +75,9 @@ namespace ProjectM.UI
             EnsureLayout(slots.Length);
 
             bool fusion = menu.State == InventoryMenuState.FusionPick;
-            if (fusion) _title.text = text.FusionPickTitle(menu.FusionFirst >= 0 ? slots[menu.FusionFirst] : InventoryRef.Empty);
+            bool picking = menu.State == InventoryMenuState.ItemPick; // 3-10b 대상 고르기
+            if (picking) _title.text = text.PickTitle(menu.PickSource);
+            else if (fusion) _title.text = text.FusionPickTitle(menu.FusionFirst >= 0 ? slots[menu.FusionFirst] : InventoryRef.Empty);
             else if (menu.AssignTarget >= 0) _title.text = HudText.AssignHint(menu.AssignTarget);
             else _title.text = menu.State == InventoryMenuState.ChooseSlot ? text.ChooseSlotHint(menu.SelectedEntry(player)) : HudText.BackpackTitle;
 
@@ -98,7 +100,7 @@ namespace ProjectM.UI
                 // 융합 고르기: 첫 주문 칸은 파랑으로 남기고, 주문이 아닌 칸은 빈 칸처럼 어둡게
                 if (i == menu.Selected) box.color = SelectedColor;
                 else if (fusion && i == menu.FusionFirst) box.color = FusionFirstColor;
-                else box.color = entry.IsEmpty || (fusion && entry.Kind != InventoryKind.Spell) ? CellEmptyColor : CellColor;
+                else box.color = entry.IsEmpty || (fusion && entry.Kind != InventoryKind.Spell) || (picking && !menu.PickFilter(entry)) ? CellEmptyColor : CellColor;
                 SetIcon(i < _cellIcons.Count ? _cellIcons[i] : null, label, entry, text);
                 if (entry.IsEmpty)
                 {

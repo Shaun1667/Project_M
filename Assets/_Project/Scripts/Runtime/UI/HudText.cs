@@ -110,6 +110,9 @@ namespace ProjectM.UI
 
         public static string Enemy(EntityId id) => $"적 {id}";
 
+        /// <summary>대상 고르기 창 제목 (3-10b): "식별 주문서 — 대상 고르기 (Esc 취소)".</summary>
+        public string PickTitle(InventoryRef source) => $"{Entry(source)} — 대상 고르기  <size=70%><color=#AAAAAA>Esc 취소</color></size>";
+
         /// <summary>배낭 창 제목 (3-10b, SPD).</summary>
         public const string BackpackTitle = "배낭  <size=70%><color=#AAAAAA>I · F 열기 · Esc 닫기</color></size>";
 

@@ -17,6 +17,8 @@ namespace ProjectM.UI
         ChooseSlot,
         /// <summary>마법 융합기 사용 (3-2b): 주문 두 개를 고르는 중. FusionFirst = 첫 주문 칸 (-1 = 아직).</summary>
         FusionPick,
+        /// <summary>주문서 대상 고르기 (3-10b, SPD): PickSource를 쓸 대상을 PickFilter에 맞는 칸에서 고르는 중.</summary>
+        ItemPick,
     }
 
     public enum InventoryMenuOption
@@ -42,6 +44,8 @@ namespace ProjectM.UI
         FuseSpells,
         /// <summary>물약 던지기 (3-9) → 입력이 던지기 조준으로 (창은 닫힘).</summary>
         ThrowItem,
+        /// <summary>대상을 골랐다 (3-10b — Entry = 쓸 주문서, Second = 고른 대상, 창은 닫힘).</summary>
+        PickedItem,
     }
 
     /// <summary>InventoryMenu 조작의 결과 — 입력 쪽이 조준 시작 · 안내 문구에 쓴다.</summary>
@@ -88,6 +92,11 @@ namespace ProjectM.UI
         /// <summary>융합 고르기에서 첫 주문의 인벤토리 칸, 아직이면 -1 (3-2b).</summary>
         public int FusionFirst { get; private set; } = -1;
 
+        /// <summary>대상 고르기에서 쓸 주문서 (3-10b).</summary>
+        public InventoryRef PickSource { get; private set; }
+        /// <summary>대상 고르기에서 고를 수 있는 칸 (3-10b).</summary>
+        public Func<InventoryRef, bool> PickFilter { get; private set; }
+
         /// <summary>그 항목을 던질 수 있는지 (3-9 — 입력이 Consumables.CanThrow로 채움). null이면 던지기 메뉴 없음.</summary>
         public Func<InventoryRef, bool> CanThrow { get; set; }
 
@@ -117,9 +126,23 @@ namespace ProjectM.UI
             Changed?.Invoke();
         }
 
+        /// <summary>주문서 대상 고르기로 연다 (3-10b). 고를 수 있는 첫 칸을 고른 채로.</summary>
+        public void OpenForPick(InventoryRef source, Func<InventoryRef, bool> filter, IReadOnlyList<InventoryRef> slots)
+        {
+            State = InventoryMenuState.ItemPick;
+            AssignTarget = -1;
+            PickSource = source;
+            PickFilter = filter ?? (e => false);
+            for (int i = 0; slots != null && i < slots.Count; i++)
+                if (PickFilter(slots[i])) { Selected = i; break; }
+            Changed?.Invoke();
+        }
+
         public void Close()
         {
             if (State == InventoryMenuState.Closed) return;
+            PickSource = InventoryRef.Empty;
+            PickFilter = null;
             State = InventoryMenuState.Closed;
             AssignTarget = -1;
             FusionFirst = -1;
@@ -147,7 +170,7 @@ namespace ProjectM.UI
         /// <summary>방향 입력: 칸 고르기에서는 격자 이동, 메뉴에서는 위아래.</summary>
         public void Move(int dx, int dy, int slotCount)
         {
-            if ((State == InventoryMenuState.Browse || State == InventoryMenuState.FusionPick) && slotCount > 0)
+            if ((State == InventoryMenuState.Browse || State == InventoryMenuState.FusionPick || State == InventoryMenuState.ItemPick) && slotCount > 0)
             {
                 int col = Selected % Columns + dx, row = Selected / Columns - dy; // 위 = 앞줄
                 int rows = (slotCount + Columns - 1) / Columns;
@@ -166,7 +189,8 @@ namespace ProjectM.UI
         /// <summary>마우스가 가리킨 칸 (칸 고르기에서만).</summary>
         public void Select(int index, int slotCount)
         {
-            if ((State != InventoryMenuState.Browse && State != InventoryMenuState.FusionPick) || index < 0 || index >= slotCount || index == Selected) return;
+            if ((State != InventoryMenuState.Browse && State != InventoryMenuState.FusionPick && State != InventoryMenuState.ItemPick)
+                || index < 0 || index >= slotCount || index == Selected) return;
             Selected = index;
             Changed?.Invoke();
         }
@@ -212,6 +236,13 @@ namespace ProjectM.UI
                     var first = unit.InventorySlots[FusionFirst];
                     Close();
                     return new InventoryAction(InventoryActionKind.FuseSpells, first, -1, entry);
+
+                case InventoryMenuState.ItemPick:
+                    // 3-10b: 조건에 맞는 칸만. 고르면 닫고 (쓸 주문서, 대상)을 넘긴다 — 차례는 부른 쪽이 쓴다
+                    if (PickFilter == null || !PickFilter(entry)) return InventoryAction.None;
+                    var source = PickSource;
+                    Close();
+                    return new InventoryAction(InventoryActionKind.PickedItem, source, -1, entry);
 
                 default:
                     return InventoryAction.None;
