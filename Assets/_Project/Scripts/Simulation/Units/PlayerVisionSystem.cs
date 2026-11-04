@@ -41,7 +41,7 @@ namespace ProjectM.Units
             {
                 sensed = new bool[visible.Length];
                 foreach (var unit in _world.Units.ToSortedList())
-                    if (unit.IsAlive && unit.Faction != player.Faction && _world.Map.InBounds(unit.Pos)) sensed[unit.Pos.Y * _world.Map.Width + unit.Pos.X] = true;
+                    if (unit.IsAlive && Factions.AreHostile(unit.Faction, player.Faction) && _world.Map.InBounds(unit.Pos)) sensed[unit.Pos.Y * _world.Map.Width + unit.Pos.X] = true;
             }
             _world.Events.Publish(new VisibilityChangedEvent(_world.Map.Width, _world.Map.Height, visible, (bool[])_world.Explored.Clone(), sensed));
         }

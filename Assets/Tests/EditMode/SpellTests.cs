@@ -35,6 +35,9 @@ namespace ProjectM.Tests
             new ProjectM.Status.StatusDef(ProjectM.Status.StatusType.Invisible, 20, hiddenFromEnemies: true),
             new ProjectM.Status.StatusDef(ProjectM.Status.StatusType.Levitating, 20, levitates: true),
             new ProjectM.Status.StatusDef(ProjectM.Status.StatusType.MindVision, 20, sensesEnemies: true),
+            // 3-13b 주문서 상태
+            new ProjectM.Status.StatusDef(ProjectM.Status.StatusType.Asleep, 30, preventsAction: true, wakesOnDamage: true),
+            new ProjectM.Status.StatusDef(ProjectM.Status.StatusType.Terrified, 20, flees: true),
         });
 
         // 상태 동작 시험용: 확률 100%로 고정 (실제 수치는 BalanceBookFull — 3-1부터 70%)

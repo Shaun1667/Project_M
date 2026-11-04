@@ -202,12 +202,15 @@ namespace ProjectM
             var progression = _progressionConfig != null ? _progressionConfig.ToConfig() : null;
             var vision = World.InstallCoreSystems(sight, Magic, Statuses, Terrains, progression, _terrainCatalog.ToFireSpread()); // 3-11b 불 번짐
             var consumableConfig = _consumableConfig != null ? _consumableConfig.ToConfig() : ConsumableConfig.Default;
-            var consumables = new ConsumableRules(Items, consumableConfig, Statuses, Terrains, progression, sight); // 3-9 물약 · 주문서 효과
+            var allyAi = new AllyAi(World, Config, sight); // 3-13b 분신
+            var consumables = new ConsumableRules(Items, consumableConfig, Statuses, Terrains, progression, sight, allyAi, Spells); // 3-9 물약 · 주문서 효과
 
             // 3-4a: 적 재생성(⑤) · 계단 사용(틱 밖 — 입력이 부른다)
             var spawn = _spawnConfig.ToConfig();
             var enemyDef = _enemyDef.ToDef();
             var enemyAi = new MeleeChaserAi(World, Config, sight, Statuses); // 3-13a: 투명
+            System.Func<World, EntityId, ICommandSource> aiFactory = (w, id) =>
+                w.Units.TryGet(id, out var u) && u.Faction == Faction.Ally ? (ICommandSource)allyAi : enemyAi; // 떠났던 층의 분신은 아군 AI로
             World.Scheduler.AddSystem(TickPhase.ManaRegen, new EnemyRespawnSystem(World, spawn, enemyDef, enemyAi, sight, dungeonConfig.FloorCount));
             var loot = _lootConfig != null ? _lootConfig.ToConfig() : null;
             if (loot != null) World.Scheduler.AddSystem(TickPhase.ManaRegen, new ItemPickupSystem(World, Items)); // 3-5: 걸어 들어가면 줍기
@@ -217,7 +220,7 @@ namespace ProjectM
             if (search != null) World.Scheduler.AddSystem(TickPhase.ManaRegen, new PassiveSearchSystem(World, search)); // ⑤ 저절로 발견 (발동보다 먼저)
             if (traps != null) World.Scheduler.AddSystem(TickPhase.ManaRegen, new TrapSystem(World, traps, Spells)); // ⑤ 밟으면 발동
             Terrains.TryGet(TerrainEffectType.Water, out var water); // 3-11a: 물 웅덩이 = 사라지지 않는 물 지형
-            var stairs = new FloorTransition(World, generator, dungeonConfig.FloorCount, enemyDef, spawn, (w, id) => enemyAi, vision, _bossDef.ToDef(), loot,
+            var stairs = new FloorTransition(World, generator, dungeonConfig.FloorCount, enemyDef, spawn, aiFactory, vision, _bossDef.ToDef(), loot,
                 decor, water, traps);
 
             if (_pixelMap != null) _pixelMap.Bind(World.Events); // P-3a 2D 맵 — 3D 맵은 묶지 않음

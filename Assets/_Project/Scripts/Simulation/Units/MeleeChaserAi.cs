@@ -33,6 +33,21 @@ namespace ProjectM.Units
             int cost = _config.DefaultActionCostTicks;
             if (!_world.Units.TryGet(context.Actor, out var self) || !self.IsAlive) return new WaitCommand(cost);
 
+            // 3-13b 공포: 플레이어에게서 멀어진다 (공격하지 않음)
+            if (ProjectM.Status.StatusEffects.Any(_statuses, self, d => d.Flees))
+                return PlayerActions.TryGetPlayer(_world, out var feared) ? StepAway(self, feared.Pos, cost) : new WaitCommand(cost);
+
+            // 3-13b 분신: 보이는 아군이 플레이어보다 가까우면 그쪽을 친다 (분신이 주의를 끔)
+            var ally = NearestVisibleAlly(self);
+            bool playerSeen = PlayerActions.TryGetPlayer(_world, out var seenPlayer) && seenPlayer.IsAlive
+                && _sight.CanSee(_world.Map, self.Pos, seenPlayer.Pos, self.SightRange)
+                && !ProjectM.Status.StatusEffects.Any(_statuses, seenPlayer, d => d.HiddenFromEnemies);
+            if (ally != null && (!playerSeen || GridMovement.Chebyshev(self.Pos, ally.Pos) < GridMovement.Chebyshev(self.Pos, seenPlayer.Pos)))
+            {
+                if (GridMovement.CanStep(_world.Map, self.Pos, ally.Pos)) return new AttackCommand(_world, ally.Id, cost);
+                return StepToward(self, ally.Pos, cost) ?? new WaitCommand(cost);
+            }
+
             // ① 보임
             if (PlayerActions.TryGetPlayer(_world, out var player) && player.IsAlive
                 && _sight.CanSee(_world.Map, self.Pos, player.Pos, self.SightRange)
@@ -100,6 +115,32 @@ namespace ProjectM.Units
             }
             if (candidates.Count == 0) return null;
             return candidates[_world.Rng.Get(RngStream.Ai).Range(0, candidates.Count)];
+        }
+
+        private Unit NearestVisibleAlly(Unit self)
+        {
+            Unit best = null;
+            foreach (var u in _world.Units.ToSortedList())
+            {
+                if (!u.IsAlive || u.Faction != Faction.Ally || !_sight.CanSee(_world.Map, self.Pos, u.Pos, self.SightRange)) continue;
+                if (best == null || GridMovement.Chebyshev(self.Pos, u.Pos) < GridMovement.Chebyshev(self.Pos, best.Pos)) best = u;
+            }
+            return best;
+        }
+
+        /// <summary>from에서 멀어지는 이웃 칸으로 한 걸음 (3-13b 공포 — 거리가 가장 커지는 칸, 방향 순서 고정). 없으면 대기.</summary>
+        private ICommand StepAway(Unit self, GridPos from, int cost)
+        {
+            GridPos? best = null;
+            int bestDistance = GridMovement.Chebyshev(self.Pos, from);
+            foreach (var dir in GridMovement.Directions)
+            {
+                var p = self.Pos + dir;
+                if (!GridMovement.CanStep(_world.Map, self.Pos, p) || _world.Units.IsOccupied(p)) continue;
+                int d = GridMovement.Chebyshev(p, from);
+                if (d > bestDistance) { bestDistance = d; best = p; }
+            }
+            return best.HasValue ? new MoveCommand(_world, best.Value, cost) : (ICommand)new WaitCommand(cost);
         }
 
         /// <summary>goal 쪽으로 한 걸음 (GridPathfinder.ChaseStep). 길이 없거나 첫 칸이 막혀 있으면 null.</summary>

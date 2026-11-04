@@ -87,6 +87,9 @@ namespace ProjectM.Core
             SetFloorMap(map);
         }
 
+        /// <summary>피해를 받은 유닛에게 붙는 규칙 (3-13b — 잠이 깸). InstallCoreSystems가 넣는다. 상태가 아니라 규칙 연결이라 저장하지 않는다.</summary>
+        internal Action<Unit> OnUnitDamaged { get; private set; }
+
         /// <summary>지금 층의 칸 종류를 바꾸고 TileChangedEvent를 낸다 (3-11a 풀 놓기 · 밟기). 같은 종류면 아무 일 없음.</summary>
         public void SetTile(GridPos pos, TileType type)
         {
@@ -120,6 +123,7 @@ namespace ProjectM.Core
             var vision = new PlayerVisionSystem(this, sight, statuses); // 3-13a 정신 시야
             Scheduler.SetActionRules(id => StatusEffects.CanAct(this, statuses, id),
                 (id, cost) => StatusEffects.AdjustCost(this, statuses, id, cost));
+            OnUnitDamaged = unit => StatusEffects.RemoveWhere(this, statuses, unit, d => d.WakesOnDamage); // 3-13b: 맞으면 깸
             Scheduler.AddSystem(TickPhase.Terrain, new TerrainSystem(this, terrains, statuses));
             if (fireSpread != null) Scheduler.AddSystem(TickPhase.Terrain, new FireSpreadSystem(this, terrains, fireSpread)); // 3-11b: 지형 처리 다음
             Scheduler.AddSystem(TickPhase.Status, new StatusSystem(this, statuses));

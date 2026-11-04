@@ -118,6 +118,7 @@ namespace ProjectM.UI
             _bus.Subscribe<ProjectM.Dungeon.TrapTriggeredEvent>(OnTrapTriggered);
             _bus.Subscribe<ProjectM.Dungeon.TrapRevealedEvent>(OnTrapRevealed);
             _bus.Subscribe<ProjectM.Dungeon.SearchedEvent>(OnSearched);
+            _bus.Subscribe<ItemTransmutedEvent>(OnTransmuted);
             _bus.Subscribe<ProjectM.Dungeon.HiddenDoorFoundEvent>(OnHiddenDoorFound);
             _lastPickupFail = null;
             Changed?.Invoke();
@@ -298,6 +299,12 @@ namespace ProjectM.UI
             Changed?.Invoke();
         }
 
+        private void OnTransmuted(ItemTransmutedEvent e)
+        {
+            AddLog(Text.Transmuted(e.From, e.To));
+            Changed?.Invoke();
+        }
+
         private void OnSearched(ProjectM.Dungeon.SearchedEvent e)
         {
             if (e.Actor != _playerId || e.Found > 0) return;
@@ -348,6 +355,7 @@ namespace ProjectM.UI
             _bus.Unsubscribe<ProjectM.Dungeon.TrapTriggeredEvent>(OnTrapTriggered);
             _bus.Unsubscribe<ProjectM.Dungeon.TrapRevealedEvent>(OnTrapRevealed);
             _bus.Unsubscribe<ProjectM.Dungeon.SearchedEvent>(OnSearched);
+            _bus.Unsubscribe<ItemTransmutedEvent>(OnTransmuted);
             _bus.Unsubscribe<ProjectM.Dungeon.HiddenDoorFoundEvent>(OnHiddenDoorFound);
             _bus = null;
         }

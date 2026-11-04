@@ -23,6 +23,10 @@ namespace ProjectM.Status
         Levitating = 9,
         /// <summary>정신 시야 (3-13a 정신 시야 물약): 층의 모든 적이 보인다 (SensesEnemies).</summary>
         MindVision = 10,
+        /// <summary>잠 (3-13b 자장가 주문서): 행동 불가 · 피해를 받으면 깬다 (WakesOnDamage).</summary>
+        Asleep = 11,
+        /// <summary>공포 (3-13b 공포 주문서): 플레이어에게서 도망친다 (Flees).</summary>
+        Terrified = 12,
     }
 
     /// <summary>
@@ -48,10 +52,17 @@ namespace ProjectM.Status
         public bool Levitates { get; }
         /// <summary>층의 모든 적이 화면에 보인다 (3-13a 정신 시야 — 플레이어만).</summary>
         public bool SensesEnemies { get; }
+        /// <summary>피해를 받으면 풀린다 (3-13b 잠).</summary>
+        public bool WakesOnDamage { get; }
+        /// <summary>걸린 적은 플레이어 쪽에서 멀어지고 공격하지 않는다 (3-13b 공포).</summary>
+        public bool Flees { get; }
 
         public StatusDef(StatusType type, int durationTicks, int damagePerTick = 0, int extraActionCostTicks = 0, bool preventsAction = false,
-            int moveSteps = 1, bool hiddenFromEnemies = false, bool levitates = false, bool sensesEnemies = false)
+            int moveSteps = 1, bool hiddenFromEnemies = false, bool levitates = false, bool sensesEnemies = false,
+            bool wakesOnDamage = false, bool flees = false)
         {
+            WakesOnDamage = wakesOnDamage;
+            Flees = flees;
             if (moveSteps < 1) throw new ArgumentOutOfRangeException(nameof(moveSteps), moveSteps, "이동 칸 수는 1 이상이어야 한다.");
             MoveSteps = moveSteps;
             HiddenFromEnemies = hiddenFromEnemies;

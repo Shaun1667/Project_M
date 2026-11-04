@@ -21,6 +21,7 @@ namespace ProjectM.Units
                 world.Run.LastPlayerAttacker = attacker;
             }
             world.Events.Publish(new UnitDamagedEvent(target.Id, attacker, amount, target.Hp, target.MaxHp, cause));
+            if (amount > 0 && target.IsAlive) world.OnUnitDamaged?.Invoke(target); // 3-13b: 잠이 깸 (StatusDef.WakesOnDamage)
         }
 
         private static int AccuracyPercent(Unit attacker) => MeleeWeapon.AccuracyPercentOf(attacker);

@@ -769,7 +769,7 @@ namespace ProjectM.Input
             var list = new List<Unit>();
             foreach (var unit in _world.Units.ToSortedList())
             {
-                if (unit.Faction == player.Faction || !unit.IsAlive) continue;
+                if (!Factions.AreHostile(unit.Faction, player.Faction) || !unit.IsAlive) continue;
                 if (_sight.CanSee(_world.Map, player.Pos, unit.Pos, player.SightRange)) list.Add(unit);
             }
             list.Sort((a, b) =>
@@ -959,7 +959,7 @@ namespace ProjectM.Input
             result.Clear();
             foreach (var unit in _world.Units.ToSortedList())
             {
-                if (unit.Faction == player.Faction || !unit.IsAlive) continue;
+                if (!Factions.AreHostile(unit.Faction, player.Faction) || !unit.IsAlive) continue;
                 if (_sight.CanSee(_world.Map, player.Pos, unit.Pos, player.SightRange))
                     result.Add(unit.Id);
             }

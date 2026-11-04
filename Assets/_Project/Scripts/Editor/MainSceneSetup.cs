@@ -514,6 +514,9 @@ namespace ProjectM.Editor
             changed |= catalog.AddIfMissing(new StatusCatalogAsset.Entry { Type = StatusType.Invisible, DurationTicks = 20, HiddenFromEnemies = true });
             changed |= catalog.AddIfMissing(new StatusCatalogAsset.Entry { Type = StatusType.Levitating, DurationTicks = 20, Levitates = true });
             changed |= catalog.AddIfMissing(new StatusCatalogAsset.Entry { Type = StatusType.MindVision, DurationTicks = 20, SensesEnemies = true });
+            // 3-13b 주문서 상태 (BALANCE 6번): 잠 = 행동 불가 · 맞으면 깸, 공포 = 도망 (SPD 20)
+            changed |= catalog.AddIfMissing(new StatusCatalogAsset.Entry { Type = StatusType.Asleep, DurationTicks = 30, PreventsAction = true, WakesOnDamage = true });
+            changed |= catalog.AddIfMissing(new StatusCatalogAsset.Entry { Type = StatusType.Terrified, DurationTicks = 20, Flees = true });
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }
@@ -852,6 +855,11 @@ namespace ProjectM.Editor
             changed |= catalog.AddIfMissing(Consumable("potion_invisibility", "투명 물약", ItemUse.Potion, ConsumableEffect.Invisibility, 1));
             changed |= catalog.AddIfMissing(Consumable("potion_levitation", "부양 물약", ItemUse.Potion, ConsumableEffect.Levitation, 1));
             changed |= catalog.AddIfMissing(Consumable("potion_mind_vision", "정신 시야 물약", ItemUse.Potion, ConsumableEffect.MindVision, 2));
+            // 3-13b: 주문서 4 (SPD 무게 비율 — 분신 2 · 공포 · 자장가 · 변환 1)
+            changed |= catalog.AddIfMissing(Consumable("scroll_mirror_image", "분신 주문서", ItemUse.Scroll, ConsumableEffect.MirrorImage, 2));
+            changed |= catalog.AddIfMissing(Consumable("scroll_terror", "공포 주문서", ItemUse.Scroll, ConsumableEffect.Terror, 1));
+            changed |= catalog.AddIfMissing(Consumable("scroll_lullaby", "자장가 주문서", ItemUse.Scroll, ConsumableEffect.Lullaby, 1));
+            changed |= catalog.AddIfMissing(Consumable("scroll_transmutation", "변환 주문서", ItemUse.Scroll, ConsumableEffect.Transmutation, 1));
             changed |= catalog.AddIfMissing(Consumable("scroll_identify", "식별 주문서", ItemUse.Scroll, ConsumableEffect.Identify, 3));
             changed |= catalog.AddIfMissing(Consumable("scroll_magic_mapping", "지도 주문서", ItemUse.Scroll, ConsumableEffect.MagicMapping, 1));
             changed |= catalog.AddIfMissing(Consumable("scroll_teleportation", "순간이동 주문서", ItemUse.Scroll, ConsumableEffect.Teleportation, 1));

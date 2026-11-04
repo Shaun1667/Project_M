@@ -119,6 +119,14 @@ namespace ProjectM.Items
         Levitation = 18,
         /// <summary>정신 시야 물약 (3-13a): 정신 시야.</summary>
         MindVision = 19,
+        /// <summary>분신 주문서 (3-13b): 둘레에 분신(아군) — ConsumableConfig.MirrorImageCount · Hp.</summary>
+        MirrorImage = 20,
+        /// <summary>공포 주문서 (3-13b): 보이는 적 공포.</summary>
+        Terror = 21,
+        /// <summary>자장가 주문서 (3-13b): 보이는 적 잠.</summary>
+        Lullaby = 22,
+        /// <summary>변환 주문서 (3-13b): 고른 아이템을 같은 쓰임의 다른 것으로.</summary>
+        Transmutation = 23,
     }
 
     /// <summary>아이템 하나의 규칙 데이터 (3-2a). 값은 ItemCatalogAsset에서 온다 — BALANCE.md 9번.</summary>

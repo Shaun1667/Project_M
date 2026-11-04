@@ -108,6 +108,8 @@ namespace ProjectM.UI
                 case StatusType.Invisible: return "투명";
                 case StatusType.Levitating: return "부양";
                 case StatusType.MindVision: return "정신 시야";
+                case StatusType.Asleep: return "잠";
+                case StatusType.Terrified: return "공포";
                 default: return type.ToString();
             }
         }
@@ -142,6 +144,10 @@ namespace ProjectM.UI
                 default: return text.Entry(entry);
             }
         }
+
+        /// <summary>변환 로그 (3-13b): "변환: 소검 → 손도끼" · 바꿀 것 없음.</summary>
+        public string Transmuted(string from, string to) =>
+            from == null ? "변환할 것을 고르지 않았다" : to == null ? $"{Item(from)}: 바꿀 것이 없다" : $"변환: {Item(from)} → {Item(to)}";
 
         /// <summary>함정 이름 (3-12a).</summary>
         public static string Trap(ProjectM.Dungeon.TrapType type)

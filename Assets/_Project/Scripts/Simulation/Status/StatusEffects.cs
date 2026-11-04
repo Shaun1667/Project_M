@@ -73,6 +73,17 @@ namespace ProjectM.Status
             return false;
         }
 
+        /// <summary>조건에 맞는 상태를 모두 푼다 (3-13b — 피해로 잠이 깸). 푼 것이 있으면 true.</summary>
+        public static bool RemoveWhere(World world, StatusBook book, Unit unit, Func<StatusDef, bool> flag)
+        {
+            if (book == null || unit == null) return false;
+            var types = new System.Collections.Generic.List<StatusType>();
+            foreach (var s in unit.Statuses)
+                if (book.TryGet(s.Type, out var def) && flag(def)) types.Add(s.Type);
+            foreach (var t in types) Remove(world, unit, t);
+            return types.Count > 0;
+        }
+
         /// <summary>이동 한 번에 가는 칸 수 = 걸린 상태들의 MoveSteps 중 최대 (3-13a 신속). book이 null이면 1.</summary>
         public static int MoveSteps(StatusBook book, Unit unit)
         {

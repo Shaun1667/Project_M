@@ -234,7 +234,7 @@ namespace ProjectM.Dungeon
                     break;
                 case TrapSpecial.Alarm:
                     foreach (var other in world.Units.ToSortedList())
-                        if (other.IsAlive && other.Faction != Faction.Player) other.LastSeenTargetPos = pos;
+                        if (other.IsAlive && other.Faction == Faction.Enemy) other.LastSeenTargetPos = pos;
                     break;
             }
         }

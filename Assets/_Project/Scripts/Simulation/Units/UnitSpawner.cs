@@ -25,6 +25,16 @@ namespace ProjectM.Units
             return unit;
         }
 
+        /// <summary>아군 생성 (3-13b 분신): 행위자로 등록, 진영 Ally.</summary>
+        public static Unit SpawnAlly(World world, UnitDef def, GridPos pos, ICommandSource ai)
+        {
+            if (ai == null) throw new ArgumentNullException(nameof(ai));
+            var unit = Create(world, def, Faction.Ally, pos, 0, 0);
+            world.Scheduler.RegisterActor(unit.Id, ai);
+            Announce(world, unit);
+            return unit;
+        }
+
         private static Unit Create(World world, UnitDef def, Faction faction, GridPos pos, int quickSlotCount, int inventorySize)
         {
             if (world == null) throw new ArgumentNullException(nameof(world));

@@ -39,9 +39,12 @@ namespace ProjectM.Data
         [Min(0)] [SerializeField] private float _retributionHpPercent = 22.5f;
         [Min(0)] [SerializeField] private float _retributionPowerScale = 4.45f;
         [Min(0)] [SerializeField] private float _retributionPowerCap = 4f;
+        [Header("분신 주문서 (3-13b)")]
+        [Tooltip("만드는 분신 수")] [Min(0)] [SerializeField] private int _mirrorImageCount = 2;
+        [Tooltip("분신 체력 (SPD: 한 대에 사라짐)")] [Min(1)] [SerializeField] private int _mirrorImageHp = 1;
 
         public ConsumableConfig ToConfig() => new ConsumableConfig(_potionLooks, _scrollLooks, _randomPotionsPerFloor, _randomScrollsPerFloor,
             _gasRadius, _purityRadius, _throwRange, _healingCures, _purityClears,
-            _retributionBasePercent, _retributionHpPercent, _retributionPowerScale, _retributionPowerCap);
+            _retributionBasePercent, _retributionHpPercent, _retributionPowerScale, _retributionPowerCap, _mirrorImageCount, _mirrorImageHp);
     }
 }

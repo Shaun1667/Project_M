@@ -589,6 +589,70 @@ MonoBehaviour:
     Amount: 0
     Effect: 19
     Weight: 2
+  - Id: scroll_mirror_image
+    DisplayName: "\uBD84\uC2E0 \uC8FC\uBB38\uC11C"
+    Use: 5
+    SpellId: 
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
+    Tier: 0
+    Amount: 0
+    Effect: 20
+    Weight: 2
+  - Id: scroll_terror
+    DisplayName: "\uACF5\uD3EC \uC8FC\uBB38\uC11C"
+    Use: 5
+    SpellId: 
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
+    Tier: 0
+    Amount: 0
+    Effect: 21
+    Weight: 1
+  - Id: scroll_lullaby
+    DisplayName: "\uC790\uC7A5\uAC00 \uC8FC\uBB38\uC11C"
+    Use: 5
+    SpellId: 
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
+    Tier: 0
+    Amount: 0
+    Effect: 22
+    Weight: 1
+  - Id: scroll_transmutation
+    DisplayName: "\uBCC0\uD658 \uC8FC\uBB38\uC11C"
+    Use: 5
+    SpellId: 
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
+    Tier: 0
+    Amount: 0
+    Effect: 23
+    Weight: 1
   _weaponDamageDivisor: 3
   _weaponMinDamage: 2
   _armorDefenseDivisor: 3

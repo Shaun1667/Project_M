@@ -184,6 +184,8 @@
 | Invisible 투명 | 투명 물약 (3-13a) | **20** (SPD) | 0 | 0 | 아니오 — `HiddenFromEnemies`: 적 AI가 못 봄 (공격해도 안 풀림 — SPD와 다름, Claude 임시) |
 | Levitating 부양 | 부양 물약 (3-13a) | **20** (SPD) | 0 | 0 | 아니오 — `Levitates`: 지형 효과 · 함정 · 풀 밟기를 받지 않음 |
 | MindVision 정신 시야 | 정신 시야 물약 (3-13a) | **20** (SPD) | 0 | 0 | 아니오 — `SensesEnemies`: 층의 모든 적이 화면에 보임 (지도는 안 밝힘) |
+| Asleep 잠 | 자장가 주문서 (3-13b) — 보이는 적 | **30** (Claude 임시 — SPD는 깰 때까지) | 0 | 0 | **예** — `WakesOnDamage`: 피해를 받으면 풀림 |
+| Terrified 공포 | 공포 주문서 (3-13b) — 보이는 적 | **20** (SPD) | 0 | 0 | 아니오 — `Flees`: 플레이어에게서 멀어지고 공격 안 함 |
 
 젖음 (3-2): 물 위에 있는 동안 매 턴 3으로 갱신 → 물이 사라지거나 떠나면 2턴 더 젖어 있다 (지속 3 = ④ 처리 3번, 마지막으로 갱신된 틱의 ④에서 1 소모). — `WaterTests.StandingOnWater_StaysWet_ThenWearsOff`
 
@@ -461,6 +463,10 @@
 | `potion_invisibility` (3-13a) | 투명 물약 | Invisibility | **1** | 투명 20틱 |
 | `potion_levitation` (3-13a) | 부양 물약 | Levitation | **1** | 부양 20틱 |
 | `potion_mind_vision` (3-13a) | 정신 시야 물약 | MindVision | **2** | 정신 시야 20틱 |
+| `scroll_mirror_image` (3-13b) | 분신 주문서 | MirrorImage | **2** | 둘레에 분신(아군) **2**명 — 체력 **1**, 모습 · 공격 · 명중 · 회피는 읽은 유닛 (`_mirrorImageCount` · `_mirrorImageHp`). 적을 찾아 공격, 없으면 곁(2칸)에. 적도 더 가까운 분신을 친다 |
+| `scroll_terror` (3-13b) | 공포 주문서 | Terror | **1** | 보이는 적 공포 20틱 |
+| `scroll_lullaby` (3-13b) | 자장가 주문서 | Lullaby | **1** | 보이는 적 잠 30틱 (맞으면 깸) |
+| `scroll_transmutation` (3-13b) | 변환 주문서 | Transmutation | **1** | 배낭에서 고른 하나를 같은 쓰임의 다른 것으로 — 무기 강화 유지, 갑옷 같은 티어 우선, 힘 물약 · 강화 주문서는 결과에서 뺌, 마법서는 안 배운 주문 (`RngStream.Combat`) |
 | `scroll_upgrade` | 강화 주문서 | Upgrade | 0 | 든 무기 +1 — 한 판 3장 보장 (11번) |
 | `scroll_identify` | 식별 주문서 | Identify | **3** | 인벤토리 앞 칸부터 모르는 물약 · 주문서 한 종류 (SPD는 고르기 — 고르는 창은 나중에) |
 | `scroll_magic_mapping` | 지도 주문서 | MagicMapping | **1** | 이 층 바닥 + 둘레 벽 전부 탐험 |

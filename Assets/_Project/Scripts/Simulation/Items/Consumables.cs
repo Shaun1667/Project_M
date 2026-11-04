@@ -36,11 +36,18 @@ namespace ProjectM.Items
         public float RetributionHpPercent { get; }
         public float RetributionPowerScale { get; }
         public float RetributionPowerCap { get; }
+        /// <summary>분신 주문서 (3-13b): 만드는 분신 수 · 분신 체력.</summary>
+        public int MirrorImageCount { get; }
+        public int MirrorImageHp { get; }
 
         public ConsumableConfig(IReadOnlyList<string> potionLooks, IReadOnlyList<string> scrollLooks, int randomPotionsPerFloor, int randomScrollsPerFloor,
             int gasRadius, int purityRadius, int throwRange, IReadOnlyList<StatusType> healingCures, IReadOnlyList<TerrainEffectType> purityClears,
-            int retributionBasePercent, float retributionHpPercent, float retributionPowerScale, float retributionPowerCap)
+            int retributionBasePercent, float retributionHpPercent, float retributionPowerScale, float retributionPowerCap,
+            int mirrorImageCount = 2, int mirrorImageHp = 1)
         {
+            if (mirrorImageCount < 0 || mirrorImageHp < 1) throw new ArgumentOutOfRangeException(nameof(mirrorImageCount), "분신 수 ≥ 0 · 체력 ≥ 1");
+            MirrorImageCount = mirrorImageCount;
+            MirrorImageHp = mirrorImageHp;
             if (randomPotionsPerFloor < 0) throw new ArgumentOutOfRangeException(nameof(randomPotionsPerFloor));
             if (randomScrollsPerFloor < 0) throw new ArgumentOutOfRangeException(nameof(randomScrollsPerFloor));
             if (gasRadius < 0) throw new ArgumentOutOfRangeException(nameof(gasRadius));
@@ -91,10 +98,16 @@ namespace ProjectM.Items
         public ProgressionConfig Progression { get; }
         /// <summary>응징(보이는 적)용. null이면 응징은 아무도 맞지 않음.</summary>
         public ISightRule Sight { get; }
+        /// <summary>분신의 AI (3-13b). null이면 분신 주문서는 아무 일 없음.</summary>
+        public ICommandSource AllyAi { get; }
+        /// <summary>마법서 → 주문 (3-13b 변환이 안 배운 마법서를 고를 때). null이면 마법서 변환 없음.</summary>
+        public ProjectM.Magic.SpellBook Spells { get; }
 
         public ConsumableRules(ItemBook items, ConsumableConfig config = null, StatusBook statuses = null, TerrainBook terrains = null,
-            ProgressionConfig progression = null, ISightRule sight = null)
+            ProgressionConfig progression = null, ISightRule sight = null, ICommandSource allyAi = null, ProjectM.Magic.SpellBook spells = null)
         {
+            AllyAi = allyAi;
+            Spells = spells;
             Items = items ?? throw new ArgumentNullException(nameof(items));
             Config = config ?? ConsumableConfig.Default;
             Statuses = statuses ?? new StatusBook(Array.Empty<StatusDef>());
@@ -191,6 +204,9 @@ namespace ProjectM.Items
             {
                 case ConsumableEffect.Identify:
                     return e => !e.IsEmpty && e.Kind == InventoryKind.Item && e != entry && !world.Run.IsKnown(e.Id);
+                case ConsumableEffect.Transmutation: // 3-13b: 무기 · 갑옷 · 물약 · 주문서 · 마법서 (주문서 자신 제외)
+                    return e => !e.IsEmpty && e.Kind == InventoryKind.Item && e != entry && items.TryGet(e.Id, out var d)
+                        && (d.Use == ItemUse.EquipWeapon || d.Use == ItemUse.EquipArmor || d.IsConsumable || d.Use == ItemUse.LearnSpell);
                 default:
                     return null;
             }
@@ -352,7 +368,7 @@ namespace ProjectM.Items
                     break;
                 case ConsumableEffect.Rage:
                     foreach (var other in world.Units.ToSortedList())
-                        if (other.IsAlive && other.Faction != unit.Faction) other.LastSeenTargetPos = unit.Pos;
+                        if (other.IsAlive && Factions.AreHostile(other.Faction, unit.Faction)) other.LastSeenTargetPos = unit.Pos;
                     break;
                 case ConsumableEffect.Retribution:
                     Retribution(world, rules, unit, def.Id);
@@ -368,6 +384,18 @@ namespace ProjectM.Items
                     break;
                 case ConsumableEffect.MindVision:
                     ApplySelf(world, rules, unit, StatusType.MindVision);
+                    break;
+                case ConsumableEffect.MirrorImage:
+                    MirrorImages(world, rules, unit);
+                    break;
+                case ConsumableEffect.Terror:
+                    ApplyToVisibleEnemies(world, rules, unit, StatusType.Terrified);
+                    break;
+                case ConsumableEffect.Lullaby:
+                    ApplyToVisibleEnemies(world, rules, unit, StatusType.Asleep);
+                    break;
+                case ConsumableEffect.Transmutation:
+                    Transmute(world, rules, unit, pick);
                     break;
             }
         }
@@ -456,6 +484,66 @@ namespace ProjectM.Items
                 }
         }
 
+        /// <summary>분신 주문서 (3-13b, SPD): 읽은 유닛 둘레 빈 맨땅(8방향 순)에 분신 MirrorImageCount명 — 모습 · 공격 · 명중 · 회피는 읽은 유닛, 체력 MirrorImageHp.</summary>
+        private static void MirrorImages(World world, ConsumableRules rules, Unit unit)
+        {
+            if (rules.AllyAi == null) return;
+            var def = new UnitDef(unit.VisualId, rules.Config.MirrorImageHp, unit.AttackDamage, unit.SightRange, accuracy: unit.Accuracy, evasion: unit.Evasion);
+            int made = 0;
+            foreach (var dir in GridMovement.Directions)
+            {
+                if (made >= rules.Config.MirrorImageCount) break;
+                var pos = unit.Pos + dir;
+                if (!world.Map.InBounds(pos) || !GridMap.IsGroundType(world.Map.Get(pos)) || world.Units.IsOccupied(pos)
+                    || !GridMovement.CanStep(world.Map, unit.Pos, pos)) continue;
+                UnitSpawner.SpawnAlly(world, def, pos, rules.AllyAi);
+                made++;
+            }
+        }
+
+        /// <summary>공포 · 자장가 (3-13b, SPD): 읽은 유닛이 보는 적 모두에게 상태 (보는 판정 = rules.Sight, 없으면 아무도).</summary>
+        private static void ApplyToVisibleEnemies(World world, ConsumableRules rules, Unit unit, StatusType type)
+        {
+            if (rules.Sight == null || !rules.Statuses.TryGet(type, out var status)) return;
+            foreach (var other in world.Units.ToSortedList())
+                if (other.IsAlive && Factions.AreHostile(other.Faction, unit.Faction) && rules.Sight.CanSee(world.Map, unit.Pos, other.Pos, unit.SightRange))
+                    StatusEffects.Apply(world, other, status);
+        }
+
+        /// <summary>
+        /// 변환 주문서 (3-13b — 결정 2026-11-04): 고른 아이템 하나를 같은 쓰임의 다른 것으로 (RngStream.Combat). 무기는 강화 유지, 갑옷은 같은 티어 우선,
+        /// 물약 · 주문서는 힘 · 강화 제외, 마법서는 아직 안 배운 주문의 것. 바꿀 것이 없으면 그대로 (ItemTransmutedEvent(… null)).
+        /// </summary>
+        private static void Transmute(World world, ConsumableRules rules, Unit unit, InventoryRef pick)
+        {
+            int index = pick.IsEmpty ? -1 : Array.IndexOf(unit.InventorySlots, pick);
+            if (index < 0 || !rules.Items.TryGet(pick.Id, out var from))
+            {
+                world.Events.Publish(new ItemTransmutedEvent(null, null));
+                return;
+            }
+            var choices = new List<ItemDef>();
+            foreach (var id in rules.Items.Ids)
+            {
+                if (id == from.Id || !rules.Items.TryGet(id, out var d) || d.Use != from.Use) continue;
+                if (d.Effect == ConsumableEffect.Strength || d.Effect == ConsumableEffect.Upgrade) continue;
+                if (d.Use == ItemUse.LearnSpell && (unit.HasSpell(d.SpellId) || rules.Spells == null || !rules.Spells.TryGet(d.SpellId, out _))) continue;
+                choices.Add(d);
+            }
+            if (from.Use == ItemUse.EquipArmor && choices.Exists(d => d.Armor.Tier == from.Armor.Tier))
+                choices.RemoveAll(d => d.Armor.Tier != from.Armor.Tier);
+            if (choices.Count == 0)
+            {
+                world.Events.Publish(new ItemTransmutedEvent(from.Id, null));
+                return;
+            }
+            var to = choices[world.Rng.Get(RngStream.Combat).Range(0, choices.Count)];
+            int upgrade = from.Use == ItemUse.EquipWeapon || from.Use == ItemUse.EquipArmor ? pick.Upgrade : 0;
+            Inventory.RemoveAt(world, unit, index);
+            Inventory.TryAdd(world, rules.Spells, rules.Items, unit, InventoryRef.Item(to.Id, upgrade));
+            world.Events.Publish(new ItemTransmutedEvent(from.Id, to.Id));
+        }
+
         /// <summary>마신 유닛에 상태 (3-13a 신속 · 투명 · 부양 · 정신 시야 — 지속은 StatusCatalog).</summary>
         private static void ApplySelf(World world, ConsumableRules rules, Unit unit, StatusType type)
         {
@@ -489,7 +577,7 @@ namespace ProjectM.Items
             float power = Math.Min(config.RetributionPowerCap, missing * config.RetributionPowerScale);
             foreach (var target in world.Units.ToSortedList())
             {
-                if (!target.IsAlive || target.Faction == unit.Faction) continue;
+                if (!target.IsAlive || !Factions.AreHostile(target.Faction, unit.Faction)) continue;
                 if (!rules.Sight.CanSee(world.Map, unit.Pos, target.Pos, unit.SightRange)) continue;
                 int damage = RetributionDamage(config, target, power);
                 Combat.ApplyDamage(world, unit.Id, target, damage, DamageCause.Item(itemId));
@@ -500,6 +588,19 @@ namespace ProjectM.Items
         public static int RetributionDamage(ConsumableConfig config, Unit target, float power) =>
             (int)Math.Round(target.MaxHp * config.RetributionBasePercent / 100.0 + target.Hp * power * config.RetributionHpPercent / 100.0,
                 MidpointRounding.AwayFromZero);
+    }
+
+    /// <summary>변환 주문서 결과 (3-13b, 로그). From = 고른 것 (null = 고른 것 없음), To = 바뀐 것 (null = 바꿀 것이 없었음).</summary>
+    public sealed class ItemTransmutedEvent : ISimEvent
+    {
+        public string From { get; }
+        public string To { get; }
+
+        public ItemTransmutedEvent(string from, string to)
+        {
+            From = from;
+            To = to;
+        }
     }
 
     /// <summary>던지기 조준 (3-9): 미리보기와 실제 던지기가 같은 경로 계산을 쓴다.</summary>

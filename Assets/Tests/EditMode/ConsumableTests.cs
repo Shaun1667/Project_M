@@ -54,6 +54,10 @@ namespace ProjectM.Tests
             new ItemDef("potion_invisibility", ItemUse.Potion, effect: ConsumableEffect.Invisibility, weight: 1),
             new ItemDef("potion_levitation", ItemUse.Potion, effect: ConsumableEffect.Levitation, weight: 1),
             new ItemDef("potion_mind_vision", ItemUse.Potion, effect: ConsumableEffect.MindVision, weight: 2),
+            new ItemDef("scroll_mirror_image", ItemUse.Scroll, effect: ConsumableEffect.MirrorImage, weight: 2), // 3-13b
+            new ItemDef("scroll_terror", ItemUse.Scroll, effect: ConsumableEffect.Terror, weight: 1),
+            new ItemDef("scroll_lullaby", ItemUse.Scroll, effect: ConsumableEffect.Lullaby, weight: 1),
+            new ItemDef("scroll_transmutation", ItemUse.Scroll, effect: ConsumableEffect.Transmutation, weight: 1),
             new ItemDef("scroll_identify", ItemUse.Scroll, effect: ConsumableEffect.Identify, weight: 3),
             new ItemDef("scroll_magic_mapping", ItemUse.Scroll, effect: ConsumableEffect.MagicMapping, weight: 1),
             new ItemDef("scroll_teleportation", ItemUse.Scroll, effect: ConsumableEffect.Teleportation, weight: 1),
@@ -473,6 +477,7 @@ namespace ProjectM.Tests
             Assert.That((c.PotionLooks.Count, c.ScrollLooks.Count), Is.EqualTo((12, 12)));
             Assert.That((c.RandomPotionsPerFloor, c.RandomScrollsPerFloor, c.GasRadius, c.PurityRadius, c.ThrowRange), Is.EqualTo((2, 2, 2, 3, 8)));
             Assert.That((c.RetributionBasePercent, c.RetributionHpPercent, c.RetributionPowerScale, c.RetributionPowerCap), Is.EqualTo((10, 22.5f, 4.45f, 4f)));
+            Assert.That((c.MirrorImageCount, c.MirrorImageHp), Is.EqualTo((2, 1)), "3-13b 분신");
             Assert.That(c.HealingCures, Is.EquivalentTo(new[] { StatusType.Burn, StatusType.Slow, StatusType.Poison, StatusType.Paralyze }));
             Assert.That(c.PurityClears, Is.EquivalentTo(new[] { TerrainEffectType.FireZone, TerrainEffectType.PoisonCloud, TerrainEffectType.ParalyticGas }));
 
