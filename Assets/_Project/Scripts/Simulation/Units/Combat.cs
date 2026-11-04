@@ -13,6 +13,7 @@ namespace ProjectM.Units
             if (target == null) throw new ArgumentNullException(nameof(target));
             if (amount < 0) throw new ArgumentOutOfRangeException(nameof(amount), amount, "피해는 0 이상이어야 한다.");
             if (!target.IsAlive) return;
+            if (world.EnemyRules != null) amount = world.EnemyRules.ModifyDamage(target, cause, amount); // 3-17b 약점 · 저항
 
             target.Hp = Math.Max(0, target.Hp - amount);
             if (target.Faction == Faction.Player && amount > 0)
@@ -22,6 +23,7 @@ namespace ProjectM.Units
             }
             world.Events.Publish(new UnitDamagedEvent(target.Id, attacker, amount, target.Hp, target.MaxHp, cause));
             if (amount > 0 && target.IsAlive) world.OnUnitDamaged?.Invoke(target); // 3-13b: 잠이 깸 (StatusDef.WakesOnDamage)
+            if (amount > 0 && target.IsAlive) world.EnemyRules?.OnHurt(world, target); // 3-17b: 슬라임 물
         }
 
         private static int AccuracyPercent(Unit attacker) => MeleeWeapon.AccuracyPercentOf(attacker);

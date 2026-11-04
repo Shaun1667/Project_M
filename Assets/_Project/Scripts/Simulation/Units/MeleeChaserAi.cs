@@ -18,10 +18,19 @@ namespace ProjectM.Units
         private readonly GameConfig _config;
         private readonly ISightRule _sight;
         private readonly ProjectM.Status.StatusBook _statuses;
+        private readonly EnemyBook _enemies;
+        private readonly ProjectM.Magic.SpellBook _spells;
+        private readonly ITargetingRule _targeting;
 
         /// <param name="statuses">투명(3-13a) 판정용. null이면 늘 보인다.</param>
-        public MeleeChaserAi(World world, GameConfig config, ISightRule sight, ProjectM.Status.StatusBook statuses = null)
+        /// <param name="enemies">3-17b 적 종류 행동 (VisualId로 찾음). null · 없는 종류면 예전처럼 근접 1칸.</param>
+        /// <param name="spells">원거리 주문 (EnemyTraits.SpellId) 데이터 · 조준선. null이면 주문 안 씀.</param>
+        public MeleeChaserAi(World world, GameConfig config, ISightRule sight, ProjectM.Status.StatusBook statuses = null,
+            EnemyBook enemies = null, ProjectM.Magic.SpellBook spells = null, ITargetingRule targeting = null)
         {
+            _enemies = enemies;
+            _spells = spells;
+            _targeting = targeting;
             _statuses = statuses;
             _world = world ?? throw new ArgumentNullException(nameof(world));
             _config = config ?? throw new ArgumentNullException(nameof(config));
@@ -55,6 +64,14 @@ namespace ProjectM.Units
             {
                 self.LastSeenTargetPos = player.Pos;
                 self.WanderTarget = null;
+                var traits = TraitsOf(self);
+                if (traits != null && traits.SpellId != null && TryCast(self, traits, player.Pos, cost, out var cast)) return cast; // 3-17b 주술사
+                if (traits != null && traits.KeepDistance > 0 && GridMovement.Chebyshev(self.Pos, player.Pos) < traits.KeepDistance
+                    && self.Mana > 0) // 마나가 있으면 거리를 벌림 (없으면 붙어 싸움)
+                {
+                    var away = StepAway(self, player.Pos, cost);
+                    if (away is MoveCommand) return away;
+                }
                 if (GridMovement.CanStep(_world.Map, self.Pos, player.Pos))
                     return new AttackCommand(_world, player.Id, cost);
                 return FollowTrail(self, player, cost) ?? StepToward(self, player.Pos, cost) ?? new WaitCommand(cost);
@@ -83,7 +100,7 @@ namespace ProjectM.Units
             var trail = player.PreviousPos.Value;
             if (trail == self.Pos || GridMovement.Chebyshev(trail, player.Pos) != 1) return null;
             if (!GridMovement.CanStep(_world.Map, self.Pos, trail) || _world.Units.IsOccupied(trail)) return null;
-            return new MoveCommand(_world, trail, cost);
+            return new MoveCommand(_world, trail, MoveCost(self, cost));
         }
 
         private ICommand Wander(Unit self, int cost)
@@ -140,7 +157,7 @@ namespace ProjectM.Units
                 int d = GridMovement.Chebyshev(p, from);
                 if (d > bestDistance) { bestDistance = d; best = p; }
             }
-            return best.HasValue ? new MoveCommand(_world, best.Value, cost) : (ICommand)new WaitCommand(cost);
+            return best.HasValue ? new MoveCommand(_world, best.Value, MoveCost(self, cost)) : (ICommand)new WaitCommand(cost);
         }
 
         /// <summary>goal 쪽으로 한 걸음 (GridPathfinder.ChaseStep). 길이 없거나 첫 칸이 막혀 있으면 null.</summary>
@@ -148,7 +165,33 @@ namespace ProjectM.Units
         {
             var step = GridPathfinder.ChaseStep(_world.Map, self.Pos, goal, _world.Units.IsOccupied);
             if (!step.HasValue || _world.Units.IsOccupied(step.Value)) return null;
-            return new MoveCommand(_world, step.Value, cost);
+            GridPos? then = null;
+            var traits = TraitsOf(self);
+            if (traits != null && traits.MoveSteps > 1 && step.Value != goal && GridMovement.Chebyshev(step.Value, goal) > 1) // 3-17b 빠름: 같은 차례에 한 칸 더 (목표 칸 앞에서 멈춤)
+            {
+                var second = GridPathfinder.ChaseStep(_world.Map, step.Value, goal, p => p != self.Pos && _world.Units.IsOccupied(p));
+                if (second.HasValue && second.Value != goal && !_world.Units.IsOccupied(second.Value)) then = second;
+            }
+            return new MoveCommand(_world, step.Value, MoveCost(self, cost), then);
+        }
+
+        private EnemyTraits TraitsOf(Unit self) => _enemies != null && _enemies.TryGet(self.VisualId, out var t) ? t : null;
+
+        /// <summary>이동 비용: 종류의 MoveCostTicks (느림), 없으면 기본.</summary>
+        private int MoveCost(Unit self, int cost)
+        {
+            var traits = TraitsOf(self);
+            return traits != null ? Math.Max(cost, traits.MoveCostTicks) : cost;
+        }
+
+        /// <summary>3-17b: 주문을 플레이어에게 쓸 수 있으면(사거리 · 시야 · 마나 · 막힘 — 플레이어와 같은 SpellCasting.CheckDef) 시전 커맨드.</summary>
+        private bool TryCast(Unit self, EnemyTraits traits, GridPos target, int cost, out ICommand cast)
+        {
+            cast = null;
+            if (_spells == null || _targeting == null || !_spells.TryGet(traits.SpellId, out var spell)) return false;
+            if (ProjectM.Magic.SpellCasting.CheckDef(_world, _targeting, _sight, self, spell, target, out _) != ProjectM.Magic.CastBlock.None) return false;
+            cast = new ProjectM.Magic.CastSpellCommand(_world, _spells, _targeting, spell.Id, target, cost);
+            return true;
         }
     }
 }

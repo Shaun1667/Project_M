@@ -114,7 +114,10 @@ namespace ProjectM.UI
             }
         }
 
-        public static string Enemy(EntityId id) => $"적 {id}";
+        public static string Enemy(EntityId id) => $"{EnemyName?.Invoke(id) ?? "적"} {id}";
+
+        /// <summary>3-17b 적 이름 (엔티티 → 종류 이름, HudModel이 생성 이벤트로 채움). null이면 모두 "적".</summary>
+        public static System.Func<EntityId, string> EnemyName { get; set; }
 
         /// <summary>대상 고르기 창 제목 (3-10b): "식별 주문서 — 대상 고르기 (Esc 취소)".</summary>
         public string PickTitle(InventoryRef source) => $"{Entry(source)} — 대상 고르기  <size=70%><color=#AAAAAA>Esc 취소</color></size>";

@@ -39,6 +39,7 @@ namespace ProjectM.Units
             int damage = MeleeWeapon.RollDamage(_world, attacker, surprise); // 3-7a: 무기면 굴림 · 3-7c 더크 기습
             damage = MeleeWeapon.ApplyDefense(_world, target, damage); // 3-7c: 방어 굴림 (육척봉)
             Combat.ApplyDamage(_world, attacker.Id, target, damage, DamageCause.Attack);
+            if (damage > 0) _world.EnemyRules?.OnMeleeHit(_world, attacker, target); // 3-17b: 전갈 중독
         }
     }
 }

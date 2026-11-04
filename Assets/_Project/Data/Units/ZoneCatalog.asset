@@ -22,6 +22,15 @@ MonoBehaviour:
     Evasion: 2
     ExpReward: 1
     ExpMaxLevel: 5
+    MoveSteps: 0
+    MoveCostTicks: 0
+    HitStatus: 0
+    HitStatusPercent: 0
+    HurtTerrain: 0
+    SpellId: 
+    MaxMana: 0
+    KeepDistance: 0
+    DamagePercents: []
   - Id: boss
     DisplayName: "\uBCF4\uC2A4"
     MaxHp: 60
@@ -31,13 +40,102 @@ MonoBehaviour:
     Evasion: 8
     ExpReward: 10
     ExpMaxLevel: 30
+    MoveSteps: 0
+    MoveCostTicks: 0
+    HitStatus: 0
+    HitStatusPercent: 0
+    HurtTerrain: 0
+    SpellId: 
+    MaxMana: 0
+    KeepDistance: 0
+    DamagePercents: []
+  - Id: enemy_rat
+    DisplayName: "\uC950"
+    MaxHp: 8
+    AttackDamage: 2
+    SightRange: 6
+    Accuracy: 8
+    Evasion: 2
+    ExpReward: 1
+    ExpMaxLevel: 5
+    MoveSteps: 0
+    MoveCostTicks: 0
+    HitStatus: 0
+    HitStatusPercent: 0
+    HurtTerrain: 0
+    SpellId: 
+    MaxMana: 0
+    KeepDistance: 0
+    DamagePercents: []
+  - Id: enemy_bunny
+    DisplayName: "\uD1A0\uB07C"
+    MaxHp: 5
+    AttackDamage: 1
+    SightRange: 7
+    Accuracy: 8
+    Evasion: 4
+    ExpReward: 1
+    ExpMaxLevel: 5
+    MoveSteps: 2
+    MoveCostTicks: 0
+    HitStatus: 0
+    HitStatusPercent: 0
+    HurtTerrain: 0
+    SpellId: 
+    MaxMana: 0
+    KeepDistance: 0
+    DamagePercents: []
+  - Id: enemy_slime
+    DisplayName: "\uC2AC\uB77C\uC784"
+    MaxHp: 12
+    AttackDamage: 2
+    SightRange: 5
+    Accuracy: 6
+    Evasion: 1
+    ExpReward: 2
+    ExpMaxLevel: 6
+    MoveSteps: 0
+    MoveCostTicks: 0
+    HitStatus: 0
+    HitStatusPercent: 0
+    HurtTerrain: 3
+    SpellId: 
+    MaxMana: 0
+    KeepDistance: 0
+    DamagePercents:
+    - Element: 0
+      Percent: 50
+  - Id: enemy_goblin_shaman
+    DisplayName: "\uACE0\uBE14\uB9B0 \uC8FC\uC220\uC0AC"
+    MaxHp: 6
+    AttackDamage: 1
+    SightRange: 7
+    Accuracy: 6
+    Evasion: 3
+    ExpReward: 2
+    ExpMaxLevel: 7
+    MoveSteps: 0
+    MoveCostTicks: 0
+    HitStatus: 0
+    HitStatusPercent: 0
+    HurtTerrain: 0
+    SpellId: enemy_fire_bolt
+    MaxMana: 4
+    KeepDistance: 3
+    DamagePercents: []
   _zones:
   - Name: "\uC232 \uC18D \uB3D9\uAD74"
     FirstFloor: 1
     LastFloor: 5
     StatPercent: 100
     Enemies:
-    - EnemyId: enemy_melee
+    - EnemyId: enemy_rat
+      Weight: 3
+    - EnemyId: enemy_bunny
+      Weight: 2
+    - EnemyId: enemy_slime
+      Weight: 2
+    - EnemyId: enemy_goblin_shaman
       Weight: 1
     BossId: boss
   - Name: "\uC0AC\uB9C9 \uD53C\uB77C\uBBF8\uB4DC"

@@ -144,6 +144,9 @@ namespace ProjectM.Editor
             for (int i = 0; i < MeleeVariants.Length; i++)
                 variants[i] = BuildPrefab(MeleeVariants[i], null);
             catalog.SetVariants("enemy_melee", variants);
+            catalog.SetPrefab("enemy_bunny", variants[0]); // 3-17b 적 종류마다 한 모델
+            catalog.SetPrefab("enemy_rat", variants[1]);
+            catalog.SetPrefab("enemy_slime", variants[2]);
             catalog.SetPrefab("boss", BuildPrefab(Boss, null));
             EditorUtility.SetDirty(catalog);
 

@@ -438,6 +438,15 @@ namespace ProjectM.Editor
                 if (front.Length > 0) catalog.SetPixel(id, idle, front, Walk("back"), Walk("side"));
                 else catalog.SetPixel(id, null, null, null, null);
             }
+            // 3-17b 적 종류 그레이박스 (모델이 있으면 Varco Models 메뉴가 프리팹을 붙임)
+            foreach (var (id, color, height) in new[]
+            {
+                ("enemy_rat", new Color(0.55f, 0.45f, 0.4f), 0.6f),
+                ("enemy_bunny", new Color(0.95f, 0.95f, 0.9f), 0.6f),
+                ("enemy_slime", new Color(0.3f, 0.75f, 0.95f), 0.6f),
+                ("enemy_goblin_shaman", new Color(0.35f, 0.65f, 0.2f), 0.9f),
+            })
+                catalog.Set(id, AssetDatabase.LoadAssetAtPath<Sprite>(UnitCircleSpritePath), color, height);
             // 3-4b 임시 보스: 짙은 자주색, 두 배 키 (판정은 1칸)
             catalog.Set(BossVisualId, AssetDatabase.LoadAssetAtPath<Sprite>(UnitCircleSpritePath), new Color(0.55f, 0.1f, 0.45f), 1.8f);
             // P-3 ⓑ 적 · 보스 2D 정지 그림 (2026-10-23 Varco) — 3D 변형과 같은 순서(토끼 · 쥐 · 슬라임)라 같은 엔티티 = 같은 모습
@@ -489,6 +498,11 @@ namespace ProjectM.Editor
             changed |= catalog.SetDisplayNameIfEmpty("lightning_basic", "번개 줄기");
             changed |= catalog.SetDisplayNameIfEmpty("poison_basic", "독 폭발");
             changed |= catalog.SetDisplayNameIfEmpty("water_basic", "물보라");
+            // 3-17b 적 주문 (BALANCE 20번): 고블린 주술사 — 마나 4 · 2씩
+            changed |= catalog.AddIfMissing(new SpellCatalogAsset.Entry
+                { Id = "enemy_fire_bolt", Element = Element.Fire, Shape = SpellShape.Bolt, Range = 5, Damage = 2, ManaCost = 2 });
+            changed |= catalog.SetStatusIfNone("enemy_fire_bolt", StatusType.Burn, 30);
+            changed |= catalog.SetDisplayNameIfEmpty("enemy_fire_bolt", "고블린 불씨");
             // 3-12a 함정 효과 주문 (BALANCE 17번): 함정 칸 중심 3×3, 시전자 없음 · 마나 0 · 배우지 않음. 마비 가스는 바람 속성(반응 없음)
             foreach (var (id, name, element, damage, status, chance, terrain) in new[]
             {
@@ -571,6 +585,13 @@ namespace ProjectM.Editor
                 new ZoneCatalogAsset.Enemy { Id = id, DisplayName = name, MaxHp = hp, AttackDamage = dmg, SightRange = sight, Accuracy = acc, Evasion = eva, ExpReward = exp, ExpMaxLevel = maxLvl };
             changed |= catalog.AddIfMissing(E("enemy_melee", "적", 8, 2, 6, 8, 2, 1, 5)); // 3-17a 전 적 (MeleeEnemy.asset 값)
             changed |= catalog.AddIfMissing(E(BossVisualId, "보스", 60, 5, 10, 10, 8, 10, 30)); // 3-4b 임시 보스 (Boss.asset 값)
+            // 3-17b 1구역 숲 속 동굴 (BALANCE 20번) — 행동 필드는 줄을 새로 만들 때만
+            var rat = E("enemy_rat", "쥐", 8, 2, 6, 8, 2, 1, 5);
+            var bunny = E("enemy_bunny", "토끼", 5, 1, 7, 8, 4, 1, 5); bunny.MoveSteps = 2;
+            var slime = E("enemy_slime", "슬라임", 12, 2, 5, 6, 1, 2, 6); slime.HurtTerrain = TerrainEffectType.Water;
+            slime.DamagePercents = new System.Collections.Generic.List<ZoneCatalogAsset.ElementPercent> { new ZoneCatalogAsset.ElementPercent { Element = Element.Fire, Percent = 50 } };
+            var goblin = E("enemy_goblin_shaman", "고블린 주술사", 6, 1, 7, 6, 3, 2, 7); goblin.SpellId = "enemy_fire_bolt"; goblin.MaxMana = 4; goblin.KeepDistance = 3;
+            foreach (var row in new[] { rat, bunny, slime, goblin }) changed |= catalog.AddIfMissing(row);
             ZoneCatalogAsset.Zone Z(string name, int first, int last, int percent, string boss, params (string id, int weight)[] enemies)
             {
                 var rows = new System.Collections.Generic.List<ZoneCatalogAsset.ZoneEnemyRow>();
@@ -582,6 +603,7 @@ namespace ProjectM.Editor
             changed |= catalog.AddIfMissing(Z("3구역 (임시)", 11, 15, 200, null, ("enemy_melee", 1)));
             changed |= catalog.AddIfMissing(Z("4구역 (임시)", 16, 20, 250, null, ("enemy_melee", 1)));
             changed |= catalog.AddIfMissing(Z("5구역 (임시)", 21, 25, 300, BossVisualId, ("enemy_melee", 1)));
+            changed |= catalog.ReplacePlaceholderEnemies(1, ("enemy_rat", 3), ("enemy_bunny", 2), ("enemy_slime", 2), ("enemy_goblin_shaman", 1)); // 3-17b
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }

@@ -97,6 +97,11 @@ namespace ProjectM.Core
         /// <summary>높은 풀이 밟혔다 (3-16b 씨앗 떨어뜨리기).</summary>
         internal Action<GridPos> OnGrassTrampled { get; private set; }
 
+        /// <summary>적 종류 규칙 (3-17b — 속성 배수 · 맞으면 지형 · 명중 시 상태). GameRoot가 넣는다 — 규칙 연결이라 저장하지 않는다. null이면 없음.</summary>
+        internal ProjectM.Units.EnemyRules EnemyRules { get; private set; }
+
+        public void SetEnemyRules(ProjectM.Units.EnemyRules rules) => EnemyRules = rules;
+
         public void SetItemRules(Action<ProjectM.Magic.Element, IReadOnlyList<GridPos>> onCellsHit, Action<Unit> onUnitDied, Action<GridPos> onGrassTrampled = null)
         {
             OnCellsHit = onCellsHit;

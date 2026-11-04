@@ -1,5 +1,8 @@
 using System.Collections.Generic;
+using ProjectM.Core;
 using ProjectM.Dungeon;
+using ProjectM.Magic;
+using ProjectM.Status;
 using ProjectM.Units;
 using UnityEngine;
 
@@ -24,6 +27,23 @@ namespace ProjectM.Data
             [Min(0)] public int Evasion;
             [Min(0)] public int ExpReward;
             [Min(0)] public int ExpMaxLevel;
+            [Header("행동 (3-17b)")]
+            [Tooltip("한 번 이동 칸 (1 · 2 — 0은 1)")] [Range(0, 2)] public int MoveSteps;
+            [Tooltip("이동 비용 틱 (0은 1, 2 = 느림)")] [Min(0)] public int MoveCostTicks;
+            [Tooltip("근접 명중 시 상태")] public StatusType HitStatus;
+            [Range(0, 100)] public int HitStatusPercent;
+            [Tooltip("피해를 받으면 자기 칸에 까는 지형")] public TerrainEffectType HurtTerrain;
+            [Tooltip("원거리 주문 (SpellCatalog) — 마나를 씀")] public string SpellId;
+            [Min(0)] public int MaxMana;
+            [Tooltip("플레이어가 이보다 가까우면 물러남 (마나가 있을 때)")] [Min(0)] public int KeepDistance;
+            [Tooltip("속성 피해 배수 % (약점 · 저항) — 없는 속성은 100")] public List<ElementPercent> DamagePercents;
+        }
+
+        [System.Serializable]
+        public struct ElementPercent
+        {
+            public Element Element;
+            [Min(0)] public int Percent;
         }
 
         [System.Serializable]
@@ -60,8 +80,74 @@ namespace ProjectM.Data
             return false;
         }
 
-        public static UnitDef ToDef(Enemy e) => new UnitDef(e.Id, e.MaxHp, e.AttackDamage, e.SightRange,
+        public static UnitDef ToDef(Enemy e) => new UnitDef(e.Id, e.MaxHp, e.AttackDamage, e.SightRange, e.MaxMana,
             accuracy: e.Accuracy, evasion: e.Evasion, expReward: e.ExpReward, expMaxLevel: e.ExpMaxLevel);
+
+        /// <summary>적 종류 행동 표 (3-17b).</summary>
+        public EnemyBook ToEnemyBook()
+        {
+            var list = new List<EnemyTraits>(_enemies.Count);
+            foreach (var e in _enemies)
+            {
+                var percents = new Dictionary<Element, int>();
+                if (e.DamagePercents != null) foreach (var p in e.DamagePercents) percents[p.Element] = p.Percent;
+                list.Add(new EnemyTraits(e.Id, e.DisplayName, System.Math.Max(1, e.MoveSteps), System.Math.Max(1, e.MoveCostTicks),
+                    e.HitStatus, e.HitStatusPercent, e.HurtTerrain, e.SpellId, e.KeepDistance, percents));
+            }
+            return new EnemyBook(list);
+        }
+
+        /// <summary>화면 이름 (VisualId → 이름, HUD 로그용).</summary>
+        public Dictionary<string, string> DisplayNames()
+        {
+            var names = new Dictionary<string, string>();
+            foreach (var e in _enemies) if (!string.IsNullOrEmpty(e.DisplayName)) names[e.Id] = e.DisplayName;
+            return names;
+        }
+
+        /// <summary>에디터 Setup용 (3-17b): 구역 적 표가 예전 자리표시(enemy_melee 하나)뿐이면 rows로 바꾼다.</summary>
+        public bool ReplacePlaceholderEnemies(int firstFloor, params (string id, int weight)[] rows)
+        {
+            for (int i = 0; i < _zones.Count; i++)
+            {
+                var z = _zones[i];
+                if (z.FirstFloor != firstFloor) continue;
+                if (z.Enemies != null && !(z.Enemies.Count == 1 && z.Enemies[0].EnemyId == "enemy_melee")) return false;
+                z.Enemies = new List<ZoneEnemyRow>();
+                foreach (var (id, weight) in rows) z.Enemies.Add(new ZoneEnemyRow { EnemyId = id, Weight = weight });
+                _zones[i] = z;
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>에디터 Setup용: 구역 보스가 from이면 to로 (임시 보스 → 패턴 보스).</summary>
+        public bool ReplaceBoss(int firstFloor, string from, string to)
+        {
+            for (int i = 0; i < _zones.Count; i++)
+            {
+                var z = _zones[i];
+                if (z.FirstFloor != firstFloor || z.BossId != from) continue;
+                z.BossId = to;
+                _zones[i] = z;
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>에디터 Setup용: 구역 세기가 from이면 to로.</summary>
+        public bool ReplaceStatPercent(int firstFloor, int from, int to)
+        {
+            for (int i = 0; i < _zones.Count; i++)
+            {
+                var z = _zones[i];
+                if (z.FirstFloor != firstFloor || z.StatPercent != from) continue;
+                z.StatPercent = to;
+                _zones[i] = z;
+                return true;
+            }
+            return false;
+        }
 
         public ZoneBook ToBook()
         {

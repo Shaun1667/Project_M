@@ -186,6 +186,7 @@ namespace ProjectM
             if (World != null)
             {
                 World.Events.Unsubscribe<EntityMovedEvent>(OnEntityMoved);
+                World.Events.Unsubscribe<EntitySpawnedEvent>(OnEntitySpawned);
                 World.Events.Unsubscribe<UnitDiedEvent>(OnUnitDied);
                 World.Events.Unsubscribe<RunEndedEvent>(OnRunEnded);
             }
@@ -224,7 +225,12 @@ namespace ProjectM
             if (zones != null && zones.FloorCount != dungeonConfig.FloorCount)
                 Debug.LogWarning($"[GameRoot] 구역 표의 층 수 {zones.FloorCount} ≠ DungeonGenConfig 층 수 {dungeonConfig.FloorCount}", this);
             var kindRng = World.Rng.Get(RngStream.EnemyKind);
-            var enemyAi = new MeleeChaserAi(World, Config, sight, Statuses); // 3-13a: 투명
+            var enemies = _zoneCatalog != null ? _zoneCatalog.ToEnemyBook() : null; // 3-17b 적 종류 행동
+            if (enemies != null) World.SetEnemyRules(new EnemyRules(enemies, Spells, Statuses, Terrains));
+            _unitVisuals.Clear();
+            _enemyNames = _zoneCatalog != null ? _zoneCatalog.DisplayNames() : new System.Collections.Generic.Dictionary<string, string>();
+            HudText.EnemyName = id => _unitVisuals.TryGetValue(id, out var v) && _enemyNames.TryGetValue(v, out var n) ? n : null;
+            var enemyAi = new MeleeChaserAi(World, Config, sight, Statuses, enemies, Spells, new BresenhamTargetingRule()); // 3-13a: 투명 · 3-17b 행동
             System.Func<World, EntityId, ICommandSource> aiFactory = (w, id) =>
                 !w.Units.TryGet(id, out var u) ? enemyAi : u.Faction == Faction.Ally ? allyAi
                 : u.Faction == Faction.Neutral ? new ProjectM.Dungeon.IdleNeutralAi() : (ICommandSource)enemyAi; // 떠났던 층의 분신 · 상인
@@ -249,6 +255,7 @@ namespace ProjectM
             if (_fx != null) _fx.Bind(World.Events); // G-3: 엔티티 모습 다음에 (상태 효과가 유닛에 붙음)
             if (_floorItems != null) _floorItems.Bind(World.Events);
             World.Events.Subscribe<EntityMovedEvent>(OnEntityMoved);
+            World.Events.Subscribe<EntitySpawnedEvent>(OnEntitySpawned); // 3-17b 로그의 적 이름
             World.Events.Subscribe<UnitDiedEvent>(OnUnitDied);
             World.Events.Subscribe<RunEndedEvent>(OnRunEnded);
 
@@ -305,6 +312,12 @@ namespace ProjectM
                 _camera.SnapToTarget(_entityPresenter.CellCenter(Floor.Start));
             }
         }
+
+        /// <summary>3-17b: 엔티티 → 모습 ID (로그의 적 이름 — 죽은 뒤에도 남겨 둠, 판마다 비움).</summary>
+        private readonly System.Collections.Generic.Dictionary<EntityId, string> _unitVisuals = new System.Collections.Generic.Dictionary<EntityId, string>();
+        private System.Collections.Generic.Dictionary<string, string> _enemyNames = new System.Collections.Generic.Dictionary<string, string>();
+
+        private void OnEntitySpawned(EntitySpawnedEvent e) => _unitVisuals[e.Id] = e.VisualId;
 
         private void OnEntityMoved(EntityMovedEvent e)
         {

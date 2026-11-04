@@ -156,3 +156,14 @@ MonoBehaviour:
     StatusChancePercent: 100
     LeavesTerrain: 2
     DisplayName: "\uB3C5\uC774\uB07C"
+  - Id: enemy_fire_bolt
+    Element: 0
+    Shape: 0
+    Range: 5
+    Damage: 2
+    ManaCost: 2
+    Radius: 0
+    AppliesStatus: 1
+    StatusChancePercent: 30
+    LeavesTerrain: 0
+    DisplayName: "\uACE0\uBE14\uB9B0 \uBD88\uC528"
