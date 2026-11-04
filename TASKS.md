@@ -620,6 +620,13 @@
   - 정한 것 (Claude): 고를 것이 없으면 창 없이 바로 읽음(식별할 것 없음 로그 — 예전과 같음), 강화 주문서는 지금처럼 든 무기 · 입은 갑옷(고르기 없음)
   - 테스트 작성, **실행 안 함 (사용자가 직접)**: `BackpackTests` +2 — 고르기는 조건 칸만 · 결과, 식별 조건
 
+- [x] **3-13a. 물약 4종 — 신속 · 투명 · 부양 · 정신 시야** (2026-11-04) — 테스트 작성, 실행 안 함 · 플레이 확인 대기
+  - 결정 (2026-11-04, 사용자 — 추천안): 신속 = **이동 두 번에 1틱** — 구현은 "이동 명령 한 번에 두 칸까지 1틱"(행동 비용 최소 1틱이라 틱 하나에 이동 둘을 묶음)
+  - 구현: 상태 4종(`StatusType` Haste · Invisible · Levitating · MindVision, 지속 20 — SPD)과 **데이터 필드** `StatusDef.MoveSteps`(신속 2) · `HiddenFromEnemies`(투명) · `Levitates`(부양) · `SensesEnemies`(정신 시야) — 종류별 분기 없이 `StatusEffects.Any(book, unit, 조건)` · `MoveSteps`로 판정. 신속: `MoveCommand.Then`(둘째 칸, 막히면 한 칸), `PlayerActions.TryStep/TryStepTo(… statuses)` — 키보드 = 같은 방향 두 칸, 클릭 경로 = 경로 두 칸씩. 투명: `MeleeChaserAi(… statuses)`가 못 봄. 부양: `TerrainSystem` · `TrapSystem` · `GrassTrampleSystem`이 건너뜀. 정신 시야: `PlayerVisionSystem(… statuses)` → `VisibilityChangedEvent.Sensed`(적 칸) → `EntityPresenter`가 그 적을 그림. 물약 4줄(`ConsumableEffect` Haste · Invisibility · Levitation · MindVision — 무게 1 · 1 · 1 · 2, SPD), 상태 이름 HudText
+  - 정한 것 (Claude): 지속 20(SPD), 투명은 공격해도 안 풀림(SPD는 풀림 — 커맨드가 상태 표를 몰라 이번엔 뺌), 신속으로 지나간 첫 칸의 함정 · 풀은 안 밟음, 부양 중에도 문은 열림, 물약 겉모습 12색 = 물약 12종(힘 포함)
+  - 확인: 컴파일 0 · Setup 3종(상태 4 · 물약 4)
+  - 테스트 작성, **실행 안 함 (사용자가 직접)**: `PotionStatusTests` 6개 — 신속 두 칸 1틱 · 막히면 한 칸, 신속 없으면 한 칸, 투명이면 옆 적도 못 봄, 부양은 지형 · 함정 · 풀 무시, 정신 시야 = 벽 너머 적 감지(지도는 안 밝힘), 마시면 상태 · 지속 20. 검산 표 갱신(`SpellTests.BalanceStatuses` · `StatusTests` · `ConsumableTests.Book` · `InventoryTests` 아이템 36)
+
 ## Phase P — 픽셀 그래픽 전환 (2026-10-20 사용자 요청: "전체적인 모든 그래픽을 픽셀 스타일로") — **중단 (2026-10-28, 사용자: 3D로 되돌림)**
 - [~] **G-5. 3D로 되돌리기** (2026-10-28) — 플레이 확인 대기
   - 결정 (2026-10-28, 사용자): 그래픽 기준 = **실시간 3D**(Phase G)로 되돌림, Phase P 중단. 2D 코드 · 그림은 지우지 않고 남겨 둠(추천안) — `Pixel2D = true` + Setup이면 다시 2D. 맨 위 진행 요약 "최신 (2026-10-28)" 참고

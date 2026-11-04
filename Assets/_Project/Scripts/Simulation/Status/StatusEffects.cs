@@ -64,6 +64,25 @@ namespace ProjectM.Status
             return true;
         }
 
+        /// <summary>걸린 상태 중 하나라도 조건을 만족하는지 (3-13a — 투명 · 부양 · 정신 시야 데이터 판정). book이 null이면 false.</summary>
+        public static bool Any(StatusBook book, Unit unit, Func<StatusDef, bool> flag)
+        {
+            if (book == null || unit == null) return false;
+            foreach (var s in unit.Statuses)
+                if (book.TryGet(s.Type, out var def) && flag(def)) return true;
+            return false;
+        }
+
+        /// <summary>이동 한 번에 가는 칸 수 = 걸린 상태들의 MoveSteps 중 최대 (3-13a 신속). book이 null이면 1.</summary>
+        public static int MoveSteps(StatusBook book, Unit unit)
+        {
+            int steps = 1;
+            if (book == null || unit == null) return steps;
+            foreach (var s in unit.Statuses)
+                if (book.TryGet(s.Type, out var def)) steps = Math.Max(steps, def.MoveSteps);
+            return steps;
+        }
+
         /// <summary>행동 비용 조정: 걸린 상태들의 ExtraActionCostTicks를 더한다 (둔화).</summary>
         public static int AdjustCost(World world, StatusBook book, EntityId id, int cost)
         {

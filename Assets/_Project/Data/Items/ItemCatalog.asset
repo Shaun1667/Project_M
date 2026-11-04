@@ -525,6 +525,70 @@ MonoBehaviour:
     Amount: 0
     Effect: 0
     Weight: 0
+  - Id: potion_haste
+    DisplayName: "\uC2E0\uC18D \uBB3C\uC57D"
+    Use: 4
+    SpellId: 
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
+    Tier: 0
+    Amount: 0
+    Effect: 16
+    Weight: 1
+  - Id: potion_invisibility
+    DisplayName: "\uD22C\uBA85 \uBB3C\uC57D"
+    Use: 4
+    SpellId: 
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
+    Tier: 0
+    Amount: 0
+    Effect: 17
+    Weight: 1
+  - Id: potion_levitation
+    DisplayName: "\uBD80\uC591 \uBB3C\uC57D"
+    Use: 4
+    SpellId: 
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
+    Tier: 0
+    Amount: 0
+    Effect: 18
+    Weight: 1
+  - Id: potion_mind_vision
+    DisplayName: "\uC815\uC2E0 \uC2DC\uC57C \uBB3C\uC57D"
+    Use: 4
+    SpellId: 
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
+    Tier: 0
+    Amount: 0
+    Effect: 19
+    Weight: 2
   _weaponDamageDivisor: 3
   _weaponMinDamage: 2
   _armorDefenseDivisor: 3

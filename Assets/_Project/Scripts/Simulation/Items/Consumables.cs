@@ -357,6 +357,18 @@ namespace ProjectM.Items
                 case ConsumableEffect.Retribution:
                     Retribution(world, rules, unit, def.Id);
                     break;
+                case ConsumableEffect.Haste:
+                    ApplySelf(world, rules, unit, StatusType.Haste);
+                    break;
+                case ConsumableEffect.Invisibility:
+                    ApplySelf(world, rules, unit, StatusType.Invisible);
+                    break;
+                case ConsumableEffect.Levitation:
+                    ApplySelf(world, rules, unit, StatusType.Levitating);
+                    break;
+                case ConsumableEffect.MindVision:
+                    ApplySelf(world, rules, unit, StatusType.MindVision);
+                    break;
             }
         }
 
@@ -442,6 +454,12 @@ namespace ProjectM.Items
                             if (map.IsWalkable(pos + dir)) { reveal = true; break; }
                     if (reveal) world.Explored[y * map.Width + x] = true;
                 }
+        }
+
+        /// <summary>마신 유닛에 상태 (3-13a 신속 · 투명 · 부양 · 정신 시야 — 지속은 StatusCatalog).</summary>
+        private static void ApplySelf(World world, ConsumableRules rules, Unit unit, StatusType type)
+        {
+            if (rules.Statuses != null && rules.Statuses.TryGet(type, out var status)) StatusEffects.Apply(world, unit, status);
         }
 
         /// <summary>순간이동 주문서 · 순간이동 함정(3-12a): 비어 있는 바닥 칸(계단 제외) 중 무작위로 (RngStream.Combat).</summary>

@@ -600,7 +600,7 @@ namespace ProjectM.Presentation
         private void ApplyVisibility(EntityId id, EntityView view)
         {
             if (view == null) return;
-            view.Visible = _revealAll || _visibility == null || !_positions.TryGetValue(id, out var pos) || _visibility.IsVisible(pos);
+            view.Visible = _revealAll || _visibility == null || !_positions.TryGetValue(id, out var pos) || _visibility.IsVisible(pos) || _visibility.IsSensed(pos); // 3-13a 정신 시야
             foreach (var r in view.Renderers)
                 if (r != null) r.enabled = view.Visible;
         }

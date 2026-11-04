@@ -9,15 +9,17 @@ namespace ProjectM.Units
     /// </summary>
     public static class PlayerActions
     {
-        public static bool TryStep(World world, GameConfig config, GridPos direction, out ICommand command)
+        /// <param name="statuses">상태 규칙 (3-13a 신속 — 이동 두 칸). null이면 한 칸.</param>
+        public static bool TryStep(World world, GameConfig config, GridPos direction, out ICommand command, ProjectM.Status.StatusBook statuses = null)
         {
             command = null;
             if (!TryGetPlayer(world, out var player)) return false;
-            return TryStepTo(world, config, player, player.Pos + direction, out command);
+            return TryStepTo(world, config, player, player.Pos + direction, out command, player.Pos + direction + direction, statuses);
         }
 
-        /// <summary>인접 칸 to로 이동 또는 공격.</summary>
-        public static bool TryStepTo(World world, GameConfig config, Unit player, GridPos to, out ICommand command)
+        /// <summary>인접 칸 to로 이동 또는 공격. 신속이면(statuses) 이동 뒤 next 칸까지 같은 차례에 (3-13a).</summary>
+        public static bool TryStepTo(World world, GameConfig config, Unit player, GridPos to, out ICommand command, GridPos? next = null,
+            ProjectM.Status.StatusBook statuses = null)
         {
             if (world == null) throw new ArgumentNullException(nameof(world));
             if (config == null) throw new ArgumentNullException(nameof(config));
@@ -32,7 +34,8 @@ namespace ProjectM.Units
                 return true;
             }
 
-            command = new MoveCommand(world, to, config.DefaultActionCostTicks);
+            bool fast = next.HasValue && ProjectM.Status.StatusEffects.MoveSteps(statuses, player) >= 2 && !world.Units.IsOccupied(next.Value);
+            command = new MoveCommand(world, to, config.DefaultActionCostTicks, fast ? next : null);
             return true;
         }
 

@@ -12,11 +12,14 @@ namespace ProjectM.Units
     {
         private readonly World _world;
         private readonly ISightRule _sight;
+        private readonly ProjectM.Status.StatusBook _statuses;
 
-        public PlayerVisionSystem(World world, ISightRule sight)
+        /// <param name="statuses">정신 시야(3-13a) 판정용. null이면 감지 없음.</param>
+        public PlayerVisionSystem(World world, ISightRule sight, ProjectM.Status.StatusBook statuses = null)
         {
             _world = world ?? throw new ArgumentNullException(nameof(world));
             _sight = sight ?? throw new ArgumentNullException(nameof(sight));
+            _statuses = statuses;
         }
 
         public void Run(in TickContext context) => Refresh();
@@ -32,7 +35,15 @@ namespace ProjectM.Units
             {
                 if (visible[i]) _world.Explored[i] = true;
             }
-            _world.Events.Publish(new VisibilityChangedEvent(_world.Map.Width, _world.Map.Height, visible, (bool[])_world.Explored.Clone()));
+            // 3-13a 정신 시야: 층의 살아 있는 적 칸 (지도는 밝히지 않음 — 유닛만 보임)
+            bool[] sensed = null;
+            if (ProjectM.Status.StatusEffects.Any(_statuses, player, d => d.SensesEnemies))
+            {
+                sensed = new bool[visible.Length];
+                foreach (var unit in _world.Units.ToSortedList())
+                    if (unit.IsAlive && unit.Faction != player.Faction && _world.Map.InBounds(unit.Pos)) sensed[unit.Pos.Y * _world.Map.Width + unit.Pos.X] = true;
+            }
+            _world.Events.Publish(new VisibilityChangedEvent(_world.Map.Width, _world.Map.Height, visible, (bool[])_world.Explored.Clone(), sensed));
         }
     }
 
@@ -46,8 +57,12 @@ namespace ProjectM.Units
         /// <summary>한 번이라도 본 칸 (Visible 포함).</summary>
         public bool[] Explored { get; }
 
-        public VisibilityChangedEvent(int width, int height, bool[] visible, bool[] explored)
+        /// <summary>정신 시야로 감지한 적 칸 (3-13a). 없으면 null.</summary>
+        public bool[] Sensed { get; }
+
+        public VisibilityChangedEvent(int width, int height, bool[] visible, bool[] explored, bool[] sensed = null)
         {
+            Sensed = sensed;
             Width = width;
             Height = height;
             Visible = visible ?? throw new ArgumentNullException(nameof(visible));
@@ -55,5 +70,8 @@ namespace ProjectM.Units
         }
 
         public bool IsVisible(GridPos pos) => pos.X >= 0 && pos.Y >= 0 && pos.X < Width && pos.Y < Height && Visible[pos.Y * Width + pos.X];
+
+        /// <summary>정신 시야로 감지한 칸인지 (3-13a — 유닛 표시용).</summary>
+        public bool IsSensed(GridPos pos) => Sensed != null && pos.X >= 0 && pos.Y >= 0 && pos.X < Width && pos.Y < Height && Sensed[pos.Y * Width + pos.X];
     }
 }

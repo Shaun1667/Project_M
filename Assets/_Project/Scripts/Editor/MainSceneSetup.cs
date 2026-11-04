@@ -509,6 +509,11 @@ namespace ProjectM.Editor
             changed |= catalog.AddIfMissing(new StatusCatalogAsset.Entry { Type = StatusType.Paralyze, DurationTicks = 2, PreventsAction = true });
             changed |= catalog.AddIfMissing(new StatusCatalogAsset.Entry { Type = StatusType.Wet, DurationTicks = 3 }); // 3-2
             changed |= catalog.AddIfMissing(new StatusCatalogAsset.Entry { Type = StatusType.Frozen, DurationTicks = 2, PreventsAction = true }); // 3-3a
+            // 3-13a 물약 상태 (SPD 지속 20 — BALANCE 6번)
+            changed |= catalog.AddIfMissing(new StatusCatalogAsset.Entry { Type = StatusType.Haste, DurationTicks = 20, MoveSteps = 2 });
+            changed |= catalog.AddIfMissing(new StatusCatalogAsset.Entry { Type = StatusType.Invisible, DurationTicks = 20, HiddenFromEnemies = true });
+            changed |= catalog.AddIfMissing(new StatusCatalogAsset.Entry { Type = StatusType.Levitating, DurationTicks = 20, Levitates = true });
+            changed |= catalog.AddIfMissing(new StatusCatalogAsset.Entry { Type = StatusType.MindVision, DurationTicks = 20, SensesEnemies = true });
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }
@@ -842,6 +847,11 @@ namespace ProjectM.Editor
             changed |= catalog.AddIfMissing(Consumable("potion_liquid_flame", "액체 화염 물약", ItemUse.Potion, ConsumableEffect.LiquidFlame, 3));
             changed |= catalog.AddIfMissing(Consumable("potion_frost", "냉기 물약", ItemUse.Potion, ConsumableEffect.Frost, 3));
             changed |= catalog.AddIfMissing(Consumable("potion_paralytic_gas", "마비 가스 물약", ItemUse.Potion, ConsumableEffect.ParalyticGas, 2));
+            // 3-13a: SPD 무게 (신속 · 투명 · 부양 1, 정신 시야 2)
+            changed |= catalog.AddIfMissing(Consumable("potion_haste", "신속 물약", ItemUse.Potion, ConsumableEffect.Haste, 1));
+            changed |= catalog.AddIfMissing(Consumable("potion_invisibility", "투명 물약", ItemUse.Potion, ConsumableEffect.Invisibility, 1));
+            changed |= catalog.AddIfMissing(Consumable("potion_levitation", "부양 물약", ItemUse.Potion, ConsumableEffect.Levitation, 1));
+            changed |= catalog.AddIfMissing(Consumable("potion_mind_vision", "정신 시야 물약", ItemUse.Potion, ConsumableEffect.MindVision, 2));
             changed |= catalog.AddIfMissing(Consumable("scroll_identify", "식별 주문서", ItemUse.Scroll, ConsumableEffect.Identify, 3));
             changed |= catalog.AddIfMissing(Consumable("scroll_magic_mapping", "지도 주문서", ItemUse.Scroll, ConsumableEffect.MagicMapping, 1));
             changed |= catalog.AddIfMissing(Consumable("scroll_teleportation", "순간이동 주문서", ItemUse.Scroll, ConsumableEffect.Teleportation, 1));

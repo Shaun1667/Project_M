@@ -117,7 +117,7 @@ namespace ProjectM.Core
         {
             if (statuses == null) throw new ArgumentNullException(nameof(statuses));
             if (terrains == null) throw new ArgumentNullException(nameof(terrains));
-            var vision = new PlayerVisionSystem(this, sight);
+            var vision = new PlayerVisionSystem(this, sight, statuses); // 3-13a 정신 시야
             Scheduler.SetActionRules(id => StatusEffects.CanAct(this, statuses, id),
                 (id, cost) => StatusEffects.AdjustCost(this, statuses, id, cost));
             Scheduler.AddSystem(TickPhase.Terrain, new TerrainSystem(this, terrains, statuses));
@@ -125,7 +125,7 @@ namespace ProjectM.Core
             Scheduler.AddSystem(TickPhase.Status, new StatusSystem(this, statuses));
             Scheduler.AddSystem(TickPhase.ManaRegen, new ManaRegenSystem(this, magic));
             Scheduler.AddSystem(TickPhase.ManaRegen, new HpRegenSystem(this, magic));
-            Scheduler.AddSystem(TickPhase.ManaRegen, new GrassTrampleSystem(this)); // 3-11a: 시야 갱신(⑥) 전에
+            Scheduler.AddSystem(TickPhase.ManaRegen, new GrassTrampleSystem(this, statuses)); // 3-11a: 시야 갱신(⑥) 전에
             Scheduler.AddSystem(TickPhase.ManaRegen, new DoorSystem(this)); // 3-11c: 문 열고 닫기 (시야 갱신 전)
             Scheduler.AddSystem(TickPhase.DeathCheck, new DeathCheckSystem(this, progression));
             Scheduler.AddSystem(TickPhase.DeathCheck, vision);

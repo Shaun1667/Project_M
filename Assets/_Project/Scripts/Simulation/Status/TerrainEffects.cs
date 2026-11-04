@@ -267,7 +267,8 @@ namespace ProjectM.Status
                 for (int i = 0; i < list.Count; i++)
                 {
                     var effect = list[i];
-                    if (_terrains.TryGet(effect.Type, out var def) && _world.Units.TryGetAt(pos, out var unit) && unit.IsAlive)
+                    if (_terrains.TryGet(effect.Type, out var def) && _world.Units.TryGetAt(pos, out var unit) && unit.IsAlive
+                        && !StatusEffects.Any(_statuses, unit, d => d.Levitates)) // 3-13a 부양: 지형을 받지 않음
                     {
                         if (def.AppliesStatus != StatusType.None && _statuses.TryGet(def.AppliesStatus, out var status))
                             StatusEffects.Apply(_world, unit, status);

@@ -207,7 +207,7 @@ namespace ProjectM
             // 3-4a: 적 재생성(⑤) · 계단 사용(틱 밖 — 입력이 부른다)
             var spawn = _spawnConfig.ToConfig();
             var enemyDef = _enemyDef.ToDef();
-            var enemyAi = new MeleeChaserAi(World, Config, sight);
+            var enemyAi = new MeleeChaserAi(World, Config, sight, Statuses); // 3-13a: 투명
             World.Scheduler.AddSystem(TickPhase.ManaRegen, new EnemyRespawnSystem(World, spawn, enemyDef, enemyAi, sight, dungeonConfig.FloorCount));
             var loot = _lootConfig != null ? _lootConfig.ToConfig() : null;
             if (loot != null) World.Scheduler.AddSystem(TickPhase.ManaRegen, new ItemPickupSystem(World, Items)); // 3-5: 걸어 들어가면 줍기

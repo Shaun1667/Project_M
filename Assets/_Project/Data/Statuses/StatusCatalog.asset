@@ -18,28 +18,88 @@ MonoBehaviour:
     DamagePerTick: 1
     ExtraActionCostTicks: 0
     PreventsAction: 0
+    MoveSteps: 0
+    HiddenFromEnemies: 0
+    Levitates: 0
+    SensesEnemies: 0
   - Type: 2
     DurationTicks: 3
     DamagePerTick: 0
     ExtraActionCostTicks: 1
     PreventsAction: 0
+    MoveSteps: 0
+    HiddenFromEnemies: 0
+    Levitates: 0
+    SensesEnemies: 0
   - Type: 3
     DurationTicks: 5
     DamagePerTick: 1
     ExtraActionCostTicks: 0
     PreventsAction: 0
+    MoveSteps: 0
+    HiddenFromEnemies: 0
+    Levitates: 0
+    SensesEnemies: 0
   - Type: 4
     DurationTicks: 2
     DamagePerTick: 0
     ExtraActionCostTicks: 0
     PreventsAction: 1
+    MoveSteps: 0
+    HiddenFromEnemies: 0
+    Levitates: 0
+    SensesEnemies: 0
   - Type: 5
     DurationTicks: 3
     DamagePerTick: 0
     ExtraActionCostTicks: 0
     PreventsAction: 0
+    MoveSteps: 0
+    HiddenFromEnemies: 0
+    Levitates: 0
+    SensesEnemies: 0
   - Type: 6
     DurationTicks: 2
     DamagePerTick: 0
     ExtraActionCostTicks: 0
     PreventsAction: 1
+    MoveSteps: 0
+    HiddenFromEnemies: 0
+    Levitates: 0
+    SensesEnemies: 0
+  - Type: 7
+    DurationTicks: 20
+    DamagePerTick: 0
+    ExtraActionCostTicks: 0
+    PreventsAction: 0
+    MoveSteps: 2
+    HiddenFromEnemies: 0
+    Levitates: 0
+    SensesEnemies: 0
+  - Type: 8
+    DurationTicks: 20
+    DamagePerTick: 0
+    ExtraActionCostTicks: 0
+    PreventsAction: 0
+    MoveSteps: 0
+    HiddenFromEnemies: 1
+    Levitates: 0
+    SensesEnemies: 0
+  - Type: 9
+    DurationTicks: 20
+    DamagePerTick: 0
+    ExtraActionCostTicks: 0
+    PreventsAction: 0
+    MoveSteps: 0
+    HiddenFromEnemies: 0
+    Levitates: 1
+    SensesEnemies: 0
+  - Type: 10
+    DurationTicks: 20
+    DamagePerTick: 0
+    ExtraActionCostTicks: 0
+    PreventsAction: 0
+    MoveSteps: 0
+    HiddenFromEnemies: 0
+    Levitates: 0
+    SensesEnemies: 1

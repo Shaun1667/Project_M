@@ -19,6 +19,10 @@ namespace ProjectM.Data
             [Tooltip("④ 단계마다 받는 피해")] [Min(0)] public int DamagePerTick;
             [Tooltip("걸린 동안 행동 비용에 더하는 틱 (둔화)")] [Min(0)] public int ExtraActionCostTicks;
             [Tooltip("걸린 동안 행동 불가 (마비)")] public bool PreventsAction;
+            [Tooltip("이동 한 번에 가는 최대 칸 수 (3-13a 신속 = 2). 0 · 1 = 보통")] [Min(0)] public int MoveSteps;
+            [Tooltip("적이 보지 못함 (3-13a 투명)")] public bool HiddenFromEnemies;
+            [Tooltip("지형 효과 · 함정 · 풀 밟기를 받지 않음 (3-13a 부양)")] public bool Levitates;
+            [Tooltip("층의 모든 적이 보임 (3-13a 정신 시야)")] public bool SensesEnemies;
         }
 
         [SerializeField] private List<Entry> _statuses = new List<Entry>();
@@ -27,7 +31,8 @@ namespace ProjectM.Data
         {
             var defs = new List<StatusDef>(_statuses.Count);
             foreach (var e in _statuses)
-                defs.Add(new StatusDef(e.Type, e.DurationTicks, e.DamagePerTick, e.ExtraActionCostTicks, e.PreventsAction));
+                defs.Add(new StatusDef(e.Type, e.DurationTicks, e.DamagePerTick, e.ExtraActionCostTicks, e.PreventsAction,
+                    Math.Max(1, e.MoveSteps), e.HiddenFromEnemies, e.Levitates, e.SensesEnemies));
             return new StatusBook(defs);
         }
 

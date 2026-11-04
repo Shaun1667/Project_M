@@ -240,12 +240,15 @@ namespace ProjectM.Tests
             var book = asset.ToBook();
             var expected = SpellTests.BalanceStatuses();
             Assert.That(book.Count, Is.EqualTo(expected.Count));
-            foreach (StatusType type in new[] { StatusType.Burn, StatusType.Slow, StatusType.Poison, StatusType.Paralyze, StatusType.Wet, StatusType.Frozen })
+            foreach (StatusType type in new[] { StatusType.Burn, StatusType.Slow, StatusType.Poison, StatusType.Paralyze, StatusType.Wet, StatusType.Frozen,
+                StatusType.Haste, StatusType.Invisible, StatusType.Levitating, StatusType.MindVision })
             {
                 Assert.That(book.TryGet(type, out var a), Is.True, type.ToString());
                 expected.TryGet(type, out var e);
                 Assert.That((a.DurationTicks, a.DamagePerTick, a.ExtraActionCostTicks, a.PreventsAction),
                     Is.EqualTo((e.DurationTicks, e.DamagePerTick, e.ExtraActionCostTicks, e.PreventsAction)), type.ToString());
+                Assert.That((a.MoveSteps, a.HiddenFromEnemies, a.Levitates, a.SensesEnemies),
+                    Is.EqualTo((e.MoveSteps, e.HiddenFromEnemies, e.Levitates, e.SensesEnemies)), type.ToString() + " (3-13a)");
             }
         }
     }

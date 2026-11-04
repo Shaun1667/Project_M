@@ -261,7 +261,8 @@ namespace ProjectM.Dungeon
         {
             if (_world.Traps.Count == 0) return;
             foreach (var unit in _world.Units.ToSortedList())
-                if (unit.IsAlive && _world.Map.InBounds(unit.Pos) && _world.Traps.Has(unit.Pos))
+                if (unit.IsAlive && _world.Map.InBounds(unit.Pos) && _world.Traps.Has(unit.Pos)
+                    && !ProjectM.Status.StatusEffects.Any(_spells.Statuses, unit, d => d.Levitates)) // 3-13a 부양: 함정 위를 떠서 지나감
                     Traps.Trigger(_world, _traps, _spells, unit);
         }
     }

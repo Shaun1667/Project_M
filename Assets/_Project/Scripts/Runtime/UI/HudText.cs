@@ -104,6 +104,10 @@ namespace ProjectM.UI
                 case StatusType.Paralyze: return "마비";
                 case StatusType.Wet: return "젖음";
                 case StatusType.Frozen: return "빙결";
+                case StatusType.Haste: return "신속";
+                case StatusType.Invisible: return "투명";
+                case StatusType.Levitating: return "부양";
+                case StatusType.MindVision: return "정신 시야";
                 default: return type.ToString();
             }
         }

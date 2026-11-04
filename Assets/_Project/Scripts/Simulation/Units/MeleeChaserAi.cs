@@ -17,9 +17,12 @@ namespace ProjectM.Units
         private readonly World _world;
         private readonly GameConfig _config;
         private readonly ISightRule _sight;
+        private readonly ProjectM.Status.StatusBook _statuses;
 
-        public MeleeChaserAi(World world, GameConfig config, ISightRule sight)
+        /// <param name="statuses">투명(3-13a) 판정용. null이면 늘 보인다.</param>
+        public MeleeChaserAi(World world, GameConfig config, ISightRule sight, ProjectM.Status.StatusBook statuses = null)
         {
+            _statuses = statuses;
             _world = world ?? throw new ArgumentNullException(nameof(world));
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _sight = sight ?? throw new ArgumentNullException(nameof(sight));
@@ -32,7 +35,8 @@ namespace ProjectM.Units
 
             // ① 보임
             if (PlayerActions.TryGetPlayer(_world, out var player) && player.IsAlive
-                && _sight.CanSee(_world.Map, self.Pos, player.Pos, self.SightRange))
+                && _sight.CanSee(_world.Map, self.Pos, player.Pos, self.SightRange)
+                && !ProjectM.Status.StatusEffects.Any(_statuses, player, d => d.HiddenFromEnemies)) // 3-13a 투명
             {
                 self.LastSeenTargetPos = player.Pos;
                 self.WanderTarget = null;

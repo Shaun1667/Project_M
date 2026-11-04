@@ -50,6 +50,10 @@ namespace ProjectM.Tests
             new ItemDef("potion_liquid_flame", ItemUse.Potion, effect: ConsumableEffect.LiquidFlame, weight: 3),
             new ItemDef("potion_frost", ItemUse.Potion, effect: ConsumableEffect.Frost, weight: 3),
             new ItemDef("potion_paralytic_gas", ItemUse.Potion, effect: ConsumableEffect.ParalyticGas, weight: 2),
+            new ItemDef("potion_haste", ItemUse.Potion, effect: ConsumableEffect.Haste, weight: 1), // 3-13a
+            new ItemDef("potion_invisibility", ItemUse.Potion, effect: ConsumableEffect.Invisibility, weight: 1),
+            new ItemDef("potion_levitation", ItemUse.Potion, effect: ConsumableEffect.Levitation, weight: 1),
+            new ItemDef("potion_mind_vision", ItemUse.Potion, effect: ConsumableEffect.MindVision, weight: 2),
             new ItemDef("scroll_identify", ItemUse.Scroll, effect: ConsumableEffect.Identify, weight: 3),
             new ItemDef("scroll_magic_mapping", ItemUse.Scroll, effect: ConsumableEffect.MagicMapping, weight: 1),
             new ItemDef("scroll_teleportation", ItemUse.Scroll, effect: ConsumableEffect.Teleportation, weight: 1),

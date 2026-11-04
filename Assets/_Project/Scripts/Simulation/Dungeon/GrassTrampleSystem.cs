@@ -10,17 +10,20 @@ namespace ProjectM.Dungeon
     public sealed class GrassTrampleSystem : ITickSystem
     {
         private readonly World _world;
+        private readonly ProjectM.Status.StatusBook _statuses;
 
-        public GrassTrampleSystem(World world)
+        /// <param name="statuses">부양(3-13a) 판정용. null이면 모두 밟는다.</param>
+        public GrassTrampleSystem(World world, ProjectM.Status.StatusBook statuses = null)
         {
             _world = world ?? throw new ArgumentNullException(nameof(world));
+            _statuses = statuses;
         }
 
         public void Run(in TickContext context)
         {
             foreach (var unit in _world.Units.ToSortedList())
             {
-                if (!unit.IsAlive || !_world.Map.InBounds(unit.Pos)) continue;
+                if (!unit.IsAlive || !_world.Map.InBounds(unit.Pos) || ProjectM.Status.StatusEffects.Any(_statuses, unit, d => d.Levitates)) continue;
                 if (_world.Map.Get(unit.Pos) == TileType.TallGrass) _world.SetTile(unit.Pos, TileType.Grass);
             }
         }

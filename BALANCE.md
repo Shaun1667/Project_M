@@ -180,6 +180,10 @@
 | Paralyze 마비 | 번개 **30%** | **2** | 0 | 0 | **예** |
 | Wet 젖음 | 물 **100%** · 물 타일 · 오염된 물 위 매 턴 | **3** | 0 | 0 | 아니오 — 효과 없음, 반응 트리거 (증발 · 빙결 · 3-3b 감전) |
 | Frozen 빙결 | 빙결 · 결빙 반응 · 얼음 + 물 융합 — **100% 확정** (3-3a) | **2** | 0 | 0 | **예** — 마비와 같은 규칙. 면역 없음 (결정 2026-10-18). 불 = 해동 · 번개 = 파쇄로 풀림 |
+| Haste 신속 | 신속 물약 (3-13a) | **20** (SPD) | 0 | 0 | 아니오 — `MoveSteps` **2**: 이동 한 번에 두 칸까지 1틱 (결정 2026-11-04 "이동 두 번에 1틱"). 지나간 첫 칸의 함정 · 풀은 안 밟음 |
+| Invisible 투명 | 투명 물약 (3-13a) | **20** (SPD) | 0 | 0 | 아니오 — `HiddenFromEnemies`: 적 AI가 못 봄 (공격해도 안 풀림 — SPD와 다름, Claude 임시) |
+| Levitating 부양 | 부양 물약 (3-13a) | **20** (SPD) | 0 | 0 | 아니오 — `Levitates`: 지형 효과 · 함정 · 풀 밟기를 받지 않음 |
+| MindVision 정신 시야 | 정신 시야 물약 (3-13a) | **20** (SPD) | 0 | 0 | 아니오 — `SensesEnemies`: 층의 모든 적이 화면에 보임 (지도는 안 밝힘) |
 
 젖음 (3-2): 물 위에 있는 동안 매 턴 3으로 갱신 → 물이 사라지거나 떠나면 2턴 더 젖어 있다 (지속 3 = ④ 처리 3번, 마지막으로 갱신된 틱의 ④에서 1 소모). — `WaterTests.StandingOnWater_StaysWet_ThenWearsOff`
 
@@ -453,6 +457,10 @@
 | `potion_liquid_flame` | 액체 화염 물약 | LiquidFlame | **3** | 2걸음 안 화염 지대 (7번 4틱) |
 | `potion_frost` | 냉기 물약 | Frost | **3** | 2걸음 안 유닛 빙결(6번 2틱) · 화염 지대 끔 · 물 → 빙판(8틱) |
 | `potion_paralytic_gas` | 마비 가스 물약 | ParalyticGas | **2** | 2걸음 안 마비 가스 (7번 4틱) |
+| `potion_haste` (3-13a) | 신속 물약 | Haste | **1** | 마신 유닛 신속 20틱 (6번) |
+| `potion_invisibility` (3-13a) | 투명 물약 | Invisibility | **1** | 투명 20틱 |
+| `potion_levitation` (3-13a) | 부양 물약 | Levitation | **1** | 부양 20틱 |
+| `potion_mind_vision` (3-13a) | 정신 시야 물약 | MindVision | **2** | 정신 시야 20틱 |
 | `scroll_upgrade` | 강화 주문서 | Upgrade | 0 | 든 무기 +1 — 한 판 3장 보장 (11번) |
 | `scroll_identify` | 식별 주문서 | Identify | **3** | 인벤토리 앞 칸부터 모르는 물약 · 주문서 한 종류 (SPD는 고르기 — 고르는 창은 나중에) |
 | `scroll_magic_mapping` | 지도 주문서 | MagicMapping | **1** | 이 층 바닥 + 둘레 벽 전부 탐험 |

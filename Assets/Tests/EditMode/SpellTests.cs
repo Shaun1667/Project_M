@@ -30,6 +30,11 @@ namespace ProjectM.Tests
             new ProjectM.Status.StatusDef(ProjectM.Status.StatusType.Paralyze, 2, preventsAction: true),
             new ProjectM.Status.StatusDef(ProjectM.Status.StatusType.Wet, 3), // 3-2
             new ProjectM.Status.StatusDef(ProjectM.Status.StatusType.Frozen, 2, preventsAction: true), // 3-3a
+            // 3-13a 물약 상태 (SPD 20)
+            new ProjectM.Status.StatusDef(ProjectM.Status.StatusType.Haste, 20, moveSteps: 2),
+            new ProjectM.Status.StatusDef(ProjectM.Status.StatusType.Invisible, 20, hiddenFromEnemies: true),
+            new ProjectM.Status.StatusDef(ProjectM.Status.StatusType.Levitating, 20, levitates: true),
+            new ProjectM.Status.StatusDef(ProjectM.Status.StatusType.MindVision, 20, sensesEnemies: true),
         });
 
         // 상태 동작 시험용: 확률 100%로 고정 (실제 수치는 BalanceBookFull — 3-1부터 70%)

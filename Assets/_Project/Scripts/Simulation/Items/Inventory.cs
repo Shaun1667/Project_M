@@ -111,6 +111,14 @@ namespace ProjectM.Items
         Rage = 14,
         /// <summary>응징 주문서: 보이는 적 모두에게 피해 (잃은 체력이 많을수록 셈).</summary>
         Retribution = 15,
+        /// <summary>신속 물약 (3-13a): 마신 유닛에 신속.</summary>
+        Haste = 16,
+        /// <summary>투명 물약 (3-13a): 투명.</summary>
+        Invisibility = 17,
+        /// <summary>부양 물약 (3-13a): 부양.</summary>
+        Levitation = 18,
+        /// <summary>정신 시야 물약 (3-13a): 정신 시야.</summary>
+        MindVision = 19,
     }
 
     /// <summary>아이템 하나의 규칙 데이터 (3-2a). 값은 ItemCatalogAsset에서 온다 — BALANCE.md 9번.</summary>

@@ -884,7 +884,7 @@ namespace ProjectM.Input
 
         private void Step(GridPos direction)
         {
-            if (PlayerActions.TryStep(_world, _config, direction, out var command))
+            if (PlayerActions.TryStep(_world, _config, direction, out var command, _spells.Statuses)) // 3-13a 신속: 두 칸
                 _clock.SubmitPlayerCommand(command);
         }
 
@@ -938,7 +938,9 @@ namespace ProjectM.Input
             }
 
             bool isLast = _pathIndex == _path.Count - 1;
-            if (!PlayerActions.TryStepTo(_world, _config, player, _path[_pathIndex], out var command)
+            GridPos? next = _pathIndex + 1 < _path.Count - 1 || (_pathIndex + 1 == _path.Count - 1 && !_world.Units.IsOccupied(_path[_path.Count - 1]))
+                ? _path[_pathIndex + 1] : (GridPos?)null; // 3-13a 신속: 경로의 다음 칸까지 (마지막 칸의 적은 따로 공격)
+            if (!PlayerActions.TryStepTo(_world, _config, player, _path[_pathIndex], out var command, next, _spells.Statuses)
                 || (command is AttackCommand && !isLast))
             {
                 CancelPath();
@@ -946,7 +948,8 @@ namespace ProjectM.Input
             }
 
             _clock.SubmitPlayerCommand(command);
-            _pathIndex++;
+            _pathIndex += command is MoveCommand move && move.Then.HasValue && player.Pos == move.Then.Value ? 2 : 1;
+            isLast = _pathIndex >= _path.Count;
             if (isLast || command is AttackCommand) CancelPath();
             else _nextPathStepTime = Time.time + _pathStepInterval;
         }
