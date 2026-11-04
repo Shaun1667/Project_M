@@ -82,6 +82,27 @@ namespace ProjectM.Tests
             Assert.That(s.Tile(7, 1), Is.EqualTo(TileType.Grass), "그 너머로 못 감");
         }
 
+        // 오염된 물도 젖게 하는 지형 — 그 칸은 안 타고, 불과 같은 칸에 겹치면 불이 꺼진다 (2026-11-04 사용자 요청)
+        [Test]
+        public void ContaminatedWater_BlocksAndExtinguishesFire()
+        {
+            var s = Start(4, 8);
+            SpellTests.BalanceTerrains().TryGet(TerrainEffectType.ContaminatedWater, out var contaminated);
+            TerrainEffects.Place(s.World, new GridPos(6, 1), contaminated, TerrainLayer.Permanent);
+            TerrainEffects.Place(s.World, new GridPos(4, 1), TerrainEffectType.FireZone, 3);
+            s.Wait(5);
+            Assert.That(s.Tile(6, 1), Is.EqualTo(TileType.Grass), "오염된 물 칸은 안 탄다");
+            Assert.That(s.Tile(7, 1), Is.EqualTo(TileType.Grass), "그 너머로 못 감");
+
+            var t = Start(4, 8);
+            TerrainEffects.Place(t.World, new GridPos(5, 1), TerrainEffectType.FireZone, 3);
+            TerrainEffects.Place(t.World, new GridPos(5, 1), contaminated, 8); // 불 위에 오염된 물 (오염 물결 융합)
+            t.Wait(1);
+            Assert.That(t.Burning(5, 1), Is.False, "불이 꺼짐");
+            Assert.That(t.Burning(4, 1) || t.Burning(6, 1), Is.False, "꺼진 불은 번지지 않는다");
+            Assert.That(t.Tile(5, 1), Is.EqualTo(TileType.Grass), "꺼진 칸의 풀은 남는다");
+        }
+
         // 한 틱에 붙는 칸 수 상한 (넘는 칸은 다음 틱)
         [Test]
         public void Ignitions_CappedPerTick()

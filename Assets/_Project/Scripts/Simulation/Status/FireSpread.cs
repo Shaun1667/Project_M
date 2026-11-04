@@ -24,7 +24,8 @@ namespace ProjectM.Status
     /// <summary>
     /// ③ 불 번짐 (3-11b, 결정 2026-11-04 — SPD): 지형 처리(TerrainSystem) 다음에, 화염 지대가 있는 칸마다
     /// 그 칸의 탈 것(풀)을 태우고(→ 바닥), 상하좌우 이웃의 탈 것에 불을 붙인다(→ 바닥 + 화염 지대 BurnTicks).
-    /// 이번 틱에 붙은 불은 다음 틱부터 번진다. 젖게 하는 지형(물 · 오염된 물)이 있는 칸은 타지 않는다.
+    /// 이번 틱에 붙은 불은 다음 틱부터 번진다. 젖게 하는 지형(물 · 오염된 물)이 있는 칸은 타지 않고,
+    /// 화염 지대와 같은 칸에 그런 지형이 있으면 불이 꺼진다 (번지지 않음 — 오염 물결 융합을 불 위에 쏜 경우 등).
     /// 한 틱에 MaxIgnitionsPerTick칸까지 (칸 인덱스 순). 상태를 갖지 않는다.
     /// </summary>
     public sealed class FireSpreadSystem : ITickSystem
@@ -53,6 +54,11 @@ namespace ProjectM.Status
             {
                 if (!pair.Value.Exists(t => t.Type == TerrainEffectType.FireZone)) continue;
                 var pos = _world.Terrain.PosOf(pair.Key);
+                if (IsDamp(pos))
+                {
+                    TerrainEffects.Remove(_world, pos, TerrainEffectType.FireZone); // 물 · 오염된 물이 닿은 불은 꺼진다 (2026-11-04 사용자 요청)
+                    continue;
+                }
                 if (GridMap.IsFlammableType(map.Get(pos))) _world.SetTile(pos, TileType.Floor); // 화염 지대 아래 풀은 탄다
                 foreach (var dir in Neighbors)
                 {
