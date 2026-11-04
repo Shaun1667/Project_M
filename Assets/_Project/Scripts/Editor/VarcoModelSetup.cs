@@ -91,6 +91,7 @@ namespace ProjectM.Editor
         private const float GrassBladeHeight = 0.08f;
         private const float TallGrassBladeHeight = 0.5f;
         private const string GrassMaterialPath = PrefabDir + "/Mat_GrassBlade.mat";
+        private const string DoorMaterialPath = PrefabDir + "/Mat_DoorWood.mat";
 
         /// <summary>올라가는 계단 위 발밑 높이 (m) — ART_ASSETS.md 12번.</summary>
         private const float StairsUpStandHeight = 0.3f;
@@ -151,6 +152,9 @@ namespace ProjectM.Editor
             // 3-11a 풀 (그레이박스): 바닥 모듈 + 초록 풀잎 — 높은 풀은 0.15 m보다 높아 시야를 직접 따른다 (TilemapPresenter)
             tiles.SetModule(TileType.Grass, BuildGrassPrefab(floorPrefab, "Tile_Grass", GrassBladeHeight), randomRotation: true);
             tiles.SetModule(TileType.TallGrass, BuildGrassPrefab(floorPrefab, "Tile_TallGrass", TallGrassBladeHeight), randomRotation: true);
+            // 3-11c 문 (그레이박스): 바닥 + 문틀 + 문짝 — 방향은 TilemapPresenter가 옆 벽을 보고 돌린다 (문짝이 벽 사이를 막게)
+            tiles.SetModule(TileType.Door, BuildDoorPrefab(floorPrefab, "Tile_Door", open: false));
+            tiles.SetModule(TileType.OpenDoor, BuildDoorPrefab(floorPrefab, "Tile_OpenDoor", open: true));
             tiles.SetModule(TileType.Wall, BuildPrefab(Wall, null));
             tiles.SetModule(TileType.StairsDown, BuildPrefab(StairsDown, null));
             tiles.SetModule(TileType.StairsUp, BuildPrefab(StairsUp, null));
@@ -174,7 +178,7 @@ namespace ProjectM.Editor
             try
             {
                 if (floor != null) ((GameObject)PrefabUtility.InstantiatePrefab(floor)).transform.SetParent(root.transform, false);
-                var material = EnsureGrassMaterial();
+                var material = EnsureGreyboxMaterial(GrassMaterialPath, new Color(0.3f, 0.6f, 0.2f));
                 for (int i = 0; i < 16; i++)
                 {
                     int gx = i % 4, gz = i / 4;
@@ -197,13 +201,48 @@ namespace ProjectM.Editor
             }
         }
 
-        private static Material EnsureGrassMaterial()
+        /// <summary>
+        /// 3-11c 문 모듈 (그레이박스): 바닥 모듈 + 기둥 둘 · 상인방 + 문짝. 문짝은 X축(좌우 벽 사이)을 막는다 — 닫힘 = 가운데,
+        /// 열림 = 왼쪽 기둥을 축으로 90° 돌아 Z축으로. 높이 1 m라 시야를 직접 따른다.
+        /// </summary>
+        private static GameObject BuildDoorPrefab(GameObject floor, string name, bool open)
         {
-            var material = AssetDatabase.LoadAssetAtPath<Material>(GrassMaterialPath);
+            var root = new GameObject(name);
+            try
+            {
+                if (floor != null) ((GameObject)PrefabUtility.InstantiatePrefab(floor)).transform.SetParent(root.transform, false);
+                var material = EnsureGreyboxMaterial(DoorMaterialPath, new Color(0.45f, 0.3f, 0.18f));
+                Box(root.transform, material, "PostL", new Vector3(-0.45f, 0.5f, 0f), new Vector3(0.1f, 1f, 0.16f));
+                Box(root.transform, material, "PostR", new Vector3(0.45f, 0.5f, 0f), new Vector3(0.1f, 1f, 0.16f));
+                Box(root.transform, material, "Lintel", new Vector3(0f, 1f, 0f), new Vector3(1f, 0.1f, 0.16f));
+                if (open) Box(root.transform, material, "Panel", new Vector3(-0.38f, 0.46f, 0.4f), new Vector3(0.06f, 0.9f, 0.78f));
+                else Box(root.transform, material, "Panel", new Vector3(0f, 0.46f, 0f), new Vector3(0.8f, 0.9f, 0.06f));
+                return PrefabUtility.SaveAsPrefabAsset(root, $"{PrefabDir}/{name}.prefab");
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        private static void Box(Transform parent, Material material, string name, Vector3 position, Vector3 size)
+        {
+            var box = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            Object.DestroyImmediate(box.GetComponent<Collider>());
+            box.name = name;
+            box.transform.SetParent(parent, false);
+            box.transform.localPosition = position;
+            box.transform.localScale = size;
+            box.GetComponent<Renderer>().sharedMaterial = material;
+        }
+
+        private static Material EnsureGreyboxMaterial(string path, Color color)
+        {
+            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
             if (material != null) return material;
             material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { enableInstancing = true };
-            material.SetColor("_BaseColor", new Color(0.3f, 0.6f, 0.2f));
-            AssetDatabase.CreateAsset(material, GrassMaterialPath);
+            material.SetColor("_BaseColor", color);
+            AssetDatabase.CreateAsset(material, path);
             return material;
         }
 

@@ -562,3 +562,55 @@ MonoBehaviour:
     Tile: 6
     TransformTileTo: 1
     PlaceTerrain: 1
+  - Id: door_ignite
+    DisplayName: "\uBB38\uC5D0 \uBD88\uC774 \uBD99\uC74C"
+    Group: door_ignite
+    Trigger: 2
+    Status: 0
+    Terrain: 0
+    Element: 0
+    Priority: 0
+    ExtraDamage: 0
+    ConsumeTrigger: 0
+    ExplosionRadius: 0
+    ExplosionDamage: 0
+    ExplosionDamageFromRemaining: 0
+    ExplosionStatus: 0
+    ExplosionStatusChancePercent: 100
+    TransformTerrainTo: 0
+    TransformDurationTicks: 3
+    TargetStatus: 0
+    TargetStatusChancePercent: 0
+    Spread: 0
+    SpreadRange: 0
+    SpreadMaxTargets: 0
+    SpreadDamagePercent: 0
+    Tile: 7
+    TransformTileTo: 1
+    PlaceTerrain: 1
+  - Id: opendoor_ignite
+    DisplayName: "\uBB38\uC5D0 \uBD88\uC774 \uBD99\uC74C"
+    Group: door_ignite
+    Trigger: 2
+    Status: 0
+    Terrain: 0
+    Element: 0
+    Priority: 0
+    ExtraDamage: 0
+    ConsumeTrigger: 0
+    ExplosionRadius: 0
+    ExplosionDamage: 0
+    ExplosionDamageFromRemaining: 0
+    ExplosionStatus: 0
+    ExplosionStatusChancePercent: 100
+    TransformTerrainTo: 0
+    TransformDurationTicks: 3
+    TargetStatus: 0
+    TargetStatusChancePercent: 0
+    Spread: 0
+    SpreadRange: 0
+    SpreadMaxTargets: 0
+    SpreadDamagePercent: 0
+    Tile: 8
+    TransformTileTo: 1
+    PlaceTerrain: 1

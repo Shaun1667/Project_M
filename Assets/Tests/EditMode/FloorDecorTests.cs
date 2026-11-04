@@ -22,7 +22,7 @@ namespace ProjectM.Tests
         /// <summary>BALANCE.md 16번 표와 같은 값.</summary>
         private static FloorDecorConfig BalanceConfig() => new FloorDecorConfig(
             grassPatchCount: 6, grassPatchMinSize: 4, grassPatchMaxSize: 14, tallGrassPercent: 50,
-            puddleCount: 4, puddleMinSize: 3, puddleMaxSize: 9);
+            puddleCount: 4, puddleMinSize: 3, puddleMaxSize: 9, doorPercent: 70);
 
         private static DungeonGenConfig GenConfig() => new DungeonGenConfig(
             width: 50, height: 50,
@@ -80,8 +80,9 @@ namespace ProjectM.Tests
                 for (int i = 0; i < before.Length; i++)
                 {
                     if (after[i] == before[i]) continue;
-                    Assert.That(before[i], Is.EqualTo(TileType.Floor), $"시드 {seed} 칸 {i}: 바닥만 풀이 된다");
-                    Assert.That(after[i], Is.EqualTo(TileType.Grass).Or.EqualTo(TileType.TallGrass));
+                    Assert.That(before[i], Is.EqualTo(TileType.Floor), $"시드 {seed} 칸 {i}: 바닥만 풀 · 문이 된다");
+                    Assert.That(after[i], Is.EqualTo(TileType.Grass).Or.EqualTo(TileType.TallGrass).Or.EqualTo(TileType.Door));
+                    Assert.That(GridMap.IsWalkableType(after[i]), Is.True, "걸을 수 있는 칸은 그대로");
                 }
                 Assert.That(decorated.World.Map.Get(decorated.Floor.Start), Is.Not.EqualTo(TileType.TallGrass), "시작 칸은 비움");
                 Assert.That(decorated.World.Terrain.At(decorated.Floor.Start), Is.Empty, "시작 칸에 웅덩이 없음");
@@ -203,6 +204,7 @@ namespace ProjectM.Tests
             Assert.That(c.PuddleCount, Is.EqualTo(e.PuddleCount));
             Assert.That(c.PuddleMinSize, Is.EqualTo(e.PuddleMinSize));
             Assert.That(c.PuddleMaxSize, Is.EqualTo(e.PuddleMaxSize));
+            Assert.That(c.DoorPercent, Is.EqualTo(e.DoorPercent), "3-11c");
         }
     }
 }

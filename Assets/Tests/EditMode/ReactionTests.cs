@@ -71,6 +71,11 @@ namespace ProjectM.Tests
                 group: "grass_ignite", transformDurationTicks: 3, tile: TileType.Grass, transformTileTo: TileType.Floor, placeTerrain: TerrainEffectType.FireZone),
             new ReactionDef("tallgrass_ignite", ReactionTrigger.Tile, StatusType.None, TerrainEffectType.None, Element.Fire, 0,
                 group: "grass_ignite", transformDurationTicks: 3, tile: TileType.TallGrass, transformTileTo: TileType.Floor, placeTerrain: TerrainEffectType.FireZone),
+            // 3-11c: 문 점화 (닫힌 · 열린 문 × 불 → 바닥 + 화염 지대 3틱) — 한 그룹
+            new ReactionDef("door_ignite", ReactionTrigger.Tile, StatusType.None, TerrainEffectType.None, Element.Fire, 0,
+                group: "door_ignite", transformDurationTicks: 3, tile: TileType.Door, transformTileTo: TileType.Floor, placeTerrain: TerrainEffectType.FireZone),
+            new ReactionDef("opendoor_ignite", ReactionTrigger.Tile, StatusType.None, TerrainEffectType.None, Element.Fire, 0,
+                group: "door_ignite", transformDurationTicks: 3, tile: TileType.OpenDoor, transformTileTo: TileType.Floor, placeTerrain: TerrainEffectType.FireZone),
         }, new ReactionConfig(4, 3, 5), statuses);
 
         // 주문 자체는 상태 · 지형 없이 (반응만 보려고). 상태 · 지형 규칙은 BALANCE 값

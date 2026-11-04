@@ -17,5 +17,9 @@ namespace ProjectM.Core
         Grass = 5,
         /// <summary>높은 풀 (3-11a, SPD) — 걸을 수 있지만 시야를 가린다. 유닛이 들어서면 짧은 풀이 된다 (GrassTrampleSystem).</summary>
         TallGrass = 6,
+        /// <summary>닫힌 문 (3-11c, SPD) — 걸을 수 있지만 시야를 가린다. 유닛이 서면 열린 문이 된다 (DoorSystem). 불에 탄다.</summary>
+        Door = 7,
+        /// <summary>열린 문 (3-11c) — 유닛이 서 있는 동안. 비면 닫힌 문으로 돌아간다.</summary>
+        OpenDoor = 8,
     }
 }

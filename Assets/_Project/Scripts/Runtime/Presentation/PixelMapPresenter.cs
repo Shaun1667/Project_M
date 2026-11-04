@@ -94,7 +94,9 @@ namespace ProjectM.Presentation
             {
                 case TileType.Floor:
                 case TileType.Grass: // 3-11a: 2D 그림 전까지 바닥으로
-                case TileType.TallGrass: return _tiles.Floor(x, y);
+                case TileType.TallGrass:
+                case TileType.Door: // 3-11c: 2D 그림 전까지 바닥으로
+                case TileType.OpenDoor: return _tiles.Floor(x, y);
                 case TileType.StairsDown: return _tiles.StairsDown;
                 case TileType.StairsUp: return _tiles.StairsUp;
                 case TileType.Wall: return _tiles.Wall;

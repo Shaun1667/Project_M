@@ -73,6 +73,8 @@ namespace ProjectM.Editor
         private const string StairsTilePath = "Assets/_Project/Art/Greybox/TilePalette/tile_3.asset";
         private const string GrassTilePath = VisualsDir + "/GrassTile.asset";
         private const string TallGrassTilePath = VisualsDir + "/TallGrassTile.asset";
+        private const string DoorTilePath = VisualsDir + "/DoorTile.asset";
+        private const string OpenDoorTilePath = VisualsDir + "/OpenDoorTile.asset";
         private const string PlayerSpritePath = "Assets/_Project/Art/Greybox/player.png";
         private const string UnitCircleSpritePath = "Assets/_Project/Art/Greybox/unit_circle.png";
         private const string WhiteSquareSpritePath = "Assets/_Project/Art/Greybox/white_square.png";
@@ -303,6 +305,8 @@ namespace ProjectM.Editor
             set.Set(TileType.StairsUp, EnsureStairsUpTile()); // 3-4a
             set.Set(TileType.Grass, EnsureTintTile(GrassTilePath, new Color(0.45f, 0.7f, 0.3f))); // 3-11a 그레이박스: 연두
             set.Set(TileType.TallGrass, EnsureTintTile(TallGrassTilePath, new Color(0.2f, 0.5f, 0.15f))); // 3-11a: 진초록
+            set.Set(TileType.Door, EnsureTintTile(DoorTilePath, new Color(0.45f, 0.3f, 0.18f))); // 3-11c 그레이박스: 갈색
+            set.Set(TileType.OpenDoor, EnsureTintTile(OpenDoorTilePath, new Color(0.7f, 0.55f, 0.35f))); // 3-11c: 밝은 갈색
             EditorUtility.SetDirty(set);
             return set;
         }
@@ -621,6 +625,14 @@ namespace ProjectM.Editor
                 changed |= catalog.AddIfMissing(new ReactionCatalogAsset.Entry
                 {
                     Id = id, DisplayName = "풀에 불이 붙음", Group = "grass_ignite", Trigger = ReactionTrigger.Tile, Tile = tile,
+                    Element = Element.Fire, Priority = 0, TransformTileTo = TileType.Floor, PlaceTerrain = TerrainEffectType.FireZone,
+                    TransformDurationTicks = 3, ExplosionStatusChancePercent = 100,
+                });
+            // 3-11c: 문 점화 (닫힌 · 열린 문 × 불 → 바닥 + 화염 지대 3틱, 한 그룹)
+            foreach (var (id, tile) in new[] { ("door_ignite", TileType.Door), ("opendoor_ignite", TileType.OpenDoor) })
+                changed |= catalog.AddIfMissing(new ReactionCatalogAsset.Entry
+                {
+                    Id = id, DisplayName = "문에 불이 붙음", Group = "door_ignite", Trigger = ReactionTrigger.Tile, Tile = tile,
                     Element = Element.Fire, Priority = 0, TransformTileTo = TileType.Floor, PlaceTerrain = TerrainEffectType.FireZone,
                     TransformDurationTicks = 3, ExplosionStatusChancePercent = 100,
                 });

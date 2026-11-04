@@ -254,9 +254,14 @@ namespace ProjectM.Presentation
 
             if (_visuals == null || !_visuals.TryGetModule(type, out var module, out var rotate)) return;
             var cellRoot = CreateCellRoot(pos, type.ToString());
-            var instance = Spawn(module, cellRoot.transform, rotate ? RotationIndex(pos) : 0);
+            int rotation = GridMap.IsDoorType(type) ? DoorRotation(pos) : rotate ? RotationIndex(pos) : 0;
+            var instance = Spawn(module, cellRoot.transform, rotation);
             AddCell(pos, cellRoot, Color.white, tall: ModuleHeight(instance) > TallModuleHeight, isWall: false);
         }
+
+        /// <summary>3-11c 문 모듈 방향: 문짝은 모듈 X축을 막으므로, 좌우가 벽이면 그대로(0), 아니면(위아래가 벽) 90°.</summary>
+        private int DoorRotation(GridPos pos) =>
+            TypeAt(pos + new GridPos(1, 0)) == TileType.Wall && TypeAt(pos + new GridPos(-1, 0)) == TileType.Wall ? 0 : 1;
 
         private GameObject CreateCellRoot(GridPos pos, string label)
         {

@@ -102,7 +102,7 @@ namespace ProjectM.Core
         }
 
         /// <summary>
-        /// 기본 단계 시스템을 등록한다: ③ 지형 처리 → ④ 상태 처리 → ⑤ 마나 회복 · 풀 밟기(3-11a) → ⑥ 사망 판정 → ⑥ 끝 플레이어 시야 갱신 → ⑦ 이벤트 발행.
+        /// 기본 단계 시스템을 등록한다: ③ 지형 처리 → ④ 상태 처리 → ⑤ 마나 회복 · 풀 밟기(3-11a) · 문(3-11c) → ⑥ 사망 판정 → ⑥ 끝 플레이어 시야 갱신 → ⑦ 이벤트 발행.
         /// 행동 규칙(마비 = 행동 불가, 둔화 = 비용 추가)도 스케줄러에 연결한다.
         /// 새 World · 복원한 World 모두 한 번 부른다. 돌려준 시야 시스템의 Refresh()로 층 시작 · 불러오기 직후 시야를 한 번 계산한다.
         /// 적 재생성(EnemyRespawnSystem)은 적 데이터가 필요해 부른 쪽이 따로 등록한다. 층 이동(FloorTransition)은 틱 밖 동작이라 시스템이 아니다 (3-4a).
@@ -123,6 +123,7 @@ namespace ProjectM.Core
             Scheduler.AddSystem(TickPhase.ManaRegen, new ManaRegenSystem(this, magic));
             Scheduler.AddSystem(TickPhase.ManaRegen, new HpRegenSystem(this, magic));
             Scheduler.AddSystem(TickPhase.ManaRegen, new GrassTrampleSystem(this)); // 3-11a: 시야 갱신(⑥) 전에
+            Scheduler.AddSystem(TickPhase.ManaRegen, new DoorSystem(this)); // 3-11c: 문 열고 닫기 (시야 갱신 전)
             Scheduler.AddSystem(TickPhase.DeathCheck, new DeathCheckSystem(this, progression));
             Scheduler.AddSystem(TickPhase.DeathCheck, vision);
             Scheduler.AddSystem(TickPhase.EventFlush, new EventFlushSystem(Events));
