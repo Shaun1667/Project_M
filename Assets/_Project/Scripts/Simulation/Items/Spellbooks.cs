@@ -33,11 +33,20 @@ namespace ProjectM.Items
         public int EnemyGoldPercent { get; }
         public int EnemyGoldMin { get; }
         public int EnemyGoldMax { get; }
+        /// <summary>던지는 무기 (3-16a): 층마다 묶음 수 · 아이템 목록 · 목록별 묶음 개수.</summary>
+        public int ThrownPerFloor { get; }
+        public IReadOnlyList<string> ThrownItems { get; }
+        public IReadOnlyList<int> ThrownBundles { get; }
 
         public LootConfig(int maxBooksPerFloor, int minDistanceFromStart, int weaponsPerRun = 0, int upgradeScrollsPerRun = 0, int strengthPotionsPerRun = 0,
             int armorsPerRun = 0, int goldPilesPerFloor = 0, int goldMinBase = 0, int goldMinPerFloor = 0, int goldMaxBase = 0, int goldMaxPerFloor = 0,
-            int enemyGoldPercent = 0, int enemyGoldMin = 0, int enemyGoldMax = 0)
+            int enemyGoldPercent = 0, int enemyGoldMin = 0, int enemyGoldMax = 0,
+            int thrownPerFloor = 0, IReadOnlyList<string> thrownItems = null, IReadOnlyList<int> thrownBundles = null)
         {
+            ThrownItems = thrownItems ?? Array.Empty<string>();
+            ThrownBundles = thrownBundles ?? Array.Empty<int>();
+            if (thrownPerFloor < 0 || ThrownBundles.Count != ThrownItems.Count) throw new ArgumentException("던지는 무기: 수 ≥ 0, 목록과 묶음 수의 길이가 같아야 한다");
+            ThrownPerFloor = thrownPerFloor;
             if (goldPilesPerFloor < 0 || goldMinBase < 0 || goldMinPerFloor < 0 || goldMaxBase < goldMinBase || goldMaxPerFloor < goldMinPerFloor
                 || enemyGoldPercent < 0 || enemyGoldPercent > 100 || enemyGoldMin < 0 || enemyGoldMax < enemyGoldMin)
                 throw new ArgumentOutOfRangeException(nameof(goldPilesPerFloor), "금화 수치: 0 이상, 최소 ≤ 최대, 확률 0 ~ 100");
@@ -386,6 +395,34 @@ namespace ProjectM.Items
             }
         }
 
+        /// <summary>
+        /// 던지는 무기 묶음 (3-16a): 처음 가는 층에 ThrownPerFloor개 — 목록(ThrownItems)에서 고르고, 묶음 수는 ThrownBundle (RngStream.Loot). PlaceGold 다음.
+        /// </summary>
+        public static void PlaceThrown(World world, GridPos start, LootConfig config)
+        {
+            if (world == null) throw new ArgumentNullException(nameof(world));
+            if (config == null || config.ThrownPerFloor == 0 || config.ThrownItems.Count == 0) return;
+            var map = world.Map;
+            var candidates = new List<GridPos>();
+            for (int y = 0; y < map.Height; y++)
+                for (int x = 0; x < map.Width; x++)
+                {
+                    var pos = new GridPos(x, y);
+                    if (GridMap.IsGroundType(map.Get(pos)) && GridMovement.Chebyshev(pos, start) >= config.MinDistanceFromStart && !world.FloorItems.Any(pos))
+                        candidates.Add(pos);
+                }
+            var rng = world.Rng.Get(RngStream.Loot);
+            for (int i = 0; i < config.ThrownPerFloor && candidates.Count > 0; i++)
+            {
+                int pick = rng.Range(0, candidates.Count);
+                var pos = candidates[pick];
+                candidates.RemoveAt(pick);
+                int k = rng.Range(0, config.ThrownItems.Count);
+                world.FloorItems.Add(pos, config.ThrownItems[k], Math.Max(1, config.ThrownBundles[k]));
+                world.Events.Publish(new FloorItemPlacedEvent(pos, config.ThrownItems[k], config.ThrownItems[k]));
+            }
+        }
+
         /// <summary>금화 아이템 ID (ItemCatalog의 ItemUse.Gold 줄).</summary>
         public const string GoldItemId = "gold";
 
@@ -476,7 +513,8 @@ namespace ProjectM.Items
                     world.Events.Publish(new ProjectM.Dungeon.PurchaseFailedEvent(id, floorItem.Price));
                     continue;
                 }
-                if (Inventory.TryAdd(world, null, items, player, InventoryRef.Item(id)) < 0)
+                var entry = Inventory.IsStackable(items, InventoryRef.Item(id)) ? InventoryRef.Item(id).WithCount(floorItem.Quantity) : InventoryRef.Item(id); // 3-16a 다트 묶음
+                if (Inventory.TryAdd(world, null, items, player, entry) < 0)
                 {
                     world.Events.Publish(new ItemPickupFailedEvent(player.Id, player.Pos, id));
                     continue;

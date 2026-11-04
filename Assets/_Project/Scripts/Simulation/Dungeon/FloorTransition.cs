@@ -123,6 +123,7 @@ namespace ProjectM.Dungeon
             {
                 Loot.PlaceFloorItems(_world, newFloorStart.Value, _loot); // 3-5: MapLoaded 뒤에 놓아야 화면이 지우지 않는다
                 Loot.PlaceGold(_world, newFloorStart.Value, _loot); // 3-15a
+                Loot.PlaceThrown(_world, newFloorStart.Value, _loot); // 3-16a
             }
             _world.Events.Publish(new FloorChangedEvent(from, target));
             _vision.Refresh();

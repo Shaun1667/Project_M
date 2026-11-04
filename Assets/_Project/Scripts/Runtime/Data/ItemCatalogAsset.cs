@@ -40,6 +40,10 @@ namespace ProjectM.Data
             [Tooltip("바닥에서 불을 맞으면 바뀌는 아이템 (구운 고기)")] public string FireTransformsTo;
             [Tooltip("바닥에서 얼음을 맞으면 바뀌는 아이템 (얼린 고기)")] public string IceTransformsTo;
             [Tooltip("값 (3-15c 상점 — 사기 = 값 × 사는 %, 팔기 = 값 × 파는 %). 0 = 못 팜")] [Min(0)] public int Value;
+            [Header("던지는 무기 (3-16a)")]
+            [Min(0)] public int ThrowMinDamage;
+            [Min(0)] public int ThrowMaxDamage;
+            [Tooltip("던질 때 부러질 확률 %")] [Range(0, 100)] public int BreakPercent;
         }
 
         [SerializeField] private List<Entry> _items = new List<Entry>();
@@ -63,7 +67,8 @@ namespace ProjectM.Data
                     ? new WeaponDef(e.MaxDamage, e.UpgradeEfficiency, Mathf.RoundToInt(e.Accuracy * 100f), e.AttackCostTicks, e.Reach, e.StrengthRequirement, e.SurpriseMinPercent, e.Defense)
                     : null;
                 var armor = e.Use == ItemUse.EquipArmor ? new ArmorDef(e.Tier, e.StrengthRequirement) : null;
-                defs.Add(new ItemDef(e.Id, e.Use, e.SpellId, weapon, e.Amount, e.Effect, e.Weight, armor, e.Food, e.Risky, e.FireTransformsTo, e.IceTransformsTo, e.Value));
+                defs.Add(new ItemDef(e.Id, e.Use, e.SpellId, weapon, e.Amount, e.Effect, e.Weight, armor, e.Food, e.Risky, e.FireTransformsTo, e.IceTransformsTo, e.Value,
+                    e.ThrowMinDamage, e.ThrowMaxDamage, e.BreakPercent));
             }
             return new ItemBook(defs, new WeaponRules(_weaponDamageDivisor, _weaponMinDamage), new ArmorRules(_armorDefenseDivisor, _armorDeficitPenalty));
         }

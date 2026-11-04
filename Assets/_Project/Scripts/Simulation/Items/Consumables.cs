@@ -235,7 +235,7 @@ namespace ProjectM.Items
 
         /// <summary>던질 수 있는지 — 물약만 (3-9).</summary>
         public static bool CanThrow(ItemBook items, InventoryRef entry) =>
-            entry.Kind == InventoryKind.Item && items.TryGet(entry.Id, out var def) && def.Use == ItemUse.Potion;
+            entry.Kind == InventoryKind.Item && items.TryGet(entry.Id, out var def) && (def.Use == ItemUse.Potion || def.Use == ItemUse.Thrown); // 3-16a
 
         /// <summary>범위로 퍼지는 효과인지 (마시면 발밑, 던지면 떨어진 칸).</summary>
         public static bool IsArea(ConsumableEffect effect) =>
@@ -285,10 +285,40 @@ namespace ProjectM.Items
             rules.Items.TryGet(entry.Id, out var def);
             Inventory.RemoveAt(world, unit, inventoryIndex);
             var landing = path[path.Count - 1];
+            if (def.Use == ItemUse.Thrown)
+            {
+                ThrowWeapon(world, unit, def, landing);
+                return ConsumeResult.Used;
+            }
             bool area = IsArea(def.Effect);
             Announce(world, unit, def, ConsumeMode.Throw, landing, identify: area);
             if (area) Apply(world, rules, unit, def, landing);
             return ConsumeResult.Used;
+        }
+
+        /// <summary>
+        /// 던지는 무기 (3-16a, SPD): 떨어진 칸에 적대 유닛이 있으면 명중 굴림(Combat.RollHit) → 피해 ThrowMin~Max(RngStream.Combat) − 방어 굴림.
+        /// 맞았든 빗나갔든 BreakPercent로 부러지고, 아니면 그 칸 바닥에 남는다 (다시 주움).
+        /// </summary>
+        private static void ThrowWeapon(World world, Unit unit, ItemDef def, GridPos landing)
+        {
+            var rng = world.Rng.Get(RngStream.Combat);
+            if (world.Units.TryGetAt(landing, out var target) && target.IsAlive && Factions.AreHostile(target.Faction, unit.Faction))
+            {
+                if (Combat.RollHit(world, unit, target))
+                {
+                    int damage = MeleeWeapon.ApplyDefense(world, target, rng.Range(def.ThrowMinDamage, def.ThrowMaxDamage + 1));
+                    Combat.ApplyDamage(world, unit.Id, target, damage, DamageCause.Item(def.Id));
+                }
+                else world.Events.Publish(new AttackMissedEvent(unit.Id, target.Id));
+            }
+            if (def.BreakPercent > 0 && rng.Range(0, 100) < def.BreakPercent)
+            {
+                world.Events.Publish(new ThrownBrokeEvent(def.Id, landing));
+                return;
+            }
+            world.FloorItems.Add(landing, def.Id);
+            world.Events.Publish(new FloorItemPlacedEvent(landing, def.Id, def.Id));
         }
 
         private static void Announce(World world, Unit unit, ItemDef def, ConsumeMode mode, GridPos at, bool identify)
@@ -588,6 +618,19 @@ namespace ProjectM.Items
         public static int RetributionDamage(ConsumableConfig config, Unit target, float power) =>
             (int)Math.Round(target.MaxHp * config.RetributionBasePercent / 100.0 + target.Hp * power * config.RetributionHpPercent / 100.0,
                 MidpointRounding.AwayFromZero);
+    }
+
+    /// <summary>던진 무기가 부러졌다 (3-16a, 로그).</summary>
+    public sealed class ThrownBrokeEvent : ISimEvent
+    {
+        public string ItemId { get; }
+        public GridPos Pos { get; }
+
+        public ThrownBrokeEvent(string itemId, GridPos pos)
+        {
+            ItemId = itemId;
+            Pos = pos;
+        }
     }
 
     /// <summary>변환 주문서 결과 (3-13b, 로그). From = 고른 것 (null = 고른 것 없음), To = 바뀐 것 (null = 바꿀 것이 없었음).</summary>

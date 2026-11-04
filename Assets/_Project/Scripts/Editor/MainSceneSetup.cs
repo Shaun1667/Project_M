@@ -869,6 +869,9 @@ namespace ProjectM.Editor
             // 3-14 음식 (SPD): 식량 300 · 작은 빵 · 고기 150. 정체불명 고기는 불 = 구운 고기, 얼음 = 얼린 고기 (BALANCE 18번)
             changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "gold", DisplayName = "금화", Use = ItemUse.Gold }); // 3-15a
             changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "key_iron", DisplayName = "쇠 열쇠", Use = ItemUse.Key }); // 3-15b
+            // 3-16a 던지는 무기 (SPD 다트 · 투창, 피해는 근접처럼 1/3 크기 — BALANCE 13번)
+            changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "dart", DisplayName = "다트", Use = ItemUse.Thrown, ThrowMinDamage = 1, ThrowMaxDamage = 3, BreakPercent = 0 });
+            changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "javelin", DisplayName = "투창", Use = ItemUse.Thrown, ThrowMinDamage = 3, ThrowMaxDamage = 8, BreakPercent = 33 });
             changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "food_ration", DisplayName = "식량", Use = ItemUse.Food, Food = 300 });
             changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "food_bread", DisplayName = "작은 빵", Use = ItemUse.Food, Food = 150 });
             changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "food_mystery_meat", DisplayName = "정체불명 고기", Use = ItemUse.Food, Food = 150, Risky = true,
@@ -908,6 +911,7 @@ namespace ProjectM.Editor
                 case ItemUse.LearnSpell: return 100;
                 case ItemUse.Fusion: return 200;
                 case ItemUse.Key: return 50;
+                case ItemUse.Thrown: return e.ThrowMaxDamage >= 6 ? 25 : 5;
                 default: return 0;
             }
         }

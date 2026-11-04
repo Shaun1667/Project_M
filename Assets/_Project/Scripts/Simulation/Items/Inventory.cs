@@ -79,6 +79,8 @@ namespace ProjectM.Items
         Gold = 8,
         /// <summary>열쇠 (3-15b): 잠긴 문에 부딪히면 하나 써서 연다 (UnlockCommand). 겹친다.</summary>
         Key = 9,
+        /// <summary>던지는 무기 (3-16a 다트 · 투창): 던지기만 (Consumables.Throw) — 명중 굴림 · 피해 ThrowMin~Max · BreakPercent로 부러짐, 아니면 떨어진 칸에 남음. 겹친다.</summary>
+        Thrown = 10,
     }
 
     /// <summary>
@@ -165,11 +167,21 @@ namespace ProjectM.Items
         public string IceTransformsTo { get; }
         /// <summary>값 (3-15c 상점 — 사기 · 팔기 기준 금화).</summary>
         public int Value { get; }
+        /// <summary>던지는 무기 (3-16a): 피해 범위 · 던질 때 부러질 확률 (%).</summary>
+        public int ThrowMinDamage { get; }
+        public int ThrowMaxDamage { get; }
+        public int BreakPercent { get; }
 
         public ItemDef(string id, ItemUse use, string spellId = null, WeaponDef weapon = null, int amount = 0,
             ConsumableEffect effect = ConsumableEffect.None, int weight = 0, ArmorDef armor = null,
-            int food = 0, bool risky = false, string fireTransformsTo = null, string iceTransformsTo = null, int value = 0)
+            int food = 0, bool risky = false, string fireTransformsTo = null, string iceTransformsTo = null, int value = 0,
+            int throwMinDamage = 0, int throwMaxDamage = 0, int breakPercent = 0)
         {
+            if (use == ItemUse.Thrown && (throwMinDamage < 0 || throwMaxDamage < throwMinDamage || breakPercent < 0 || breakPercent > 100))
+                throw new ArgumentOutOfRangeException(nameof(throwMaxDamage), "던지는 무기: 0 ≤ 최소 ≤ 최대, 부러짐 0 ~ 100: " + id);
+            ThrowMinDamage = use == ItemUse.Thrown ? throwMinDamage : 0;
+            ThrowMaxDamage = use == ItemUse.Thrown ? throwMaxDamage : 0;
+            BreakPercent = use == ItemUse.Thrown ? breakPercent : 0;
             if (value < 0) throw new ArgumentOutOfRangeException(nameof(value), value, "값은 0 이상: " + id);
             Value = value;
             if (use == ItemUse.Food && food < 1) throw new ArgumentOutOfRangeException(nameof(food), food, "음식의 허기 감소는 1 이상: " + id);
@@ -274,7 +286,7 @@ namespace ProjectM.Items
 
         /// <summary>겹치는 항목인지 (3-10b): 물약 · 주문서.</summary>
         public static bool IsStackable(ItemBook items, InventoryRef entry) =>
-            entry.Kind == InventoryKind.Item && items != null && items.TryGet(entry.Id, out var def) && (def.IsConsumable || def.Use == ItemUse.Food || def.Use == ItemUse.Key); // 3-14 음식 · 3-15b 열쇠도
+            entry.Kind == InventoryKind.Item && items != null && items.TryGet(entry.Id, out var def) && (def.IsConsumable || def.Use == ItemUse.Food || def.Use == ItemUse.Key || def.Use == ItemUse.Thrown); // 3-14 음식 · 3-15b 열쇠 · 3-16a 던지는 무기도
 
         /// <summary>인벤토리 칸에서 하나를 뺀다 (겹친 칸은 개수 −1). 칸이 비었고 그 항목이 인벤토리에 더 없으면 가리키던 빠른 칸도 비운다.</summary>
         public static void RemoveAt(World world, Unit unit, int index)

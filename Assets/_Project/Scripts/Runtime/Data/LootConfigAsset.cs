@@ -28,8 +28,13 @@ namespace ProjectM.Data
         [Tooltip("적이 금화를 떨어뜨릴 확률 %")] [Range(0, 100)] [SerializeField] private int _enemyGoldPercent = 20;
         [Min(0)] [SerializeField] private int _enemyGoldMin = 5;
         [Min(0)] [SerializeField] private int _enemyGoldMax = 15;
+        [Header("던지는 무기 (3-16a — BALANCE 11번)")]
+        [Tooltip("층마다 던지는 무기 묶음 수")] [Min(0)] [SerializeField] private int _thrownPerFloor = 1;
+        [SerializeField] private string[] _thrownItems = { "dart", "javelin" };
+        [Tooltip("목록별 묶음 개수 (다트 5 · 투창 2)")] [SerializeField] private int[] _thrownBundles = { 5, 2 };
 
         public LootConfig ToConfig() => new LootConfig(_maxBooksPerFloor, _minDistanceFromStart, _weaponsPerRun, _upgradeScrollsPerRun, _strengthPotionsPerRun, _armorsPerRun,
-            _goldPilesPerFloor, _goldMinBase, _goldMinPerFloor, _goldMaxBase, _goldMaxPerFloor, _enemyGoldPercent, _enemyGoldMin, _enemyGoldMax);
+            _goldPilesPerFloor, _goldMinBase, _goldMinPerFloor, _goldMaxBase, _goldMaxPerFloor, _enemyGoldPercent, _enemyGoldMin, _enemyGoldMax,
+            _thrownPerFloor, _thrownItems, _thrownBundles);
     }
 }

@@ -400,6 +400,15 @@
 
 금화(`gold`, `ItemUse.Gold`)는 걸어 들어가면 배낭이 아니라 지갑(`RunState.Gold`, 스냅샷 v21)으로. HUD 갑옷 줄 옆에 표시. 검산 (`GoldTests.ProjectAsset_MatchesBalanceTable`).
 
+**던지는 무기 (3-16a, 결정 2026-11-04 — 다트 · 투창, SPD)** — `ItemCatalog.asset`의 `Thrown` 줄 + `LootConfig.asset` 묶음 [임시]
+
+| 무기 | ID | 피해 | 부러짐 | 값 | 묶음 |
+|---|---|---|---|---|---|
+| 다트 | `dart` | **1 ~ 3** | **0**% (늘 떨어진 칸에 남음) | 5 | **5**개 |
+| 투창 | `javelin` | **3 ~ 8** | **33**% | 25 | **2**개 |
+
+배낭 → 던지기(물약과 같은 조준 · 사거리 8). 떨어진 칸의 적대 유닛에게 명중 굴림(근접과 같은 `Combat.RollHit`) → 피해 − 방어 굴림. 층마다 `_thrownPerFloor` **1**묶음(Loot 난수, 금화 다음). 겹친다.
+
 ## 12. 경험치 · 레벨업 — `Data/Units/ProgressionConfig.asset`
 
 결정 (2026-10-19, 3-6 사용자 결정): Shattered Pixel Dungeon 방식 — 필요 경험치 = 5 + 5 × 레벨, 레벨업마다 최대 체력 +5 · 최대 마나 +1 · 명중 +1 · 회피 +1(현재 체력 · 마나도 같은 만큼 오름). 적마다 최고 레벨이 있어 플레이어 레벨이 그보다 높으면 경험치 0 (반복 사냥 방지 — 적 재생성 때문에 필요).

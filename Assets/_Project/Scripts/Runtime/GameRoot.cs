@@ -276,6 +276,7 @@ namespace ProjectM
             {
                 Loot.PlaceFloorItems(World, Floor.Start, loot);
                 Loot.PlaceGold(World, Floor.Start, loot); // 3-15a
+                Loot.PlaceThrown(World, Floor.Start, loot); // 3-16a
             }
             vision.Refresh(); // 첫 시야 — 이후는 매 틱 ⑥ 단계에서
 
