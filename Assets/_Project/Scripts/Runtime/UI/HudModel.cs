@@ -117,6 +117,8 @@ namespace ProjectM.UI
             _bus.Subscribe<ItemIdentifiedEvent>(OnIdentified);
             _bus.Subscribe<ProjectM.Dungeon.TrapTriggeredEvent>(OnTrapTriggered);
             _bus.Subscribe<ProjectM.Dungeon.TrapRevealedEvent>(OnTrapRevealed);
+            _bus.Subscribe<ProjectM.Dungeon.SearchedEvent>(OnSearched);
+            _bus.Subscribe<ProjectM.Dungeon.HiddenDoorFoundEvent>(OnHiddenDoorFound);
             _lastPickupFail = null;
             Changed?.Invoke();
         }
@@ -296,6 +298,19 @@ namespace ProjectM.UI
             Changed?.Invoke();
         }
 
+        private void OnSearched(ProjectM.Dungeon.SearchedEvent e)
+        {
+            if (e.Actor != _playerId || e.Found > 0) return;
+            AddLog(HudText.SearchFoundNothing);
+            Changed?.Invoke();
+        }
+
+        private void OnHiddenDoorFound(ProjectM.Dungeon.HiddenDoorFoundEvent e)
+        {
+            AddLog(HudText.HiddenDoorFound);
+            Changed?.Invoke();
+        }
+
         private void OnReaction(ReactionTriggeredEvent e)
         {
             AddLog(e.Target.IsValid ? $"{Text.Reaction(e.ReactionId)}! {Who(e.Target)}" : $"{Text.Reaction(e.ReactionId)}!");
@@ -332,6 +347,8 @@ namespace ProjectM.UI
             _bus.Unsubscribe<ItemIdentifiedEvent>(OnIdentified);
             _bus.Unsubscribe<ProjectM.Dungeon.TrapTriggeredEvent>(OnTrapTriggered);
             _bus.Unsubscribe<ProjectM.Dungeon.TrapRevealedEvent>(OnTrapRevealed);
+            _bus.Unsubscribe<ProjectM.Dungeon.SearchedEvent>(OnSearched);
+            _bus.Unsubscribe<ProjectM.Dungeon.HiddenDoorFoundEvent>(OnHiddenDoorFound);
             _bus = null;
         }
 

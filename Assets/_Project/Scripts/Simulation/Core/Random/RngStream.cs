@@ -15,5 +15,7 @@ namespace ProjectM.Core
         Spawn = 4,
         /// <summary>층 꾸미기 — 풀 · 물 웅덩이 (3-11a). 맵 생성과 따로 — 맵 모양 · 적 배치가 그대로.</summary>
         Decor = 5,
+        /// <summary>저절로 발견 (3-12b). 전투 난수와 따로 — 찾기가 전투 결과를 바꾸지 않게.</summary>
+        Search = 6,
     }
 }

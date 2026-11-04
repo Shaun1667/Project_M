@@ -49,7 +49,10 @@ namespace ProjectM.Core
         public static bool IsWalkableType(TileType type) => IsGroundType(type) || type == TileType.StairsDown || type == TileType.StairsUp
             || IsDoorType(type);
 
-        /// <summary>문 (3-11c): 닫힌 문 · 열린 문.</summary>
+        /// <summary>벽처럼 보이는 칸 (3-12b): 벽 · 숨겨진 문 — 화면 · 벽 모양 판정용.</summary>
+        public static bool IsWallLikeType(TileType type) => type == TileType.Wall || type == TileType.HiddenDoor;
+
+        /// <summary>문 (3-11c): 닫힌 문 · 열린 문 (숨겨진 문은 찾기 전까지 벽).</summary>
         public static bool IsDoorType(TileType type) => type == TileType.Door || type == TileType.OpenDoor;
 
         /// <summary>맨땅 — 유닛 · 아이템을 놓을 수 있는 보통 칸: 바닥 · 짧은 풀 · 높은 풀 (계단 제외, 3-11a).</summary>

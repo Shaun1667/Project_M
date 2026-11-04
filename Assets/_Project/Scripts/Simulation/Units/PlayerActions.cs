@@ -57,6 +57,9 @@ namespace ProjectM.Units
             return new WaitCommand(config.DefaultActionCostTicks);
         }
 
+        /// <summary>찾기 (3-12b): 둘레를 확실히 찾는 행동 — 비용은 SearchConfig.</summary>
+        public static ICommand Search(World world, ProjectM.Dungeon.SearchConfig config) => new ProjectM.Dungeon.SearchCommand(world, config);
+
         public static bool TryGetPlayer(World world, out Unit player)
         {
             if (world == null) throw new ArgumentNullException(nameof(world));

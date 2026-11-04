@@ -21,5 +21,7 @@ namespace ProjectM.Core
         Door = 7,
         /// <summary>열린 문 (3-11c) — 유닛이 서 있는 동안. 비면 닫힌 문으로 돌아간다.</summary>
         OpenDoor = 8,
+        /// <summary>숨겨진 문 (3-12b, SPD) — 찾기 전엔 벽과 같다 (못 지나감 · 시야 막음 · 벽으로 그림). 찾으면 닫힌 문.</summary>
+        HiddenDoor = 9,
     }
 }

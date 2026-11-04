@@ -20,10 +20,14 @@ namespace ProjectM.Dungeon
         public int PuddleMaxSize { get; }
         /// <summary>방 입구(문 자리)마다 문을 놓을 확률 (%) — 3-11c.</summary>
         public int DoorPercent { get; }
+        /// <summary>놓은 문이 숨겨진 문일 확률 (%) — 3-12b. 막으면 층이 끊기는 자리는 보통 문.</summary>
+        public int HiddenDoorPercent { get; }
 
         public FloorDecorConfig(int grassPatchCount, int grassPatchMinSize, int grassPatchMaxSize, int tallGrassPercent,
-            int puddleCount, int puddleMinSize, int puddleMaxSize, int doorPercent = 0)
+            int puddleCount, int puddleMinSize, int puddleMaxSize, int doorPercent = 0, int hiddenDoorPercent = 0)
         {
+            if (hiddenDoorPercent < 0 || hiddenDoorPercent > 100) throw new ArgumentOutOfRangeException(nameof(hiddenDoorPercent));
+            HiddenDoorPercent = hiddenDoorPercent;
             if (doorPercent < 0 || doorPercent > 100) throw new ArgumentOutOfRangeException(nameof(doorPercent));
             DoorPercent = doorPercent;
             if (grassPatchCount < 0) throw new ArgumentOutOfRangeException(nameof(grassPatchCount));
@@ -68,7 +72,11 @@ namespace ProjectM.Dungeon
             if (config.DoorPercent > 0)
             {
                 foreach (var pos in DoorSpots(map, floor))
-                    if (rng.Range(0, 100) < config.DoorPercent) world.SetTile(pos, TileType.Door);
+                {
+                    if (rng.Range(0, 100) >= config.DoorPercent) continue;
+                    bool hidden = config.HiddenDoorPercent > 0 && rng.Range(0, 100) < config.HiddenDoorPercent && StaysConnected(map, floor.Start, pos);
+                    world.SetTile(pos, hidden ? TileType.HiddenDoor : TileType.Door);
+                }
             }
             if (water != null)
             {
@@ -107,6 +115,24 @@ namespace ProjectM.Dungeon
                 spots.Add(p);
             }
             return spots;
+        }
+
+        /// <summary>pos를 막아도(숨겨진 문) 시작 칸에서 걸을 수 있는 모든 칸에 닿는지 — 숨겨진 문은 우회로가 있는 자리만 (결정 2026-11-04).</summary>
+        private static bool StaysConnected(GridMap map, GridPos start, GridPos pos)
+        {
+            var before = map.Get(pos);
+            map.Set(pos, TileType.Wall);
+            try
+            {
+                var reached = DungeonGenerator.FloodWalkable(map, start);
+                for (int i = 0; i < reached.Length; i++)
+                    if (!reached[i] && map.IsWalkable(new GridPos(i % map.Width, i / map.Width))) return false;
+                return true;
+            }
+            finally
+            {
+                map.Set(pos, before);
+            }
         }
 
         /// <summary>wallAxis 양쪽이 벽이고 openAxis 양쪽이 걸을 수 있으며 그중 하나가 방 칸인지.</summary>

@@ -324,6 +324,7 @@ namespace ProjectM.Items
                     break;
                 case ConsumableEffect.MagicMapping:
                     RevealFloor(world);
+                    ProjectM.Dungeon.Searching.RevealAll(world); // 3-12b: 숨겨진 함정 · 문도
                     break;
                 case ConsumableEffect.Teleportation:
                     Teleport(world, unit);

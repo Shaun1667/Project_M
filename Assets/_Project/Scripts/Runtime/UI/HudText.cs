@@ -129,6 +129,10 @@ namespace ProjectM.UI
         /// <summary>함정 발동 로그 (3-12a): "나: 화염 함정 발동!"</summary>
         public static string TrapTriggered(string who, ProjectM.Dungeon.TrapType type) => $"{who}: {Trap(type)} 발동!";
 
+        /// <summary>찾기 행동 로그 (3-12b): 아무것도 못 찾았을 때만 (찾은 것은 각각 로그).</summary>
+        public const string SearchFoundNothing = "주변을 살폈지만 아무것도 없다";
+        public const string HiddenDoorFound = "숨겨진 문을 찾았다";
+
         /// <summary>함정 발견 로그 (3-12b): "함정 발견: 화염 함정"</summary>
         public static string TrapFound(ProjectM.Dungeon.TrapType type) => $"함정 발견: {Trap(type)}";
 

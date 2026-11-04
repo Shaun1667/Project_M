@@ -213,6 +213,8 @@ namespace ProjectM
             if (loot != null) World.Scheduler.AddSystem(TickPhase.ManaRegen, new ItemPickupSystem(World, Items)); // 3-5: 걸어 들어가면 줍기
             var decor = _floorDecorConfig != null ? _floorDecorConfig.ToConfig() : null;
             var traps = _trapCatalog != null ? _trapCatalog.ToBook(Spells) : null; // 3-12a
+            var search = _trapCatalog != null ? _trapCatalog.ToSearch() : null; // 3-12b 찾기
+            if (search != null) World.Scheduler.AddSystem(TickPhase.ManaRegen, new PassiveSearchSystem(World, search)); // ⑤ 저절로 발견 (발동보다 먼저)
             if (traps != null) World.Scheduler.AddSystem(TickPhase.ManaRegen, new TrapSystem(World, traps, Spells)); // ⑤ 밟으면 발동
             Terrains.TryGet(TerrainEffectType.Water, out var water); // 3-11a: 물 웅덩이 = 사라지지 않는 물 지형
             var stairs = new FloorTransition(World, generator, dungeonConfig.FloorCount, enemyDef, spawn, (w, id) => enemyAi, vision, _bossDef.ToDef(), loot,
@@ -261,7 +263,7 @@ namespace ProjectM
 
             _hudText.Run = World.Run; // 3-9: 모르는 물약 · 주문서는 겉모습 이름으로
             _hud.Bind(World.Events, player, Spells, _hudText, progression);
-            _input.Bind(World, Config, new TurnClock(World.Scheduler, World.PlayerInput), sight, Spells, new BresenhamTargetingRule(), Items, Fusions, stairs, consumables);
+            _input.Bind(World, Config, new TurnClock(World.Scheduler, World.PlayerInput), sight, Spells, new BresenhamTargetingRule(), Items, Fusions, stairs, consumables, search);
             World.Events.Flush();
 
             if (_camera != null)

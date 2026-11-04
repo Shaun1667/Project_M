@@ -99,7 +99,8 @@ namespace ProjectM.Presentation
                 case TileType.OpenDoor: return _tiles.Floor(x, y);
                 case TileType.StairsDown: return _tiles.StairsDown;
                 case TileType.StairsUp: return _tiles.StairsUp;
-                case TileType.Wall: return _tiles.Wall;
+                case TileType.Wall:
+                case TileType.HiddenDoor: return _tiles.Wall; // 3-12b: 찾기 전엔 벽
                 default: return null;
             }
         }
@@ -115,7 +116,7 @@ namespace ProjectM.Presentation
             return _tiles.WallCap(3);
         }
 
-        private bool IsWall(int x, int y) => InBounds(x, y) && _types[y * _width + x] == TileType.Wall;
+        private bool IsWall(int x, int y) => InBounds(x, y) && GridMap.IsWallLikeType(_types[y * _width + x]);
         private bool IsWalkable(int x, int y) => InBounds(x, y) && GridMap.IsWalkableType(_types[y * _width + x]);
 
         private bool InBounds(int x, int y) => x >= 0 && y >= 0 && x < _width && y < _height;

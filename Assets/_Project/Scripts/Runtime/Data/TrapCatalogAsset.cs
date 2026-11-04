@@ -26,6 +26,14 @@ namespace ProjectM.Data
         [Tooltip("층 시작 칸에서 최소 거리 (칸)")] [Min(0)] [SerializeField] private int _minDistanceFromStart = 3;
         [SerializeField] private List<Entry> _traps = new List<Entry>();
 
+        [Header("찾기 (3-12b — BALANCE.md 17번)")]
+        [Tooltip("찾기 행동(Z)이 확실히 찾는 반경 (칸)")] [Min(0)] [SerializeField] private int _searchRadius = 2;
+        [Tooltip("찾기 행동 비용 (틱)")] [Min(1)] [SerializeField] private int _searchCostTicks = 2;
+        [Tooltip("저절로 발견: 반경 안의 숨겨진 것마다 매 턴 확률 %")] [Range(0, 100)] [SerializeField] private int _passiveSearchPercent = 10;
+        [Tooltip("저절로 발견 반경 (칸)")] [Min(0)] [SerializeField] private int _passiveSearchRadius = 1;
+
+        public SearchConfig ToSearch() => new SearchConfig(_searchRadius, _searchCostTicks, _passiveSearchPercent, _passiveSearchRadius);
+
         public TrapBook ToBook(SpellBook spells)
         {
             var defs = new List<TrapDef>(_traps.Count);

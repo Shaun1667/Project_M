@@ -70,6 +70,10 @@ namespace ProjectM.Input
         private FusionBook _fusions;
         private ConsumableRules _consumables;
         private ProjectM.Dungeon.FloorTransition _stairs;
+        /// <summary>찾기 수치 (3-12b). null이면 찾기 키를 무시.</summary>
+        private ProjectM.Dungeon.SearchConfig _search;
+        /// <summary>찾기 키 (3-12b) — S는 이동(WASD)이라 Z.</summary>
+        private const Key SearchKey = Key.Z;
         private bool _stairsHintShown;
 
         private static readonly Key[] StairsKeys = { Key.Enter, Key.NumpadEnter };
@@ -129,9 +133,11 @@ namespace ProjectM.Input
         private void OnDestroy() => _inventory.Changed -= DrawInventory;
 
         public void Bind(World world, GameConfig config, ITickClock clock, ISightRule sight, SpellBook spells, ITargetingRule targeting,
-            ItemBook items, FusionBook fusions, ProjectM.Dungeon.FloorTransition stairs = null, ConsumableRules consumables = null)
+            ItemBook items, FusionBook fusions, ProjectM.Dungeon.FloorTransition stairs = null, ConsumableRules consumables = null,
+            ProjectM.Dungeon.SearchConfig search = null)
         {
             Unbind();
+            _search = search;
             _world = world;
             _config = config;
             _clock = clock;
@@ -803,6 +809,13 @@ namespace ProjectM.Input
                 if (!keyboard[key].wasPressedThisFrame) continue;
                 CancelPath();
                 _clock.SubmitPlayerCommand(PlayerActions.Wait(_config));
+                return true;
+            }
+
+            if (_search != null && keyboard[SearchKey].wasPressedThisFrame) // 3-12b 찾기
+            {
+                CancelPath();
+                _clock.SubmitPlayerCommand(PlayerActions.Search(_world, _search));
                 return true;
             }
 

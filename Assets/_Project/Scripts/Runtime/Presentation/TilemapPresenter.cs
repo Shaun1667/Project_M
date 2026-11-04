@@ -186,6 +186,7 @@ namespace ProjectM.Presentation
         /// <summary>Tilemap에 그릴 타일: 3D로 그리는 타입(3D 모드의 벽 · 모듈이 있는 타입)은 비운다.</summary>
         private TileBase TileFor(TileType type)
         {
+            if (type == TileType.HiddenDoor) type = TileType.Wall; // 3-12b: 찾기 전엔 벽으로 그림
             if (_walls3D && (type == TileType.Wall || (_visuals != null && _visuals.TryGetModule(type, out _, out _)))) return null;
             return _visuals != null ? _visuals.Get(type) : null;
         }
@@ -207,8 +208,8 @@ namespace ProjectM.Presentation
         /// <summary>외톨이 벽: 상하좌우 네 칸에 벽이 하나도 없음 (보스 방 기둥 · 홀로 선 벽).</summary>
         private bool IsIsolatedWall(GridPos pos)
         {
-            return TypeAt(pos + new GridPos(1, 0)) != TileType.Wall && TypeAt(pos + new GridPos(-1, 0)) != TileType.Wall
-                && TypeAt(pos + new GridPos(0, 1)) != TileType.Wall && TypeAt(pos + new GridPos(0, -1)) != TileType.Wall;
+            return !GridMap.IsWallLikeType(TypeAt(pos + new GridPos(1, 0))) && !GridMap.IsWallLikeType(TypeAt(pos + new GridPos(-1, 0)))
+                && !GridMap.IsWallLikeType(TypeAt(pos + new GridPos(0, 1))) && !GridMap.IsWallLikeType(TypeAt(pos + new GridPos(0, -1)));
         }
 
         private void RebuildCell(GridPos pos)
@@ -228,7 +229,7 @@ namespace ProjectM.Presentation
             bool floorRotate = false;
             if (_visuals != null) _visuals.TryGetModule(TileType.Floor, out floorModule, out floorRotate);
 
-            if (type == TileType.Wall)
+            if (GridMap.IsWallLikeType(type)) // 3-12b: 숨겨진 문도 벽
             {
                 if (!TouchesWalkable(pos)) return;
                 var root = CreateCellRoot(pos, "Wall");
@@ -261,7 +262,7 @@ namespace ProjectM.Presentation
 
         /// <summary>3-11c 문 모듈 방향: 문짝은 모듈 X축을 막으므로, 좌우가 벽이면 그대로(0), 아니면(위아래가 벽) 90°.</summary>
         private int DoorRotation(GridPos pos) =>
-            TypeAt(pos + new GridPos(1, 0)) == TileType.Wall && TypeAt(pos + new GridPos(-1, 0)) == TileType.Wall ? 0 : 1;
+            GridMap.IsWallLikeType(TypeAt(pos + new GridPos(1, 0))) && GridMap.IsWallLikeType(TypeAt(pos + new GridPos(-1, 0))) ? 0 : 1;
 
         private GameObject CreateCellRoot(GridPos pos, string label)
         {

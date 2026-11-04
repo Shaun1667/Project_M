@@ -18,8 +18,9 @@ namespace ProjectM.Data
         [Tooltip("웅덩이 최소 칸 수")] [Min(1)] [SerializeField] private int _puddleMinSize = 3;
         [Tooltip("웅덩이 최대 칸 수")] [Min(1)] [SerializeField] private int _puddleMaxSize = 9;
         [Tooltip("방 입구(복도가 방에 들어가는 한 칸 폭 길목)마다 문을 놓을 확률 % (3-11c)")] [Range(0, 100)] [SerializeField] private int _doorPercent = 70;
+        [Tooltip("놓은 문이 숨겨진 문일 확률 % (3-12b) — 막으면 층이 끊기는 자리는 보통 문")] [Range(0, 100)] [SerializeField] private int _hiddenDoorPercent = 15;
 
         public FloorDecorConfig ToConfig() => new FloorDecorConfig(_grassPatchCount, _grassPatchMinSize, _grassPatchMaxSize, _tallGrassPercent,
-            _puddleCount, _puddleMinSize, _puddleMaxSize, _doorPercent);
+            _puddleCount, _puddleMinSize, _puddleMaxSize, _doorPercent, _hiddenDoorPercent);
     }
 }
