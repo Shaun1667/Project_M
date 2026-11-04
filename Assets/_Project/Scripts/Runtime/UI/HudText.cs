@@ -147,6 +147,13 @@ namespace ProjectM.UI
             }
         }
 
+        /// <summary>상점 (3-15c).</summary>
+        public const string SellTitle = "팔기 — 고른 물건을 값의 절반에  <size=70%><color=#AAAAAA>Esc 닫기</color></size>";
+        public const string NothingToSell = "팔 물건이 없다";
+        public string Bought(string id, int price) => $"샀다: {Item(id)} (금화 {price})";
+        public string Sold(string id, int price) => $"팔았다: {Item(id)} (금화 {price})";
+        public string CannotAfford(string id, int price) => $"{Item(id)} — 금화 {price}개가 필요하다";
+
         /// <summary>잠긴 문 (3-15b).</summary>
         public const string DoorLocked = "잠겨 있다 — 열쇠가 필요하다";
         public const string DoorUnlocked = "열쇠로 문을 열었다";

@@ -76,7 +76,7 @@ namespace ProjectM.UI
 
             bool fusion = menu.State == InventoryMenuState.FusionPick;
             bool picking = menu.State == InventoryMenuState.ItemPick; // 3-10b 대상 고르기
-            if (picking) _title.text = text.PickTitle(menu.PickSource);
+            if (picking) _title.text = menu.IsSelling ? HudText.SellTitle : text.PickTitle(menu.PickSource); // 3-15c 팔기
             else if (fusion) _title.text = text.FusionPickTitle(menu.FusionFirst >= 0 ? slots[menu.FusionFirst] : InventoryRef.Empty);
             else if (menu.AssignTarget >= 0) _title.text = HudText.AssignHint(menu.AssignTarget);
             else _title.text = menu.State == InventoryMenuState.ChooseSlot ? text.ChooseSlotHint(menu.SelectedEntry(player)) : HudText.BackpackTitle;

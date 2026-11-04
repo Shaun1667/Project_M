@@ -412,6 +412,7 @@ namespace ProjectM.Editor
             // G-1 3D 그레이박스: 프리팹이 없으면 캡슐 (색 · 키). Varco 모델은 G-2에서 Prefab에 넣는다 — Setup은 Prefab을 건드리지 않는다
             catalog.Set(PlayerVisualId, AssetDatabase.LoadAssetAtPath<Sprite>(PlayerSpritePath), new Color(0.3f, 0.85f, 0.4f), 0.9f);
             catalog.Set(EnemyVisualId, AssetDatabase.LoadAssetAtPath<Sprite>(UnitCircleSpritePath), new Color(0.9f, 0.25f, 0.2f), 0.8f);
+            catalog.Set("shopkeeper", AssetDatabase.LoadAssetAtPath<Sprite>(UnitCircleSpritePath), new Color(0.95f, 0.8f, 0.3f), 0.9f); // 3-15c 상인 (그레이박스 금빛 캡슐)
             foreach (var (id, _) in Characters) // 고를 수 있는 캐릭터 — 모델은 Varco Models 메뉴가 플레이어 모델로 넣는다
             {
                 // 2D(P-3 ⓑ)에서는 스프라이트를 그대로 그리므로 흰색 (3D 캡슐 색은 모델이 있어 안 씀)
@@ -886,8 +887,29 @@ namespace ProjectM.Editor
             changed |= catalog.AddIfMissing(Armor("armor_mail", "사슬 갑옷", 3, 14));
             changed |= catalog.AddIfMissing(Armor("armor_scale", "비늘 갑옷", 4, 16));
             changed |= catalog.AddIfMissing(Armor("armor_plate", "판금 갑옷", 5, 18));
+            changed |= catalog.FillZeroValues(ShopValue); // 3-15c: 값 (BALANCE 16번 — 비어 있을 때만)
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
+        }
+
+        /// <summary>
+        /// 3-15c 쓰임새별 값 (SPD 비율, 금화): 무기 60 · 갑옷 30 × 티어 · 물약 · 주문서 30(힘 · 강화 150, 경험 100) · 식량 20 · 빵 10 · 고기 5 · 마법서 100 · 융합기 200 · 열쇠 50 · 금화 0.
+        /// </summary>
+        private static int ShopValue(ItemCatalogAsset.Entry e)
+        {
+            switch (e.Use)
+            {
+                case ItemUse.EquipWeapon: return 60;
+                case ItemUse.EquipArmor: return 30 * System.Math.Max(1, e.Tier);
+                case ItemUse.Potion:
+                case ItemUse.Scroll:
+                    return e.Effect == ConsumableEffect.Strength || e.Effect == ConsumableEffect.Upgrade ? 150 : e.Effect == ConsumableEffect.Experience ? 100 : 30;
+                case ItemUse.Food: return e.Food >= 300 ? 20 : e.Risky || e.Id.Contains("meat") ? 5 : 10;
+                case ItemUse.LearnSpell: return 100;
+                case ItemUse.Fusion: return 200;
+                case ItemUse.Key: return 50;
+                default: return 0;
+            }
         }
 
         /// <summary>

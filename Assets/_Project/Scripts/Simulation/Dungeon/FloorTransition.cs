@@ -30,6 +30,8 @@ namespace ProjectM.Dungeon
         private readonly FloorDecorConfig _decor;
         private readonly TerrainDef _water;
         private readonly TrapBook _traps;
+        private readonly ShopConfig _shop;
+        private readonly ItemBook _items;
 
         /// <param name="bossDef">마지막 층(보스 층)의 보스 (3-4b). null이면 마지막 층도 일반 층처럼 만든다 (테스트용).</param>
         /// <param name="loot">바닥 아이템 배치 수치 (3-5). null이면 새 층에 아이템을 놓지 않는다.</param>
@@ -37,8 +39,10 @@ namespace ProjectM.Dungeon
         /// <param name="water">물 웅덩이에 쓸 물 지형 규칙. null이면 웅덩이 없이 풀만.</param>
         public FloorTransition(World world, DungeonGenerator generator, int floorCount, UnitDef enemyDef, SpawnConfig spawn,
             Func<World, EntityId, ICommandSource> aiFactory, PlayerVisionSystem vision, UnitDef bossDef = null, LootConfig loot = null,
-            FloorDecorConfig decor = null, TerrainDef water = null, TrapBook traps = null)
+            FloorDecorConfig decor = null, TerrainDef water = null, TrapBook traps = null, ShopConfig shop = null, ItemBook items = null)
         {
+            _shop = shop;
+            _items = items;
             _traps = traps;
             _decor = decor;
             _water = water;
@@ -108,6 +112,7 @@ namespace ProjectM.Dungeon
                 var floor = _generator.Generate(_world.Rng.Get(RngStream.MapGen), stairsUp: target > 1, stairsDown: !last);
                 _world.EnterNewFloor(target, floor.Map);
                 if (_decor != null) FloorDecor.Apply(_world, floor, _decor, _water, _traps); // 3-11a · 3-12a: 이벤트는 아래 Announce가 맵 · 지형 · 함정을 다시 보낸다
+                Shop.Build(_world, floor, _shop, _items, _world.Rng.Get(RngStream.Decor), new IdleNeutralAi()); // 3-15c: 상점 층이면
                 _world.Units.Teleport(player.Id, floor.Start);
                 FloorPopulator.PopulateEnemies(_world, floor.Start, _enemyDef, _spawn, _aiFactory(_world, EntityId.None));
                 newFloorStart = floor.Start;

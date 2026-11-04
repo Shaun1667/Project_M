@@ -163,11 +163,15 @@ namespace ProjectM.Items
         /// <summary>바닥에서 불 · 얼음을 맞으면 바뀌는 아이템 (3-14 요리). 없으면 null.</summary>
         public string FireTransformsTo { get; }
         public string IceTransformsTo { get; }
+        /// <summary>값 (3-15c 상점 — 사기 · 팔기 기준 금화).</summary>
+        public int Value { get; }
 
         public ItemDef(string id, ItemUse use, string spellId = null, WeaponDef weapon = null, int amount = 0,
             ConsumableEffect effect = ConsumableEffect.None, int weight = 0, ArmorDef armor = null,
-            int food = 0, bool risky = false, string fireTransformsTo = null, string iceTransformsTo = null)
+            int food = 0, bool risky = false, string fireTransformsTo = null, string iceTransformsTo = null, int value = 0)
         {
+            if (value < 0) throw new ArgumentOutOfRangeException(nameof(value), value, "값은 0 이상: " + id);
+            Value = value;
             if (use == ItemUse.Food && food < 1) throw new ArgumentOutOfRangeException(nameof(food), food, "음식의 허기 감소는 1 이상: " + id);
             Food = use == ItemUse.Food ? food : 0;
             Risky = use == ItemUse.Food && risky;

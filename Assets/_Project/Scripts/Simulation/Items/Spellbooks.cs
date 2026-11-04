@@ -71,12 +71,15 @@ namespace ProjectM.Items
         public readonly string ItemId;
         /// <summary>개수 (3-15a 금화 무더기의 금액). 그 밖 1.</summary>
         public readonly int Quantity;
+        /// <summary>가격표 (3-15c 상점 물건 — 주우면 금화가 빠짐). 0 = 공짜.</summary>
+        public readonly int Price;
 
-        public FloorItem(GridPos pos, string itemId, int quantity = 1)
+        public FloorItem(GridPos pos, string itemId, int quantity = 1, int price = 0)
         {
             Pos = pos;
             ItemId = itemId;
             Quantity = Math.Max(1, quantity);
+            Price = Math.Max(0, price);
         }
     }
 
@@ -91,12 +94,12 @@ namespace ProjectM.Items
         public int Count => _items.Count;
         public IReadOnlyList<FloorItem> All => _items;
 
-        public void Add(GridPos pos, string itemId, int quantity = 1)
+        public void Add(GridPos pos, string itemId, int quantity = 1, int price = 0)
         {
             if (string.IsNullOrEmpty(itemId)) throw new ArgumentException("아이템 ID가 비어 있다.", nameof(itemId));
             int index = _items.Count;
             while (index > 0 && Compare(_items[index - 1].Pos, pos) > 0) index--;
-            _items.Insert(index, new FloorItem(pos, itemId, quantity));
+            _items.Insert(index, new FloorItem(pos, itemId, quantity, price));
         }
 
         /// <summary>그 칸의 아이템들 (놓은 순서, 개수 포함 — 3-15a).</summary>
@@ -468,6 +471,11 @@ namespace ProjectM.Items
                     picked++;
                     continue;
                 }
+                if (floorItem.Price > world.Run.Gold) // 3-15c: 가격표 — 금화가 모자라면 그대로
+                {
+                    world.Events.Publish(new ProjectM.Dungeon.PurchaseFailedEvent(id, floorItem.Price));
+                    continue;
+                }
                 if (Inventory.TryAdd(world, null, items, player, InventoryRef.Item(id)) < 0)
                 {
                     world.Events.Publish(new ItemPickupFailedEvent(player.Id, player.Pos, id));
@@ -475,6 +483,12 @@ namespace ProjectM.Items
                 }
                 world.FloorItems.Remove(player.Pos, id);
                 world.Events.Publish(new ItemPickedUpEvent(player.Id, player.Pos, id));
+                if (floorItem.Price > 0) // 3-15c: 샀다
+                {
+                    world.Run.Gold -= floorItem.Price;
+                    world.Events.Publish(new GoldChangedEvent(world.Run.Gold, -floorItem.Price));
+                    world.Events.Publish(new ProjectM.Dungeon.ItemBoughtEvent(id, floorItem.Price));
+                }
                 picked++;
             }
             return picked;
@@ -541,11 +555,14 @@ namespace ProjectM.Items
     {
         public int Gold { get; }
         public int Delta { get; }
+        /// <summary>상점 거래로 바뀜 (3-15c — 줍기 로그를 안 냄).</summary>
+        public bool FromSale { get; }
 
-        public GoldChangedEvent(int gold, int delta)
+        public GoldChangedEvent(int gold, int delta, bool fromSale = false)
         {
             Gold = gold;
             Delta = delta;
+            FromSale = fromSale;
         }
     }
 

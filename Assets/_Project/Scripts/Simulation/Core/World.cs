@@ -275,7 +275,7 @@ namespace ProjectM.Core
         {
             var items = new FloorItemState[FloorItems.Count];
             for (int i = 0; i < items.Length; i++)
-                items[i] = new FloorItemState(FloorItems.All[i].Pos.X, FloorItems.All[i].Pos.Y, FloorItems.All[i].ItemId, FloorItems.All[i].Quantity);
+                items[i] = new FloorItemState(FloorItems.All[i].Pos.X, FloorItems.All[i].Pos.Y, FloorItems.All[i].ItemId, FloorItems.All[i].Quantity, FloorItems.All[i].Price);
             return items;
         }
 
@@ -321,7 +321,7 @@ namespace ProjectM.Core
             foreach (var u in units)
                 world.Units.Add(ToUnit(u));
             foreach (var item in floorItems ?? Array.Empty<FloorItemState>())
-                world.FloorItems.Add(new GridPos(item.X, item.Y), item.ItemId, item.Quantity);
+                world.FloorItems.Add(new GridPos(item.X, item.Y), item.ItemId, item.Quantity, item.Price);
             foreach (var t in traps ?? Array.Empty<TrapCellState>())
                 world.Traps.Set(world.Traps.PosOf(t.CellIndex), new TrapInstance(t.Type, t.Hidden));
         }

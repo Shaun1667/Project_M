@@ -220,7 +220,8 @@ namespace ProjectM
             var enemyDef = _enemyDef.ToDef();
             var enemyAi = new MeleeChaserAi(World, Config, sight, Statuses); // 3-13a: 투명
             System.Func<World, EntityId, ICommandSource> aiFactory = (w, id) =>
-                w.Units.TryGet(id, out var u) && u.Faction == Faction.Ally ? (ICommandSource)allyAi : enemyAi; // 떠났던 층의 분신은 아군 AI로
+                !w.Units.TryGet(id, out var u) ? enemyAi : u.Faction == Faction.Ally ? allyAi
+                : u.Faction == Faction.Neutral ? new ProjectM.Dungeon.IdleNeutralAi() : (ICommandSource)enemyAi; // 떠났던 층의 분신 · 상인
             World.Scheduler.AddSystem(TickPhase.ManaRegen, new EnemyRespawnSystem(World, spawn, enemyDef, enemyAi, sight, dungeonConfig.FloorCount));
             var loot = _lootConfig != null ? _lootConfig.ToConfig() : null;
             if (loot != null) World.Scheduler.AddSystem(TickPhase.ManaRegen, new ItemPickupSystem(World, Items)); // 3-5: 걸어 들어가면 줍기
@@ -231,7 +232,7 @@ namespace ProjectM
             if (traps != null) World.Scheduler.AddSystem(TickPhase.ManaRegen, new TrapSystem(World, traps, Spells)); // ⑤ 밟으면 발동
             Terrains.TryGet(TerrainEffectType.Water, out var water); // 3-11a: 물 웅덩이 = 사라지지 않는 물 지형
             var stairs = new FloorTransition(World, generator, dungeonConfig.FloorCount, enemyDef, spawn, aiFactory, vision, _bossDef.ToDef(), loot,
-                decor, water, traps);
+                decor, water, traps, _floorDecorConfig != null ? _floorDecorConfig.ToShop() : null, Items); // 3-15c 상점
 
             if (_pixelMap != null) _pixelMap.Bind(World.Events); // P-3a 2D 맵 — 3D 맵은 묶지 않음
             else _tilemapPresenter.Bind(World.Events);
@@ -280,7 +281,7 @@ namespace ProjectM
 
             _hudText.Run = World.Run; // 3-9: 모르는 물약 · 주문서는 겉모습 이름으로
             _hud.Bind(World.Events, player, Spells, _hudText, progression);
-            _input.Bind(World, Config, new TurnClock(World.Scheduler, World.PlayerInput), sight, Spells, new BresenhamTargetingRule(), Items, Fusions, stairs, consumables, search, hunger);
+            _input.Bind(World, Config, new TurnClock(World.Scheduler, World.PlayerInput), sight, Spells, new BresenhamTargetingRule(), Items, Fusions, stairs, consumables, search, hunger, _floorDecorConfig != null ? _floorDecorConfig.ToShop() : null);
             World.Events.Flush();
 
             if (_camera != null)

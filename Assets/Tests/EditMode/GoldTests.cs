@@ -79,7 +79,7 @@ namespace ProjectM.Tests
         [Test]
         public void Snapshot_RoundTripsGold()
         {
-            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.EqualTo(21), "3-15a 금화");
+            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.GreaterThanOrEqualTo(21), "3-15a 금화 (정확한 값은 ShopTests — 22)");
             var (world, _, _) = Start();
             world.FloorItems.Add(new GridPos(5, 2), Loot.GoldItemId, 88);
             var restored = World.Restore(WorldSnapshotCodec.Decode(WorldSnapshotCodec.Encode(world.Capture())), (w, id) => null);

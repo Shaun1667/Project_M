@@ -96,6 +96,16 @@ namespace ProjectM.UI
         public InventoryRef PickSource { get; private set; }
         /// <summary>대상 고르기에서 고를 수 있는 칸 (3-10b).</summary>
         public Func<InventoryRef, bool> PickFilter { get; private set; }
+        /// <summary>상인에게 팔 물건 고르기 (3-15c) — 고르면 PickedItem(Entry = 빈 칸, Second = 판 것).</summary>
+        public bool IsSelling { get; private set; }
+
+        /// <summary>팔기로 연다 (3-15c).</summary>
+        public void OpenForSale(Func<InventoryRef, bool> filter, IReadOnlyList<InventoryRef> slots)
+        {
+            OpenForPick(InventoryRef.Empty, filter, slots);
+            IsSelling = true;
+            Changed?.Invoke();
+        }
 
         /// <summary>그 항목을 던질 수 있는지 (3-9 — 입력이 Consumables.CanThrow로 채움). null이면 던지기 메뉴 없음.</summary>
         public Func<InventoryRef, bool> CanThrow { get; set; }
@@ -143,6 +153,7 @@ namespace ProjectM.UI
             if (State == InventoryMenuState.Closed) return;
             PickSource = InventoryRef.Empty;
             PickFilter = null;
+            IsSelling = false;
             State = InventoryMenuState.Closed;
             AssignTarget = -1;
             FusionFirst = -1;

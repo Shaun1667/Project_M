@@ -39,6 +39,7 @@ namespace ProjectM.Data
             [Tooltip("먹으면 나쁜 상태가 걸릴 수 있음 (정체불명 고기)")] public bool Risky;
             [Tooltip("바닥에서 불을 맞으면 바뀌는 아이템 (구운 고기)")] public string FireTransformsTo;
             [Tooltip("바닥에서 얼음을 맞으면 바뀌는 아이템 (얼린 고기)")] public string IceTransformsTo;
+            [Tooltip("값 (3-15c 상점 — 사기 = 값 × 사는 %, 팔기 = 값 × 파는 %). 0 = 못 팜")] [Min(0)] public int Value;
         }
 
         [SerializeField] private List<Entry> _items = new List<Entry>();
@@ -62,7 +63,7 @@ namespace ProjectM.Data
                     ? new WeaponDef(e.MaxDamage, e.UpgradeEfficiency, Mathf.RoundToInt(e.Accuracy * 100f), e.AttackCostTicks, e.Reach, e.StrengthRequirement, e.SurpriseMinPercent, e.Defense)
                     : null;
                 var armor = e.Use == ItemUse.EquipArmor ? new ArmorDef(e.Tier, e.StrengthRequirement) : null;
-                defs.Add(new ItemDef(e.Id, e.Use, e.SpellId, weapon, e.Amount, e.Effect, e.Weight, armor, e.Food, e.Risky, e.FireTransformsTo, e.IceTransformsTo));
+                defs.Add(new ItemDef(e.Id, e.Use, e.SpellId, weapon, e.Amount, e.Effect, e.Weight, armor, e.Food, e.Risky, e.FireTransformsTo, e.IceTransformsTo, e.Value));
             }
             return new ItemBook(defs, new WeaponRules(_weaponDamageDivisor, _weaponMinDamage), new ArmorRules(_armorDefenseDivisor, _armorDeficitPenalty));
         }
@@ -119,6 +120,22 @@ namespace ProjectM.Data
                 return true;
             }
             return false;
+        }
+
+        /// <summary>에디터 Setup용 (3-15c): 값이 0인 줄만 쓰임새별 값으로 채운다 (사용자가 고친 값은 그대로). 바뀌었으면 true.</summary>
+        public bool FillZeroValues(System.Func<Entry, int> valueOf)
+        {
+            bool changed = false;
+            for (int i = 0; i < _items.Count; i++)
+            {
+                if (_items[i].Value != 0) continue;
+                var e = _items[i];
+                e.Value = valueOf(e);
+                if (e.Value == 0) continue;
+                _items[i] = e;
+                changed = true;
+            }
+            return changed;
         }
 
         /// <summary>에디터 Setup용: 같은 ID가 없을 때만 추가한다.</summary>

@@ -122,6 +122,9 @@ namespace ProjectM.UI
             _bus.Subscribe<HungerChangedEvent>(OnHungerChanged);
             _bus.Subscribe<GoldChangedEvent>(OnGoldChanged);
             _bus.Subscribe<ProjectM.Dungeon.DoorUnlockedEvent>(OnDoorUnlocked);
+            _bus.Subscribe<ProjectM.Dungeon.ItemBoughtEvent>(OnBought);
+            _bus.Subscribe<ProjectM.Dungeon.ItemSoldEvent>(OnSold);
+            _bus.Subscribe<ProjectM.Dungeon.PurchaseFailedEvent>(OnPurchaseFailed);
             _bus.Subscribe<FoodEatenEvent>(OnFoodEaten);
             _bus.Subscribe<FoodCookedEvent>(OnFoodCooked);
             _bus.Subscribe<ProjectM.Dungeon.HiddenDoorFoundEvent>(OnHiddenDoorFound);
@@ -308,6 +311,29 @@ namespace ProjectM.UI
         /// <summary>가진 금화 (3-15a — HUD 갑옷 줄 옆에).</summary>
         public int Gold { get; private set; }
 
+        private string _lastPurchaseFail;
+
+        private void OnBought(ProjectM.Dungeon.ItemBoughtEvent e)
+        {
+            AddLog(Text.Bought(e.ItemId, e.Price));
+            Changed?.Invoke();
+        }
+
+        private void OnSold(ProjectM.Dungeon.ItemSoldEvent e)
+        {
+            AddLog(Text.Sold(e.ItemId, e.Price));
+            Changed?.Invoke();
+        }
+
+        // 가격표 칸에 서 있는 동안 틱마다 오므로 같은 물건은 한 번만
+        private void OnPurchaseFailed(ProjectM.Dungeon.PurchaseFailedEvent e)
+        {
+            if (_lastPurchaseFail == e.ItemId) return;
+            _lastPurchaseFail = e.ItemId;
+            AddLog(Text.CannotAfford(e.ItemId, e.Price));
+            Changed?.Invoke();
+        }
+
         private void OnDoorUnlocked(ProjectM.Dungeon.DoorUnlockedEvent e)
         {
             AddLog(HudText.DoorUnlocked);
@@ -317,7 +343,7 @@ namespace ProjectM.UI
         private void OnGoldChanged(GoldChangedEvent e)
         {
             Gold = e.Gold;
-            if (e.Delta > 0) AddLog(HudText.GoldPicked(e.Delta));
+            if (e.Delta > 0 && !e.FromSale) AddLog(HudText.GoldPicked(e.Delta));
             Changed?.Invoke();
         }
 
@@ -405,6 +431,9 @@ namespace ProjectM.UI
             _bus.Unsubscribe<HungerChangedEvent>(OnHungerChanged);
             _bus.Unsubscribe<GoldChangedEvent>(OnGoldChanged);
             _bus.Unsubscribe<ProjectM.Dungeon.DoorUnlockedEvent>(OnDoorUnlocked);
+            _bus.Unsubscribe<ProjectM.Dungeon.ItemBoughtEvent>(OnBought);
+            _bus.Unsubscribe<ProjectM.Dungeon.ItemSoldEvent>(OnSold);
+            _bus.Unsubscribe<ProjectM.Dungeon.PurchaseFailedEvent>(OnPurchaseFailed);
             _bus.Unsubscribe<FoodEatenEvent>(OnFoodEaten);
             _bus.Unsubscribe<FoodCookedEvent>(OnFoodCooked);
             _bus.Unsubscribe<ProjectM.Dungeon.HiddenDoorFoundEvent>(OnHiddenDoorFound);

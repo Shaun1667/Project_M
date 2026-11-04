@@ -428,6 +428,7 @@ namespace ProjectM.Core
                 w.Write(item.Y);
                 w.Write(item.ItemId ?? string.Empty);
                 w.Write(item.Quantity); // 21 (3-15a)
+                w.Write(item.Price); // 22 (3-15c)
             }
         }
 
@@ -439,7 +440,8 @@ namespace ProjectM.Core
                 int x = r.ReadInt32();
                 int y = r.ReadInt32();
                 var itemId = r.ReadString();
-                items[i] = new FloorItemState(x, y, itemId, r.ReadInt32()); // 21 (3-15a)
+                int quantity = r.ReadInt32(); // 21 (3-15a)
+                items[i] = new FloorItemState(x, y, itemId, quantity, r.ReadInt32()); // 22 (3-15c)
             }
             return items;
         }

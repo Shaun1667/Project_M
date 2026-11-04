@@ -74,6 +74,8 @@ namespace ProjectM.Input
         private ProjectM.Dungeon.SearchConfig _search;
         /// <summary>허기 수치 (3-14). null이면 음식을 먹을 수 없음.</summary>
         private HungerConfig _hunger;
+        /// <summary>상점 (3-15c). null이면 팔기 없음.</summary>
+        private ProjectM.Dungeon.ShopConfig _shop;
         /// <summary>찾기 키 (3-12b) — S는 이동(WASD)이라 Z.</summary>
         private const Key SearchKey = Key.Z;
         private bool _stairsHintShown;
@@ -136,9 +138,10 @@ namespace ProjectM.Input
 
         public void Bind(World world, GameConfig config, ITickClock clock, ISightRule sight, SpellBook spells, ITargetingRule targeting,
             ItemBook items, FusionBook fusions, ProjectM.Dungeon.FloorTransition stairs = null, ConsumableRules consumables = null,
-            ProjectM.Dungeon.SearchConfig search = null, HungerConfig hunger = null)
+            ProjectM.Dungeon.SearchConfig search = null, HungerConfig hunger = null, ProjectM.Dungeon.ShopConfig shop = null)
         {
             Unbind();
+            _shop = shop;
             _search = search;
             _hunger = hunger;
             _world = world;
@@ -496,6 +499,10 @@ namespace ProjectM.Input
                     break;
                 case InventoryActionKind.ThrowItem:
                     BeginThrowAim(player, action.Entry);
+                    break;
+                case InventoryActionKind.PickedItem when action.Entry.IsEmpty && _shop != null: // 3-15c: 팔기 (차례 안 씀)
+                    ProjectM.Dungeon.Shop.Sell(_world, _items, _shop, player, System.Array.IndexOf(player.InventorySlots, action.Second));
+                    _world.Events.Flush();
                     break;
                 case InventoryActionKind.PickedItem: // 3-10b: 고른 대상에 주문서 쓰기 = 차례 1
                     _clock.SubmitPlayerCommand(new UseConsumableCommand(_world, _consumables, System.Array.IndexOf(player.InventorySlots, action.Entry),
@@ -903,6 +910,13 @@ namespace ProjectM.Input
                 if (ProjectM.Dungeon.UnlockCommand.KeySlot(_items, bumper) >= 0)
                     _clock.SubmitPlayerCommand(new ProjectM.Dungeon.UnlockCommand(_world, _items, bumper.Pos + direction, _config.DefaultActionCostTicks));
                 else Hint(HudText.DoorLocked);
+            }
+            else if (_shop != null && PlayerActions.TryGetPlayer(_world, out var buyer) && _world.Units.TryGetAt(buyer.Pos + direction, out var keeper)
+                && keeper.Faction == Faction.Neutral) // 3-15c: 상인에게 부딪히면 팔기
+            {
+                bool Sellable(ProjectM.Items.InventoryRef e) => ProjectM.Dungeon.Shop.SellPrice(_items, _shop, e) > 0;
+                if (System.Array.Exists(buyer.InventorySlots, Sellable)) _inventory.OpenForSale(Sellable, buyer.InventorySlots);
+                else Hint(HudText.NothingToSell);
             }
         }
 

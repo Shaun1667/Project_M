@@ -85,12 +85,22 @@ namespace ProjectM.Dungeon
         {
             if (config == null || rng.Range(0, 100) >= config.RoomPercent) return null;
             var type = PickType(config, rng);
+            var room = CarveEmpty(world, floor, rng, config.MinSize, config.MaxSize, type == SpecialRoomType.Vault ? TileType.LockedDoor : TileType.Door);
+            if (room == null) return null;
+            room.Type = type;
+            Furnish(world, floor, config, rng, type, room.Cells, room.Entrance);
+            return room;
+        }
+
+        /// <summary>빈 방 하나를 판다 (3-15b 특수 방 · 3-15c 상점 공용): 입구 칸 = entranceTile. 못 팠으면 null.</summary>
+        public static Result CarveEmpty(World world, DungeonFloor floor, IRng rng, int minSize, int maxSize, TileType entranceTile)
+        {
             var map = world.Map;
             for (int attempt = 0; attempt < Attempts; attempt++)
             {
                 var anchor = new GridPos(rng.Range(1, map.Width - 1), rng.Range(1, map.Height - 1));
                 var dir = Sides[rng.Range(0, Sides.Length)];
-                int size = rng.Range(config.MinSize, config.MaxSize + 1);
+                int size = rng.Range(minSize, maxSize + 1);
                 if (!GridMap.IsGroundType(map.Get(anchor)) || anchor == floor.Start) continue;
                 var entrance = anchor + dir;
                 if (!map.InBounds(entrance) || map.Get(entrance) != TileType.Wall) continue;
@@ -105,9 +115,8 @@ namespace ProjectM.Dungeon
                 if (!AllSolid(map, cells, entrance)) continue;
 
                 foreach (var c in cells) world.SetTile(c, TileType.Floor);
-                world.SetTile(entrance, type == SpecialRoomType.Vault ? TileType.LockedDoor : TileType.Door);
-                Furnish(world, floor, config, rng, type, cells, entrance);
-                return new Result { Type = type, Cells = cells, Entrance = entrance };
+                world.SetTile(entrance, entranceTile);
+                return new Result { Type = SpecialRoomType.None, Cells = cells, Entrance = entrance };
             }
             return null;
         }

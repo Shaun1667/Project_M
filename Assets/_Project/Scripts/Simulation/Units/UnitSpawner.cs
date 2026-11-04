@@ -35,6 +35,16 @@ namespace ProjectM.Units
             return unit;
         }
 
+        /// <summary>중립 유닛 생성 (3-15c 상인).</summary>
+        public static Unit SpawnNeutral(World world, UnitDef def, GridPos pos, ICommandSource ai)
+        {
+            if (ai == null) throw new ArgumentNullException(nameof(ai));
+            var unit = Create(world, def, Faction.Neutral, pos, 0, 0);
+            world.Scheduler.RegisterActor(unit.Id, ai);
+            Announce(world, unit);
+            return unit;
+        }
+
         private static Unit Create(World world, UnitDef def, Faction faction, GridPos pos, int quickSlotCount, int inventorySize)
         {
             if (world == null) throw new ArgumentNullException(nameof(world));

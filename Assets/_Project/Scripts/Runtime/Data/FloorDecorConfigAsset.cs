@@ -35,6 +35,18 @@ namespace ProjectM.Data
         [Min(0)] [SerializeField] private int _gardenItemCount = 2;
         [Tooltip("보물 방 열쇠 (ItemCatalog, ItemUse.Key)")] [SerializeField] private string _keyItem = "key_iron";
 
+        [Header("상점 (3-15c — BALANCE 16번)")]
+        [Tooltip("상점이 있는 층")] [Min(1)] [SerializeField] private int _shopFloor = 3;
+        [SerializeField] private string[] _shopStock = { "potion_healing", "potion_frost", "scroll_identify", "scroll_magic_mapping", "scroll_teleportation", "scroll_recharging",
+            "food_ration", "food_bread", "armor_leather", "shortsword", "hand_axe", "key_iron" };
+        [Tooltip("파는 물건 수")] [Min(0)] [SerializeField] private int _shopStockCount = 6;
+        [Tooltip("사는 값 = 아이템 값 × %")] [Min(1)] [SerializeField] private int _shopBuyPercent = 100;
+        [Tooltip("파는 값 = 아이템 값 × %")] [Min(0)] [SerializeField] private int _shopSellPercent = 50;
+        [SerializeField] private string _shopkeeperVisualId = "shopkeeper";
+        [Min(1)] [SerializeField] private int _shopkeeperHp = 999;
+
+        public ShopConfig ToShop() => new ShopConfig(_shopFloor, _shopStock, _shopStockCount, _shopBuyPercent, _shopSellPercent, _shopkeeperVisualId, _shopkeeperHp);
+
         public FloorDecorConfig ToConfig() => new FloorDecorConfig(_grassPatchCount, _grassPatchMinSize, _grassPatchMaxSize, _tallGrassPercent,
             _puddleCount, _puddleMinSize, _puddleMaxSize, _doorPercent, _hiddenDoorPercent,
             new SpecialRoomConfig(_specialRoomPercent, _specialRoomWeights, _specialRoomMinSize, _specialRoomMaxSize, _vaultItems, _vaultItemCount,

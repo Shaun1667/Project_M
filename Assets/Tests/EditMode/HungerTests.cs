@@ -154,7 +154,7 @@ namespace ProjectM.Tests
         [Test]
         public void Snapshot_RoundTripsHunger()
         {
-            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.GreaterThanOrEqualTo(20), "3-14 허기 (정확한 값은 GoldTests — 21)");
+            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.GreaterThanOrEqualTo(20), "3-14 허기 (정확한 값은 ShopTests — 22)");
             var s = Start();
             s.Wait(7);
             var restored = World.Restore(WorldSnapshotCodec.Decode(WorldSnapshotCodec.Encode(s.World.Capture())), (w, id) => null);
