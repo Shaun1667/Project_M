@@ -62,6 +62,34 @@ namespace ProjectM.Data
             [Tooltip("적 · 보스 체력 · 피해 · 명중 · 회피 배수 % (100 = 그대로)")] [Min(1)] public int StatPercent;
             public List<ZoneEnemyRow> Enemies;
             [Tooltip("보스 적 ID — 구역 마지막 층이 보스 층. 비면 보스 없음")] public string BossId;
+            [Tooltip("구역 분위기 (3-17c): 해 색. 알파 0 = 기본 색 그대로")] public Color LightColor;
+        }
+
+        /// <summary>그 층 구역의 해 색 (3-17c). 정하지 않았으면(알파 0) false.</summary>
+        public bool TryGetLightColor(int floor, out Color color)
+        {
+            color = default;
+            for (int i = 0; i < _zones.Count; i++)
+            {
+                if (floor > _zones[i].LastFloor && i < _zones.Count - 1) continue;
+                color = _zones[i].LightColor;
+                return color.a > 0f;
+            }
+            return false;
+        }
+
+        /// <summary>에디터 Setup용 (3-17c): 해 색이 비어 있으면 채운다.</summary>
+        public bool SetLightColorIfEmpty(int firstFloor, Color color)
+        {
+            for (int i = 0; i < _zones.Count; i++)
+            {
+                var z = _zones[i];
+                if (z.FirstFloor != firstFloor || z.LightColor.a > 0f) continue;
+                z.LightColor = color;
+                _zones[i] = z;
+                return true;
+            }
+            return false;
         }
 
         [SerializeField] private List<Enemy> _enemies = new List<Enemy>();

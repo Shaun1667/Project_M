@@ -151,7 +151,22 @@ namespace ProjectM.Tests
             Assert.That(bossFloors, Is.EqualTo(new[] { 5, 10, 25 }));
             var percents = new List<int>();
             foreach (var z in book.Zones) percents.Add(z.StatPercent);
-            Assert.That(percents, Is.EqualTo(new[] { 100, 150, 200, 250, 300 }));
+            Assert.That(percents, Is.EqualTo(new[] { 100, 100, 130, 160, 200 }), "3-17c: 2구역은 사막 적 줄이 세기를 가짐, 3~5구역(임시)은 사막 적 × %");
+            // 3-17c: 2~5구역 = 사막 4종 (전갈 3 · 자칼 2 · 미라 2 · 사막 주술사 1)
+            foreach (int floor in new[] { 6, 11, 16, 21 })
+            {
+                var ids = new List<string>();
+                foreach (var e in book.ZoneOf(floor).Enemies) ids.Add(e.Def.VisualId + ":" + e.Weight);
+                Assert.That(ids, Is.EqualTo(new[] { "enemy_scorpion:3", "enemy_jackal:2", "enemy_mummy:2", "enemy_desert_shaman:1" }), $"{floor}층");
+            }
+            var traits = catalog.ToEnemyBook();
+            Assert.That(traits.TryGet("enemy_scorpion", out var scorpion) && scorpion.HitStatus == ProjectM.Status.StatusType.Poison && scorpion.HitStatusPercent == 40, Is.True);
+            Assert.That(traits.TryGet("enemy_jackal", out var jackal) && jackal.MoveSteps == 2, Is.True);
+            Assert.That(traits.TryGet("enemy_mummy", out var mummy) && mummy.MoveCostTicks == 2
+                && mummy.DamagePercent(ProjectM.Magic.Element.Fire) == 150 && mummy.DamagePercent(ProjectM.Magic.Element.Poison) == 50, Is.True);
+            Assert.That(traits.TryGet("enemy_desert_shaman", out var shaman) && shaman.SpellId == "enemy_sand_bolt" && shaman.KeepDistance == 3, Is.True);
+            Assert.That(catalog.TryGetEnemy("enemy_mummy", out var m) && (m.MaxHp, m.AttackDamage, m.Accuracy, m.Evasion) == (22, 4, 10, 1), Is.True);
+            Assert.That(catalog.TryGetLightColor(7, out var sand) && sand.b < sand.r, Is.True, "사막 = 모래빛 해");
             Assert.That(catalog.LootPlanFloors, Is.EqualTo(10));
         }
     }

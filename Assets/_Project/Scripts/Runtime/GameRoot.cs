@@ -25,6 +25,7 @@ namespace ProjectM
         [SerializeField] private UnitDefAsset _enemyDef;
         [Tooltip("마지막 층(보스 층)의 임시 보스 (3-4b)")] [SerializeField] private UnitDefAsset _bossDef;
         [Tooltip("구역 표 (3-17a) — 있으면 층마다 적 종류 · 보스 층을 여기서. 없으면 위 적 · 보스")] [SerializeField] private ZoneCatalogAsset _zoneCatalog;
+        [Tooltip("구역 분위기 (3-17c) — 비우면 없음")] [SerializeField] private ZoneThemePresenter _zoneTheme;
         [SerializeField] private SpawnConfigAsset _spawnConfig;
         [SerializeField] private MagicConfigAsset _magicConfig;
         [SerializeField] private SpellCatalogAsset _spellCatalog;
@@ -254,6 +255,7 @@ namespace ProjectM
             if (_traps != null) _traps.Bind(World.Events);
             if (_fx != null) _fx.Bind(World.Events); // G-3: 엔티티 모습 다음에 (상태 효과가 유닛에 붙음)
             if (_floorItems != null) _floorItems.Bind(World.Events);
+            if (_zoneTheme != null) _zoneTheme.Bind(World.Events, 1); // 3-17c
             World.Events.Subscribe<EntityMovedEvent>(OnEntityMoved);
             World.Events.Subscribe<EntitySpawnedEvent>(OnEntitySpawned); // 3-17b 로그의 적 이름
             World.Events.Subscribe<UnitDiedEvent>(OnUnitDied);

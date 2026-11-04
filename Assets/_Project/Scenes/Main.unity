@@ -1806,6 +1806,52 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1200373272}
   m_CullTransparentMesh: 1
+--- !u!1 &1218183478
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1218183480}
+  - component: {fileID: 1218183479}
+  m_Layer: 0
+  m_Name: ZoneTheme
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1218183479
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1218183478}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a38fb80a948cfc4baf59465e5a99995, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ProjectM.Runtime::ProjectM.Presentation.ZoneThemePresenter
+  _sun: {fileID: 1021309094}
+  _zones: {fileID: 11400000, guid: b7a5ad580c04203489f9f39e81bfa40b, type: 2}
+--- !u!4 &1218183480
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1218183478}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1277504539
 GameObject:
   m_ObjectHideFlags: 0
@@ -2341,6 +2387,7 @@ MonoBehaviour:
   _enemyDef: {fileID: 11400000, guid: 8cf3b61c14b647b49852985152984ea0, type: 2}
   _bossDef: {fileID: 11400000, guid: f4f20f1b04627024aa810b1df1f48fde, type: 2}
   _zoneCatalog: {fileID: 11400000, guid: b7a5ad580c04203489f9f39e81bfa40b, type: 2}
+  _zoneTheme: {fileID: 1218183479}
   _spawnConfig: {fileID: 11400000, guid: 97324289cd98993439d34909471507ab, type: 2}
   _magicConfig: {fileID: 11400000, guid: db61fbf46bbfbc441aa4a98582c8dd36, type: 2}
   _spellCatalog: {fileID: 11400000, guid: 956c31c6ca499d041b06f330e39782d3, type: 2}
@@ -3811,3 +3858,4 @@ SceneRoots:
   - {fileID: 1360970459}
   - {fileID: 809542930}
   - {fileID: 1918597510}
+  - {fileID: 1218183480}

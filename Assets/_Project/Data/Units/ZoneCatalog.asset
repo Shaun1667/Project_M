@@ -123,6 +123,82 @@ MonoBehaviour:
     MaxMana: 4
     KeepDistance: 3
     DamagePercents: []
+  - Id: enemy_scorpion
+    DisplayName: "\uC804\uAC08"
+    MaxHp: 12
+    AttackDamage: 3
+    SightRange: 6
+    Accuracy: 12
+    Evasion: 4
+    ExpReward: 3
+    ExpMaxLevel: 10
+    MoveSteps: 0
+    MoveCostTicks: 0
+    HitStatus: 3
+    HitStatusPercent: 40
+    HurtTerrain: 0
+    SpellId: 
+    MaxMana: 0
+    KeepDistance: 0
+    DamagePercents: []
+  - Id: enemy_jackal
+    DisplayName: "\uC790\uCE7C"
+    MaxHp: 9
+    AttackDamage: 3
+    SightRange: 8
+    Accuracy: 12
+    Evasion: 6
+    ExpReward: 3
+    ExpMaxLevel: 10
+    MoveSteps: 2
+    MoveCostTicks: 0
+    HitStatus: 0
+    HitStatusPercent: 0
+    HurtTerrain: 0
+    SpellId: 
+    MaxMana: 0
+    KeepDistance: 0
+    DamagePercents: []
+  - Id: enemy_mummy
+    DisplayName: "\uBBF8\uB77C"
+    MaxHp: 22
+    AttackDamage: 4
+    SightRange: 5
+    Accuracy: 10
+    Evasion: 1
+    ExpReward: 4
+    ExpMaxLevel: 12
+    MoveSteps: 0
+    MoveCostTicks: 2
+    HitStatus: 0
+    HitStatusPercent: 0
+    HurtTerrain: 0
+    SpellId: 
+    MaxMana: 0
+    KeepDistance: 0
+    DamagePercents:
+    - Element: 0
+      Percent: 150
+    - Element: 3
+      Percent: 50
+  - Id: enemy_desert_shaman
+    DisplayName: "\uC0AC\uB9C9 \uC8FC\uC220\uC0AC"
+    MaxHp: 10
+    AttackDamage: 2
+    SightRange: 8
+    Accuracy: 10
+    Evasion: 5
+    ExpReward: 4
+    ExpMaxLevel: 12
+    MoveSteps: 0
+    MoveCostTicks: 0
+    HitStatus: 0
+    HitStatusPercent: 0
+    HurtTerrain: 0
+    SpellId: enemy_sand_bolt
+    MaxMana: 6
+    KeepDistance: 3
+    DamagePercents: []
   _zones:
   - Name: "\uC232 \uC18D \uB3D9\uAD74"
     FirstFloor: 1
@@ -138,36 +214,65 @@ MonoBehaviour:
     - EnemyId: enemy_goblin_shaman
       Weight: 1
     BossId: boss
+    LightColor: {r: 0.85, g: 1, b: 0.88, a: 1}
   - Name: "\uC0AC\uB9C9 \uD53C\uB77C\uBBF8\uB4DC"
     FirstFloor: 6
     LastFloor: 10
-    StatPercent: 150
+    StatPercent: 100
     Enemies:
-    - EnemyId: enemy_melee
+    - EnemyId: enemy_scorpion
+      Weight: 3
+    - EnemyId: enemy_jackal
+      Weight: 2
+    - EnemyId: enemy_mummy
+      Weight: 2
+    - EnemyId: enemy_desert_shaman
       Weight: 1
     BossId: boss
+    LightColor: {r: 1, g: 0.84, b: 0.58, a: 1}
   - Name: "3\uAD6C\uC5ED (\uC784\uC2DC)"
     FirstFloor: 11
     LastFloor: 15
-    StatPercent: 200
+    StatPercent: 130
     Enemies:
-    - EnemyId: enemy_melee
+    - EnemyId: enemy_scorpion
+      Weight: 3
+    - EnemyId: enemy_jackal
+      Weight: 2
+    - EnemyId: enemy_mummy
+      Weight: 2
+    - EnemyId: enemy_desert_shaman
       Weight: 1
     BossId: 
+    LightColor: {r: 0, g: 0, b: 0, a: 0}
   - Name: "4\uAD6C\uC5ED (\uC784\uC2DC)"
     FirstFloor: 16
     LastFloor: 20
-    StatPercent: 250
+    StatPercent: 160
     Enemies:
-    - EnemyId: enemy_melee
+    - EnemyId: enemy_scorpion
+      Weight: 3
+    - EnemyId: enemy_jackal
+      Weight: 2
+    - EnemyId: enemy_mummy
+      Weight: 2
+    - EnemyId: enemy_desert_shaman
       Weight: 1
     BossId: 
+    LightColor: {r: 0, g: 0, b: 0, a: 0}
   - Name: "5\uAD6C\uC5ED (\uC784\uC2DC)"
     FirstFloor: 21
     LastFloor: 25
-    StatPercent: 300
+    StatPercent: 200
     Enemies:
-    - EnemyId: enemy_melee
+    - EnemyId: enemy_scorpion
+      Weight: 3
+    - EnemyId: enemy_jackal
+      Weight: 2
+    - EnemyId: enemy_mummy
+      Weight: 2
+    - EnemyId: enemy_desert_shaman
       Weight: 1
     BossId: boss
+    LightColor: {r: 0, g: 0, b: 0, a: 0}
   _lootPlanFloors: 10

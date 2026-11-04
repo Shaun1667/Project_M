@@ -988,3 +988,69 @@ MonoBehaviour:
     Fps: 4
     PixelCells: 1
     PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: cast.Earth
+    Prefab: {fileID: 2944396702758532163, guid: e190bf97c041e58448af6b043116cba0, type: 3}
+    Scale: 0.14
+    Tint: {r: 0.85, g: 0.68, b: 0.38, a: 1}
+    Speed: 1.5
+    Lifetime: 0.6
+    Height: 0
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: cast.Wind
+    Prefab: {fileID: 2944396702758532163, guid: e190bf97c041e58448af6b043116cba0, type: 3}
+    Scale: 0.14
+    Tint: {r: 0.8, g: 0.95, b: 0.85, a: 1}
+    Speed: 1.5
+    Lifetime: 0.6
+    Height: 0
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: projectile.Earth
+    Prefab: {fileID: 8860363494751517875, guid: 010733280c7cd0b4294a9867b26a13f4, type: 3}
+    Scale: 1.2
+    Tint: {r: 0.85, g: 0.68, b: 0.38, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: projectile.Wind
+    Prefab: {fileID: 8860363494751517875, guid: 010733280c7cd0b4294a9867b26a13f4, type: 3}
+    Scale: 1.2
+    Tint: {r: 0.8, g: 0.95, b: 0.85, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: impact.Earth
+    Prefab: {fileID: 4809171458859421548, guid: 4e91ed1a8efe7044785b9bd97a47d87f, type: 3}
+    Scale: 0.12
+    Tint: {r: 0.85, g: 0.68, b: 0.38, a: 1}
+    Speed: 1.5
+    Lifetime: 1
+    Height: 0
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: impact.Wind
+    Prefab: {fileID: 4809171458859421548, guid: 4e91ed1a8efe7044785b9bd97a47d87f, type: 3}
+    Scale: 0.12
+    Tint: {r: 0.8, g: 0.95, b: 0.85, a: 1}
+    Speed: 1.5
+    Lifetime: 1
+    Height: 0
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}

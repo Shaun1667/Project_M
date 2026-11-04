@@ -167,3 +167,14 @@ MonoBehaviour:
     StatusChancePercent: 30
     LeavesTerrain: 0
     DisplayName: "\uACE0\uBE14\uB9B0 \uBD88\uC528"
+  - Id: enemy_sand_bolt
+    Element: 4
+    Shape: 0
+    Range: 6
+    Damage: 3
+    ManaCost: 3
+    Radius: 0
+    AppliesStatus: 2
+    StatusChancePercent: 30
+    LeavesTerrain: 0
+    DisplayName: "\uBAA8\uB798 \uD654\uC0B4"

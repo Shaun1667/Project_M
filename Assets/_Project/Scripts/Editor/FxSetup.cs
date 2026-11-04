@@ -44,6 +44,8 @@ namespace ProjectM.Editor
         private static readonly Color PotionRed = new Color(0.95f, 0.25f, 0.25f); // 3-7b 힘 물약
         private static readonly Color ScrollGold = new Color(1f, 0.82f, 0.35f); // 3-7b 강화 주문서
         private static readonly Color Keep = Color.clear; // 원래 색
+        private static readonly Color Sand = new Color(0.85f, 0.68f, 0.38f); // 3-17c 대지 (사막 주술사)
+        private static readonly Color Gust = new Color(0.8f, 0.95f, 0.85f); // 3-17c 바람
 
         private struct Row
         {
@@ -78,17 +80,23 @@ namespace ProjectM.Editor
             new Row("cast.Lightning", Hovl + "Hits and explosions/Holy hit", 0.14f, Lightning, 1.5f, 0.6f),
             new Row("cast.Poison", Hovl + "Hits and explosions/Holy hit", 0.14f, Poison, 1.5f, 0.6f),
             new Row("cast.Water", Hovl + "Hits and explosions/Holy hit", 0.14f, Water, 1.5f, 0.6f),
+            new Row("cast.Earth", Hovl + "Hits and explosions/Holy hit", 0.14f, Sand, 1.5f, 0.6f), // 3-17c
+            new Row("cast.Wind", Hovl + "Hits and explosions/Holy hit", 0.14f, Gust, 1.5f, 0.6f),
             // 투사체 (날아가는 동안 루프)
             new Row("projectile.Fire", Eric + "FX_Fireball", 0.09f, Keep),
             new Row("projectile.Ice", Hovl + "Sparks/Sparks white", 1.2f, Ice),
             new Row("projectile.Poison", Hovl + "Sparks/Sparks pink", 1.2f, Poison),
             new Row("projectile.Water", Hovl + "Sparks/Sparks blue", 1.2f, Water),
+            new Row("projectile.Earth", Hovl + "Sparks/Sparks white", 1.2f, Sand), // 3-17c
+            new Row("projectile.Wind", Hovl + "Sparks/Sparks white", 1.2f, Gust),
             // 맞는 칸 (단일 · 광선 끝)
             new Row("impact.Fire", Hovl + "Hits and explosions/Explosion", 0.16f, Keep, 1.5f, 1f),
             new Row("impact.Ice", Hovl + "Hits and explosions/Snow hit", 0.35f, Keep, 1.3f, 0.9f),
             new Row("impact.Lightning", Hovl + "Hits and explosions/Electro hit", 0.5f, Lightning, 1.3f, 0.8f),
             new Row("impact.Poison", Eric + "FX_Purple_Hit_02", 0.15f, Keep, 1f, 0.7f),
             new Row("impact.Water", Hovl + "Sparks/Sparks explode blue", 0.25f, Water, 1.3f, 0.9f),
+            new Row("impact.Earth", Hovl + "Smoke effects/Smoke puff", 0.12f, Sand, 1.5f, 1f), // 3-17c
+            new Row("impact.Wind", Hovl + "Smoke effects/Smoke puff", 0.12f, Gust, 1.5f, 1f),
             // 3×3 폭발 (중심 칸 바닥)
             new Row("burst.Fire", Hovl + "AoE effects/Ground AOE explosion", 0.33f, Keep, 1.6f, 1f, 0.02f),
             new Row("burst.Ice", Hovl + "AoE effects/Snow AOE", 0.33f, Keep, 2f, 1f, 0.02f),

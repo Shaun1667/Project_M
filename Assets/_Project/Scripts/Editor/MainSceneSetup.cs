@@ -296,6 +296,7 @@ namespace ProjectM.Editor
                 ("_trapCatalog", trapCatalog),
                 ("_hungerConfig", hungerConfig),
                 ("_zoneCatalog", zoneCatalog),
+                ("_zoneTheme", EnsureZoneTheme(zoneCatalog)), // 3-17c
                 ("_traps", trapPresenter),
                 ("_consumableConfig", consumableConfig),
                 ("_characters", characterCatalog),
@@ -445,6 +446,10 @@ namespace ProjectM.Editor
                 ("enemy_bunny", new Color(0.95f, 0.95f, 0.9f), 0.6f),
                 ("enemy_slime", new Color(0.3f, 0.75f, 0.95f), 0.6f),
                 ("enemy_goblin_shaman", new Color(0.35f, 0.65f, 0.2f), 0.9f),
+                ("enemy_scorpion", new Color(0.75f, 0.3f, 0.15f), 0.5f), // 3-17c 사막
+                ("enemy_jackal", new Color(0.7f, 0.55f, 0.3f), 0.7f),
+                ("enemy_mummy", new Color(0.88f, 0.85f, 0.72f), 1.1f),
+                ("enemy_desert_shaman", new Color(0.95f, 0.7f, 0.2f), 1f),
             })
                 catalog.Set(id, AssetDatabase.LoadAssetAtPath<Sprite>(UnitCircleSpritePath), color, height);
             // 3-4b 임시 보스: 짙은 자주색, 두 배 키 (판정은 1칸)
@@ -503,6 +508,11 @@ namespace ProjectM.Editor
                 { Id = "enemy_fire_bolt", Element = Element.Fire, Shape = SpellShape.Bolt, Range = 5, Damage = 2, ManaCost = 2 });
             changed |= catalog.SetStatusIfNone("enemy_fire_bolt", StatusType.Burn, 30);
             changed |= catalog.SetDisplayNameIfEmpty("enemy_fire_bolt", "고블린 불씨");
+            // 3-17c 사막 주술사 — 마나 6 · 3씩, 둔화 30% (모래가 눈에)
+            changed |= catalog.AddIfMissing(new SpellCatalogAsset.Entry
+                { Id = "enemy_sand_bolt", Element = Element.Earth, Shape = SpellShape.Bolt, Range = 6, Damage = 3, ManaCost = 3 });
+            changed |= catalog.SetStatusIfNone("enemy_sand_bolt", StatusType.Slow, 30);
+            changed |= catalog.SetDisplayNameIfEmpty("enemy_sand_bolt", "모래 화살");
             // 3-12a 함정 효과 주문 (BALANCE 17번): 함정 칸 중심 3×3, 시전자 없음 · 마나 0 · 배우지 않음. 마비 가스는 바람 속성(반응 없음)
             foreach (var (id, name, element, damage, status, chance, terrain) in new[]
             {
@@ -576,6 +586,16 @@ namespace ProjectM.Editor
 
         /// <summary>반응 규칙 표: 없는 ID만 REACTIONS.md 3-1 표 · BALANCE 8번 값으로 추가한다.</summary>
         /// <summary>함정 7종 (3-12a, BALANCE 17번): 없는 종류만 추가 (사용자가 고친 값은 그대로). 배치 수치는 새 에셋의 필드 초기값.</summary>
+        /// <summary>3-17c 구역 분위기: 해 색 (씬 오브젝트 ZoneTheme).</summary>
+        private static ZoneThemePresenter EnsureZoneTheme(ZoneCatalogAsset zones)
+        {
+            var theme = GetOrAdd<ZoneThemePresenter>(FindOrCreate("ZoneTheme", null));
+            var sun = GameObject.Find("Sun");
+            theme.Configure(sun != null ? sun.GetComponent<Light>() : null, zones);
+            EditorUtility.SetDirty(theme);
+            return theme;
+        }
+
         /// <summary>3-17a 적 종류 · 구역 표 (BALANCE 20번) — 없는 줄만 더한다 (사용자가 고친 값은 그대로).</summary>
         private static ZoneCatalogAsset EnsureZoneCatalog()
         {
@@ -592,6 +612,17 @@ namespace ProjectM.Editor
             slime.DamagePercents = new System.Collections.Generic.List<ZoneCatalogAsset.ElementPercent> { new ZoneCatalogAsset.ElementPercent { Element = Element.Fire, Percent = 50 } };
             var goblin = E("enemy_goblin_shaman", "고블린 주술사", 6, 1, 7, 6, 3, 2, 7); goblin.SpellId = "enemy_fire_bolt"; goblin.MaxMana = 4; goblin.KeepDistance = 3;
             foreach (var row in new[] { rat, bunny, slime, goblin }) changed |= catalog.AddIfMissing(row);
+            // 3-17c 2구역 사막 피라미드 (BALANCE 20-1)
+            var scorpion = E("enemy_scorpion", "전갈", 12, 3, 6, 12, 4, 3, 10); scorpion.HitStatus = StatusType.Poison; scorpion.HitStatusPercent = 40;
+            var jackal = E("enemy_jackal", "자칼", 9, 3, 8, 12, 6, 3, 10); jackal.MoveSteps = 2;
+            var mummy = E("enemy_mummy", "미라", 22, 4, 5, 10, 1, 4, 12); mummy.MoveCostTicks = 2;
+            mummy.DamagePercents = new System.Collections.Generic.List<ZoneCatalogAsset.ElementPercent>
+            {
+                new ZoneCatalogAsset.ElementPercent { Element = Element.Fire, Percent = 150 },
+                new ZoneCatalogAsset.ElementPercent { Element = Element.Poison, Percent = 50 },
+            };
+            var sandShaman = E("enemy_desert_shaman", "사막 주술사", 10, 2, 8, 10, 5, 4, 12); sandShaman.SpellId = "enemy_sand_bolt"; sandShaman.MaxMana = 6; sandShaman.KeepDistance = 3;
+            foreach (var row in new[] { scorpion, jackal, mummy, sandShaman }) changed |= catalog.AddIfMissing(row);
             ZoneCatalogAsset.Zone Z(string name, int first, int last, int percent, string boss, params (string id, int weight)[] enemies)
             {
                 var rows = new System.Collections.Generic.List<ZoneCatalogAsset.ZoneEnemyRow>();
@@ -604,6 +635,15 @@ namespace ProjectM.Editor
             changed |= catalog.AddIfMissing(Z("4구역 (임시)", 16, 20, 250, null, ("enemy_melee", 1)));
             changed |= catalog.AddIfMissing(Z("5구역 (임시)", 21, 25, 300, BossVisualId, ("enemy_melee", 1)));
             changed |= catalog.ReplacePlaceholderEnemies(1, ("enemy_rat", 3), ("enemy_bunny", 2), ("enemy_slime", 2), ("enemy_goblin_shaman", 1)); // 3-17b
+            // 3-17c: 2구역 = 사막 4종 (세기 100 — 적 줄이 이미 셈), 3~5구역(임시) = 사막 4종을 세게
+            foreach (int first in new[] { 6, 11, 16, 21 })
+                changed |= catalog.ReplacePlaceholderEnemies(first, ("enemy_scorpion", 3), ("enemy_jackal", 2), ("enemy_mummy", 2), ("enemy_desert_shaman", 1));
+            changed |= catalog.ReplaceStatPercent(6, 150, 100);
+            changed |= catalog.ReplaceStatPercent(11, 200, 130);
+            changed |= catalog.ReplaceStatPercent(16, 250, 160);
+            changed |= catalog.ReplaceStatPercent(21, 300, 200);
+            changed |= catalog.SetLightColorIfEmpty(1, new Color(0.85f, 1f, 0.88f)); // 숲 속 동굴: 옅은 초록
+            changed |= catalog.SetLightColorIfEmpty(6, new Color(1f, 0.84f, 0.58f)); // 사막 피라미드: 모래빛
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }
