@@ -124,6 +124,7 @@ namespace ProjectM.UI
             _bus.Subscribe<ProjectM.Dungeon.DoorUnlockedEvent>(OnDoorUnlocked);
             _bus.Subscribe<ProjectM.Dungeon.ItemBoughtEvent>(OnBought);
             _bus.Subscribe<ThrownBrokeEvent>(OnThrownBroke);
+            _bus.Subscribe<PotionBrewedEvent>(OnBrewed);
             _bus.Subscribe<ProjectM.Dungeon.SeedPlantedEvent>(OnPlanted);
             _bus.Subscribe<ProjectM.Dungeon.ItemSoldEvent>(OnSold);
             _bus.Subscribe<ProjectM.Dungeon.PurchaseFailedEvent>(OnPurchaseFailed);
@@ -321,6 +322,12 @@ namespace ProjectM.UI
             Changed?.Invoke();
         }
 
+        private void OnBrewed(PotionBrewedEvent e)
+        {
+            AddLog(Text.Brewed(e.ItemId));
+            Changed?.Invoke();
+        }
+
         private void OnThrownBroke(ThrownBrokeEvent e)
         {
             AddLog(Text.ThrownBroke(e.ItemId));
@@ -447,6 +454,7 @@ namespace ProjectM.UI
             _bus.Unsubscribe<ProjectM.Dungeon.DoorUnlockedEvent>(OnDoorUnlocked);
             _bus.Unsubscribe<ProjectM.Dungeon.ItemBoughtEvent>(OnBought);
             _bus.Unsubscribe<ThrownBrokeEvent>(OnThrownBroke);
+            _bus.Unsubscribe<PotionBrewedEvent>(OnBrewed);
             _bus.Unsubscribe<ProjectM.Dungeon.SeedPlantedEvent>(OnPlanted);
             _bus.Unsubscribe<ProjectM.Dungeon.ItemSoldEvent>(OnSold);
             _bus.Unsubscribe<ProjectM.Dungeon.PurchaseFailedEvent>(OnPurchaseFailed);

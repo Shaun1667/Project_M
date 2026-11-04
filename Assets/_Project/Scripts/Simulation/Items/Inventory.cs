@@ -175,12 +175,16 @@ namespace ProjectM.Items
         public int BreakPercent { get; }
         /// <summary>씨앗이 자라는 식물 (3-16b — TrapCatalog의 식물 줄).</summary>
         public ProjectM.Dungeon.TrapType PlantTrap { get; }
+        /// <summary>연금 솥에 넣으면 나오는 물약 (3-16c). 없으면 null.</summary>
+        public string BrewsInto { get; }
 
         public ItemDef(string id, ItemUse use, string spellId = null, WeaponDef weapon = null, int amount = 0,
             ConsumableEffect effect = ConsumableEffect.None, int weight = 0, ArmorDef armor = null,
             int food = 0, bool risky = false, string fireTransformsTo = null, string iceTransformsTo = null, int value = 0,
-            int throwMinDamage = 0, int throwMaxDamage = 0, int breakPercent = 0, ProjectM.Dungeon.TrapType plantTrap = ProjectM.Dungeon.TrapType.None)
+            int throwMinDamage = 0, int throwMaxDamage = 0, int breakPercent = 0, ProjectM.Dungeon.TrapType plantTrap = ProjectM.Dungeon.TrapType.None,
+            string brewsInto = null)
         {
+            BrewsInto = use == ItemUse.Seed && !string.IsNullOrEmpty(brewsInto) ? brewsInto : null;
             if (use == ItemUse.Seed && plantTrap == ProjectM.Dungeon.TrapType.None) throw new ArgumentException("씨앗에 식물이 없다: " + id, nameof(plantTrap));
             PlantTrap = use == ItemUse.Seed ? plantTrap : ProjectM.Dungeon.TrapType.None;
             if (use == ItemUse.Thrown && (throwMinDamage < 0 || throwMaxDamage < throwMinDamage || breakPercent < 0 || breakPercent > 100))

@@ -16,6 +16,8 @@ namespace ProjectM.Dungeon
         Library = 3,
         /// <summary>정원: 높은 풀 가득 · 음식.</summary>
         Garden = 4,
+        /// <summary>연구실 (3-16c): 가운데 연금 솥 · 씨앗.</summary>
+        Laboratory = 5,
     }
 
     /// <summary>특수 방 수치 · 아이템 목록 (3-15b). 값은 FloorDecorConfigAsset에서 — 기준은 BALANCE.md 16번.</summary>
@@ -23,7 +25,7 @@ namespace ProjectM.Dungeon
     {
         /// <summary>층마다 특수 방이 생길 확률 (%) — 생기면 하나.</summary>
         public int RoomPercent { get; }
-        /// <summary>종류 무게 (보물 방 · 무기고 · 도서관 · 정원 순).</summary>
+        /// <summary>종류 무게 (보물 방 · 무기고 · 도서관 · 정원 · 연구실 순 — 4개면 연구실 0).</summary>
         public IReadOnlyList<int> Weights { get; }
         /// <summary>방 안쪽 크기 (정사각 한 변 최소 ~ 최대).</summary>
         public int MinSize { get; }
@@ -37,15 +39,21 @@ namespace ProjectM.Dungeon
         public int LibraryItemCount { get; }
         public IReadOnlyList<string> GardenItems { get; }
         public int GardenItemCount { get; }
+        /// <summary>연구실 아이템 (3-16c 씨앗) · 개수.</summary>
+        public IReadOnlyList<string> LabItems { get; }
+        public int LabItemCount { get; }
         /// <summary>보물 방 열쇠 아이템 ID.</summary>
         public string KeyItem { get; }
 
         public SpecialRoomConfig(int roomPercent, IReadOnlyList<int> weights, int minSize, int maxSize,
             IReadOnlyList<string> vaultItems, int vaultItemCount, IReadOnlyList<string> armoryItems, int armoryItemCount,
-            IReadOnlyList<string> libraryItems, int libraryItemCount, IReadOnlyList<string> gardenItems, int gardenItemCount, string keyItem)
+            IReadOnlyList<string> libraryItems, int libraryItemCount, IReadOnlyList<string> gardenItems, int gardenItemCount, string keyItem,
+            IReadOnlyList<string> labItems = null, int labItemCount = 0)
         {
+            LabItems = labItems ?? Array.Empty<string>();
+            LabItemCount = Math.Max(0, labItemCount);
             if (roomPercent < 0 || roomPercent > 100) throw new ArgumentOutOfRangeException(nameof(roomPercent));
-            if (weights == null || weights.Count != 4) throw new ArgumentException("종류 무게는 4개 (보물 · 무기고 · 도서관 · 정원)", nameof(weights));
+            if (weights == null || (weights.Count != 4 && weights.Count != 5)) throw new ArgumentException("종류 무게는 4 · 5개 (보물 · 무기고 · 도서관 · 정원 · 연구실)", nameof(weights));
             if (minSize < 2 || maxSize < minSize) throw new ArgumentOutOfRangeException(nameof(maxSize), "2 ≤ 최소 ≤ 최대");
             RoomPercent = roomPercent;
             Weights = weights;
@@ -163,12 +171,19 @@ namespace ProjectM.Dungeon
                 case SpecialRoomType.Vault: pool = config.VaultItems; count = config.VaultItemCount; break;
                 case SpecialRoomType.Armory: pool = config.ArmoryItems; count = config.ArmoryItemCount; break;
                 case SpecialRoomType.Library: pool = config.LibraryItems; count = config.LibraryItemCount; break;
+                case SpecialRoomType.Laboratory: pool = config.LabItems; count = config.LabItemCount; break;
                 default: pool = config.GardenItems; count = config.GardenItemCount; break;
             }
             if (type == SpecialRoomType.Garden)
                 foreach (var c in cells) world.SetTile(c, TileType.TallGrass);
 
             var spots = new List<GridPos>(cells);
+            if (type == SpecialRoomType.Laboratory) // 3-16c: 가운데 칸에 연금 솥
+            {
+                var center = cells[cells.Count / 2];
+                world.SetTile(center, TileType.AlchemyPot);
+                spots.Remove(center);
+            }
             var choices = new List<string>(pool);
             for (int i = 0; i < count && spots.Count > 0 && choices.Count > 0; i++)
             {
@@ -177,7 +192,7 @@ namespace ProjectM.Dungeon
                 world.FloorItems.Add(spots[s], choices[k]);
                 world.Events.Publish(new ProjectM.Items.FloorItemPlacedEvent(spots[s], choices[k], choices[k]));
                 spots.RemoveAt(s);
-                if (type != SpecialRoomType.Garden) choices.RemoveAt(k); // 음식은 겹쳐도 됨
+                if (type != SpecialRoomType.Garden && type != SpecialRoomType.Laboratory) choices.RemoveAt(k); // 음식 · 씨앗은 겹쳐도 됨
             }
 
             if (type == SpecialRoomType.Vault && config.KeyItem != null) PlaceKey(world, floor, config.KeyItem, rng, new HashSet<GridPos>(cells));

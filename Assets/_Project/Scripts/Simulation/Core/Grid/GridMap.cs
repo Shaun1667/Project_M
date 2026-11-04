@@ -74,7 +74,7 @@ namespace ProjectM.Core
         {
             if (!InBounds(pos)) return true;
             var type = _cells[IndexOf(pos)];
-            return !IsWalkableType(type) || type == TileType.TallGrass || type == TileType.Door;
+            return (!IsWalkableType(type) && type != TileType.AlchemyPot) || type == TileType.TallGrass || type == TileType.Door; // 3-16c 솥은 낮아 안 가림
         }
 
         /// <summary>주문 · 투척 경로를 막는 칸인지: 벽 · 빈칸 · 맵 밖. 높은 풀 · 닫힌 문은 시야만 가리고 막지 않는다 (3-11a · 3-11c, SPD).</summary>

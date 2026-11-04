@@ -79,6 +79,7 @@ namespace ProjectM.Editor
         private const string DoorTilePath = VisualsDir + "/DoorTile.asset";
         private const string OpenDoorTilePath = VisualsDir + "/OpenDoorTile.asset";
         private const string LockedDoorTilePath = VisualsDir + "/LockedDoorTile.asset";
+        private const string AlchemyPotTilePath = VisualsDir + "/AlchemyPotTile.asset";
         private const string PlayerSpritePath = "Assets/_Project/Art/Greybox/player.png";
         private const string UnitCircleSpritePath = "Assets/_Project/Art/Greybox/unit_circle.png";
         private const string WhiteSquareSpritePath = "Assets/_Project/Art/Greybox/white_square.png";
@@ -325,6 +326,7 @@ namespace ProjectM.Editor
             set.Set(TileType.Door, EnsureTintTile(DoorTilePath, new Color(0.45f, 0.3f, 0.18f))); // 3-11c 그레이박스: 갈색
             set.Set(TileType.OpenDoor, EnsureTintTile(OpenDoorTilePath, new Color(0.7f, 0.55f, 0.35f))); // 3-11c: 밝은 갈색
             set.Set(TileType.LockedDoor, EnsureTintTile(LockedDoorTilePath, new Color(0.75f, 0.6f, 0.15f))); // 3-15b: 금빛
+            set.Set(TileType.AlchemyPot, EnsureTintTile(AlchemyPotTilePath, new Color(0.55f, 0.3f, 0.75f))); // 3-16c: 보라
             EditorUtility.SetDirty(set);
             return set;
         }
@@ -889,6 +891,12 @@ namespace ProjectM.Editor
                 ("seed_fadeleaf", "사라짐잎 씨앗", TrapType.Fadeleaf),
             })
                 changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = seedId, DisplayName = seedName, Use = ItemUse.Seed, PlantTrap = plant });
+            // 3-16c 연금 솥 결과 (BALANCE 18번 옆 — 씨앗 → 물약)
+            changed |= catalog.SetBrewIfEmpty("seed_firebloom", "potion_liquid_flame");
+            changed |= catalog.SetBrewIfEmpty("seed_icecap", "potion_frost");
+            changed |= catalog.SetBrewIfEmpty("seed_sorrowmoss", "potion_toxic_gas");
+            changed |= catalog.SetBrewIfEmpty("seed_sungrass", "potion_healing");
+            changed |= catalog.SetBrewIfEmpty("seed_fadeleaf", "potion_invisibility");
             changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "javelin", DisplayName = "투창", Use = ItemUse.Thrown, ThrowMinDamage = 3, ThrowMaxDamage = 8, BreakPercent = 33 });
             changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "food_ration", DisplayName = "식량", Use = ItemUse.Food, Food = 300 });
             changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "food_bread", DisplayName = "작은 빵", Use = ItemUse.Food, Food = 150 });

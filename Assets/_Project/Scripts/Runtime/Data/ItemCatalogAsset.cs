@@ -45,6 +45,7 @@ namespace ProjectM.Data
             [Min(0)] public int ThrowMaxDamage;
             [Tooltip("던질 때 부러질 확률 %")] [Range(0, 100)] public int BreakPercent;
             [Tooltip("씨앗(Seed)만: 자라는 식물 (TrapCatalog)")] public ProjectM.Dungeon.TrapType PlantTrap;
+            [Tooltip("씨앗(Seed)만: 연금 솥에서 나오는 물약 (3-16c)")] public string BrewsInto;
         }
 
         [SerializeField] private List<Entry> _items = new List<Entry>();
@@ -69,7 +70,7 @@ namespace ProjectM.Data
                     : null;
                 var armor = e.Use == ItemUse.EquipArmor ? new ArmorDef(e.Tier, e.StrengthRequirement) : null;
                 defs.Add(new ItemDef(e.Id, e.Use, e.SpellId, weapon, e.Amount, e.Effect, e.Weight, armor, e.Food, e.Risky, e.FireTransformsTo, e.IceTransformsTo, e.Value,
-                    e.ThrowMinDamage, e.ThrowMaxDamage, e.BreakPercent, e.PlantTrap));
+                    e.ThrowMinDamage, e.ThrowMaxDamage, e.BreakPercent, e.PlantTrap, e.BrewsInto));
             }
             return new ItemBook(defs, new WeaponRules(_weaponDamageDivisor, _weaponMinDamage), new ArmorRules(_armorDefenseDivisor, _armorDeficitPenalty));
         }
@@ -122,6 +123,20 @@ namespace ProjectM.Data
                 var e = _items[i];
                 if (e.Id != id || e.Effect != ConsumableEffect.None) continue;
                 e.Effect = effect;
+                _items[i] = e;
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>에디터 Setup용 (3-16c): 씨앗의 연금 결과가 비어 있으면 채운다. 바뀌었으면 true.</summary>
+        public bool SetBrewIfEmpty(string id, string potionId)
+        {
+            for (int i = 0; i < _items.Count; i++)
+            {
+                if (_items[i].Id != id || !string.IsNullOrEmpty(_items[i].BrewsInto)) continue;
+                var e = _items[i];
+                e.BrewsInto = potionId;
                 _items[i] = e;
                 return true;
             }

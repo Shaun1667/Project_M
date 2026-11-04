@@ -34,6 +34,9 @@ namespace ProjectM.Data
         [SerializeField] private string[] _gardenItems = { "food_bread", "food_ration" };
         [Min(0)] [SerializeField] private int _gardenItemCount = 2;
         [Tooltip("보물 방 열쇠 (ItemCatalog, ItemUse.Key)")] [SerializeField] private string _keyItem = "key_iron";
+        [Tooltip("연구실 무게 (3-16c)")] [Min(0)] [SerializeField] private int _laboratoryWeight = 2;
+        [SerializeField] private string[] _labItems = { "seed_firebloom", "seed_icecap", "seed_sorrowmoss", "seed_sungrass", "seed_fadeleaf" };
+        [Min(0)] [SerializeField] private int _labItemCount = 2;
 
         [Header("상점 (3-15c — BALANCE 16번)")]
         [Tooltip("상점이 있는 층")] [Min(1)] [SerializeField] private int _shopFloor = 3;
@@ -49,7 +52,16 @@ namespace ProjectM.Data
 
         public FloorDecorConfig ToConfig() => new FloorDecorConfig(_grassPatchCount, _grassPatchMinSize, _grassPatchMaxSize, _tallGrassPercent,
             _puddleCount, _puddleMinSize, _puddleMaxSize, _doorPercent, _hiddenDoorPercent,
-            new SpecialRoomConfig(_specialRoomPercent, _specialRoomWeights, _specialRoomMinSize, _specialRoomMaxSize, _vaultItems, _vaultItemCount,
-                _armoryItems, _armoryItemCount, _libraryItems, _libraryItemCount, _gardenItems, _gardenItemCount, _keyItem));
+            new SpecialRoomConfig(_specialRoomPercent, WithLab(), _specialRoomMinSize, _specialRoomMaxSize, _vaultItems, _vaultItemCount,
+                _armoryItems, _armoryItemCount, _libraryItems, _libraryItemCount, _gardenItems, _gardenItemCount, _keyItem, _labItems, _labItemCount));
+
+        /// <summary>보물 · 무기고 · 도서관 · 정원 무게 + 연구실 무게 (3-16c — 예전 에셋의 4칸 배열을 그대로 쓰려고 따로 둠).</summary>
+        private int[] WithLab()
+        {
+            var w = new int[5];
+            for (int i = 0; i < 4 && i < _specialRoomWeights.Length; i++) w[i] = _specialRoomWeights[i];
+            w[4] = _laboratoryWeight;
+            return w;
+        }
     }
 }

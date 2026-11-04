@@ -152,6 +152,11 @@ namespace ProjectM.UI
         public static string Planted(ProjectM.Dungeon.TrapType plant) => $"{Trap(plant)}을(를) 심었다";
         public string ThrownBroke(string id) => $"{Item(id)}이(가) 부러졌다";
 
+        /// <summary>연금 솥 (3-16c).</summary>
+        public static string BrewTitle(int picked) => $"연금 솥 — 씨앗 {picked + 1}/3 고르기  <size=70%><color=#AAAAAA>Esc 그만두기</color></size>";
+        public const string NotEnoughSeeds = "씨앗이 3개 있어야 한다";
+        public string Brewed(string id) => $"연금 솥에서 {Item(id)}이(가) 만들어졌다";
+
         /// <summary>상점 (3-15c).</summary>
         public const string SellTitle = "팔기 — 고른 물건을 값의 절반에  <size=70%><color=#AAAAAA>Esc 닫기</color></size>";
         public const string NothingToSell = "팔 물건이 없다";

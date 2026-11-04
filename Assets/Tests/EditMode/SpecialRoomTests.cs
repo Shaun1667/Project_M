@@ -21,9 +21,9 @@ namespace ProjectM.Tests
 
         private static SpecialRoomConfig Only(SpecialRoomType type)
         {
-            var w = new int[4];
+            var w = new int[5];
             w[(int)type - 1] = 1;
-            return new SpecialRoomConfig(100, w, 3, 5, new[] { "scroll_upgrade" }, 1, new[] { "a" }, 1, new[] { "b" }, 1, new[] { "c" }, 1, "key_iron");
+            return new SpecialRoomConfig(100, w, 3, 5, new[] { "scroll_upgrade" }, 1, new[] { "a" }, 1, new[] { "b" }, 1, new[] { "c" }, 1, "key_iron", new[] { "seed_x" }, 2);
         }
 
         private static (World World, DungeonFloor Floor, SpecialRooms.Result Room) Carve(ulong seed, SpecialRoomType type)
@@ -117,9 +117,10 @@ namespace ProjectM.Tests
             var c = AssetDatabase.LoadAssetAtPath<FloorDecorConfigAsset>("Assets/_Project/Data/Dungeon/FloorDecorConfig.asset").ToConfig().SpecialRooms;
             Assert.That((c.RoomPercent, c.MinSize, c.MaxSize, c.VaultItemCount, c.ArmoryItemCount, c.LibraryItemCount, c.GardenItemCount, c.KeyItem),
                 Is.EqualTo((70, 3, 5, 2, 2, 3, 2, "key_iron")));
-            Assert.That(c.Weights, Is.EqualTo(new[] { 3, 2, 2, 2 }));
+            Assert.That(c.Weights, Is.EqualTo(new[] { 3, 2, 2, 2, 2 }), "3-16c 연구실 2");
+            Assert.That(c.LabItemCount, Is.EqualTo(2));
             var items = AssetDatabase.LoadAssetAtPath<ItemCatalogAsset>("Assets/_Project/Data/Items/ItemCatalog.asset").ToBook();
-            foreach (var list in new[] { c.VaultItems, c.ArmoryItems, c.LibraryItems, c.GardenItems })
+            foreach (var list in new[] { c.VaultItems, c.ArmoryItems, c.LibraryItems, c.GardenItems, c.LabItems })
                 foreach (var id in list) Assert.That(items.TryGet(id, out _), Is.True, id);
             Assert.That(items.TryGet("key_iron", out var key) && key.Use == ItemUse.Key, Is.True);
         }

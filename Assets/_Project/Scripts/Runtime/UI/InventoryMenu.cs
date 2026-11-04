@@ -99,6 +99,21 @@ namespace ProjectM.UI
         /// <summary>상인에게 팔 물건 고르기 (3-15c) — 고르면 PickedItem(Entry = 빈 칸, Second = 판 것).</summary>
         public bool IsSelling { get; private set; }
 
+        /// <summary>연금 솥에 넣을 씨앗 고르기 (3-16c) — 고를 때마다 PickedItem(Entry = 빈 칸, Second = 씨앗), 입력이 3개 모일 때까지 다시 연다.</summary>
+        public bool IsBrewing { get; private set; }
+        /// <summary>지금까지 고른 씨앗 수 (제목 표시용).</summary>
+        public int BrewPicked { get; private set; }
+        /// <summary>마지막 PickedItem이 연금 솥 고르기였나.</summary>
+        public bool LastPickWasBrew { get; private set; }
+
+        public void OpenForBrew(Func<InventoryRef, bool> filter, IReadOnlyList<InventoryRef> slots, int picked)
+        {
+            OpenForPick(InventoryRef.Empty, filter, slots);
+            IsBrewing = true;
+            BrewPicked = picked;
+            Changed?.Invoke();
+        }
+
         /// <summary>팔기로 연다 (3-15c).</summary>
         public void OpenForSale(Func<InventoryRef, bool> filter, IReadOnlyList<InventoryRef> slots)
         {
@@ -154,6 +169,7 @@ namespace ProjectM.UI
             PickSource = InventoryRef.Empty;
             PickFilter = null;
             IsSelling = false;
+            IsBrewing = false;
             State = InventoryMenuState.Closed;
             AssignTarget = -1;
             FusionFirst = -1;
@@ -252,6 +268,7 @@ namespace ProjectM.UI
                     // 3-10b: 조건에 맞는 칸만. 고르면 닫고 (쓸 주문서, 대상)을 넘긴다 — 차례는 부른 쪽이 쓴다
                     if (PickFilter == null || !PickFilter(entry)) return InventoryAction.None;
                     var source = PickSource;
+                    LastPickWasBrew = IsBrewing; // 3-16c: Close가 지우기 전에
                     Close();
                     return new InventoryAction(InventoryActionKind.PickedItem, source, -1, entry);
 

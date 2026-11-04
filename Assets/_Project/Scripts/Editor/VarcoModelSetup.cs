@@ -156,6 +156,7 @@ namespace ProjectM.Editor
             tiles.SetModule(TileType.Door, BuildDoorPrefab(floorPrefab, "Tile_Door", open: false));
             tiles.SetModule(TileType.OpenDoor, BuildDoorPrefab(floorPrefab, "Tile_OpenDoor", open: true));
             tiles.SetModule(TileType.LockedDoor, AssetDatabase.LoadAssetAtPath<GameObject>($"{PrefabDir}/Tile_Door.prefab")); // 3-15b: 닫힌 문 모양 (색은 타일)
+            tiles.SetModule(TileType.AlchemyPot, BuildPotPrefab(floorPrefab)); // 3-16c 연금 솥 (그레이박스)
             tiles.SetModule(TileType.Wall, BuildPrefab(Wall, null));
             tiles.SetModule(TileType.StairsDown, BuildPrefab(StairsDown, null));
             tiles.SetModule(TileType.StairsUp, BuildPrefab(StairsUp, null));
@@ -219,6 +220,28 @@ namespace ProjectM.Editor
                 if (open) Box(root.transform, material, "Panel", new Vector3(-0.38f, 0.46f, 0.4f), new Vector3(0.06f, 0.9f, 0.78f));
                 else Box(root.transform, material, "Panel", new Vector3(0f, 0.46f, 0f), new Vector3(0.8f, 0.9f, 0.06f));
                 return PrefabUtility.SaveAsPrefabAsset(root, $"{PrefabDir}/{name}.prefab");
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        /// <summary>3-16c 연금 솥 (그레이박스): 바닥 + 보라 원기둥 솥.</summary>
+        private static GameObject BuildPotPrefab(GameObject floor)
+        {
+            var root = new GameObject("Tile_AlchemyPot");
+            try
+            {
+                if (floor != null) ((GameObject)PrefabUtility.InstantiatePrefab(floor)).transform.SetParent(root.transform, false);
+                var pot = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                Object.DestroyImmediate(pot.GetComponent<Collider>());
+                pot.name = "Pot";
+                pot.transform.SetParent(root.transform, false);
+                pot.transform.localPosition = new Vector3(0f, 0.25f, 0f);
+                pot.transform.localScale = new Vector3(0.6f, 0.25f, 0.6f);
+                pot.GetComponent<Renderer>().sharedMaterial = EnsureGreyboxMaterial(PrefabDir + "/Mat_AlchemyPot.mat", new Color(0.45f, 0.25f, 0.6f));
+                return PrefabUtility.SaveAsPrefabAsset(root, $"{PrefabDir}/Tile_AlchemyPot.prefab");
             }
             finally
             {

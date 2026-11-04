@@ -38,6 +38,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: spellbook_fire
     DisplayName: "\uBD88\uAF43 \uD654\uC0B4 \uB9C8\uBC95\uC11C"
     Use: 2
@@ -63,6 +64,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: spellbook_ice
     DisplayName: "\uC5BC\uC74C \uD654\uC0B4 \uB9C8\uBC95\uC11C"
     Use: 2
@@ -88,6 +90,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: spellbook_lightning
     DisplayName: "\uBC88\uAC1C \uC904\uAE30 \uB9C8\uBC95\uC11C"
     Use: 2
@@ -113,6 +116,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: spellbook_poison
     DisplayName: "\uB3C5 \uD3ED\uBC1C \uB9C8\uBC95\uC11C"
     Use: 2
@@ -138,6 +142,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: spellbook_water
     DisplayName: "\uBB3C\uBCF4\uB77C \uB9C8\uBC95\uC11C"
     Use: 2
@@ -163,6 +168,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: shortsword
     DisplayName: "\uC18C\uAC80"
     Use: 3
@@ -188,6 +194,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: hand_axe
     DisplayName: "\uC190\uB3C4\uB07C"
     Use: 3
@@ -213,6 +220,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: spear
     DisplayName: "\uCC3D"
     Use: 3
@@ -238,6 +246,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: quarterstaff
     DisplayName: "\uC721\uCC99\uBD09"
     Use: 3
@@ -263,6 +272,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: dirk
     DisplayName: "\uB354\uD06C"
     Use: 3
@@ -288,6 +298,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: sickle
     DisplayName: "\uC190\uB0AB"
     Use: 3
@@ -313,6 +324,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: potion_strength
     DisplayName: "\uD798 \uBB3C\uC57D"
     Use: 4
@@ -338,6 +350,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: scroll_upgrade
     DisplayName: "\uAC15\uD654 \uC8FC\uBB38\uC11C"
     Use: 5
@@ -363,6 +376,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: potion_healing
     DisplayName: "\uCE58\uC720 \uBB3C\uC57D"
     Use: 4
@@ -388,6 +402,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: potion_experience
     DisplayName: "\uACBD\uD5D8 \uBB3C\uC57D"
     Use: 4
@@ -413,6 +428,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: potion_purity
     DisplayName: "\uC815\uD654 \uBB3C\uC57D"
     Use: 4
@@ -438,6 +454,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: potion_toxic_gas
     DisplayName: "\uB3C5\uAC00\uC2A4 \uBB3C\uC57D"
     Use: 4
@@ -463,6 +480,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: potion_liquid_flame
     DisplayName: "\uC561\uCCB4 \uD654\uC5FC \uBB3C\uC57D"
     Use: 4
@@ -488,6 +506,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: potion_frost
     DisplayName: "\uB0C9\uAE30 \uBB3C\uC57D"
     Use: 4
@@ -513,6 +532,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: potion_paralytic_gas
     DisplayName: "\uB9C8\uBE44 \uAC00\uC2A4 \uBB3C\uC57D"
     Use: 4
@@ -538,6 +558,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: scroll_identify
     DisplayName: "\uC2DD\uBCC4 \uC8FC\uBB38\uC11C"
     Use: 5
@@ -563,6 +584,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: scroll_magic_mapping
     DisplayName: "\uC9C0\uB3C4 \uC8FC\uBB38\uC11C"
     Use: 5
@@ -588,6 +610,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: scroll_teleportation
     DisplayName: "\uC21C\uAC04\uC774\uB3D9 \uC8FC\uBB38\uC11C"
     Use: 5
@@ -613,6 +636,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: scroll_recharging
     DisplayName: "\uCDA9\uC804 \uC8FC\uBB38\uC11C"
     Use: 5
@@ -638,6 +662,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: scroll_rage
     DisplayName: "\uACA9\uB178 \uC8FC\uBB38\uC11C"
     Use: 5
@@ -663,6 +688,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: scroll_retribution
     DisplayName: "\uC751\uC9D5 \uC8FC\uBB38\uC11C"
     Use: 5
@@ -688,6 +714,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: armor_cloth
     DisplayName: "\uCC9C \uAC11\uC637"
     Use: 6
@@ -713,6 +740,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: armor_leather
     DisplayName: "\uAC00\uC8FD \uAC11\uC637"
     Use: 6
@@ -738,6 +766,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: armor_mail
     DisplayName: "\uC0AC\uC2AC \uAC11\uC637"
     Use: 6
@@ -763,6 +792,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: armor_scale
     DisplayName: "\uBE44\uB298 \uAC11\uC637"
     Use: 6
@@ -788,6 +818,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: armor_plate
     DisplayName: "\uD310\uAE08 \uAC11\uC637"
     Use: 6
@@ -813,6 +844,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: potion_haste
     DisplayName: "\uC2E0\uC18D \uBB3C\uC57D"
     Use: 4
@@ -838,6 +870,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: potion_invisibility
     DisplayName: "\uD22C\uBA85 \uBB3C\uC57D"
     Use: 4
@@ -863,6 +896,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: potion_levitation
     DisplayName: "\uBD80\uC591 \uBB3C\uC57D"
     Use: 4
@@ -888,6 +922,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: potion_mind_vision
     DisplayName: "\uC815\uC2E0 \uC2DC\uC57C \uBB3C\uC57D"
     Use: 4
@@ -913,6 +948,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: scroll_mirror_image
     DisplayName: "\uBD84\uC2E0 \uC8FC\uBB38\uC11C"
     Use: 5
@@ -938,6 +974,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: scroll_terror
     DisplayName: "\uACF5\uD3EC \uC8FC\uBB38\uC11C"
     Use: 5
@@ -963,6 +1000,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: scroll_lullaby
     DisplayName: "\uC790\uC7A5\uAC00 \uC8FC\uBB38\uC11C"
     Use: 5
@@ -988,6 +1026,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: scroll_transmutation
     DisplayName: "\uBCC0\uD658 \uC8FC\uBB38\uC11C"
     Use: 5
@@ -1013,6 +1052,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: food_ration
     DisplayName: "\uC2DD\uB7C9"
     Use: 7
@@ -1038,6 +1078,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: food_bread
     DisplayName: "\uC791\uC740 \uBE75"
     Use: 7
@@ -1063,6 +1104,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: food_mystery_meat
     DisplayName: "\uC815\uCCB4\uBD88\uBA85 \uACE0\uAE30"
     Use: 7
@@ -1088,6 +1130,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: food_cooked_meat
     DisplayName: "\uAD6C\uC6B4 \uACE0\uAE30"
     Use: 7
@@ -1113,6 +1156,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: food_frozen_meat
     DisplayName: "\uC5BC\uB9B0 \uACE0\uAE30"
     Use: 7
@@ -1138,6 +1182,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: gold
     DisplayName: "\uAE08\uD654"
     Use: 8
@@ -1163,6 +1208,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: key_iron
     DisplayName: "\uC1E0 \uC5F4\uC1E0"
     Use: 9
@@ -1188,6 +1234,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: dart
     DisplayName: "\uB2E4\uD2B8"
     Use: 10
@@ -1213,6 +1260,7 @@ MonoBehaviour:
     ThrowMaxDamage: 3
     BreakPercent: 0
     PlantTrap: 0
+    BrewsInto: 
   - Id: javelin
     DisplayName: "\uD22C\uCC3D"
     Use: 10
@@ -1238,6 +1286,7 @@ MonoBehaviour:
     ThrowMaxDamage: 8
     BreakPercent: 33
     PlantTrap: 0
+    BrewsInto: 
   - Id: seed_firebloom
     DisplayName: "\uD654\uC5FC\uAF43 \uC528\uC557"
     Use: 11
@@ -1263,6 +1312,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 8
+    BrewsInto: potion_liquid_flame
   - Id: seed_icecap
     DisplayName: "\uC5BC\uC74C\uBC84\uC12F \uD3EC\uC790"
     Use: 11
@@ -1288,6 +1338,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 9
+    BrewsInto: potion_frost
   - Id: seed_sorrowmoss
     DisplayName: "\uB3C5\uC774\uB07C \uC528\uC557"
     Use: 11
@@ -1313,6 +1364,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 10
+    BrewsInto: potion_toxic_gas
   - Id: seed_sungrass
     DisplayName: "\uD587\uBCD5\uD480 \uC528\uC557"
     Use: 11
@@ -1338,6 +1390,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 11
+    BrewsInto: potion_healing
   - Id: seed_fadeleaf
     DisplayName: "\uC0AC\uB77C\uC9D0\uC78E \uC528\uC557"
     Use: 11
@@ -1363,6 +1416,7 @@ MonoBehaviour:
     ThrowMaxDamage: 0
     BreakPercent: 0
     PlantTrap: 12
+    BrewsInto: potion_invisibility
   _weaponDamageDivisor: 3
   _weaponMinDamage: 2
   _armorDefenseDivisor: 3

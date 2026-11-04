@@ -76,6 +76,16 @@ namespace ProjectM.Input
         private HungerConfig _hunger;
         /// <summary>상점 (3-15c). null이면 팔기 없음.</summary>
         private ProjectM.Dungeon.ShopConfig _shop;
+        /// <summary>연금 솥에 넣으려고 고른 씨앗 (3-16c — 창 하나 동안의 입력 상태, 시뮬레이션 상태 아님).</summary>
+        private readonly List<InventoryRef> _brewSeeds = new List<InventoryRef>();
+
+        private bool IsBrewSeed(Unit player, InventoryRef e)
+        {
+            if (e.IsEmpty || !_items.TryGet(e.Id, out var d) || d.Use != ItemUse.Seed || d.BrewsInto == null) return false;
+            int used = 0;
+            foreach (var s in _brewSeeds) if (s == e) used++;
+            return e.Count > used; // 이미 고른 만큼은 빼고
+        }
         /// <summary>찾기 키 (3-12b) — S는 이동(WASD)이라 Z.</summary>
         private const Key SearchKey = Key.Z;
         private bool _stairsHintShown;
@@ -508,6 +518,16 @@ namespace ProjectM.Input
                 case InventoryActionKind.ThrowItem:
                     BeginThrowAim(player, action.Entry);
                     break;
+                case InventoryActionKind.PickedItem when action.Entry.IsEmpty && _inventory.LastPickWasBrew: // 3-16c: 씨앗 하나 골랐다 — 3개면 만들기 (차례 안 씀)
+                    _brewSeeds.Add(action.Second);
+                    if (_brewSeeds.Count < Alchemy.SeedsPerBrew) _inventory.OpenForBrew(e => IsBrewSeed(player, e), player.InventorySlots, _brewSeeds.Count);
+                    else
+                    {
+                        Alchemy.Brew(_world, _items, player, _brewSeeds);
+                        _brewSeeds.Clear();
+                        _world.Events.Flush();
+                    }
+                    break;
                 case InventoryActionKind.PickedItem when action.Entry.IsEmpty && _shop != null: // 3-15c: 팔기 (차례 안 씀)
                     ProjectM.Dungeon.Shop.Sell(_world, _items, _shop, player, System.Array.IndexOf(player.InventorySlots, action.Second));
                     _world.Events.Flush();
@@ -918,6 +938,15 @@ namespace ProjectM.Input
                 if (ProjectM.Dungeon.UnlockCommand.KeySlot(_items, bumper) >= 0)
                     _clock.SubmitPlayerCommand(new ProjectM.Dungeon.UnlockCommand(_world, _items, bumper.Pos + direction, _config.DefaultActionCostTicks));
                 else Hint(HudText.DoorLocked);
+            }
+            else if (PlayerActions.TryGetPlayer(_world, out var brewer) && _world.Map.InBounds(brewer.Pos + direction)
+                && _world.Map.Get(brewer.Pos + direction) == TileType.AlchemyPot) // 3-16c 연금 솥
+            {
+                _brewSeeds.Clear();
+                int seeds = 0;
+                foreach (var e in brewer.InventorySlots) if (IsBrewSeed(brewer, e)) seeds += e.Count;
+                if (seeds < Alchemy.SeedsPerBrew) Hint(HudText.NotEnoughSeeds);
+                else _inventory.OpenForBrew(e => IsBrewSeed(brewer, e), brewer.InventorySlots, 0);
             }
             else if (_shop != null && PlayerActions.TryGetPlayer(_world, out var buyer) && _world.Units.TryGetAt(buyer.Pos + direction, out var keeper)
                 && keeper.Faction == Faction.Neutral) // 3-15c: 상인에게 부딪히면 팔기

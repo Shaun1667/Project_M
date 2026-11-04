@@ -25,5 +25,7 @@ namespace ProjectM.Core
         HiddenDoor = 9,
         /// <summary>잠긴 문 (3-15b 보물 방) — 걸을 수 없고 시야를 막는다. 열쇠를 가지고 부딪히면 닫힌 문이 된다 (UnlockCommand).</summary>
         LockedDoor = 10,
+        /// <summary>연금 솥 (3-16c 연구실) — 걸을 수 없음 · 시야는 안 막음. 부딪히면 씨앗 3개로 물약 (Alchemy.Brew).</summary>
+        AlchemyPot = 11,
     }
 }
