@@ -15,8 +15,8 @@ namespace ProjectM.Items
     }
 
     /// <summary>
-    /// 인벤토리 칸 · 빠른 칸 하나의 내용: 종류 + ID (주문 ID 또는 아이템 ID) + 강화 단계(3-7b 무기, 그 밖에는 0). 빈 칸 = Empty.
-    /// 강화가 다르면 다른 항목이다 (소검 ≠ 소검+1).
+    /// 인벤토리 칸 · 빠른 칸 하나의 내용: 종류 + ID (주문 ID 또는 아이템 ID) + 강화 단계(3-7b 무기, 그 밖에는 0) + 개수(3-10b 겹치기). 빈 칸 = Empty.
+    /// 강화가 다르면 다른 항목이다 (소검 ≠ 소검+1). **개수는 같은 항목 판정에 쓰지 않는다** — 빠른 칸은 항목만 가리키고, 개수는 인벤토리 칸의 것.
     /// </summary>
     public readonly struct InventoryRef : IEquatable<InventoryRef>
     {
@@ -24,9 +24,14 @@ namespace ProjectM.Items
         public string Id { get; }
         /// <summary>무기 강화 단계 (3-7b — 결정 2026-10-19: 강화는 무기 자체에 붙어 내려놓아도 남음).</summary>
         public int Upgrade { get; }
+        /// <summary>겹친 개수 (3-10b — 물약 · 주문서). 빈 칸 0, 그 밖 1 이상.</summary>
+        public int Count => Kind == InventoryKind.None ? 0 : Math.Max(1, _count);
+        private readonly int _count;
 
-        public InventoryRef(InventoryKind kind, string id, int upgrade = 0)
+        public InventoryRef(InventoryKind kind, string id, int upgrade = 0, int count = 1)
         {
+            if (count < 1) throw new ArgumentOutOfRangeException(nameof(count), count, "개수는 1 이상.");
+            _count = count;
             if (kind == InventoryKind.None ? !string.IsNullOrEmpty(id) : string.IsNullOrEmpty(id))
                 throw new ArgumentException("빈 칸은 ID가 없고, 빈 칸이 아니면 ID가 있어야 한다.", nameof(id));
             if (upgrade < 0 || (upgrade > 0 && kind != InventoryKind.Item)) throw new ArgumentOutOfRangeException(nameof(upgrade), upgrade, "강화는 아이템만, 0 이상.");
@@ -41,12 +46,15 @@ namespace ProjectM.Items
 
         public bool IsEmpty => Kind == InventoryKind.None;
 
+        /// <summary>개수만 바꾼 복사본 (3-10b).</summary>
+        public InventoryRef WithCount(int count) => new InventoryRef(Kind, Id, Upgrade, count);
+
         public bool Equals(InventoryRef other) => Kind == other.Kind && Id == other.Id && Upgrade == other.Upgrade;
         public override bool Equals(object obj) => obj is InventoryRef other && Equals(other);
         public override int GetHashCode() => ((int)Kind * 397) ^ (Id != null ? Id.GetHashCode() : 0) ^ (Upgrade * 7919);
         public static bool operator ==(InventoryRef a, InventoryRef b) => a.Equals(b);
         public static bool operator !=(InventoryRef a, InventoryRef b) => !a.Equals(b);
-        public override string ToString() => IsEmpty ? "(빈 칸)" : Upgrade > 0 ? $"{Kind}:{Id}+{Upgrade}" : $"{Kind}:{Id}";
+        public override string ToString() => IsEmpty ? "(빈 칸)" : (Upgrade > 0 ? $"{Kind}:{Id}+{Upgrade}" : $"{Kind}:{Id}") + (Count > 1 ? $"×{Count}" : "");
     }
 
     /// <summary>아이템을 "사용"하면 하는 일 (3-2a). 끝에만 추가한다.</summary>
@@ -190,7 +198,8 @@ namespace ProjectM.Items
 
     /// <summary>
     /// 인벤토리 · 빠른 칸을 바꾸는 곳은 여기 하나 (3-2a). 칸 수는 고정(MagicConfig.InventorySlotCount · QuickSlotCount).
-    /// - 인벤토리: 앞쪽 빈 칸부터 채운다. 같은 주문은 한 번만 (아이템은 여러 개 가능, 겹치지 않음). 꽉 차면 못 넣는다.
+    /// - 인벤토리: 앞쪽 빈 칸부터 채운다. 같은 주문은 한 번만. 물약 · 주문서는 같은 것이 있으면 그 칸에 겹친다(3-10b — 개수 +1, 꽉 차도 들어감), 그 밖의 아이템은 칸마다. 꽉 차면 못 넣는다.
+    /// - 빼기(RemoveAt)는 한 개씩 — 겹친 칸은 개수만 줄고, 마지막 하나를 빼면 칸이 빈다.
     /// - 빠른 칸: 인벤토리에 있는 것만 등록. 한 항목은 빠른 칸 하나에만 — 다른 칸에 등록하면 원래 칸은 비워진다.
     /// - 인벤토리에서 빼면 그것을 가리키던 빠른 칸도 비운다 (같은 것이 인벤토리에 더 남아 있으면 그대로).
     /// 바뀌면 InventoryChangedEvent · QuickSlotsChangedEvent.
@@ -208,7 +217,14 @@ namespace ProjectM.Items
                 throw new ArgumentException("모르는 아이템: " + entry.Id, nameof(entry));
 
             var slots = unit.InventorySlots;
-            if (entry.Kind == InventoryKind.Spell && Array.IndexOf(slots, entry) >= 0) return -1;
+            int existing = Array.IndexOf(slots, entry);
+            if (entry.Kind == InventoryKind.Spell && existing >= 0) return -1;
+            if (existing >= 0 && IsStackable(items, entry))
+            {
+                slots[existing] = slots[existing].WithCount(slots[existing].Count + entry.Count);
+                PublishInventory(world, unit);
+                return existing;
+            }
             int index = Array.IndexOf(slots, InventoryRef.Empty);
             if (index < 0) return -1;
             slots[index] = entry;
@@ -216,7 +232,11 @@ namespace ProjectM.Items
             return index;
         }
 
-        /// <summary>인벤토리 칸 하나를 비운다. 그 항목이 인벤토리에 더 없으면 가리키던 빠른 칸도 비운다.</summary>
+        /// <summary>겹치는 항목인지 (3-10b): 물약 · 주문서.</summary>
+        public static bool IsStackable(ItemBook items, InventoryRef entry) =>
+            entry.Kind == InventoryKind.Item && items != null && items.TryGet(entry.Id, out var def) && def.IsConsumable;
+
+        /// <summary>인벤토리 칸에서 하나를 뺀다 (겹친 칸은 개수 −1). 칸이 비었고 그 항목이 인벤토리에 더 없으면 가리키던 빠른 칸도 비운다.</summary>
         public static void RemoveAt(World world, Unit unit, int index)
         {
             Validate(world, unit);
@@ -224,6 +244,12 @@ namespace ProjectM.Items
             if (index < 0 || index >= slots.Length) throw new ArgumentOutOfRangeException(nameof(index), index, "인벤토리 칸 밖");
             var removed = slots[index];
             if (removed.IsEmpty) return;
+            if (removed.Count > 1)
+            {
+                slots[index] = removed.WithCount(removed.Count - 1);
+                PublishInventory(world, unit);
+                return;
+            }
             slots[index] = InventoryRef.Empty;
             PublishInventory(world, unit);
 

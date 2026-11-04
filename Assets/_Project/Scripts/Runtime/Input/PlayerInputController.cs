@@ -237,7 +237,7 @@ namespace ProjectM.Input
                 return;
             }
             HandleWheel(mouse);
-            if (keyboard != null && keyboard[Key.I].wasPressedThisFrame)
+            if (keyboard != null && (keyboard[Key.I].wasPressedThisFrame || keyboard[Key.F].wasPressedThisFrame)) // 3-10b: F로도 (SPD 배낭)
             {
                 OpenInventory();
                 return;
@@ -399,7 +399,7 @@ namespace ProjectM.Input
         {
             if (keyboard != null)
             {
-                if (keyboard[Key.I].wasPressedThisFrame)
+                if (keyboard[Key.I].wasPressedThisFrame || keyboard[Key.F].wasPressedThisFrame)
                 {
                     CloseInventory();
                     return;
@@ -512,7 +512,7 @@ namespace ProjectM.Input
             if (_inventoryView == null) return;
             Unit player = null;
             if (_world != null) PlayerActions.TryGetPlayer(_world, out player);
-            _inventoryView.Draw(_inventory, player, Text);
+            _inventoryView.Draw(_inventory, player, Text, _items);
             if (_hud != null) _hud.SetHighlightSlot(_inventory.IsOpen ? _inventory.AssignTarget : _aimSlot);
         }
 

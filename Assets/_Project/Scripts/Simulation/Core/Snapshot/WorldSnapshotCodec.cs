@@ -447,6 +447,7 @@ namespace ProjectM.Core
                 w.Write((int)entry.Kind);
                 w.Write(entry.Id ?? string.Empty);
                 w.Write(entry.Upgrade); // 14 (3-7b)
+                w.Write(entry.Count); // 19 (3-10b 겹치기)
             }
         }
 
@@ -459,7 +460,8 @@ namespace ProjectM.Core
                 var id = r.ReadString();
                 if (!Enum.IsDefined(typeof(InventoryKind), kind)) throw new InvalidDataException("알 수 없는 인벤토리 종류 " + (int)kind);
                 int upgrade = r.ReadInt32(); // 14 (3-7b)
-                refs[k] = kind == InventoryKind.None ? InventoryRef.Empty : new InventoryRef(kind, id, upgrade);
+                int count = r.ReadInt32(); // 19 (3-10b)
+                refs[k] = kind == InventoryKind.None ? InventoryRef.Empty : new InventoryRef(kind, id, upgrade, Math.Max(1, count));
             }
             return refs;
         }

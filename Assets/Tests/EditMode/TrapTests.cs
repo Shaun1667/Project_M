@@ -194,7 +194,7 @@ namespace ProjectM.Tests
         [Test]
         public void Snapshot_RoundTripsTraps()
         {
-            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.EqualTo(18), "3-12a 함정");
+            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.GreaterThanOrEqualTo(18), "3-12a 함정 (정확한 값은 BackpackTests — 19)");
             var r = Start(new GridPos(1, 2));
             Traps.Place(r.S.World, new GridPos(6, 2), TrapType.Fire, hidden: true);
             Traps.Place(r.S.World, new GridPos(8, 3), TrapType.Alarm, hidden: false);

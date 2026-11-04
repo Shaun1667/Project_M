@@ -30,7 +30,11 @@ namespace ProjectM.UI
         private static readonly Color MenuSelectedColor = new Color(0.65f, 0.52f, 0.14f, 1f);
         private static readonly Color FusionFirstColor = new Color(0.2f, 0.38f, 0.72f, 1f);
 
-        private const float Padding = 20, TitleHeight = 44;
+        private const float Padding = 20, TitleHeight = 44, InfoHeight = 40;
+
+        private TMP_Text _info;
+        private readonly List<(Image box, TMP_Text label)> _equipCells = new List<(Image, TMP_Text)>();
+        private static readonly Color EquipColor = new Color(0.16f, 0.2f, 0.26f, 1f);
 
         private TMP_Text _title;
         private readonly List<(Image box, TMP_Text label)> _cells = new List<(Image, TMP_Text)>();
@@ -57,7 +61,8 @@ namespace ProjectM.UI
             if (_panel != null) _panel.gameObject.SetActive(false);
         }
 
-        public void Draw(InventoryMenu menu, Unit player, HudText text)
+        /// <param name="items">설명 줄(3-10b)에 쓰는 아이템 표. null이면 설명 없음.</param>
+        public void Draw(InventoryMenu menu, Unit player, HudText text, ItemBook items = null)
         {
             if (_panel == null) return;
             if (menu == null || !menu.IsOpen || player == null)
@@ -72,7 +77,19 @@ namespace ProjectM.UI
             bool fusion = menu.State == InventoryMenuState.FusionPick;
             if (fusion) _title.text = text.FusionPickTitle(menu.FusionFirst >= 0 ? slots[menu.FusionFirst] : InventoryRef.Empty);
             else if (menu.AssignTarget >= 0) _title.text = HudText.AssignHint(menu.AssignTarget);
-            else _title.text = menu.State == InventoryMenuState.ChooseSlot ? text.ChooseSlotHint(menu.SelectedEntry(player)) : "인벤토리";
+            else _title.text = menu.State == InventoryMenuState.ChooseSlot ? text.ChooseSlotHint(menu.SelectedEntry(player)) : HudText.BackpackTitle;
+
+            // 3-10b 장비 5칸 (SPD): 무기 · 갑옷 · 유물 · 기타 · 반지 — 유물 · 기타 · 반지는 틀만
+            for (int i = 0; i < _equipCells.Count; i++)
+            {
+                var (box, label) = _equipCells[i];
+                box.color = EquipColor;
+                string item = i == 0 ? (player.Weapon.IsEmpty ? null : text.WeaponName(player.Weapon))
+                    : i == 1 ? (player.Armor.IsEmpty ? null : text.ArmorName(player.Armor)) : null;
+                label.text = $"<color=#9FB4CC>{HudText.EquipSlotNames[i]}</color> " + (item ?? "<color=#666666>—</color>");
+            }
+            var selected = menu.SelectedEntry(player);
+            _info.text = HudText.ItemInfo(text, items, selected);
 
             for (int i = 0; i < _cells.Count; i++)
             {
@@ -90,7 +107,8 @@ namespace ProjectM.UI
                 }
                 int quick = Inventory.QuickSlotOf(player, entry);
                 string kind = entry.Kind == InventoryKind.Spell ? "<color=#8FB8FF>주문</color>" : "<color=#FFC46B>도구</color>";
-                label.text = $"{kind} {text.Entry(entry)}" + (quick >= 0 ? $" <color=#FFD54F>[{quick + 1}]</color>" : string.Empty);
+                label.text = $"{kind} {text.Entry(entry)}" + (entry.Count > 1 ? $" <color=#DDDDDD>×{entry.Count}</color>" : string.Empty)
+                    + (quick >= 0 ? $" <color=#FFD54F>[{quick + 1}]</color>" : string.Empty);
             }
 
             DrawMenu(menu);
@@ -163,7 +181,8 @@ namespace ProjectM.UI
 
             int columns = InventoryMenu.Columns, rows = (slotCount + columns - 1) / columns;
             float width = Padding * 2 + columns * _cellSize.x + (columns - 1) * _spacing;
-            float height = Padding * 2 + TitleHeight + rows * _cellSize.y + (rows - 1) * _spacing;
+            float equipHeight = _cellSize.y + _spacing; // 3-10b 장비 줄
+            float height = Padding * 2 + TitleHeight + equipHeight + rows * _cellSize.y + (rows - 1) * _spacing + _spacing + InfoHeight;
             _panel.anchorMin = _panel.anchorMax = _panel.pivot = new Vector2(0.5f, 0.5f);
             _panel.anchoredPosition = Vector2.zero;
             _panel.sizeDelta = new Vector2(width, height);
@@ -182,6 +201,15 @@ namespace ProjectM.UI
                 Style(_title, 28, TextAlignmentOptions.TopLeft, new Color(1f, 0.84f, 0.31f));
             }
 
+            foreach (var (box, _) in _equipCells) Destroy(box.gameObject);
+            _equipCells.Clear();
+            for (int i = 0; i < HudText.EquipSlotNames.Length && i < columns; i++)
+            {
+                var cell = CreateBox(_panel, "Equip" + i, _cellSize);
+                ((RectTransform)cell.Item1.transform).anchoredPosition = new Vector2(Padding + i * (_cellSize.x + _spacing), -(Padding + TitleHeight));
+                _equipCells.Add(cell);
+            }
+
             foreach (var (box, _) in _cells) Destroy(box.gameObject);
             _cells.Clear();
             _cellIcons.Clear();
@@ -190,10 +218,19 @@ namespace ProjectM.UI
                 var cell = CreateBox(_panel, "Cell" + i, _cellSize);
                 var rect = (RectTransform)cell.Item1.transform;
                 rect.anchoredPosition = new Vector2(Padding + i % columns * (_cellSize.x + _spacing),
-                    -(Padding + TitleHeight + i / columns * (_cellSize.y + _spacing)));
+                    -(Padding + TitleHeight + equipHeight + i / columns * (_cellSize.y + _spacing)));
                 _cells.Add(cell);
                 _cellIcons.Add(CreateIcon(rect, _cellSize.y));
             }
+
+            if (_info == null)
+            {
+                var infoGo = new GameObject("Info", typeof(RectTransform), typeof(TextMeshProUGUI));
+                infoGo.transform.SetParent(_panel, false);
+                _info = infoGo.GetComponent<TextMeshProUGUI>();
+                Style(_info, 22, TextAlignmentOptions.Left, new Color(0.85f, 0.85f, 0.85f));
+            }
+            TopLeft(_info.rectTransform, new Vector2(Padding, -(height - Padding - InfoHeight)), new Vector2(width - Padding * 2, InfoHeight));
 
             if (_menu == null)
             {

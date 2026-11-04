@@ -110,6 +110,32 @@ namespace ProjectM.UI
 
         public static string Enemy(EntityId id) => $"적 {id}";
 
+        /// <summary>배낭 창 제목 (3-10b, SPD).</summary>
+        public const string BackpackTitle = "배낭  <size=70%><color=#AAAAAA>I · F 열기 · Esc 닫기</color></size>";
+
+        /// <summary>장비 5칸 이름 (3-10b — 결정 2026-10-20: 무기 · 갑옷 · 유물 · 기타 · 반지, 뒤의 셋은 틀만).</summary>
+        public static readonly string[] EquipSlotNames = { "무기", "갑옷", "유물", "기타", "반지" };
+
+        /// <summary>배낭 설명 줄 (3-10b): 고른 칸의 종류와 쓰는 법. 모르는 물약 · 주문서는 "정체를 모름".</summary>
+        public static string ItemInfo(HudText text, ItemBook items, InventoryRef entry)
+        {
+            if (entry.IsEmpty) return string.Empty;
+            if (entry.Kind == InventoryKind.Spell) return $"{text.Entry(entry)} — 주문. 사용하면 조준해 시전";
+            if (items == null || !items.TryGet(entry.Id, out var def)) return text.Entry(entry);
+            string count = entry.Count > 1 ? $" ({entry.Count}개)" : string.Empty;
+            bool known = text.Run == null || text.Run.IsKnown(entry.Id);
+            switch (def.Use)
+            {
+                case ItemUse.EquipWeapon: return $"{text.Entry(entry)} — 근접 무기. 사용 = 들기";
+                case ItemUse.EquipArmor: return $"{text.Entry(entry)} — 갑옷. 사용 = 입기";
+                case ItemUse.Potion: return $"{text.Entry(entry)}{count} — 물약. 마시기 · 던지기" + (known ? string.Empty : " · 정체를 모름");
+                case ItemUse.Scroll: return $"{text.Entry(entry)}{count} — 주문서. 읽기" + (known ? string.Empty : " · 정체를 모름");
+                case ItemUse.LearnSpell: return $"{text.Entry(entry)} — 마법서. 읽으면 주문을 배운다";
+                case ItemUse.Fusion: return $"{text.Entry(entry)} — 마법 융합기. 주문 두 개를 합쳐 한 번에 시전";
+                default: return text.Entry(entry);
+            }
+        }
+
         /// <summary>함정 이름 (3-12a).</summary>
         public static string Trap(ProjectM.Dungeon.TrapType type)
         {
