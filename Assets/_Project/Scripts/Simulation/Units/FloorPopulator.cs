@@ -26,13 +26,14 @@ namespace ProjectM.Units
         {
             if (world == null) throw new ArgumentNullException(nameof(world));
             if (spawn == null) throw new ArgumentNullException(nameof(spawn));
-            var cells = PickEnemyCells(world.Map, start, spawn.EnemyCount, spawn.EnemyMinDistanceFromStart, world.Rng.Get(RngStream.MapGen));
+            var cells = PickEnemyCells(world.Map, start, spawn.EnemyCount, spawn.EnemyMinDistanceFromStart, world.Rng.Get(RngStream.MapGen), world.Traps.Has);
             foreach (var cell in cells)
                 UnitSpawner.SpawnEnemy(world, enemyDef, cell, enemyAi);
         }
 
         /// <summary>후보 칸에서 count개를 겹치지 않게 뽑는다 (부분 Fisher-Yates, 후보는 y → x 순).</summary>
-        public static List<GridPos> PickEnemyCells(GridMap map, GridPos start, int count, int minDistance, IRng rng)
+        /// <param name="exclude">빼는 칸 (3-12a 함정). null이면 없음.</param>
+        public static List<GridPos> PickEnemyCells(GridMap map, GridPos start, int count, int minDistance, IRng rng, Func<GridPos, bool> exclude = null)
         {
             if (map == null) throw new ArgumentNullException(nameof(map));
             if (rng == null) throw new ArgumentNullException(nameof(rng));
@@ -43,7 +44,7 @@ namespace ProjectM.Units
                 for (int x = 0; x < map.Width; x++)
                 {
                     var pos = new GridPos(x, y);
-                    if (GridMap.IsGroundType(map.Get(pos)) && GridMovement.Chebyshev(pos, start) >= minDistance)
+                    if (GridMap.IsGroundType(map.Get(pos)) && GridMovement.Chebyshev(pos, start) >= minDistance && (exclude == null || !exclude(pos)))
                         candidates.Add(pos);
                 }
             }

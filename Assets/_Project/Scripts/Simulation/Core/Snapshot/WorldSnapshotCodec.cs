@@ -63,6 +63,7 @@ namespace ProjectM.Core
                     WriteActors(w, f.Actors);
                     WriteUnits(w, f.Units);
                     WriteFloorItems(w, f.FloorItems); // 11 (3-5)
+                    WriteTraps(w, f.Traps); // 18 (3-12a)
                 }
 
                 // 10 (3-4b): 한 판 기록
@@ -94,6 +95,9 @@ namespace ProjectM.Core
                 w.Write(snapshot.IdentifiedItems.Length);
                 foreach (var id in snapshot.IdentifiedItems)
                     w.Write(id ?? string.Empty);
+
+                // 18 (3-12a): 함정
+                WriteTraps(w, snapshot.Traps);
 
                 w.Flush();
                 return stream.ToArray();
@@ -152,6 +156,7 @@ namespace ProjectM.Core
                     f.Actors = ReadActors(r);
                     f.Units = ReadUnits(r);
                     f.FloorItems = ReadFloorItems(r);
+                    f.Traps = ReadTraps(r);
                     s.StoredFloors[i] = f;
                 }
 
@@ -182,6 +187,8 @@ namespace ProjectM.Core
                 s.IdentifiedItems = new string[ReadCount(r)];
                 for (int i = 0; i < s.IdentifiedItems.Length; i++)
                     s.IdentifiedItems[i] = r.ReadString();
+
+                s.Traps = ReadTraps(r);
 
                 if (stream.Position != stream.Length)
                     throw new InvalidDataException("스냅샷 끝에 남는 데이터가 있다.");
@@ -381,6 +388,30 @@ namespace ProjectM.Core
                     maxMana, mana, inventory, quick, previousPos, wanderTarget, statuses, accuracy, evasion, expReward, expMaxLevel, level, exp, weapon, strength, armor);
             }
             return units;
+        }
+
+        // 함정 (3-12a): 개수 + 칸 인덱스 · 종류 · 숨김
+        private static void WriteTraps(BinaryWriter w, TrapCellState[] traps)
+        {
+            w.Write(traps.Length);
+            foreach (var t in traps)
+            {
+                w.Write(t.CellIndex);
+                w.Write((int)t.Type);
+                w.Write(t.Hidden);
+            }
+        }
+
+        private static TrapCellState[] ReadTraps(BinaryReader r)
+        {
+            var traps = new TrapCellState[ReadCount(r)];
+            for (int i = 0; i < traps.Length; i++)
+            {
+                int index = r.ReadInt32();
+                var type = (ProjectM.Dungeon.TrapType)r.ReadInt32();
+                traps[i] = new TrapCellState(index, type, r.ReadBoolean());
+            }
+            return traps;
         }
 
         // 바닥 아이템 (3-5): 개수 + x · y · 아이템 ID

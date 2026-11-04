@@ -235,7 +235,7 @@ namespace ProjectM.Tests
             var statuses = statusAsset.ToBook();
             var book = asset.ToBook(statuses, terrainAsset.ToBook(statuses));
             var expected = BalanceBookFull();
-            Assert.That(book.Count, Is.EqualTo(expected.Count));
+            Assert.That(book.Count, Is.EqualTo(expected.Count + TrapTests.TrapSpellCount), "+ 함정 효과 주문 (3-12a, TrapTests가 검산)");
             foreach (var id in new[] { "fire_basic", "ice_basic", "lightning_basic", "poison_basic", "water_basic" })
             {
                 Assert.That(book.TryGet(id, out var a), Is.True, id);

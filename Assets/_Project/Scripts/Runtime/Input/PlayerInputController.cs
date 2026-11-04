@@ -885,7 +885,8 @@ namespace ProjectM.Input
                 return;
             }
 
-            var path = GridPathfinder.FindPath(_world.Map, player.Pos, target, _world.Units.IsOccupied);
+            // 3-12a: 드러난 함정은 지나가지 않는다 (함정 칸을 직접 누르면 그 칸까지는 간다 — goal 예외)
+            var path = GridPathfinder.FindPath(_world.Map, player.Pos, target, p => _world.Units.IsOccupied(p) || ProjectM.Dungeon.Traps.IsKnown(_world, p));
             if (path == null || path.Count == 0) return;
 
             _path = path;

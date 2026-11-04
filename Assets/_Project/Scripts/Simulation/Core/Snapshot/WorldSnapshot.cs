@@ -1,4 +1,5 @@
 using System;
+using ProjectM.Dungeon;
 using ProjectM.Items;
 using ProjectM.Status;
 using ProjectM.Units;
@@ -35,6 +36,22 @@ namespace ProjectM.Core
         }
     }
 
+    /// <summary>칸 하나의 함정 저장 상태 (3-12a, 칸 인덱스 = y * MapWidth + x).</summary>
+    [Serializable]
+    public readonly struct TrapCellState
+    {
+        public readonly int CellIndex;
+        public readonly TrapType Type;
+        public readonly bool Hidden;
+
+        public TrapCellState(int cellIndex, TrapType type, bool hidden)
+        {
+            CellIndex = cellIndex;
+            Type = type;
+            Hidden = hidden;
+        }
+    }
+
     /// <summary>바닥 아이템 하나의 저장 상태 (3-5).</summary>
     [Serializable]
     public readonly struct FloorItemState
@@ -60,7 +77,7 @@ namespace ProjectM.Core
     public sealed class WorldSnapshot
     {
         /// <summary>1: 1-4 최초. 2: 유닛(Units) 추가 (1-6). 3: 탐험 기록(Explored) · 유닛 기억(LastSeen) 추가 (1-7). 4: 유닛 마나 · 주문 장착 칸 (2-1). 5: 유닛 발자국(PreviousPos) · 배회 목적지(WanderTarget). 6: 유닛 상태 이상 (2-3). 7: 지형 효과 레이어 (2-4). 8: 주문 장착 칸 → 인벤토리 · 빠른 칸 (3-2a). 9: 층 번호 · 떠난 층들 (3-4a). 10: 한 판 기록 — 처치 수 · 결과 · 보스 · 사망 원인 (3-4b). 11: 바닥 아이템(지금 층 · 떠난 층) · 마법서 배치 계획 (3-5). 12: 유닛 명중 · 회피 · 처치 경험치 · 경험치 최고 레벨 · 레벨 · 경험치 (3-6 · 3-7). 13: 유닛이 든 무기 (3-7a). 14: 유닛 힘 · 무기 강화 단계 · 요구 힘 · 인벤토리 칸 강화 단계 (3-7b). 15: 무기 기습 최소 % · 방어 (3-7c). 16: 물약 · 주문서 겉모습 · 식별 (3-9). 17: 유닛이 입은 갑옷 (3-10a).</summary>
-        public const int CurrentFormatVersion = 17;
+        public const int CurrentFormatVersion = 18;
 
         public int FormatVersion = CurrentFormatVersion;
 
@@ -105,6 +122,9 @@ namespace ProjectM.Core
         /// <summary>아직 가 보지 않은 층에 놓을 아이템 (RunState), 층 → 나눠 준 순서.</summary>
         public PendingFloorItem[] PendingFloorItems = Array.Empty<PendingFloorItem>();
 
+        // 18 (3-12a): 지금 층 함정, 칸 인덱스 순
+        public TrapCellState[] Traps = Array.Empty<TrapCellState>();
+
         // 16 (3-9): 물약 · 주문서 식별 (RunState)
         /// <summary>아이템 ID → 겉모습, 정한 순서.</summary>
         public ItemLook[] ItemLooks = Array.Empty<ItemLook>();
@@ -131,6 +151,8 @@ namespace ProjectM.Core
         public ActorState[] Actors = Array.Empty<ActorState>();
         /// <summary>그 층 바닥 아이템 (3-5).</summary>
         public FloorItemState[] FloorItems = Array.Empty<FloorItemState>();
+        /// <summary>그 층 함정 (3-12a), 칸 인덱스 순.</summary>
+        public TrapCellState[] Traps = Array.Empty<TrapCellState>();
     }
 
     /// <summary>유닛 하나의 저장 가능한 상태 (ProjectM.Units.Unit과 같은 필드).</summary>

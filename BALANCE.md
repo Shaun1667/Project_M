@@ -24,6 +24,7 @@
 | 13 | 무기 (3-7a) | `ItemCatalog.asset`의 무기 줄 · 공통 값 (`ItemCatalogAsset`) — 9번과 같은 에셋 | `ProjectM.Items.WeaponDef` · `WeaponRules` · `Weapons` · `ProjectM.Units.EquippedWeapon` | 사용 중 (3-7a) |
 | 12 | 경험치 · 레벨업 | `Assets/_Project/Data/Units/ProgressionConfig.asset` (`ProgressionConfigAsset`) + 유닛 에셋의 명중 · 회피 · 경험치 (3번) | `ProjectM.Units.ProgressionConfig` · `Progression` | 사용 중 (3-6) |
 | 15 | 갑옷 (3-10a) | `ItemCatalog.asset`의 갑옷 줄 · 갑옷 공통 값 + `Player.asset`의 `_startingArmor` + `LootConfig.asset`의 `_armorsPerRun` | `ProjectM.Items.ArmorDef` · `ArmorRules` · `Armors` · `ProjectM.Units.EquippedArmor` | 사용 중 (3-10a) |
+| 17 | 함정 (3-12a) | `Assets/_Project/Data/Dungeon/TrapCatalog.asset` (`TrapCatalogAsset`) + `SpellCatalog.asset`의 `trap_*` 5줄 | `ProjectM.Dungeon.TrapBook` · `Traps` · `TrapSystem` | 사용 중 (3-12a) |
 | 16 | 층 꾸미기 (풀 · 물 웅덩이) | `Assets/_Project/Data/Dungeon/FloorDecorConfig.asset` (`FloorDecorConfigAsset`) | `ProjectM.Dungeon.FloorDecorConfig` · `FloorDecor` · `GrassTrampleSystem` | 사용 중 (3-11a) |
 | 14 | 물약 · 주문서 (효과 · 식별 · 무작위 배치 · 던지기) | `Assets/_Project/Data/Items/ConsumableConfig.asset` (`ConsumableConfigAsset`) + `ItemCatalog.asset`의 `Effect` · `Weight` (9번) | `ProjectM.Items.ConsumableConfig` · `Consumables` · `Identification` · `Throwing` | 사용 중 (3-9) |
 
@@ -534,6 +535,29 @@ SPD 규칙 그대로: 방어 굴림 = 강화 ~ 티어 × (2 + 강화) (SPD Armor
 - 웅덩이는 물 지형 그대로 반응한다 — 증발(불)이면 사라짐, 오염(독)이면 **영구 오염된 물**(남은 틱 유지), 결빙(얼음)이면 빙판 8틱 → 녹으면 물 12틱 → 사라짐.
 
 검산 (`FloorDecorTests.ProjectAsset_MatchesBalanceTable`). 결과: 50×50 층에서 웅덩이 칸 최대 4 × 9 = 36, 풀 칸 최대 6 × 14 = 84.
+
+---
+
+## 17. 함정 — `Data/Dungeon/TrapCatalog.asset` + `SpellCatalog.asset`의 `trap_*` (3-12a)
+
+결정 (2026-11-04, 사용자 — 모두 추천안): **속성 함정 7종**(지금 있는 지형 · 상태를 씀, 함정도 반응을 일으킴) · 찾기는 SPD식(3-12b) · **적도 밟으면 발동**(적은 피하지 않음, 플레이어 클릭 이동은 드러난 함정을 피함). 수치는 Claude 임시값 [임시].
+
+**배치** (`TrapCatalogAsset`): 층마다 **4**개 (`_trapsPerFloor`) · 숨김 **85**% (`_hiddenPercent`) · 시작 칸에서 **3**칸 이상 (`_minDistanceFromStart`). 맨땅(바닥 · 풀) 중 지형 효과 없는 칸, 꾸미기 맨 끝(Decor 난수), 보스 층 없음. 적 배치 · 재생성은 함정 칸을 피한다.
+
+| 함정 | `TrapType` | 효과 주문 (함정 칸 중심 3×3, 시전자 없음 · 마나 0) | 특수 | 무게 |
+|---|---|---|---|---|
+| 화염 함정 | Fire | `trap_fire` 불 — 피해 **2** + 화상 100% + 화염 지대(4틱) | — | 2 |
+| 독가스 함정 | ToxicGas | `trap_toxic` 독 — 피해 0 + 중독 100% + 독구름(4틱) | — | 2 |
+| 마비 가스 함정 | ParalyticGas | `trap_paralytic` **바람**(반응 없음) — 마비 가스(4틱) | — | 1 |
+| 물 함정 | Flood | `trap_flood` 물 — 젖음 100% + 물 타일(12틱) | — | 2 |
+| 번개 함정 | Shock | `trap_shock` 번개 — 피해 **3** + 마비 30% (젖었으면 감전) | — | 2 |
+| 순간이동 함정 | Teleport | — | 밟은 유닛을 무작위 빈 칸으로 (순간이동 주문서와 같음) | 1 |
+| 경보 함정 | Alarm | — | 층의 모든 적이 함정 칸을 안다 (몰려옴) | 1 |
+
+- 발동 = ⑤ `TrapSystem`: 함정 칸에 선 살아 있는 유닛(EntityId 순) — 숨겨진 것도. 한 번 발동하면 사라진다. 효과 순서는 주문과 같다(피해 → 반응 → 상태 → 지형). 함정 주문은 배우지 않는다(마법서 없음).
+- 사망 원인은 주문 이름(예: "화염 함정").
+
+검산 (`TrapTests.ProjectAssets_MatchBalanceTable`).
 
 ---
 

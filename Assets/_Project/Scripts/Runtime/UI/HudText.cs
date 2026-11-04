@@ -110,6 +110,28 @@ namespace ProjectM.UI
 
         public static string Enemy(EntityId id) => $"적 {id}";
 
+        /// <summary>함정 이름 (3-12a).</summary>
+        public static string Trap(ProjectM.Dungeon.TrapType type)
+        {
+            switch (type)
+            {
+                case ProjectM.Dungeon.TrapType.Fire: return "화염 함정";
+                case ProjectM.Dungeon.TrapType.ToxicGas: return "독가스 함정";
+                case ProjectM.Dungeon.TrapType.ParalyticGas: return "마비 가스 함정";
+                case ProjectM.Dungeon.TrapType.Flood: return "물 함정";
+                case ProjectM.Dungeon.TrapType.Shock: return "번개 함정";
+                case ProjectM.Dungeon.TrapType.Teleport: return "순간이동 함정";
+                case ProjectM.Dungeon.TrapType.Alarm: return "경보 함정";
+                default: return type.ToString();
+            }
+        }
+
+        /// <summary>함정 발동 로그 (3-12a): "나: 화염 함정 발동!"</summary>
+        public static string TrapTriggered(string who, ProjectM.Dungeon.TrapType type) => $"{who}: {Trap(type)} 발동!";
+
+        /// <summary>함정 발견 로그 (3-12b): "함정 발견: 화염 함정"</summary>
+        public static string TrapFound(ProjectM.Dungeon.TrapType type) => $"함정 발견: {Trap(type)}";
+
         // 3-6 · 3-7: 명중 · 경험치 · 레벨
         public static string PlayerMissed(EntityId target) => $"{Enemy(target)}에게 빗나감";
         public static string EnemyMissed(EntityId attacker) => $"{Enemy(attacker)}의 공격: 빗나감";

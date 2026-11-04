@@ -415,8 +415,8 @@ namespace ProjectM.Items
                 }
         }
 
-        /// <summary>순간이동 주문서: 비어 있는 바닥 칸(계단 제외) 중 무작위로 (RngStream.Combat).</summary>
-        private static void Teleport(World world, Unit unit)
+        /// <summary>순간이동 주문서 · 순간이동 함정(3-12a): 비어 있는 바닥 칸(계단 제외) 중 무작위로 (RngStream.Combat).</summary>
+        public static void Teleport(World world, Unit unit)
         {
             var map = world.Map;
             var cells = new List<GridPos>();

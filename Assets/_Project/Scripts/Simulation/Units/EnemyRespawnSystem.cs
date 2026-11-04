@@ -59,7 +59,7 @@ namespace ProjectM.Units
                 for (int x = 0; x < map.Width; x++)
                 {
                     var pos = new GridPos(x, y);
-                    if (!GridMap.IsGroundType(map.Get(pos)) || visible[y * map.Width + x] || _world.Units.IsOccupied(pos)) continue;
+                    if (!GridMap.IsGroundType(map.Get(pos)) || visible[y * map.Width + x] || _world.Units.IsOccupied(pos) || _world.Traps.Has(pos)) continue;
                     list.Add(pos);
                 }
             }

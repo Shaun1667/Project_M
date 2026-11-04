@@ -68,3 +68,58 @@ MonoBehaviour:
     StatusChancePercent: 100
     LeavesTerrain: 3
     DisplayName: "\uBB3C\uBCF4\uB77C"
+  - Id: trap_fire
+    Element: 0
+    Shape: 2
+    Range: 1
+    Damage: 2
+    ManaCost: 0
+    Radius: 1
+    AppliesStatus: 1
+    StatusChancePercent: 100
+    LeavesTerrain: 1
+    DisplayName: "\uD654\uC5FC \uD568\uC815"
+  - Id: trap_toxic
+    Element: 3
+    Shape: 2
+    Range: 1
+    Damage: 0
+    ManaCost: 0
+    Radius: 1
+    AppliesStatus: 3
+    StatusChancePercent: 100
+    LeavesTerrain: 2
+    DisplayName: "\uB3C5\uAC00\uC2A4 \uD568\uC815"
+  - Id: trap_paralytic
+    Element: 5
+    Shape: 2
+    Range: 1
+    Damage: 0
+    ManaCost: 0
+    Radius: 1
+    AppliesStatus: 0
+    StatusChancePercent: 0
+    LeavesTerrain: 6
+    DisplayName: "\uB9C8\uBE44 \uAC00\uC2A4 \uD568\uC815"
+  - Id: trap_flood
+    Element: 6
+    Shape: 2
+    Range: 1
+    Damage: 0
+    ManaCost: 0
+    Radius: 1
+    AppliesStatus: 5
+    StatusChancePercent: 100
+    LeavesTerrain: 3
+    DisplayName: "\uBB3C \uD568\uC815"
+  - Id: trap_shock
+    Element: 2
+    Shape: 2
+    Range: 1
+    Damage: 3
+    ManaCost: 0
+    Radius: 1
+    AppliesStatus: 4
+    StatusChancePercent: 30
+    LeavesTerrain: 0
+    DisplayName: "\uBC88\uAC1C \uD568\uC815"

@@ -49,6 +49,26 @@ namespace ProjectM.Magic
     /// </summary>
     public static class SpellCasting
     {
+        /// <summary>
+        /// 시전자 없이 center에서 터지는 효과의 칸 (3-12a 함정): Burst = center 둘레 반지름 칸(걸을 수 있는 칸), 그 밖의 모양 = center 한 칸.
+        /// 경로는 [center] — 지형 칸 규칙(TerrainCells)이 Bolt · Beam에서도 center만 고른다.
+        /// </summary>
+        public static SpellPreview PreviewAt(World world, SpellDef spell, GridPos center)
+        {
+            if (world == null) throw new ArgumentNullException(nameof(world));
+            if (spell == null) throw new ArgumentNullException(nameof(spell));
+            var path = new List<GridPos> { center };
+            var area = new List<GridPos>();
+            int radius = spell.Shape == SpellShape.Burst ? spell.Radius : 0;
+            for (int y = center.Y - radius; y <= center.Y + radius; y++)
+                for (int x = center.X - radius; x <= center.X + radius; x++)
+                {
+                    var p = new GridPos(x, y);
+                    if (world.Map.IsWalkable(p)) area.Add(p);
+                }
+            return new SpellPreview(path, area);
+        }
+
         /// <summary>caster에서 target을 조준했을 때의 경로와 맞는 칸.</summary>
         public static SpellPreview Preview(World world, ITargetingRule targeting, GridPos caster, SpellDef spell, GridPos target)
         {
@@ -153,6 +173,44 @@ namespace ProjectM.Magic
             return CastBlock.None;
         }
 
+        /// <summary>
+        /// 주문 효과를 미리보기 칸에 적용한다 — 시전(CastSpellCommand)과 함정(3-12a, 시전자 없음 = EntityId.None)이 같은 순서를 쓴다.
+        /// 순서 (REACTIONS.md 2-1): 원래 피해 → 반응 → 새 상태 → 지형. 마나 · 시전 이벤트는 부른 쪽 몫.
+        /// </summary>
+        public static void ApplyEffect(World world, SpellBook book, EntityId casterId, SpellDef spell, SpellPreview preview)
+        {
+            // 맞는 유닛을 먼저 모은 뒤 피해 (칸 순서 = 결정론적)
+            var victims = new List<Unit>();
+            foreach (var cell in preview.AffectedCells)
+            {
+                if (world.Units.TryGetAt(cell, out var unit) && unit.IsAlive) victims.Add(unit);
+            }
+            if (spell.Damage > 0) // 피해 0 주문(3-2 물)은 "피해 0" 이벤트를 내지 않는다
+                foreach (var victim in victims)
+                    Combat.ApplyDamage(world, casterId, victim, spell.Damage, DamageCause.Spell(spell.Id));
+
+            // 반응 (3-1): 맞은 유닛의 기존 상태 · 주문이 닿은 칸의 지형 × 주문 속성
+            var cells = CastSpellCommand.TerrainCells(spell, preview);
+            if (spell.TriggersReactions)
+                ReactionEngine.Resolve(world, book.Reactions, book.Statuses, casterId, spell, victims, cells);
+
+            // 새 상태 이상 (살아 있으면). 확률은 맞은 유닛마다 전투 난수로 따로 (같은 시드 = 같은 결과)
+            if (book.Statuses.TryGet(spell.AppliesStatus, out var status))
+            {
+                foreach (var victim in victims)
+                {
+                    if (victim.IsAlive) StatusEffects.TryApply(world, victim, status, spell.StatusChancePercent);
+                }
+            }
+
+            // 지형 효과 (2-4): 놓인 틱의 ③에서 바로 그 칸 유닛에게 상태를 건다
+            if (book.Terrains.TryGet(spell.LeavesTerrain, out var terrain))
+            {
+                foreach (var cell in cells)
+                    TerrainEffects.Place(world, cell, terrain, spell.TerrainDurationTicks);
+            }
+        }
+
         /// <summary>CheckSpell을 통과하면 시전 커맨드를 만든다 (인벤토리에서 바로 쓰기).</summary>
         public static CastBlock TryCreateCastSpell(World world, GameConfig config, SpellBook book, ITargetingRule targeting, ISightRule sight,
             string spellId, GridPos target, out ICommand command)
@@ -208,38 +266,7 @@ namespace ProjectM.Magic
 
             var preview = SpellCasting.Preview(_world, _targeting, caster.Pos, spell, Target);
             _world.Events.Publish(new SpellCastEvent(caster.Id, spell.Id, spell.Element, Target, preview));
-
-            // 맞는 유닛을 먼저 모은 뒤 피해 (칸 순서 = 결정론적)
-            var victims = new List<Unit>();
-            foreach (var cell in preview.AffectedCells)
-            {
-                if (_world.Units.TryGetAt(cell, out var unit) && unit.IsAlive) victims.Add(unit);
-            }
-            // 순서 (REACTIONS.md 2-1): 원래 피해 → 반응 → 새 상태 → 지형
-            if (spell.Damage > 0) // 피해 0 주문(3-2 물)은 "피해 0" 이벤트를 내지 않는다
-                foreach (var victim in victims)
-                    Combat.ApplyDamage(_world, caster.Id, victim, spell.Damage, DamageCause.Spell(spell.Id));
-
-            // 반응 (3-1): 맞은 유닛의 기존 상태 · 주문이 닿은 칸의 지형 × 주문 속성
-            var cells = TerrainCells(spell, preview);
-            if (spell.TriggersReactions)
-                ReactionEngine.Resolve(_world, _book.Reactions, _book.Statuses, caster, spell, victims, cells);
-
-            // 새 상태 이상 (살아 있으면). 확률은 맞은 유닛마다 전투 난수로 따로 (같은 시드 = 같은 결과)
-            if (_book.Statuses.TryGet(spell.AppliesStatus, out var status))
-            {
-                foreach (var victim in victims)
-                {
-                    if (victim.IsAlive) StatusEffects.TryApply(_world, victim, status, spell.StatusChancePercent);
-                }
-            }
-
-            // 지형 효과 (2-4): 놓인 틱의 ③에서 바로 그 칸 유닛에게 상태를 건다
-            if (_book.Terrains.TryGet(spell.LeavesTerrain, out var terrain))
-            {
-                foreach (var cell in cells)
-                    TerrainEffects.Place(_world, cell, terrain, spell.TerrainDurationTicks);
-            }
+            SpellCasting.ApplyEffect(_world, _book, caster.Id, spell, preview);
         }
 
         /// <summary>지형이 남는 칸: Bolt = 투사체가 멈춘 칸, Beam = 지나간 칸 전부, Burst = 폭발 범위.</summary>

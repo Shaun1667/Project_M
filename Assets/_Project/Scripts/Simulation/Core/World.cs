@@ -32,6 +32,8 @@ namespace ProjectM.Core
 
         /// <summary>바닥 아이템 (3-5 마법서). Loot · ItemPickupSystem으로만 바꾼다. 지금 층의 것.</summary>
         public FloorItemLayer FloorItems { get; private set; }
+        /// <summary>지금 층의 함정 (3-12a). 층이 바뀌면 통째로 바뀐다.</summary>
+        public TrapLayer Traps { get; private set; }
 
         /// <summary>지금 층 번호 (1부터, 3-4a).</summary>
         public int Floor { get; private set; } = 1;
@@ -99,6 +101,7 @@ namespace ProjectM.Core
             Explored = new bool[map.Width * map.Height];
             Terrain = new TerrainLayer(map.Width, map.Height);
             FloorItems = new FloorItemLayer();
+            Traps = new TrapLayer(map.Width, map.Height);
         }
 
         /// <summary>
@@ -164,6 +167,7 @@ namespace ProjectM.Core
                 Units = units.ToArray(),
                 Actors = actors.ToArray(),
                 FloorItems = CaptureFloorItems(),
+                Traps = CaptureTraps(),
             });
             _storedFloors.Sort((a, b) => a.Floor.CompareTo(b.Floor));
 
@@ -193,7 +197,7 @@ namespace ProjectM.Core
             var stored = _storedFloors.Find(f => f.Floor == floor) ?? throw new InvalidOperationException($"{floor}층 기록이 없다.");
             _storedFloors.Remove(stored);
             Floor = floor;
-            LoadFloorData(this, stored.MapWidth, stored.MapHeight, stored.Cells, stored.Explored, stored.Terrain, stored.Units, stored.FloorItems);
+            LoadFloorData(this, stored.MapWidth, stored.MapHeight, stored.Cells, stored.Explored, stored.Terrain, stored.Units, stored.FloorItems, stored.Traps);
             foreach (var a in stored.Actors)
                 Scheduler.RegisterActor(a.Id, aiFactory(this, a.Id), Scheduler.CurrentTick + a.ReadyTick);
         }
@@ -238,7 +242,17 @@ namespace ProjectM.Core
                 PendingFloorItems = new List<PendingFloorItem>(Run.PendingFloorItems).ToArray(),
                 ItemLooks = new List<ItemLook>(Run.Looks).ToArray(),
                 IdentifiedItems = new List<string>(Run.Identified).ToArray(),
+                Traps = CaptureTraps(),
             };
+        }
+
+        private TrapCellState[] CaptureTraps()
+        {
+            var list = Traps.ToSortedList();
+            var traps = new TrapCellState[list.Count];
+            for (int i = 0; i < traps.Length; i++)
+                traps[i] = new TrapCellState(list[i].Key, list[i].Value.Type, list[i].Value.Hidden);
+            return traps;
         }
 
         private FloorItemState[] CaptureFloorItems()
@@ -280,7 +294,7 @@ namespace ProjectM.Core
 
         /// <summary>맵 · 탐험 기록 · 지형 · 유닛 · 바닥 아이템을 world의 지금 층으로 넣는다 (복원 · 돌아가기 공용).</summary>
         private static void LoadFloorData(World world, int width, int height, TileType[] cells, bool[] explored, TerrainCellState[] terrain, UnitState[] units,
-            FloorItemState[] floorItems)
+            FloorItemState[] floorItems, TrapCellState[] traps)
         {
             world.SetFloorMap(GridMap.FromCells(width, height, cells));
             if (explored.Length != world.Explored.Length)
@@ -292,6 +306,8 @@ namespace ProjectM.Core
                 world.Units.Add(ToUnit(u));
             foreach (var item in floorItems ?? Array.Empty<FloorItemState>())
                 world.FloorItems.Add(new GridPos(item.X, item.Y), item.ItemId);
+            foreach (var t in traps ?? Array.Empty<TrapCellState>())
+                world.Traps.Set(world.Traps.PosOf(t.CellIndex), new TrapInstance(t.Type, t.Hidden));
         }
 
         /// <summary>
@@ -316,7 +332,7 @@ namespace ProjectM.Core
 
             var scheduler = new TickScheduler(snapshot.CurrentTick);
             var world = new World(map, ids, rng, scheduler);
-            LoadFloorData(world, snapshot.MapWidth, snapshot.MapHeight, snapshot.Cells, snapshot.Explored, snapshot.Terrain, snapshot.Units, snapshot.FloorItems);
+            LoadFloorData(world, snapshot.MapWidth, snapshot.MapHeight, snapshot.Cells, snapshot.Explored, snapshot.Terrain, snapshot.Units, snapshot.FloorItems, snapshot.Traps);
             world.Run.SetPendingFloorItems(snapshot.PendingFloorItems);
             world.Run.SetLooks(snapshot.ItemLooks, snapshot.IdentifiedItems);
             world.Floor = snapshot.Floor;

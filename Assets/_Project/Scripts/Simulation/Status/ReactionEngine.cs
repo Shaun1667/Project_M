@@ -35,7 +35,7 @@ namespace ProjectM.Status
         }
 
         /// <returns>발동한 반응 수.</returns>
-        public static int Resolve(World world, ReactionBook book, StatusBook statuses, Unit caster, SpellDef spell,
+        public static int Resolve(World world, ReactionBook book, StatusBook statuses, EntityId casterId, SpellDef spell,
             IReadOnlyList<Unit> victims, IReadOnlyList<GridPos> cells)
         {
             if (world == null) throw new ArgumentNullException(nameof(world));
@@ -100,7 +100,7 @@ namespace ProjectM.Status
                     && (c.Unit == null || (r.ExtraDamage == 0 && r.TargetStatus == StatusType.None)))
                 {
                     if (cellOnlyLogged.Add(r.Id))
-                        world.Events.Publish(new ReactionTriggeredEvent(r.Id, caster.Id, c.Pos, EntityId.None));
+                        world.Events.Publish(new ReactionTriggeredEvent(r.Id, casterId, c.Pos, EntityId.None));
                     ApplyTriggerChange(world, r, c);
                     continue;
                 }
@@ -114,10 +114,10 @@ namespace ProjectM.Status
                 }
                 fired++;
 
-                world.Events.Publish(new ReactionTriggeredEvent(r.Id, caster.Id, c.Pos, c.Unit != null ? c.Unit.Id : EntityId.None));
+                world.Events.Publish(new ReactionTriggeredEvent(r.Id, casterId, c.Pos, c.Unit != null ? c.Unit.Id : EntityId.None));
 
                 int extra = r.ExtraDamage > 0 && c.Unit != null && c.Unit.IsAlive ? Math.Min(r.ExtraDamage, config.ExtraDamageCap(spell.Damage)) : 0;
-                if (extra > 0) Combat.ApplyDamage(world, caster.Id, c.Unit, extra, DamageCause.Reaction(r.Id));
+                if (extra > 0) Combat.ApplyDamage(world, casterId, c.Unit, extra, DamageCause.Reaction(r.Id));
 
                 // 대상 상태 (3-3a 빙결): 트리거 소모보다 먼저 — 빙결 × 불(해동)처럼 같은 상태를 소모하는 반응은 이 필드를 쓰지 않는다
                 if (r.TargetStatus != StatusType.None && c.Unit != null && c.Unit.IsAlive && statuses.TryGet(r.TargetStatus, out var targetDef))
@@ -153,7 +153,7 @@ namespace ProjectM.Status
             foreach (var pair in explosions)
             {
                 if (!world.Units.TryGet(new EntityId(pair.Key), out var unit) || !unit.IsAlive) continue;
-                Combat.ApplyDamage(world, caster.Id, unit, pair.Value.Damage, DamageCause.Reaction(pair.Value.ReactionId));
+                Combat.ApplyDamage(world, casterId, unit, pair.Value.Damage, DamageCause.Reaction(pair.Value.ReactionId));
                 if (pair.Value.Status != StatusType.None && unit.IsAlive && statuses.TryGet(pair.Value.Status, out var def))
                     StatusEffects.TryApply(world, unit, def, pair.Value.ChancePercent);
             }
@@ -161,7 +161,7 @@ namespace ProjectM.Status
             foreach (var pair in spreads)
             {
                 if (!world.Units.TryGet(new EntityId(pair.Key), out var unit) || !unit.IsAlive) continue;
-                Combat.ApplyDamage(world, caster.Id, unit, pair.Value.damage, DamageCause.Reaction(pair.Value.id));
+                Combat.ApplyDamage(world, casterId, unit, pair.Value.damage, DamageCause.Reaction(pair.Value.id));
             }
             return fired;
         }

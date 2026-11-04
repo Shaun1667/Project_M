@@ -115,6 +115,8 @@ namespace ProjectM.UI
             _bus.Subscribe<ArmorEquippedEvent>(OnArmorEquipped);
             _bus.Subscribe<ArmorUpgradedEvent>(OnArmorUpgraded);
             _bus.Subscribe<ItemIdentifiedEvent>(OnIdentified);
+            _bus.Subscribe<ProjectM.Dungeon.TrapTriggeredEvent>(OnTrapTriggered);
+            _bus.Subscribe<ProjectM.Dungeon.TrapRevealedEvent>(OnTrapRevealed);
             _lastPickupFail = null;
             Changed?.Invoke();
         }
@@ -281,6 +283,19 @@ namespace ProjectM.UI
         }
 
         // 반응 로그 (3-1): "독화! 적 #3" · 빈 칸의 지형 반응은 이름만
+        // 3-12a 함정: 밟은 유닛 · 함정 이름, 3-12b 찾음
+        private void OnTrapTriggered(ProjectM.Dungeon.TrapTriggeredEvent e)
+        {
+            AddLog(HudText.TrapTriggered(Who(e.Unit), e.Type));
+            Changed?.Invoke();
+        }
+
+        private void OnTrapRevealed(ProjectM.Dungeon.TrapRevealedEvent e)
+        {
+            AddLog(HudText.TrapFound(e.Type));
+            Changed?.Invoke();
+        }
+
         private void OnReaction(ReactionTriggeredEvent e)
         {
             AddLog(e.Target.IsValid ? $"{Text.Reaction(e.ReactionId)}! {Who(e.Target)}" : $"{Text.Reaction(e.ReactionId)}!");
@@ -315,6 +330,8 @@ namespace ProjectM.UI
             _bus.Unsubscribe<ArmorEquippedEvent>(OnArmorEquipped);
             _bus.Unsubscribe<ArmorUpgradedEvent>(OnArmorUpgraded);
             _bus.Unsubscribe<ItemIdentifiedEvent>(OnIdentified);
+            _bus.Unsubscribe<ProjectM.Dungeon.TrapTriggeredEvent>(OnTrapTriggered);
+            _bus.Unsubscribe<ProjectM.Dungeon.TrapRevealedEvent>(OnTrapRevealed);
             _bus = null;
         }
 

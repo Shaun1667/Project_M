@@ -34,6 +34,7 @@ namespace ProjectM
         [SerializeField] private FusionCatalogAsset _fusionCatalog;
         [Tooltip("마법서 배치 수치 (3-5). 비우면 바닥에 마법서를 놓지 않는다")] [SerializeField] private LootConfigAsset _lootConfig;
         [Tooltip("층 꾸미기 수치 (3-11a — 풀 · 물 웅덩이). 비우면 꾸미지 않는다")] [SerializeField] private FloorDecorConfigAsset _floorDecorConfig;
+        [Tooltip("함정 표 (3-12a). 비우면 함정을 놓지 않는다")] [SerializeField] private TrapCatalogAsset _trapCatalog;
         [Tooltip("경험치 · 레벨업 수치 (3-6). 비우면 경험치를 주지 않는다")] [SerializeField] private ProgressionConfigAsset _progressionConfig;
         [Tooltip("물약 · 주문서 수치 · 겉모습 (3-9). 비우면 식별 · 무작위 배치 없음")] [SerializeField] private ConsumableConfigAsset _consumableConfig;
         [Tooltip("고를 수 있는 캐릭터 (2026-10-21). 비우거나 창이 없으면 고르지 않고 Player.asset 모습으로 시작")] [SerializeField] private CharacterCatalogAsset _characters;
@@ -45,6 +46,7 @@ namespace ProjectM
         [SerializeField] private FogPresenter _fogPresenter;
         [Tooltip("지형 효과 오버레이. 비우면 지형 효과가 화면에 안 보인다")]
         [SerializeField] private TerrainOverlayPresenter _terrainOverlay;
+        [SerializeField] private TrapPresenter _traps;
         [Tooltip("3D 이펙트 (G-3). 비우면 이펙트 없이 색 덮개만")] [SerializeField] private FxPresenter _fx;
         [Tooltip("바닥 아이템 · 마법서 (3-5). 비우면 바닥 아이템이 화면에 안 보인다")] [SerializeField] private FloorItemPresenter _floorItems;
         [SerializeField] private PlayerInputController _input;
@@ -210,15 +212,18 @@ namespace ProjectM
             var loot = _lootConfig != null ? _lootConfig.ToConfig() : null;
             if (loot != null) World.Scheduler.AddSystem(TickPhase.ManaRegen, new ItemPickupSystem(World, Items)); // 3-5: 걸어 들어가면 줍기
             var decor = _floorDecorConfig != null ? _floorDecorConfig.ToConfig() : null;
+            var traps = _trapCatalog != null ? _trapCatalog.ToBook(Spells) : null; // 3-12a
+            if (traps != null) World.Scheduler.AddSystem(TickPhase.ManaRegen, new TrapSystem(World, traps, Spells)); // ⑤ 밟으면 발동
             Terrains.TryGet(TerrainEffectType.Water, out var water); // 3-11a: 물 웅덩이 = 사라지지 않는 물 지형
             var stairs = new FloorTransition(World, generator, dungeonConfig.FloorCount, enemyDef, spawn, (w, id) => enemyAi, vision, _bossDef.ToDef(), loot,
-                decor, water);
+                decor, water, traps);
 
             if (_pixelMap != null) _pixelMap.Bind(World.Events); // P-3a 2D 맵 — 3D 맵은 묶지 않음
             else _tilemapPresenter.Bind(World.Events);
             _entityPresenter.Bind(World.Events);
             if (_fogPresenter != null) _fogPresenter.Bind(World.Events);
             if (_terrainOverlay != null) _terrainOverlay.Bind(World.Events);
+            if (_traps != null) _traps.Bind(World.Events);
             if (_fx != null) _fx.Bind(World.Events); // G-3: 엔티티 모습 다음에 (상태 효과가 유닛에 붙음)
             if (_floorItems != null) _floorItems.Bind(World.Events);
             World.Events.Subscribe<EntityMovedEvent>(OnEntityMoved);
@@ -226,7 +231,7 @@ namespace ProjectM
             World.Events.Subscribe<RunEndedEvent>(OnRunEnded);
 
             World.Events.Publish(new MapLoadedEvent(World.Map));
-            if (decor != null) FloorDecor.Apply(World, Floor, decor, water); // 3-11a: MapLoaded 뒤에 (화면이 지우지 않게), 적 배치 전
+            if (decor != null) FloorDecor.Apply(World, Floor, decor, water, traps); // 3-11a · 3-12a: MapLoaded 뒤에 (화면이 지우지 않게), 적 배치 전
             var playerDef = _playerDef.ToDef();
             if (!string.IsNullOrEmpty(visualId)) playerDef = playerDef.WithVisualId(visualId); // 2026-10-21 캐릭터 선택 — 지금은 외형만
             var player = FloorPopulator.Populate(World, Floor.Start, playerDef, enemyDef, spawn, enemyAi,

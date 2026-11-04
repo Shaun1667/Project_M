@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using ProjectM.Core;
 using ProjectM.Data;
+using ProjectM.Dungeon;
 using ProjectM.Input;
 using ProjectM.Items;
 using ProjectM.Magic;
@@ -42,6 +43,7 @@ namespace ProjectM.Editor
         private const string FusionCatalogPath = "Assets/_Project/Data/Fusions/FusionCatalog.asset";
         private const string LootConfigPath = "Assets/_Project/Data/Items/LootConfig.asset";
         private const string FloorDecorConfigPath = "Assets/_Project/Data/Dungeon/FloorDecorConfig.asset";
+        private const string TrapCatalogPath = "Assets/_Project/Data/Dungeon/TrapCatalog.asset";
         private const string ConsumableConfigPath = "Assets/_Project/Data/Items/ConsumableConfig.asset";
         // P-3a (결정 2026-10-21): 2D 픽셀 그래픽 — Grid를 눕히지 않고 정사영 카메라, 맵은 PixelMapPresenter. false면 G-1 3D 그대로
         internal static readonly bool Pixel2D = false; // 결정 2026-10-28 (사용자): 3D로 되돌림 — 2D 코드 · 그림은 남겨 두고 이 스위치로만 끔
@@ -178,6 +180,14 @@ namespace ProjectM.Editor
             var terrainOverlay = GetOrAdd<TerrainOverlayPresenter>(terrainFxGo);
             SetRefs(terrainOverlay, ("_tilemap", terrainFxTilemap), ("_tile", EnsureFogTile()));
 
+            // 3-12a 함정 표시: 지형 오버레이 바로 위 (드러난 함정만)
+            var trapsGo = FindOrCreate("Traps", gridGo.transform);
+            var trapsTilemap = GetOrAdd<Tilemap>(trapsGo);
+            GetOrAdd<TilemapRenderer>(trapsGo).sortingOrder = 6;
+            trapsGo.transform.localPosition = new Vector3(0f, 0f, -0.012f);
+            var trapPresenter = GetOrAdd<TrapPresenter>(trapsGo);
+            SetRefs(trapPresenter, ("_tilemap", trapsTilemap), ("_tile", EnsureFogTile()));
+
             // 시야 안개: 엔티티(정렬 10) 위
             var fogGo = FindOrCreate("Fog", gridGo.transform);
             var fogTilemap = GetOrAdd<Tilemap>(fogGo);
@@ -236,6 +246,7 @@ namespace ProjectM.Editor
             FillZeroInts(lootConfig, ("_weaponsPerRun", 2), ("_upgradeScrollsPerRun", 3), ("_strengthPotionsPerRun", 2), ("_armorsPerRun", 2)); // 3-10a 갑옷 2 // 3-7a 무기 2 · 3-7b 강화 3 · 힘 2 (BALANCE 11번)
             var consumableConfig = LoadOrCreate<ConsumableConfigAsset>(ConsumableConfigPath); // 3-9: 새로 만들면 필드 초기값 = BALANCE 14번
             var floorDecorConfig = LoadOrCreate<FloorDecorConfigAsset>(FloorDecorConfigPath); // 3-11a: 풀 · 물 웅덩이, 새로 만들면 필드 초기값 = BALANCE 16번
+            var trapCatalog = EnsureTrapCatalog(); // 3-12a
             var floorItemsGo = FindOrCreate("FloorItems", null);
             var floorItems = GetOrAdd<FloorItemPresenter>(floorItemsGo);
             var itemVisuals = EnsureItemIcons(); // P-3 ⓒ: 아이템 픽셀 그림 (Art/Pixel/Items — 파일 이름 = 아이템 ID 또는 겉모습 키)
@@ -276,6 +287,8 @@ namespace ProjectM.Editor
                 ("_fusionCatalog", fusionCatalog),
                 ("_lootConfig", lootConfig),
                 ("_floorDecorConfig", floorDecorConfig),
+                ("_trapCatalog", trapCatalog),
+                ("_traps", trapPresenter),
                 ("_consumableConfig", consumableConfig),
                 ("_characters", characterCatalog),
                 ("_characterSelect", characterSelect),
@@ -465,6 +478,22 @@ namespace ProjectM.Editor
             changed |= catalog.SetDisplayNameIfEmpty("lightning_basic", "번개 줄기");
             changed |= catalog.SetDisplayNameIfEmpty("poison_basic", "독 폭발");
             changed |= catalog.SetDisplayNameIfEmpty("water_basic", "물보라");
+            // 3-12a 함정 효과 주문 (BALANCE 17번): 함정 칸 중심 3×3, 시전자 없음 · 마나 0 · 배우지 않음. 마비 가스는 바람 속성(반응 없음)
+            foreach (var (id, name, element, damage, status, chance, terrain) in new[]
+            {
+                ("trap_fire", "화염 함정", Element.Fire, 2, StatusType.Burn, 100, TerrainEffectType.FireZone),
+                ("trap_toxic", "독가스 함정", Element.Poison, 0, StatusType.Poison, 100, TerrainEffectType.PoisonCloud),
+                ("trap_paralytic", "마비 가스 함정", Element.Wind, 0, StatusType.None, 0, TerrainEffectType.ParalyticGas),
+                ("trap_flood", "물 함정", Element.Water, 0, StatusType.Wet, 100, TerrainEffectType.Water),
+                ("trap_shock", "번개 함정", Element.Lightning, 3, StatusType.Paralyze, 30, TerrainEffectType.None),
+            })
+            {
+                changed |= catalog.AddIfMissing(new SpellCatalogAsset.Entry
+                    { Id = id, Element = element, Shape = SpellShape.Burst, Range = 1, Damage = damage, ManaCost = 0, Radius = 1 });
+                if (status != StatusType.None) changed |= catalog.SetStatusIfNone(id, status, chance);
+                if (terrain != TerrainEffectType.None) changed |= catalog.SetTerrainIfNone(id, terrain);
+                changed |= catalog.SetDisplayNameIfEmpty(id, name);
+            }
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }
@@ -509,6 +538,26 @@ namespace ProjectM.Editor
         }
 
         /// <summary>반응 규칙 표: 없는 ID만 REACTIONS.md 3-1 표 · BALANCE 8번 값으로 추가한다.</summary>
+        /// <summary>함정 7종 (3-12a, BALANCE 17번): 없는 종류만 추가 (사용자가 고친 값은 그대로). 배치 수치는 새 에셋의 필드 초기값.</summary>
+        private static TrapCatalogAsset EnsureTrapCatalog()
+        {
+            var catalog = LoadOrCreate<TrapCatalogAsset>(TrapCatalogPath);
+            bool changed = false;
+            foreach (var (type, spell, special, weight) in new[]
+            {
+                (TrapType.Fire, "trap_fire", TrapSpecial.None, 2),
+                (TrapType.ToxicGas, "trap_toxic", TrapSpecial.None, 2),
+                (TrapType.ParalyticGas, "trap_paralytic", TrapSpecial.None, 1),
+                (TrapType.Flood, "trap_flood", TrapSpecial.None, 2),
+                (TrapType.Shock, "trap_shock", TrapSpecial.None, 2),
+                (TrapType.Teleport, (string)null, TrapSpecial.Teleport, 1),
+                (TrapType.Alarm, (string)null, TrapSpecial.Alarm, 1),
+            })
+                changed |= catalog.AddIfMissing(new TrapCatalogAsset.Entry { Type = type, SpellId = spell, Special = special, Weight = weight });
+            if (changed) EditorUtility.SetDirty(catalog);
+            return catalog;
+        }
+
         private static ReactionCatalogAsset EnsureReactionCatalog()
         {
             var catalog = LoadOrCreate<ReactionCatalogAsset>(ReactionCatalogPath);
