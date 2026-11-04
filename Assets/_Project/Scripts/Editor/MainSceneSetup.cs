@@ -78,6 +78,7 @@ namespace ProjectM.Editor
         private const string TallGrassTilePath = VisualsDir + "/TallGrassTile.asset";
         private const string DoorTilePath = VisualsDir + "/DoorTile.asset";
         private const string OpenDoorTilePath = VisualsDir + "/OpenDoorTile.asset";
+        private const string LockedDoorTilePath = VisualsDir + "/LockedDoorTile.asset";
         private const string PlayerSpritePath = "Assets/_Project/Art/Greybox/player.png";
         private const string UnitCircleSpritePath = "Assets/_Project/Art/Greybox/unit_circle.png";
         private const string WhiteSquareSpritePath = "Assets/_Project/Art/Greybox/white_square.png";
@@ -323,6 +324,7 @@ namespace ProjectM.Editor
             set.Set(TileType.TallGrass, EnsureTintTile(TallGrassTilePath, new Color(0.2f, 0.5f, 0.15f))); // 3-11a: 진초록
             set.Set(TileType.Door, EnsureTintTile(DoorTilePath, new Color(0.45f, 0.3f, 0.18f))); // 3-11c 그레이박스: 갈색
             set.Set(TileType.OpenDoor, EnsureTintTile(OpenDoorTilePath, new Color(0.7f, 0.55f, 0.35f))); // 3-11c: 밝은 갈색
+            set.Set(TileType.LockedDoor, EnsureTintTile(LockedDoorTilePath, new Color(0.75f, 0.6f, 0.15f))); // 3-15b: 금빛
             EditorUtility.SetDirty(set);
             return set;
         }
@@ -865,6 +867,7 @@ namespace ProjectM.Editor
             changed |= catalog.AddIfMissing(Consumable("scroll_transmutation", "변환 주문서", ItemUse.Scroll, ConsumableEffect.Transmutation, 1));
             // 3-14 음식 (SPD): 식량 300 · 작은 빵 · 고기 150. 정체불명 고기는 불 = 구운 고기, 얼음 = 얼린 고기 (BALANCE 18번)
             changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "gold", DisplayName = "금화", Use = ItemUse.Gold }); // 3-15a
+            changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "key_iron", DisplayName = "쇠 열쇠", Use = ItemUse.Key }); // 3-15b
             changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "food_ration", DisplayName = "식량", Use = ItemUse.Food, Food = 300 });
             changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "food_bread", DisplayName = "작은 빵", Use = ItemUse.Food, Food = 150 });
             changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "food_mystery_meat", DisplayName = "정체불명 고기", Use = ItemUse.Food, Food = 150, Risky = true,

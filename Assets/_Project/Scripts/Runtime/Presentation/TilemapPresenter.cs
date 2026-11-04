@@ -255,7 +255,7 @@ namespace ProjectM.Presentation
 
             if (_visuals == null || !_visuals.TryGetModule(type, out var module, out var rotate)) return;
             var cellRoot = CreateCellRoot(pos, type.ToString());
-            int rotation = GridMap.IsDoorType(type) ? DoorRotation(pos) : rotate ? RotationIndex(pos) : 0;
+            int rotation = GridMap.IsDoorType(type) || type == TileType.LockedDoor ? DoorRotation(pos) : rotate ? RotationIndex(pos) : 0;
             var instance = Spawn(module, cellRoot.transform, rotation);
             AddCell(pos, cellRoot, Color.white, tall: ModuleHeight(instance) > TallModuleHeight, isWall: false);
         }

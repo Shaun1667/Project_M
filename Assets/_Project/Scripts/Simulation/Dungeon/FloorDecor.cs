@@ -23,9 +23,13 @@ namespace ProjectM.Dungeon
         /// <summary>놓은 문이 숨겨진 문일 확률 (%) — 3-12b. 막으면 층이 끊기는 자리는 보통 문.</summary>
         public int HiddenDoorPercent { get; }
 
+        /// <summary>특수 방 (3-15b). null이면 없음.</summary>
+        public SpecialRoomConfig SpecialRooms { get; }
+
         public FloorDecorConfig(int grassPatchCount, int grassPatchMinSize, int grassPatchMaxSize, int tallGrassPercent,
-            int puddleCount, int puddleMinSize, int puddleMaxSize, int doorPercent = 0, int hiddenDoorPercent = 0)
+            int puddleCount, int puddleMinSize, int puddleMaxSize, int doorPercent = 0, int hiddenDoorPercent = 0, SpecialRoomConfig specialRooms = null)
         {
+            SpecialRooms = specialRooms;
             if (hiddenDoorPercent < 0 || hiddenDoorPercent > 100) throw new ArgumentOutOfRangeException(nameof(hiddenDoorPercent));
             HiddenDoorPercent = hiddenDoorPercent;
             if (doorPercent < 0 || doorPercent > 100) throw new ArgumentOutOfRangeException(nameof(doorPercent));
@@ -78,6 +82,8 @@ namespace ProjectM.Dungeon
                     world.SetTile(pos, hidden ? TileType.HiddenDoor : TileType.Door);
                 }
             }
+            var special = SpecialRooms.Carve(world, floor, config.SpecialRooms, rng); // 3-15b: 문 다음, 웅덩이 · 풀 전
+            if (special != null) foreach (var c in special.Cells) used.Add(c);
             if (water != null)
             {
                 for (int i = 0; i < config.PuddleCount; i++)

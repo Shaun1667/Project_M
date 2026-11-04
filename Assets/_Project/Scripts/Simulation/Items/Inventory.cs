@@ -77,6 +77,8 @@ namespace ProjectM.Items
         Food = 7,
         /// <summary>금화 (3-15a): 주우면 배낭이 아니라 RunState.Gold로 — 바닥 무더기의 Quantity가 금액.</summary>
         Gold = 8,
+        /// <summary>열쇠 (3-15b): 잠긴 문에 부딪히면 하나 써서 연다 (UnlockCommand). 겹친다.</summary>
+        Key = 9,
     }
 
     /// <summary>
@@ -268,7 +270,7 @@ namespace ProjectM.Items
 
         /// <summary>겹치는 항목인지 (3-10b): 물약 · 주문서.</summary>
         public static bool IsStackable(ItemBook items, InventoryRef entry) =>
-            entry.Kind == InventoryKind.Item && items != null && items.TryGet(entry.Id, out var def) && (def.IsConsumable || def.Use == ItemUse.Food); // 3-14 음식도
+            entry.Kind == InventoryKind.Item && items != null && items.TryGet(entry.Id, out var def) && (def.IsConsumable || def.Use == ItemUse.Food || def.Use == ItemUse.Key); // 3-14 음식 · 3-15b 열쇠도
 
         /// <summary>인벤토리 칸에서 하나를 뺀다 (겹친 칸은 개수 −1). 칸이 비었고 그 항목이 인벤토리에 더 없으면 가리키던 빠른 칸도 비운다.</summary>
         public static void RemoveAt(World world, Unit unit, int index)

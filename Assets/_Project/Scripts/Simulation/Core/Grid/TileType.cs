@@ -23,5 +23,7 @@ namespace ProjectM.Core
         OpenDoor = 8,
         /// <summary>숨겨진 문 (3-12b, SPD) — 찾기 전엔 벽과 같다 (못 지나감 · 시야 막음 · 벽으로 그림). 찾으면 닫힌 문.</summary>
         HiddenDoor = 9,
+        /// <summary>잠긴 문 (3-15b 보물 방) — 걸을 수 없고 시야를 막는다. 열쇠를 가지고 부딪히면 닫힌 문이 된다 (UnlockCommand).</summary>
+        LockedDoor = 10,
     }
 }

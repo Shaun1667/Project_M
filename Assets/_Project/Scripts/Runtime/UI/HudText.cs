@@ -141,10 +141,15 @@ namespace ProjectM.UI
                 case ItemUse.Scroll: return $"{text.Entry(entry)}{count} — 주문서. 읽기" + (known ? string.Empty : " · 정체를 모름");
                 case ItemUse.LearnSpell: return $"{text.Entry(entry)} — 마법서. 읽으면 주문을 배운다";
                 case ItemUse.Fusion: return $"{text.Entry(entry)} — 마법 융합기. 주문 두 개를 합쳐 한 번에 시전";
+                case ItemUse.Key: return $"{text.Entry(entry)}{count} — 열쇠. 잠긴 문에 부딪히면 열린다";
                 case ItemUse.Food: return $"{text.Entry(entry)}{count} — 음식. 먹으면 허기 −{def.Food}" + (def.Risky ? " · 탈이 날 수 있음 (불에 구우면 안전)" : string.Empty);
                 default: return text.Entry(entry);
             }
         }
+
+        /// <summary>잠긴 문 (3-15b).</summary>
+        public const string DoorLocked = "잠겨 있다 — 열쇠가 필요하다";
+        public const string DoorUnlocked = "열쇠로 문을 열었다";
 
         /// <summary>금화 (3-15a): HUD 표시 · 주웠을 때 로그.</summary>
         public static string GoldLabel(int gold) => $"<color=#FFD54F>금화 {gold}</color>";

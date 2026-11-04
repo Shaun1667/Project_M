@@ -897,6 +897,13 @@ namespace ProjectM.Input
         {
             if (PlayerActions.TryStep(_world, _config, direction, out var command, _spells.Statuses)) // 3-13a 신속: 두 칸
                 _clock.SubmitPlayerCommand(command);
+            else if (PlayerActions.TryGetPlayer(_world, out var bumper) && _world.Map.InBounds(bumper.Pos + direction)
+                && _world.Map.Get(bumper.Pos + direction) == TileType.LockedDoor && (direction.X == 0 || direction.Y == 0)) // 3-15b 잠긴 문
+            {
+                if (ProjectM.Dungeon.UnlockCommand.KeySlot(_items, bumper) >= 0)
+                    _clock.SubmitPlayerCommand(new ProjectM.Dungeon.UnlockCommand(_world, _items, bumper.Pos + direction, _config.DefaultActionCostTicks));
+                else Hint(HudText.DoorLocked);
+            }
         }
 
         private void OnClick(Unit player, Vector2 screenPos)

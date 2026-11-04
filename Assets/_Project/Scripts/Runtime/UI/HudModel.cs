@@ -121,6 +121,7 @@ namespace ProjectM.UI
             _bus.Subscribe<ItemTransmutedEvent>(OnTransmuted);
             _bus.Subscribe<HungerChangedEvent>(OnHungerChanged);
             _bus.Subscribe<GoldChangedEvent>(OnGoldChanged);
+            _bus.Subscribe<ProjectM.Dungeon.DoorUnlockedEvent>(OnDoorUnlocked);
             _bus.Subscribe<FoodEatenEvent>(OnFoodEaten);
             _bus.Subscribe<FoodCookedEvent>(OnFoodCooked);
             _bus.Subscribe<ProjectM.Dungeon.HiddenDoorFoundEvent>(OnHiddenDoorFound);
@@ -307,6 +308,12 @@ namespace ProjectM.UI
         /// <summary>가진 금화 (3-15a — HUD 갑옷 줄 옆에).</summary>
         public int Gold { get; private set; }
 
+        private void OnDoorUnlocked(ProjectM.Dungeon.DoorUnlockedEvent e)
+        {
+            AddLog(HudText.DoorUnlocked);
+            Changed?.Invoke();
+        }
+
         private void OnGoldChanged(GoldChangedEvent e)
         {
             Gold = e.Gold;
@@ -397,6 +404,7 @@ namespace ProjectM.UI
             _bus.Unsubscribe<ItemTransmutedEvent>(OnTransmuted);
             _bus.Unsubscribe<HungerChangedEvent>(OnHungerChanged);
             _bus.Unsubscribe<GoldChangedEvent>(OnGoldChanged);
+            _bus.Unsubscribe<ProjectM.Dungeon.DoorUnlockedEvent>(OnDoorUnlocked);
             _bus.Unsubscribe<FoodEatenEvent>(OnFoodEaten);
             _bus.Unsubscribe<FoodCookedEvent>(OnFoodCooked);
             _bus.Unsubscribe<ProjectM.Dungeon.HiddenDoorFoundEvent>(OnHiddenDoorFound);

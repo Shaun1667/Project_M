@@ -155,6 +155,7 @@ namespace ProjectM.Editor
             // 3-11c 문 (그레이박스): 바닥 + 문틀 + 문짝 — 방향은 TilemapPresenter가 옆 벽을 보고 돌린다 (문짝이 벽 사이를 막게)
             tiles.SetModule(TileType.Door, BuildDoorPrefab(floorPrefab, "Tile_Door", open: false));
             tiles.SetModule(TileType.OpenDoor, BuildDoorPrefab(floorPrefab, "Tile_OpenDoor", open: true));
+            tiles.SetModule(TileType.LockedDoor, AssetDatabase.LoadAssetAtPath<GameObject>($"{PrefabDir}/Tile_Door.prefab")); // 3-15b: 닫힌 문 모양 (색은 타일)
             tiles.SetModule(TileType.Wall, BuildPrefab(Wall, null));
             tiles.SetModule(TileType.StairsDown, BuildPrefab(StairsDown, null));
             tiles.SetModule(TileType.StairsUp, BuildPrefab(StairsUp, null));
