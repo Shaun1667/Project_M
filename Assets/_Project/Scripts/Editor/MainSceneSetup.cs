@@ -492,6 +492,10 @@ namespace ProjectM.Editor
                 ("trap_paralytic", "마비 가스 함정", Element.Wind, 0, StatusType.None, 0, TerrainEffectType.ParalyticGas),
                 ("trap_flood", "물 함정", Element.Water, 0, StatusType.Wet, 100, TerrainEffectType.Water),
                 ("trap_shock", "번개 함정", Element.Lightning, 3, StatusType.Paralyze, 30, TerrainEffectType.None),
+                // 3-16b 식물 (BALANCE 17번)
+                ("plant_firebloom", "화염꽃", Element.Fire, 2, StatusType.Burn, 100, TerrainEffectType.FireZone),
+                ("plant_icecap", "얼음버섯", Element.Ice, 0, StatusType.Frozen, 100, TerrainEffectType.None),
+                ("plant_sorrowmoss", "독이끼", Element.Poison, 0, StatusType.Poison, 100, TerrainEffectType.PoisonCloud),
             })
             {
                 changed |= catalog.AddIfMissing(new SpellCatalogAsset.Entry
@@ -566,6 +570,12 @@ namespace ProjectM.Editor
                 (TrapType.Shock, "trap_shock", TrapSpecial.None, 2),
                 (TrapType.Teleport, (string)null, TrapSpecial.Teleport, 1),
                 (TrapType.Alarm, (string)null, TrapSpecial.Alarm, 1),
+                // 3-16b 식물 — 무게 0 (씨앗으로만)
+                (TrapType.Firebloom, "plant_firebloom", TrapSpecial.None, 0),
+                (TrapType.Icecap, "plant_icecap", TrapSpecial.None, 0),
+                (TrapType.Sorrowmoss, "plant_sorrowmoss", TrapSpecial.None, 0),
+                (TrapType.Sungrass, (string)null, TrapSpecial.Heal, 0),
+                (TrapType.Fadeleaf, (string)null, TrapSpecial.Teleport, 0),
             })
                 changed |= catalog.AddIfMissing(new TrapCatalogAsset.Entry { Type = type, SpellId = spell, Special = special, Weight = weight });
             if (changed) EditorUtility.SetDirty(catalog);
@@ -871,6 +881,14 @@ namespace ProjectM.Editor
             changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "key_iron", DisplayName = "쇠 열쇠", Use = ItemUse.Key }); // 3-15b
             // 3-16a 던지는 무기 (SPD 다트 · 투창, 피해는 근접처럼 1/3 크기 — BALANCE 13번)
             changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "dart", DisplayName = "다트", Use = ItemUse.Thrown, ThrowMinDamage = 1, ThrowMaxDamage = 3, BreakPercent = 0 });
+            // 3-16b 씨앗 5종 (SPD)
+            foreach (var (seedId, seedName, plant) in new[]
+            {
+                ("seed_firebloom", "화염꽃 씨앗", TrapType.Firebloom), ("seed_icecap", "얼음버섯 포자", TrapType.Icecap),
+                ("seed_sorrowmoss", "독이끼 씨앗", TrapType.Sorrowmoss), ("seed_sungrass", "햇볕풀 씨앗", TrapType.Sungrass),
+                ("seed_fadeleaf", "사라짐잎 씨앗", TrapType.Fadeleaf),
+            })
+                changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = seedId, DisplayName = seedName, Use = ItemUse.Seed, PlantTrap = plant });
             changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "javelin", DisplayName = "투창", Use = ItemUse.Thrown, ThrowMinDamage = 3, ThrowMaxDamage = 8, BreakPercent = 33 });
             changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "food_ration", DisplayName = "식량", Use = ItemUse.Food, Food = 300 });
             changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "food_bread", DisplayName = "작은 빵", Use = ItemUse.Food, Food = 150 });
@@ -912,6 +930,7 @@ namespace ProjectM.Editor
                 case ItemUse.Fusion: return 200;
                 case ItemUse.Key: return 50;
                 case ItemUse.Thrown: return e.ThrowMaxDamage >= 6 ? 25 : 5;
+                case ItemUse.Seed: return 10;
                 default: return 0;
             }
         }

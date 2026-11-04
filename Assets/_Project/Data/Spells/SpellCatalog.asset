@@ -123,3 +123,36 @@ MonoBehaviour:
     StatusChancePercent: 30
     LeavesTerrain: 0
     DisplayName: "\uBC88\uAC1C \uD568\uC815"
+  - Id: plant_firebloom
+    Element: 0
+    Shape: 2
+    Range: 1
+    Damage: 2
+    ManaCost: 0
+    Radius: 1
+    AppliesStatus: 1
+    StatusChancePercent: 100
+    LeavesTerrain: 1
+    DisplayName: "\uD654\uC5FC\uAF43"
+  - Id: plant_icecap
+    Element: 1
+    Shape: 2
+    Range: 1
+    Damage: 0
+    ManaCost: 0
+    Radius: 1
+    AppliesStatus: 6
+    StatusChancePercent: 100
+    LeavesTerrain: 0
+    DisplayName: "\uC5BC\uC74C\uBC84\uC12F"
+  - Id: plant_sorrowmoss
+    Element: 3
+    Shape: 2
+    Range: 1
+    Damage: 0
+    ManaCost: 0
+    Radius: 1
+    AppliesStatus: 3
+    StatusChancePercent: 100
+    LeavesTerrain: 2
+    DisplayName: "\uB3C5\uC774\uB07C"

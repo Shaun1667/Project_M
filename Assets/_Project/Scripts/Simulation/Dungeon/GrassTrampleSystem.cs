@@ -24,7 +24,9 @@ namespace ProjectM.Dungeon
             foreach (var unit in _world.Units.ToSortedList())
             {
                 if (!unit.IsAlive || !_world.Map.InBounds(unit.Pos) || ProjectM.Status.StatusEffects.Any(_statuses, unit, d => d.Levitates)) continue;
-                if (_world.Map.Get(unit.Pos) == TileType.TallGrass) _world.SetTile(unit.Pos, TileType.Grass);
+                if (_world.Map.Get(unit.Pos) != TileType.TallGrass) continue;
+                _world.SetTile(unit.Pos, TileType.Grass);
+                _world.OnGrassTrampled?.Invoke(unit.Pos); // 3-16b: 가끔 씨앗
             }
         }
     }

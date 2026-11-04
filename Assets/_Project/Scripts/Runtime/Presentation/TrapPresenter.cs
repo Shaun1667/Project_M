@@ -81,6 +81,11 @@ namespace ProjectM.Presentation
                 case TrapType.Shock: return _shockColor;
                 case TrapType.Teleport: return _teleportColor;
                 case TrapType.Alarm: return _alarmColor;
+                case TrapType.Firebloom: return new Color(1f, 0.55f, 0.2f, 1f); // 3-16b 식물 (밝은 색)
+                case TrapType.Icecap: return new Color(0.7f, 0.95f, 1f, 1f);
+                case TrapType.Sorrowmoss: return new Color(0.5f, 0.8f, 0.2f, 1f);
+                case TrapType.Sungrass: return new Color(1f, 0.95f, 0.3f, 1f);
+                case TrapType.Fadeleaf: return new Color(0.75f, 0.6f, 1f, 1f);
                 default: return Color.white;
             }
         }

@@ -367,6 +367,14 @@ namespace ProjectM.Input
                 _clock.SubmitPlayerCommand(new EquipWeaponCommand(_world, _items, index, entry, _config.DefaultActionCostTicks));
                 return;
             }
+            if (_items.TryGet(entry.Id, out var seed) && seed.Use == ItemUse.Seed && PlayerActions.TryGetPlayer(_world, out var planter))
+            {
+                // 3-16b: 사용 = 발밑에 심기 (차례 1)
+                int index = System.Array.IndexOf(planter.InventorySlots, entry);
+                CloseInventory();
+                _clock.SubmitPlayerCommand(new ProjectM.Dungeon.PlantCommand(_world, _items, index, entry, _config.DefaultActionCostTicks));
+                return;
+            }
             if (_hunger != null && _items.TryGet(entry.Id, out var food) && food.Use == ItemUse.Food && PlayerActions.TryGetPlayer(_world, out var eater))
             {
                 // 3-14: 먹기 = 차례 EatTicks (SPD 3)

@@ -17,7 +17,7 @@ namespace ProjectM.Tests
         private static readonly GameConfig StepConfig = new GameConfig(1, 1f);
 
         /// <summary>SpellCatalog의 함정 효과 주문 수 (SpellTests 검산이 쓴다).</summary>
-        internal const int TrapSpellCount = 5;
+        internal const int TrapSpellCount = 8; // 함정 5 + 식물 3 (3-16b)
 
         /// <summary>BALANCE.md 17번 함정 효과 주문 — 3×3, 마나 0.</summary>
         internal static SpellDef[] BalanceTrapSpells() => new[]
@@ -27,6 +27,10 @@ namespace ProjectM.Tests
             new SpellDef("trap_paralytic", Element.Wind, SpellShape.Burst, 1, 0, 0, 1, StatusType.None, 0, TerrainEffectType.ParalyticGas),
             new SpellDef("trap_flood", Element.Water, SpellShape.Burst, 1, 0, 0, 1, StatusType.Wet, 100, TerrainEffectType.Water),
             new SpellDef("trap_shock", Element.Lightning, SpellShape.Burst, 1, 3, 0, 1, StatusType.Paralyze, 30),
+            // 3-16b 식물
+            new SpellDef("plant_firebloom", Element.Fire, SpellShape.Burst, 1, 2, 0, 1, StatusType.Burn, 100, TerrainEffectType.FireZone),
+            new SpellDef("plant_icecap", Element.Ice, SpellShape.Burst, 1, 0, 0, 1, StatusType.Frozen, 100),
+            new SpellDef("plant_sorrowmoss", Element.Poison, SpellShape.Burst, 1, 0, 0, 1, StatusType.Poison, 100, TerrainEffectType.PoisonCloud),
         };
 
         /// <summary>BALANCE.md 17번 함정 표 · 배치 수치.</summary>
@@ -39,7 +43,13 @@ namespace ProjectM.Tests
             new TrapDef(TrapType.Shock, "trap_shock", TrapSpecial.None, 2),
             new TrapDef(TrapType.Teleport, null, TrapSpecial.Teleport, 1),
             new TrapDef(TrapType.Alarm, null, TrapSpecial.Alarm, 1),
-        }, spells, trapsPerFloor: 4, hiddenPercent: 85, minDistanceFromStart: 3);
+            // 3-16b 식물 (무게 0 — 씨앗으로만)
+            new TrapDef(TrapType.Firebloom, "plant_firebloom", TrapSpecial.None, 0),
+            new TrapDef(TrapType.Icecap, "plant_icecap", TrapSpecial.None, 0),
+            new TrapDef(TrapType.Sorrowmoss, "plant_sorrowmoss", TrapSpecial.None, 0),
+            new TrapDef(TrapType.Sungrass, null, TrapSpecial.Heal, 0),
+            new TrapDef(TrapType.Fadeleaf, null, TrapSpecial.Teleport, 0),
+        }, spells, trapsPerFloor: 4, hiddenPercent: 85, minDistanceFromStart: 3, healPercent: 50);
 
         private sealed class Run
         {

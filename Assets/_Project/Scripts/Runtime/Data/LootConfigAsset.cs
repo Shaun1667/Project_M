@@ -32,9 +32,13 @@ namespace ProjectM.Data
         [Tooltip("층마다 던지는 무기 묶음 수")] [Min(0)] [SerializeField] private int _thrownPerFloor = 1;
         [SerializeField] private string[] _thrownItems = { "dart", "javelin" };
         [Tooltip("목록별 묶음 개수 (다트 5 · 투창 2)")] [SerializeField] private int[] _thrownBundles = { 5, 2 };
+        [Header("씨앗 (3-16b — BALANCE 11번)")]
+        [Tooltip("층마다 씨앗 수")] [Min(0)] [SerializeField] private int _seedsPerFloor = 2;
+        [SerializeField] private string[] _seedItems = { "seed_firebloom", "seed_icecap", "seed_sorrowmoss", "seed_sungrass", "seed_fadeleaf" };
+        [Tooltip("높은 풀을 밟으면 씨앗을 떨어뜨릴 확률 %")] [Range(0, 100)] [SerializeField] private int _seedDropPercent = 5;
 
         public LootConfig ToConfig() => new LootConfig(_maxBooksPerFloor, _minDistanceFromStart, _weaponsPerRun, _upgradeScrollsPerRun, _strengthPotionsPerRun, _armorsPerRun,
             _goldPilesPerFloor, _goldMinBase, _goldMinPerFloor, _goldMaxBase, _goldMaxPerFloor, _enemyGoldPercent, _enemyGoldMin, _enemyGoldMax,
-            _thrownPerFloor, _thrownItems, _thrownBundles);
+            _thrownPerFloor, _thrownItems, _thrownBundles, _seedsPerFloor, _seedItems, _seedDropPercent);
     }
 }

@@ -37,12 +37,21 @@ namespace ProjectM.Items
         public int ThrownPerFloor { get; }
         public IReadOnlyList<string> ThrownItems { get; }
         public IReadOnlyList<int> ThrownBundles { get; }
+        /// <summary>씨앗 (3-16b): 층마다 놓는 수 · 목록 · 높은 풀을 밟으면 떨어뜨릴 확률 (%).</summary>
+        public int SeedsPerFloor { get; }
+        public IReadOnlyList<string> SeedItems { get; }
+        public int SeedDropPercent { get; }
 
         public LootConfig(int maxBooksPerFloor, int minDistanceFromStart, int weaponsPerRun = 0, int upgradeScrollsPerRun = 0, int strengthPotionsPerRun = 0,
             int armorsPerRun = 0, int goldPilesPerFloor = 0, int goldMinBase = 0, int goldMinPerFloor = 0, int goldMaxBase = 0, int goldMaxPerFloor = 0,
             int enemyGoldPercent = 0, int enemyGoldMin = 0, int enemyGoldMax = 0,
-            int thrownPerFloor = 0, IReadOnlyList<string> thrownItems = null, IReadOnlyList<int> thrownBundles = null)
+            int thrownPerFloor = 0, IReadOnlyList<string> thrownItems = null, IReadOnlyList<int> thrownBundles = null,
+            int seedsPerFloor = 0, IReadOnlyList<string> seedItems = null, int seedDropPercent = 0)
         {
+            if (seedsPerFloor < 0 || seedDropPercent < 0 || seedDropPercent > 100) throw new ArgumentOutOfRangeException(nameof(seedDropPercent));
+            SeedsPerFloor = seedsPerFloor;
+            SeedItems = seedItems ?? Array.Empty<string>();
+            SeedDropPercent = seedDropPercent;
             ThrownItems = thrownItems ?? Array.Empty<string>();
             ThrownBundles = thrownBundles ?? Array.Empty<int>();
             if (thrownPerFloor < 0 || ThrownBundles.Count != ThrownItems.Count) throw new ArgumentException("던지는 무기: 수 ≥ 0, 목록과 묶음 수의 길이가 같아야 한다");
@@ -401,7 +410,27 @@ namespace ProjectM.Items
         public static void PlaceThrown(World world, GridPos start, LootConfig config)
         {
             if (world == null) throw new ArgumentNullException(nameof(world));
-            if (config == null || config.ThrownPerFloor == 0 || config.ThrownItems.Count == 0) return;
+            if (config == null) return;
+            PlaceBundles(world, start, config, config.ThrownPerFloor, config.ThrownItems, config.ThrownBundles);
+            PlaceBundles(world, start, config, config.SeedsPerFloor, config.SeedItems, null); // 3-16b 씨앗 (하나씩)
+        }
+
+        /// <summary>
+        /// 씨앗 떨어뜨리기 (3-16b, SPD): 높은 풀이 밟히면 SeedDropPercent로 그 칸에 무작위 씨앗 (RngStream.Loot) — World.OnGrassTrampled.
+        /// </summary>
+        public static void DropSeed(World world, LootConfig config, GridPos pos)
+        {
+            if (config == null || config.SeedDropPercent == 0 || config.SeedItems.Count == 0) return;
+            var rng = world.Rng.Get(RngStream.Loot);
+            if (rng.Range(0, 100) >= config.SeedDropPercent) return;
+            var id = config.SeedItems[rng.Range(0, config.SeedItems.Count)];
+            world.FloorItems.Add(pos, id);
+            world.Events.Publish(new FloorItemPlacedEvent(pos, id, id));
+        }
+
+        private static void PlaceBundles(World world, GridPos start, LootConfig config, int count, IReadOnlyList<string> ids, IReadOnlyList<int> bundles)
+        {
+            if (count == 0 || ids.Count == 0) return;
             var map = world.Map;
             var candidates = new List<GridPos>();
             for (int y = 0; y < map.Height; y++)
@@ -412,14 +441,14 @@ namespace ProjectM.Items
                         candidates.Add(pos);
                 }
             var rng = world.Rng.Get(RngStream.Loot);
-            for (int i = 0; i < config.ThrownPerFloor && candidates.Count > 0; i++)
+            for (int i = 0; i < count && candidates.Count > 0; i++)
             {
                 int pick = rng.Range(0, candidates.Count);
                 var pos = candidates[pick];
                 candidates.RemoveAt(pick);
-                int k = rng.Range(0, config.ThrownItems.Count);
-                world.FloorItems.Add(pos, config.ThrownItems[k], Math.Max(1, config.ThrownBundles[k]));
-                world.Events.Publish(new FloorItemPlacedEvent(pos, config.ThrownItems[k], config.ThrownItems[k]));
+                int k = rng.Range(0, ids.Count);
+                world.FloorItems.Add(pos, ids[k], bundles != null ? Math.Max(1, bundles[k]) : 1);
+                world.Events.Publish(new FloorItemPlacedEvent(pos, ids[k], ids[k]));
             }
         }
 

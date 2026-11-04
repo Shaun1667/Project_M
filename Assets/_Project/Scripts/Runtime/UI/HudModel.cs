@@ -124,6 +124,7 @@ namespace ProjectM.UI
             _bus.Subscribe<ProjectM.Dungeon.DoorUnlockedEvent>(OnDoorUnlocked);
             _bus.Subscribe<ProjectM.Dungeon.ItemBoughtEvent>(OnBought);
             _bus.Subscribe<ThrownBrokeEvent>(OnThrownBroke);
+            _bus.Subscribe<ProjectM.Dungeon.SeedPlantedEvent>(OnPlanted);
             _bus.Subscribe<ProjectM.Dungeon.ItemSoldEvent>(OnSold);
             _bus.Subscribe<ProjectM.Dungeon.PurchaseFailedEvent>(OnPurchaseFailed);
             _bus.Subscribe<FoodEatenEvent>(OnFoodEaten);
@@ -314,6 +315,12 @@ namespace ProjectM.UI
 
         private string _lastPurchaseFail;
 
+        private void OnPlanted(ProjectM.Dungeon.SeedPlantedEvent e)
+        {
+            AddLog(HudText.Planted(e.Plant));
+            Changed?.Invoke();
+        }
+
         private void OnThrownBroke(ThrownBrokeEvent e)
         {
             AddLog(Text.ThrownBroke(e.ItemId));
@@ -440,6 +447,7 @@ namespace ProjectM.UI
             _bus.Unsubscribe<ProjectM.Dungeon.DoorUnlockedEvent>(OnDoorUnlocked);
             _bus.Unsubscribe<ProjectM.Dungeon.ItemBoughtEvent>(OnBought);
             _bus.Unsubscribe<ThrownBrokeEvent>(OnThrownBroke);
+            _bus.Unsubscribe<ProjectM.Dungeon.SeedPlantedEvent>(OnPlanted);
             _bus.Unsubscribe<ProjectM.Dungeon.ItemSoldEvent>(OnSold);
             _bus.Unsubscribe<ProjectM.Dungeon.PurchaseFailedEvent>(OnPurchaseFailed);
             _bus.Unsubscribe<FoodEatenEvent>(OnFoodEaten);

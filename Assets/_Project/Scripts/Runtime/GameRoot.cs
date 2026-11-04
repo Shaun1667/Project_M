@@ -210,7 +210,8 @@ namespace ProjectM
                 {
                     if (hunger != null) ProjectM.Units.Hunger.DropFood(World, hunger, dead);
                     if (lootRules != null) Loot.DropGold(World, lootRules, dead);
-                });
+                },
+                pos => { if (lootRules != null) Loot.DropSeed(World, lootRules, pos); }); // 3-16b
             var consumableConfig = _consumableConfig != null ? _consumableConfig.ToConfig() : ConsumableConfig.Default;
             var allyAi = new AllyAi(World, Config, sight); // 3-13b 분신
             var consumables = new ConsumableRules(Items, consumableConfig, Statuses, Terrains, progression, sight, allyAi, Spells); // 3-9 물약 · 주문서 효과

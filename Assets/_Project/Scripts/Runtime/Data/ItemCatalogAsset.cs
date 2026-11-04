@@ -44,6 +44,7 @@ namespace ProjectM.Data
             [Min(0)] public int ThrowMinDamage;
             [Min(0)] public int ThrowMaxDamage;
             [Tooltip("던질 때 부러질 확률 %")] [Range(0, 100)] public int BreakPercent;
+            [Tooltip("씨앗(Seed)만: 자라는 식물 (TrapCatalog)")] public ProjectM.Dungeon.TrapType PlantTrap;
         }
 
         [SerializeField] private List<Entry> _items = new List<Entry>();
@@ -68,7 +69,7 @@ namespace ProjectM.Data
                     : null;
                 var armor = e.Use == ItemUse.EquipArmor ? new ArmorDef(e.Tier, e.StrengthRequirement) : null;
                 defs.Add(new ItemDef(e.Id, e.Use, e.SpellId, weapon, e.Amount, e.Effect, e.Weight, armor, e.Food, e.Risky, e.FireTransformsTo, e.IceTransformsTo, e.Value,
-                    e.ThrowMinDamage, e.ThrowMaxDamage, e.BreakPercent));
+                    e.ThrowMinDamage, e.ThrowMaxDamage, e.BreakPercent, e.PlantTrap));
             }
             return new ItemBook(defs, new WeaponRules(_weaponDamageDivisor, _weaponMinDamage), new ArmorRules(_armorDefenseDivisor, _armorDeficitPenalty));
         }

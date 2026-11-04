@@ -25,6 +25,16 @@ namespace ProjectM.Dungeon
         Teleport = 6,
         /// <summary>경보 함정: 층의 모든 적이 함정 칸을 안다 (몰려옴).</summary>
         Alarm = 7,
+        /// <summary>식물 (3-16b — 씨앗을 심으면, 늘 보임 · 밟으면 발동 · 무작위 배치 없음): 화염꽃 — 불.</summary>
+        Firebloom = 8,
+        /// <summary>얼음버섯 — 3×3 빙결.</summary>
+        Icecap = 9,
+        /// <summary>독이끼 — 독구름.</summary>
+        Sorrowmoss = 10,
+        /// <summary>햇볕풀 — 밟은 유닛 회복 (Special Heal).</summary>
+        Sungrass = 11,
+        /// <summary>사라짐잎 — 밟은 유닛 순간이동.</summary>
+        Fadeleaf = 12,
     }
 
     /// <summary>주문으로 나타낼 수 없는 함정 효과 (3-12a).</summary>
@@ -33,6 +43,8 @@ namespace ProjectM.Dungeon
         None = 0,
         Teleport = 1,
         Alarm = 2,
+        /// <summary>밟은 유닛 체력 회복 (3-16b 햇볕풀 — 최대 체력 × TrapBook.HealPercent).</summary>
+        Heal = 3,
     }
 
     /// <summary>함정 한 종류 (3-12a). 값은 TrapCatalogAsset에서 — 기준은 BALANCE.md 17번.</summary>
@@ -42,13 +54,13 @@ namespace ProjectM.Dungeon
         /// <summary>효과 주문 (SpellCatalog, 함정 칸 중심으로 시전자 없이). 비면 주문 효과 없음.</summary>
         public string SpellId { get; }
         public TrapSpecial Special { get; }
-        /// <summary>배치 무게 (클수록 자주).</summary>
+        /// <summary>배치 무게 (클수록 자주). 0 = 무작위로 놓지 않음 (식물).</summary>
         public int Weight { get; }
 
         public TrapDef(TrapType type, string spellId, TrapSpecial special, int weight)
         {
             if (type == TrapType.None) throw new ArgumentException("None은 함정이 아니다.", nameof(type));
-            if (weight < 1) throw new ArgumentOutOfRangeException(nameof(weight));
+            if (weight < 0) throw new ArgumentOutOfRangeException(nameof(weight)); // 0 = 무작위로 안 놓음 (3-16b 식물)
             if (string.IsNullOrEmpty(spellId) && special == TrapSpecial.None) throw new ArgumentException("효과 없는 함정: " + type);
             Type = type;
             SpellId = string.IsNullOrEmpty(spellId) ? null : spellId;
@@ -70,8 +82,13 @@ namespace ProjectM.Dungeon
         public int MinDistanceFromStart { get; }
         public IReadOnlyList<TrapDef> All => _defs;
 
-        public TrapBook(IEnumerable<TrapDef> defs, SpellBook spells, int trapsPerFloor, int hiddenPercent, int minDistanceFromStart)
+        /// <summary>햇볕풀 회복 = 최대 체력 × % (3-16b).</summary>
+        public int HealPercent { get; }
+
+        public TrapBook(IEnumerable<TrapDef> defs, SpellBook spells, int trapsPerFloor, int hiddenPercent, int minDistanceFromStart, int healPercent = 50)
         {
+            if (healPercent < 0 || healPercent > 100) throw new ArgumentOutOfRangeException(nameof(healPercent));
+            HealPercent = healPercent;
             if (defs == null) throw new ArgumentNullException(nameof(defs));
             if (trapsPerFloor < 0) throw new ArgumentOutOfRangeException(nameof(trapsPerFloor));
             if (hiddenPercent < 0 || hiddenPercent > 100) throw new ArgumentOutOfRangeException(nameof(hiddenPercent));
@@ -100,6 +117,7 @@ namespace ProjectM.Dungeon
         {
             int total = 0;
             foreach (var d in _defs) total += d.Weight;
+            if (total == 0) return _defs[0];
             int roll = rng.Range(0, total);
             foreach (var d in _defs)
             {
@@ -200,6 +218,15 @@ namespace ProjectM.Dungeon
             if (!hidden) world.Events.Publish(new TrapChangedEvent(pos, type, true));
         }
 
+        /// <summary>씨앗 심기 (3-16b): 맨땅이고 함정 · 식물이 없는 칸에 식물(보이는 함정). 심었으면 true.</summary>
+        public static bool Plant(World world, GridPos pos, TrapType plant)
+        {
+            if (!world.Map.InBounds(pos) || !GridMap.IsGroundType(world.Map.Get(pos)) || world.Traps.Has(pos)) return false;
+            Place(world, pos, plant, hidden: false);
+            world.Events.Publish(new SeedPlantedEvent(pos, plant));
+            return true;
+        }
+
         /// <summary>플레이어가 아는(드러난) 함정이 있는 칸인지 — 클릭 이동 경로가 피한다.</summary>
         public static bool IsKnown(World world, GridPos pos) => world.Traps.Has(pos) && world.Traps.TryGet(pos, out var trap) && !trap.Hidden;
 
@@ -235,6 +262,14 @@ namespace ProjectM.Dungeon
                 case TrapSpecial.Alarm:
                     foreach (var other in world.Units.ToSortedList())
                         if (other.IsAlive && other.Faction == Faction.Enemy) other.LastSeenTargetPos = pos;
+                    break;
+                case TrapSpecial.Heal:
+                    int healed = Math.Min(unit.MaxHp - unit.Hp, Math.Max(1, unit.MaxHp * traps.HealPercent / 100));
+                    if (unit.IsAlive && healed > 0)
+                    {
+                        unit.Hp += healed;
+                        world.Events.Publish(new UnitHealedEvent(unit.Id, healed, unit.Hp, unit.MaxHp));
+                    }
                     break;
             }
         }
@@ -297,6 +332,19 @@ namespace ProjectM.Dungeon
         }
     }
 
+    /// <summary>씨앗을 심었다 (3-16b, 로그).</summary>
+    public sealed class SeedPlantedEvent : ISimEvent
+    {
+        public GridPos Pos { get; }
+        public TrapType Plant { get; }
+
+        public SeedPlantedEvent(GridPos pos, TrapType plant)
+        {
+            Pos = pos;
+            Plant = plant;
+        }
+    }
+
     /// <summary>숨겨진 함정을 찾았다 (로그, 3-12b).</summary>
     public sealed class TrapRevealedEvent : ISimEvent
     {
@@ -307,6 +355,35 @@ namespace ProjectM.Dungeon
         {
             Pos = pos;
             Type = type;
+        }
+    }
+
+    /// <summary>씨앗 심기 (3-16b, 차례 1): 발밑에 심는다 — 그 칸에 식물이 있거나 맨땅이 아니면 씨앗을 쓰지 않는다.</summary>
+    public sealed class PlantCommand : ICommand
+    {
+        private readonly World _world;
+        private readonly ItemBook _items;
+        private readonly int _inventoryIndex;
+        private readonly InventoryRef _entry;
+
+        public int CostTicks { get; }
+
+        public PlantCommand(World world, ItemBook items, int inventoryIndex, InventoryRef entry, int costTicks)
+        {
+            if (costTicks < 1) throw new ArgumentOutOfRangeException(nameof(costTicks));
+            _world = world ?? throw new ArgumentNullException(nameof(world));
+            _items = items ?? throw new ArgumentNullException(nameof(items));
+            _inventoryIndex = inventoryIndex;
+            _entry = entry;
+            CostTicks = costTicks;
+        }
+
+        public void Execute(in TickContext context)
+        {
+            if (!_world.Units.TryGet(context.Actor, out var unit) || !unit.IsAlive) return;
+            if (_inventoryIndex < 0 || _inventoryIndex >= unit.InventorySlots.Length || unit.InventorySlots[_inventoryIndex] != _entry) return;
+            if (!_items.TryGet(_entry.Id, out var def) || def.Use != ItemUse.Seed) return;
+            if (Traps.Plant(_world, unit.Pos, def.PlantTrap)) Inventory.RemoveAt(_world, unit, _inventoryIndex);
         }
     }
 }

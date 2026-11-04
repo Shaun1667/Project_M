@@ -235,7 +235,7 @@ namespace ProjectM.Items
 
         /// <summary>던질 수 있는지 — 물약만 (3-9).</summary>
         public static bool CanThrow(ItemBook items, InventoryRef entry) =>
-            entry.Kind == InventoryKind.Item && items.TryGet(entry.Id, out var def) && (def.Use == ItemUse.Potion || def.Use == ItemUse.Thrown); // 3-16a
+            entry.Kind == InventoryKind.Item && items.TryGet(entry.Id, out var def) && (def.Use == ItemUse.Potion || def.Use == ItemUse.Thrown || def.Use == ItemUse.Seed); // 3-16a · 3-16b
 
         /// <summary>범위로 퍼지는 효과인지 (마시면 발밑, 던지면 떨어진 칸).</summary>
         public static bool IsArea(ConsumableEffect effect) =>
@@ -288,6 +288,15 @@ namespace ProjectM.Items
             if (def.Use == ItemUse.Thrown)
             {
                 ThrowWeapon(world, unit, def, landing);
+                return ConsumeResult.Used;
+            }
+            if (def.Use == ItemUse.Seed) // 3-16b: 떨어진 칸에 심는다 (못 심는 칸이면 씨앗이 바닥에 남음)
+            {
+                if (!ProjectM.Dungeon.Traps.Plant(world, landing, def.PlantTrap))
+                {
+                    world.FloorItems.Add(landing, def.Id);
+                    world.Events.Publish(new FloorItemPlacedEvent(landing, def.Id, def.Id));
+                }
                 return ConsumeResult.Used;
             }
             bool area = IsArea(def.Effect);

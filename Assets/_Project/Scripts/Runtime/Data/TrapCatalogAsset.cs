@@ -18,13 +18,14 @@ namespace ProjectM.Data
             public TrapType Type;
             [Tooltip("효과 주문 (SpellCatalog) — 함정 칸 중심으로 시전자 없이. 비면 주문 효과 없음")] public string SpellId;
             public TrapSpecial Special;
-            [Tooltip("배치 무게 (클수록 자주)")] [Min(1)] public int Weight;
+            [Tooltip("배치 무게 (클수록 자주). 0 = 무작위로 안 놓음 (식물)")] [Min(0)] public int Weight;
         }
 
         [Tooltip("층마다 함정 수")] [Min(0)] [SerializeField] private int _trapsPerFloor = 4;
         [Tooltip("숨겨진 채 놓일 확률 %")] [Range(0, 100)] [SerializeField] private int _hiddenPercent = 85;
         [Tooltip("층 시작 칸에서 최소 거리 (칸)")] [Min(0)] [SerializeField] private int _minDistanceFromStart = 3;
         [SerializeField] private List<Entry> _traps = new List<Entry>();
+        [Tooltip("햇볕풀 회복 = 최대 체력 × % (3-16b)")] [Range(0, 100)] [SerializeField] private int _healPercent = 50;
 
         [Header("찾기 (3-12b — BALANCE.md 17번)")]
         [Tooltip("찾기 행동(Z)이 확실히 찾는 반경 (칸)")] [Min(0)] [SerializeField] private int _searchRadius = 2;
@@ -39,7 +40,7 @@ namespace ProjectM.Data
             var defs = new List<TrapDef>(_traps.Count);
             foreach (var e in _traps)
                 defs.Add(new TrapDef(e.Type, e.SpellId, e.Special, e.Weight));
-            return new TrapBook(defs, spells, _trapsPerFloor, _hiddenPercent, _minDistanceFromStart);
+            return new TrapBook(defs, spells, _trapsPerFloor, _hiddenPercent, _minDistanceFromStart, _healPercent);
         }
 
         /// <summary>에디터 Setup용: 같은 종류가 없을 때만 추가한다 (사용자가 고친 값은 그대로).</summary>

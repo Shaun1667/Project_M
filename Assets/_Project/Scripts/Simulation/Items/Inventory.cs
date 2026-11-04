@@ -81,6 +81,8 @@ namespace ProjectM.Items
         Key = 9,
         /// <summary>던지는 무기 (3-16a 다트 · 투창): 던지기만 (Consumables.Throw) — 명중 굴림 · 피해 ThrowMin~Max · BreakPercent로 부러짐, 아니면 떨어진 칸에 남음. 겹친다.</summary>
         Thrown = 10,
+        /// <summary>씨앗 (3-16b): 사용 = 발밑에 심기 · 던지기 = 떨어진 칸에 심기 → 식물(PlantTrap). 연금술 재료 (3-16c). 겹친다.</summary>
+        Seed = 11,
     }
 
     /// <summary>
@@ -171,12 +173,16 @@ namespace ProjectM.Items
         public int ThrowMinDamage { get; }
         public int ThrowMaxDamage { get; }
         public int BreakPercent { get; }
+        /// <summary>씨앗이 자라는 식물 (3-16b — TrapCatalog의 식물 줄).</summary>
+        public ProjectM.Dungeon.TrapType PlantTrap { get; }
 
         public ItemDef(string id, ItemUse use, string spellId = null, WeaponDef weapon = null, int amount = 0,
             ConsumableEffect effect = ConsumableEffect.None, int weight = 0, ArmorDef armor = null,
             int food = 0, bool risky = false, string fireTransformsTo = null, string iceTransformsTo = null, int value = 0,
-            int throwMinDamage = 0, int throwMaxDamage = 0, int breakPercent = 0)
+            int throwMinDamage = 0, int throwMaxDamage = 0, int breakPercent = 0, ProjectM.Dungeon.TrapType plantTrap = ProjectM.Dungeon.TrapType.None)
         {
+            if (use == ItemUse.Seed && plantTrap == ProjectM.Dungeon.TrapType.None) throw new ArgumentException("씨앗에 식물이 없다: " + id, nameof(plantTrap));
+            PlantTrap = use == ItemUse.Seed ? plantTrap : ProjectM.Dungeon.TrapType.None;
             if (use == ItemUse.Thrown && (throwMinDamage < 0 || throwMaxDamage < throwMinDamage || breakPercent < 0 || breakPercent > 100))
                 throw new ArgumentOutOfRangeException(nameof(throwMaxDamage), "던지는 무기: 0 ≤ 최소 ≤ 최대, 부러짐 0 ~ 100: " + id);
             ThrowMinDamage = use == ItemUse.Thrown ? throwMinDamage : 0;
@@ -286,7 +292,7 @@ namespace ProjectM.Items
 
         /// <summary>겹치는 항목인지 (3-10b): 물약 · 주문서.</summary>
         public static bool IsStackable(ItemBook items, InventoryRef entry) =>
-            entry.Kind == InventoryKind.Item && items != null && items.TryGet(entry.Id, out var def) && (def.IsConsumable || def.Use == ItemUse.Food || def.Use == ItemUse.Key || def.Use == ItemUse.Thrown); // 3-14 음식 · 3-15b 열쇠 · 3-16a 던지는 무기도
+            entry.Kind == InventoryKind.Item && items != null && items.TryGet(entry.Id, out var def) && (def.IsConsumable || def.Use == ItemUse.Food || def.Use == ItemUse.Key || def.Use == ItemUse.Thrown || def.Use == ItemUse.Seed); // 3-14 음식 · 3-15b 열쇠 · 3-16a 던지는 무기 · 3-16b 씨앗도
 
         /// <summary>인벤토리 칸에서 하나를 뺀다 (겹친 칸은 개수 −1). 칸이 비었고 그 항목이 인벤토리에 더 없으면 가리키던 빠른 칸도 비운다.</summary>
         public static void RemoveAt(World world, Unit unit, int index)

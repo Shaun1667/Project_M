@@ -44,3 +44,28 @@ MonoBehaviour:
     SpellId: 
     Special: 2
     Weight: 1
+  - Type: 8
+    SpellId: plant_firebloom
+    Special: 0
+    Weight: 0
+  - Type: 9
+    SpellId: plant_icecap
+    Special: 0
+    Weight: 0
+  - Type: 10
+    SpellId: plant_sorrowmoss
+    Special: 0
+    Weight: 0
+  - Type: 11
+    SpellId: 
+    Special: 3
+    Weight: 0
+  - Type: 12
+    SpellId: 
+    Special: 1
+    Weight: 0
+  _healPercent: 50
+  _searchRadius: 2
+  _searchCostTicks: 2
+  _passiveSearchPercent: 10
+  _passiveSearchRadius: 1

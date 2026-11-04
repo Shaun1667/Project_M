@@ -94,10 +94,14 @@ namespace ProjectM.Core
         internal Action<ProjectM.Magic.Element, IReadOnlyList<GridPos>> OnCellsHit { get; private set; }
         internal Action<Unit> OnUnitDied { get; private set; }
 
-        public void SetItemRules(Action<ProjectM.Magic.Element, IReadOnlyList<GridPos>> onCellsHit, Action<Unit> onUnitDied)
+        /// <summary>높은 풀이 밟혔다 (3-16b 씨앗 떨어뜨리기).</summary>
+        internal Action<GridPos> OnGrassTrampled { get; private set; }
+
+        public void SetItemRules(Action<ProjectM.Magic.Element, IReadOnlyList<GridPos>> onCellsHit, Action<Unit> onUnitDied, Action<GridPos> onGrassTrampled = null)
         {
             OnCellsHit = onCellsHit;
             OnUnitDied = onUnitDied;
+            OnGrassTrampled = onGrassTrampled;
         }
 
         /// <summary>지금 층의 칸 종류를 바꾸고 TileChangedEvent를 낸다 (3-11a 풀 놓기 · 밟기). 같은 종류면 아무 일 없음.</summary>
