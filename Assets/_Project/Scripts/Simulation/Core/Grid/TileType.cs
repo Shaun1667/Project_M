@@ -13,5 +13,9 @@ namespace ProjectM.Core
         StairsDown = 3,
         /// <summary>올라가는 계단 (3-4a) — 2층부터 시작 칸. 플레이어가 들어가면 이전 층 (떠날 때 그대로 남아 있음).</summary>
         StairsUp = 4,
+        /// <summary>짧은 풀 (3-11a) — 장식 바닥. 걸을 수 있고 보인다.</summary>
+        Grass = 5,
+        /// <summary>높은 풀 (3-11a, SPD) — 걸을 수 있지만 시야를 가린다. 유닛이 들어서면 짧은 풀이 된다 (GrassTrampleSystem).</summary>
+        TallGrass = 6,
     }
 }

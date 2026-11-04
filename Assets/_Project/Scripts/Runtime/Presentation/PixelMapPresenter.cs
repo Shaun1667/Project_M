@@ -92,7 +92,9 @@ namespace ProjectM.Presentation
             if (_tiles == null || !InBounds(x, y)) return null;
             switch (_types[y * _width + x])
             {
-                case TileType.Floor: return _tiles.Floor(x, y);
+                case TileType.Floor:
+                case TileType.Grass: // 3-11a: 2D 그림 전까지 바닥으로
+                case TileType.TallGrass: return _tiles.Floor(x, y);
                 case TileType.StairsDown: return _tiles.StairsDown;
                 case TileType.StairsUp: return _tiles.StairsUp;
                 case TileType.Wall: return _tiles.Wall;

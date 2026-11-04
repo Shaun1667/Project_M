@@ -43,7 +43,7 @@ namespace ProjectM.Units
                 for (int x = 0; x < map.Width; x++)
                 {
                     var pos = new GridPos(x, y);
-                    if (map.Get(pos) == TileType.Floor && GridMovement.Chebyshev(pos, start) >= minDistance)
+                    if (GridMap.IsGroundType(map.Get(pos)) && GridMovement.Chebyshev(pos, start) >= minDistance)
                         candidates.Add(pos);
                 }
             }

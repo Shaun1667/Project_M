@@ -33,4 +33,14 @@ MonoBehaviour:
     Module: {fileID: 4606725624150939120, guid: c8166442d0d4cf3469791de5f6b1ceeb, type: 3}
     RandomRotation: 0
     StandHeight: 0.3
+  - Type: 5
+    Tile: {fileID: 11400000, guid: 45bd5c59b3cc8254e92497fb8d92774a, type: 2}
+    Module: {fileID: 3085486193477064445, guid: 7963b726f64b61644b0722e8e0040eb8, type: 3}
+    RandomRotation: 1
+    StandHeight: 0
+  - Type: 6
+    Tile: {fileID: 11400000, guid: 0eec26965c841c449a77c3283a0cc6da, type: 2}
+    Module: {fileID: 7568114089958167240, guid: 7b08c277ff8f2af45b439f233be0e94c, type: 3}
+    RandomRotation: 1
+    StandHeight: 0
   _pillarModule: {fileID: 2250049114770325675, guid: 20655c15c02cde04d993f35f16442fef, type: 3}

@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using ProjectM.Core;
 
 namespace ProjectM.Dungeon
@@ -11,11 +13,15 @@ namespace ProjectM.Dungeon
         /// <summary>내려가는 계단 칸 (마지막 방의 기준점).</summary>
         public GridPos Exit { get; }
 
-        public DungeonFloor(GridMap map, GridPos start, GridPos exit)
+        /// <summary>방마다 테두리 안쪽 바닥 칸 (생성 순서). 층 꾸미기(3-11a)가 쓴다 — 저장하지 않는다 (만들 때만 필요).</summary>
+        public IReadOnlyList<IReadOnlyList<GridPos>> Rooms { get; }
+
+        public DungeonFloor(GridMap map, GridPos start, GridPos exit, IReadOnlyList<IReadOnlyList<GridPos>> rooms = null)
         {
             Map = map;
             Start = start;
             Exit = exit;
+            Rooms = rooms ?? Array.Empty<IReadOnlyList<GridPos>>();
         }
     }
 }

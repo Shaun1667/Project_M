@@ -99,7 +99,7 @@ namespace ProjectM.Dungeon
             // ⑧ 도착점 · 시작점 계단 (난수를 쓰지 않으므로 계단 유무가 맵 모양을 바꾸지 않는다)
             if (stairsDown) map.Set(exit, TileType.StairsDown);
             if (stairsUp) map.Set(start, TileType.StairsUp);
-            return new DungeonFloor(map, start, exit);
+            return new DungeonFloor(map, start, exit, waypointRooms.ConvertAll(r => (IReadOnlyList<GridPos>)r));
         }
 
         /// <summary>

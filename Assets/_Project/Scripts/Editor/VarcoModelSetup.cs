@@ -87,6 +87,11 @@ namespace ProjectM.Editor
         /// <summary>지팡이를 쥐는 높이 (지팡이 길이에 대한 비율) — 손이 이 지점에 오게 붙인다.</summary>
         private const float StaffGripRatio = 0.4f;
         private const string StaffHandBone = "RightHand";
+        /// <summary>3-11a 그레이박스 풀잎 높이 (m): 짧은 풀 · 높은 풀 (ART_ASSETS.md 12-4).</summary>
+        private const float GrassBladeHeight = 0.08f;
+        private const float TallGrassBladeHeight = 0.5f;
+        private const string GrassMaterialPath = PrefabDir + "/Mat_GrassBlade.mat";
+
         /// <summary>올라가는 계단 위 발밑 높이 (m) — ART_ASSETS.md 12번.</summary>
         private const float StairsUpStandHeight = 0.3f;
 
@@ -141,7 +146,11 @@ namespace ProjectM.Editor
             catalog.SetPrefab("boss", BuildPrefab(Boss, null));
             EditorUtility.SetDirty(catalog);
 
-            tiles.SetModule(TileType.Floor, BuildPrefab(Floor, SinkToGround), randomRotation: true);
+            var floorPrefab = BuildPrefab(Floor, SinkToGround);
+            tiles.SetModule(TileType.Floor, floorPrefab, randomRotation: true);
+            // 3-11a 풀 (그레이박스): 바닥 모듈 + 초록 풀잎 — 높은 풀은 0.15 m보다 높아 시야를 직접 따른다 (TilemapPresenter)
+            tiles.SetModule(TileType.Grass, BuildGrassPrefab(floorPrefab, "Tile_Grass", GrassBladeHeight), randomRotation: true);
+            tiles.SetModule(TileType.TallGrass, BuildGrassPrefab(floorPrefab, "Tile_TallGrass", TallGrassBladeHeight), randomRotation: true);
             tiles.SetModule(TileType.Wall, BuildPrefab(Wall, null));
             tiles.SetModule(TileType.StairsDown, BuildPrefab(StairsDown, null));
             tiles.SetModule(TileType.StairsUp, BuildPrefab(StairsUp, null));
@@ -154,6 +163,48 @@ namespace ProjectM.Editor
             EnableInstancing();
             AssetDatabase.SaveAssets();
             Debug.Log("[VarcoModelSetup] 완료: " + PrefabDir);
+        }
+
+        /// <summary>
+        /// 3-11a 풀 모듈 (그레이박스 — 모델이 생기면 ModelSpec으로 바꾼다): 바닥 모듈 + 4 × 4 풀잎(가는 상자). 잎 위치 · 높이는 고정 무늬 (난수 안 씀).
+        /// </summary>
+        private static GameObject BuildGrassPrefab(GameObject floor, string name, float bladeHeight)
+        {
+            var root = new GameObject(name);
+            try
+            {
+                if (floor != null) ((GameObject)PrefabUtility.InstantiatePrefab(floor)).transform.SetParent(root.transform, false);
+                var material = EnsureGrassMaterial();
+                for (int i = 0; i < 16; i++)
+                {
+                    int gx = i % 4, gz = i / 4;
+                    float jitterX = ((i * 37) % 11) / 11f - 0.5f, jitterZ = ((i * 53) % 13) / 13f - 0.5f;
+                    float h = bladeHeight * (0.7f + 0.3f * (((i * 29) % 7) / 6f));
+                    var blade = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    Object.DestroyImmediate(blade.GetComponent<Collider>());
+                    blade.name = "Blade";
+                    blade.transform.SetParent(root.transform, false);
+                    blade.transform.localPosition = new Vector3(-0.375f + gx * 0.25f + jitterX * 0.12f, h * 0.5f, -0.375f + gz * 0.25f + jitterZ * 0.12f);
+                    blade.transform.localRotation = Quaternion.Euler(0f, (i * 47) % 90, 0f);
+                    blade.transform.localScale = new Vector3(0.06f, h, 0.06f);
+                    blade.GetComponent<Renderer>().sharedMaterial = material;
+                }
+                return PrefabUtility.SaveAsPrefabAsset(root, $"{PrefabDir}/{name}.prefab");
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        private static Material EnsureGrassMaterial()
+        {
+            var material = AssetDatabase.LoadAssetAtPath<Material>(GrassMaterialPath);
+            if (material != null) return material;
+            material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { enableInstancing = true };
+            material.SetColor("_BaseColor", new Color(0.3f, 0.6f, 0.2f));
+            AssetDatabase.CreateAsset(material, GrassMaterialPath);
+            return material;
         }
 
         private static GameObject BuildPrefab(ModelSpec spec, System.Action<GameObject> decorate)

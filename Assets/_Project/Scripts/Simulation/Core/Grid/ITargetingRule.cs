@@ -49,9 +49,9 @@ namespace ProjectM.Core
                 var cell = new GridPos(x, y);
 
                 if (GridMovement.Chebyshev(from, cell) > range) return cells;
-                if (map.BlocksSight(cell)) return cells;
+                if (map.BlocksProjectile(cell)) return cells;
                 if (cell.X != prev.X && cell.Y != prev.Y
-                    && map.BlocksSight(new GridPos(cell.X, prev.Y)) && map.BlocksSight(new GridPos(prev.X, cell.Y)))
+                    && map.BlocksProjectile(new GridPos(cell.X, prev.Y)) && map.BlocksProjectile(new GridPos(prev.X, cell.Y)))
                     return cells; // 양옆이 벽인 대각선 틈
 
                 cells.Add(cell);

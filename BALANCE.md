@@ -24,6 +24,7 @@
 | 13 | 무기 (3-7a) | `ItemCatalog.asset`의 무기 줄 · 공통 값 (`ItemCatalogAsset`) — 9번과 같은 에셋 | `ProjectM.Items.WeaponDef` · `WeaponRules` · `Weapons` · `ProjectM.Units.EquippedWeapon` | 사용 중 (3-7a) |
 | 12 | 경험치 · 레벨업 | `Assets/_Project/Data/Units/ProgressionConfig.asset` (`ProgressionConfigAsset`) + 유닛 에셋의 명중 · 회피 · 경험치 (3번) | `ProjectM.Units.ProgressionConfig` · `Progression` | 사용 중 (3-6) |
 | 15 | 갑옷 (3-10a) | `ItemCatalog.asset`의 갑옷 줄 · 갑옷 공통 값 + `Player.asset`의 `_startingArmor` + `LootConfig.asset`의 `_armorsPerRun` | `ProjectM.Items.ArmorDef` · `ArmorRules` · `Armors` · `ProjectM.Units.EquippedArmor` | 사용 중 (3-10a) |
+| 16 | 층 꾸미기 (풀 · 물 웅덩이) | `Assets/_Project/Data/Dungeon/FloorDecorConfig.asset` (`FloorDecorConfigAsset`) | `ProjectM.Dungeon.FloorDecorConfig` · `FloorDecor` · `GrassTrampleSystem` | 사용 중 (3-11a) |
 | 14 | 물약 · 주문서 (효과 · 식별 · 무작위 배치 · 던지기) | `Assets/_Project/Data/Items/ConsumableConfig.asset` (`ConsumableConfigAsset`) + `ItemCatalog.asset`의 `Effect` · `Weight` (9번) | `ProjectM.Items.ConsumableConfig` · `Consumables` · `Identification` · `Throwing` | 사용 중 (3-9) |
 
 **데이터 구조 규칙 (0-4 결정)**
@@ -489,6 +490,26 @@ SPD 규칙 그대로: 방어 굴림 = 강화 ~ 티어 × (2 + 강화) (SPD Armor
 결과: 시작(힘 10 · 천 갑옷) 근접 적 피해 2 → 평균 약 0.5 막음. 판금은 힘 18이 필요 — 힘 물약 2개(12)로는 6 모자라 굴림 −12 → 사실상 방어 0 · 회피 ÷ 11. 사슬(14)도 힘 12면 2 모자라 0~6 − 4 → 0~1 · 회피 ÷ 2.25 → 지금 판(힘 물약 2개)에서는 가죽(12) +강화가 현실적인 선택.
 
 검산 (`ArmorTests` — `Resolve_MatchesSpdFormula` · `ShownDefense_DividedByThree` · `ProjectAssets_MatchBalanceTable`).
+
+---
+
+## 16. 층 꾸미기 (풀 · 물 웅덩이) — `Data/Dungeon/FloorDecorConfig.asset` (3-11a)
+
+결정 (2026-11-04, 사용자): 지형에 무작위로 **물 웅덩이**(사라지지 않는 물 지형 — 7번 Water를 지속 `Permanent`로) · **풀**(짧은 풀 · 높은 풀 칸, SPD). 수치는 Claude 임시값 [임시] — 재미 검증에서 조정.
+
+| 값 | 필드 | 값 | 뜻 |
+|---|---|---|---|
+| 풀 덩어리 수 (층마다) | `_grassPatchCount` | **6** | 방 안 무작위 바닥 칸에서 상하좌우로 넓힘 |
+| 풀 덩어리 크기 | `_grassPatchMinSize` ~ `_grassPatchMaxSize` | **4 ~ 14** 칸 | 덩어리마다 고름 (막히면 더 작게) |
+| 높은 풀 확률 | `_tallGrassPercent` | **50** % | 풀 칸마다 — 나머지는 짧은 풀 |
+| 물 웅덩이 수 (층마다) | `_puddleCount` | **4** | 풀보다 먼저 놓음 (웅덩이 칸에는 풀 없음) |
+| 웅덩이 크기 | `_puddleMinSize` ~ `_puddleMaxSize` | **3 ~ 9** 칸 | |
+
+- 바닥(Floor) 칸만 바꾼다 — 계단 · 시작 칸 · 복도 밖 벽은 그대로. 보스 층은 꾸미지 않는다. 난수 `RngStream.Decor` (맵 모양 · 적 배치 불변).
+- 높은 풀: 걸을 수 있음 · **시야를 가림**(풀 칸 자체는 보임) · 주문 · 투척 경로는 막지 않음 · 유닛(적 포함)이 들어서면 짧은 풀 (⑤). 짧은 풀은 장식.
+- 웅덩이는 물 지형 그대로 반응한다 — 증발(불)이면 사라짐, 오염(독)이면 **영구 오염된 물**(남은 틱 유지), 결빙(얼음)이면 빙판 8틱 → 녹으면 물 12틱 → 사라짐.
+
+검산 (`FloorDecorTests.ProjectAsset_MatchesBalanceTable`). 결과: 50×50 층에서 웅덩이 칸 최대 4 × 9 = 36, 풀 칸 최대 6 × 14 = 84.
 
 ---
 

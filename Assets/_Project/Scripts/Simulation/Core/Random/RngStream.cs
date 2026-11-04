@@ -13,5 +13,7 @@ namespace ProjectM.Core
         Loot = 3,
         /// <summary>적 재생성 칸 고르기 (3-4a). 맵 생성(MapGen)과 따로 — 재생성이 다음 층 모양을 바꾸지 않게.</summary>
         Spawn = 4,
+        /// <summary>층 꾸미기 — 풀 · 물 웅덩이 (3-11a). 맵 생성과 따로 — 맵 모양 · 적 배치가 그대로.</summary>
+        Decor = 5,
     }
 }

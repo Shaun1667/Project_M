@@ -424,7 +424,7 @@ namespace ProjectM.Items
                 for (int x = 0; x < map.Width; x++)
                 {
                     var pos = new GridPos(x, y);
-                    if (map.Get(pos) == TileType.Floor && pos != unit.Pos && !world.Units.IsOccupied(pos)) cells.Add(pos);
+                    if (GridMap.IsGroundType(map.Get(pos)) && pos != unit.Pos && !world.Units.IsOccupied(pos)) cells.Add(pos);
                 }
             if (cells.Count == 0) return;
             var to = cells[world.Rng.Get(RngStream.Combat).Range(0, cells.Count)];

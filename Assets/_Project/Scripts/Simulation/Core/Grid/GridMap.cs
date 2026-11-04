@@ -45,8 +45,11 @@ namespace ProjectM.Core
         /// <summary>걸을 수 있는 칸인지. 맵 밖은 걸을 수 없다.</summary>
         public bool IsWalkable(GridPos pos) => InBounds(pos) && IsWalkableType(_cells[IndexOf(pos)]);
 
-        /// <summary>걸을 수 있는 지형: 바닥 · 계단(내려가는 · 올라가는).</summary>
-        public static bool IsWalkableType(TileType type) => type == TileType.Floor || type == TileType.StairsDown || type == TileType.StairsUp;
+        /// <summary>걸을 수 있는 지형: 바닥 · 계단(내려가는 · 올라가는) · 풀(3-11a).</summary>
+        public static bool IsWalkableType(TileType type) => IsGroundType(type) || type == TileType.StairsDown || type == TileType.StairsUp;
+
+        /// <summary>맨땅 — 유닛 · 아이템을 놓을 수 있는 보통 칸: 바닥 · 짧은 풀 · 높은 풀 (계단 제외, 3-11a).</summary>
+        public static bool IsGroundType(TileType type) => type == TileType.Floor || type == TileType.Grass || type == TileType.TallGrass;
 
         /// <summary>그 종류의 첫 칸 (y → x 순), 없으면 null — 계단 찾기 (3-4a).</summary>
         public GridPos? Find(TileType type)
@@ -56,8 +59,11 @@ namespace ProjectM.Core
             return null;
         }
 
-        /// <summary>시야를 막는 칸인지: 벽 · 빈칸 · 맵 밖. 바닥 · 계단은 보인다.</summary>
-        public bool BlocksSight(GridPos pos) => !InBounds(pos) || !IsWalkableType(_cells[IndexOf(pos)]);
+        /// <summary>시야를 막는 칸인지: 벽 · 빈칸 · 맵 밖 · 높은 풀(3-11a). 바닥 · 계단 · 짧은 풀은 보인다.</summary>
+        public bool BlocksSight(GridPos pos) => !InBounds(pos) || !IsWalkableType(_cells[IndexOf(pos)]) || _cells[IndexOf(pos)] == TileType.TallGrass;
+
+        /// <summary>주문 · 투척 경로를 막는 칸인지: 벽 · 빈칸 · 맵 밖. 높은 풀은 시야만 가리고 막지 않는다 (3-11a, SPD).</summary>
+        public bool BlocksProjectile(GridPos pos) => !InBounds(pos) || !IsWalkableType(_cells[IndexOf(pos)]);
 
         /// <summary>맵 가장자리 한 줄인지.</summary>
         public bool IsBorder(GridPos pos) => pos.X == 0 || pos.Y == 0 || pos.X == Width - 1 || pos.Y == Height - 1;

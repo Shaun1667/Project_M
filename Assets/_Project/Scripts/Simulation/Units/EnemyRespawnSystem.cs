@@ -59,7 +59,7 @@ namespace ProjectM.Units
                 for (int x = 0; x < map.Width; x++)
                 {
                     var pos = new GridPos(x, y);
-                    if (map.Get(pos) != TileType.Floor || visible[y * map.Width + x] || _world.Units.IsOccupied(pos)) continue;
+                    if (!GridMap.IsGroundType(map.Get(pos)) || visible[y * map.Width + x] || _world.Units.IsOccupied(pos)) continue;
                     list.Add(pos);
                 }
             }

@@ -41,6 +41,7 @@ namespace ProjectM.Editor
         private const string ItemCatalogPath = "Assets/_Project/Data/Items/ItemCatalog.asset";
         private const string FusionCatalogPath = "Assets/_Project/Data/Fusions/FusionCatalog.asset";
         private const string LootConfigPath = "Assets/_Project/Data/Items/LootConfig.asset";
+        private const string FloorDecorConfigPath = "Assets/_Project/Data/Dungeon/FloorDecorConfig.asset";
         private const string ConsumableConfigPath = "Assets/_Project/Data/Items/ConsumableConfig.asset";
         // P-3a (결정 2026-10-21): 2D 픽셀 그래픽 — Grid를 눕히지 않고 정사영 카메라, 맵은 PixelMapPresenter. false면 G-1 3D 그대로
         internal static readonly bool Pixel2D = false; // 결정 2026-10-28 (사용자): 3D로 되돌림 — 2D 코드 · 그림은 남겨 두고 이 스위치로만 끔
@@ -70,6 +71,8 @@ namespace ProjectM.Editor
         private const string FloorTilePath = "Assets/_Project/Art/Greybox/TilePalette/tile_0.asset";
         private const string WallTilePath = "Assets/_Project/Art/Greybox/TilePalette/tile_1.asset";
         private const string StairsTilePath = "Assets/_Project/Art/Greybox/TilePalette/tile_3.asset";
+        private const string GrassTilePath = VisualsDir + "/GrassTile.asset";
+        private const string TallGrassTilePath = VisualsDir + "/TallGrassTile.asset";
         private const string PlayerSpritePath = "Assets/_Project/Art/Greybox/player.png";
         private const string UnitCircleSpritePath = "Assets/_Project/Art/Greybox/unit_circle.png";
         private const string WhiteSquareSpritePath = "Assets/_Project/Art/Greybox/white_square.png";
@@ -230,6 +233,7 @@ namespace ProjectM.Editor
             var lootConfig = EnsureAsset<LootConfigAsset>(LootConfigPath, ("_maxBooksPerFloor", 2), ("_minDistanceFromStart", 3));
             FillZeroInts(lootConfig, ("_weaponsPerRun", 2), ("_upgradeScrollsPerRun", 3), ("_strengthPotionsPerRun", 2), ("_armorsPerRun", 2)); // 3-10a 갑옷 2 // 3-7a 무기 2 · 3-7b 강화 3 · 힘 2 (BALANCE 11번)
             var consumableConfig = LoadOrCreate<ConsumableConfigAsset>(ConsumableConfigPath); // 3-9: 새로 만들면 필드 초기값 = BALANCE 14번
+            var floorDecorConfig = LoadOrCreate<FloorDecorConfigAsset>(FloorDecorConfigPath); // 3-11a: 풀 · 물 웅덩이, 새로 만들면 필드 초기값 = BALANCE 16번
             var floorItemsGo = FindOrCreate("FloorItems", null);
             var floorItems = GetOrAdd<FloorItemPresenter>(floorItemsGo);
             var itemVisuals = EnsureItemIcons(); // P-3 ⓒ: 아이템 픽셀 그림 (Art/Pixel/Items — 파일 이름 = 아이템 ID 또는 겉모습 키)
@@ -269,6 +273,7 @@ namespace ProjectM.Editor
                 ("_itemCatalog", itemCatalog),
                 ("_fusionCatalog", fusionCatalog),
                 ("_lootConfig", lootConfig),
+                ("_floorDecorConfig", floorDecorConfig),
                 ("_consumableConfig", consumableConfig),
                 ("_characters", characterCatalog),
                 ("_characterSelect", characterSelect),
@@ -296,6 +301,8 @@ namespace ProjectM.Editor
             set.Set(TileType.Wall, AssetDatabase.LoadAssetAtPath<TileBase>(WallTilePath));
             set.Set(TileType.StairsDown, AssetDatabase.LoadAssetAtPath<TileBase>(StairsTilePath));
             set.Set(TileType.StairsUp, EnsureStairsUpTile()); // 3-4a
+            set.Set(TileType.Grass, EnsureTintTile(GrassTilePath, new Color(0.45f, 0.7f, 0.3f))); // 3-11a 그레이박스: 연두
+            set.Set(TileType.TallGrass, EnsureTintTile(TallGrassTilePath, new Color(0.2f, 0.5f, 0.15f))); // 3-11a: 진초록
             EditorUtility.SetDirty(set);
             return set;
         }
@@ -363,11 +370,14 @@ namespace ProjectM.Editor
         }
 
         /// <summary>올라가는 계단 타일 (3-4a, 그레이박스): 흰 사각형을 청록색으로 — 내려가는 계단(파랑)과 구분.</summary>
-        private static Tile EnsureStairsUpTile()
+        private static Tile EnsureStairsUpTile() => EnsureTintTile(StairsUpTilePath, new Color(0.25f, 0.85f, 0.75f));
+
+        /// <summary>그레이박스 색 타일: 흰 사각형을 그 색으로 (계단 · 풀).</summary>
+        private static Tile EnsureTintTile(string path, Color color)
         {
-            var tile = LoadOrCreate<Tile>(StairsUpTilePath);
+            var tile = LoadOrCreate<Tile>(path);
             tile.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(WhiteSquareSpritePath);
-            tile.color = new Color(0.25f, 0.85f, 0.75f);
+            tile.color = color;
             tile.flags = TileFlags.LockColor;
             tile.colliderType = Tile.ColliderType.None;
             EditorUtility.SetDirty(tile);

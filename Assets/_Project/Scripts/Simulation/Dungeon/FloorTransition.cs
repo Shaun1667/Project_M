@@ -27,12 +27,19 @@ namespace ProjectM.Dungeon
         private readonly PlayerVisionSystem _vision;
         private readonly UnitDef _bossDef;
         private readonly LootConfig _loot;
+        private readonly FloorDecorConfig _decor;
+        private readonly TerrainDef _water;
 
         /// <param name="bossDef">마지막 층(보스 층)의 보스 (3-4b). null이면 마지막 층도 일반 층처럼 만든다 (테스트용).</param>
         /// <param name="loot">바닥 아이템 배치 수치 (3-5). null이면 새 층에 아이템을 놓지 않는다.</param>
+        /// <param name="decor">층 꾸미기 수치 (3-11a — 풀 · 물 웅덩이). null이면 꾸미지 않는다. 보스 층은 꾸미지 않는다.</param>
+        /// <param name="water">물 웅덩이에 쓸 물 지형 규칙. null이면 웅덩이 없이 풀만.</param>
         public FloorTransition(World world, DungeonGenerator generator, int floorCount, UnitDef enemyDef, SpawnConfig spawn,
-            Func<World, EntityId, ICommandSource> aiFactory, PlayerVisionSystem vision, UnitDef bossDef = null, LootConfig loot = null)
+            Func<World, EntityId, ICommandSource> aiFactory, PlayerVisionSystem vision, UnitDef bossDef = null, LootConfig loot = null,
+            FloorDecorConfig decor = null, TerrainDef water = null)
         {
+            _decor = decor;
+            _water = water;
             _bossDef = bossDef;
             _loot = loot;
             _world = world ?? throw new ArgumentNullException(nameof(world));
@@ -98,6 +105,7 @@ namespace ProjectM.Dungeon
                 bool last = target == _floorCount;
                 var floor = _generator.Generate(_world.Rng.Get(RngStream.MapGen), stairsUp: target > 1, stairsDown: !last);
                 _world.EnterNewFloor(target, floor.Map);
+                if (_decor != null) FloorDecor.Apply(_world, floor, _decor, _water); // 3-11a: 이벤트는 아래 Announce가 맵 · 지형을 다시 보낸다
                 _world.Units.Teleport(player.Id, floor.Start);
                 FloorPopulator.PopulateEnemies(_world, floor.Start, _enemyDef, _spawn, _aiFactory(_world, EntityId.None));
                 newFloorStart = floor.Start;

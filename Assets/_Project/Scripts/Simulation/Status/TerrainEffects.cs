@@ -99,6 +99,12 @@ namespace ProjectM.Status
     {
         private readonly SortedDictionary<int, List<TerrainInstance>> _cells = new SortedDictionary<int, List<TerrainInstance>>();
 
+        /// <summary>
+        /// 사라지지 않는 지형의 남은 틱 (3-11a 물 웅덩이). ③에서 줄지 않는다. 같은 종류를 더 짧게 놓아도 그대로(긴 쪽).
+        /// 반응으로 바뀌면 남은 틱 유지 변환(오염)은 그대로 영구, 지속을 정하는 변환(결빙)은 그 지속을 따른다.
+        /// </summary>
+        public const int Permanent = int.MaxValue;
+
         public int Width { get; }
         public int Height { get; }
 
@@ -176,7 +182,7 @@ namespace ProjectM.Status
     /// <summary>지형 효과를 놓는 곳은 여기 하나. 걸을 수 없는 칸(벽)에는 놓지 않는다.</summary>
     public static class TerrainEffects
     {
-        /// <param name="durationTicks">0이면 규칙의 지속(def.DurationTicks). 3-2b 융합은 자기 지속을 넘긴다.</param>
+        /// <param name="durationTicks">0이면 규칙의 지속(def.DurationTicks). 3-2b 융합은 자기 지속을 넘긴다. TerrainLayer.Permanent = 사라지지 않음 (3-11a).</param>
         public static void Place(World world, GridPos pos, TerrainDef def, int durationTicks = 0)
         {
             if (world == null) throw new ArgumentNullException(nameof(world));
@@ -222,6 +228,7 @@ namespace ProjectM.Status
 
     /// <summary>
     /// ③ 지형 처리 (GDD 3-3): 칸 인덱스 순 · 종류 순으로, 그 칸 유닛에게 상태를 걸고(지속 갱신) → 틱당 피해(3-2) → 남은 틱 1 감소 → 0이면 사라짐.
+    /// 영구 지형(TerrainLayer.Permanent, 3-11a)은 줄지 않는다.
     /// 확산은 없다 (2-4). 상태를 갖지 않는다.
     /// </summary>
     public sealed class TerrainSystem : ITickSystem
@@ -254,6 +261,7 @@ namespace ProjectM.Status
                             Combat.ApplyDamage(_world, EntityId.None, unit, def.DamagePerTick, DamageCause.FromTerrain(effect.Type));
                     }
 
+                    if (effect.Remaining == TerrainLayer.Permanent) continue; // 3-11a 영구 지형은 줄지 않는다
                     effect.Remaining--;
                     _world.Events.Publish(new TerrainChangedEvent(pos, effect.Type, effect.Remaining));
                     if (effect.Remaining <= 0)

@@ -33,6 +33,7 @@ namespace ProjectM
         [SerializeField] private ItemCatalogAsset _itemCatalog;
         [SerializeField] private FusionCatalogAsset _fusionCatalog;
         [Tooltip("마법서 배치 수치 (3-5). 비우면 바닥에 마법서를 놓지 않는다")] [SerializeField] private LootConfigAsset _lootConfig;
+        [Tooltip("층 꾸미기 수치 (3-11a — 풀 · 물 웅덩이). 비우면 꾸미지 않는다")] [SerializeField] private FloorDecorConfigAsset _floorDecorConfig;
         [Tooltip("경험치 · 레벨업 수치 (3-6). 비우면 경험치를 주지 않는다")] [SerializeField] private ProgressionConfigAsset _progressionConfig;
         [Tooltip("물약 · 주문서 수치 · 겉모습 (3-9). 비우면 식별 · 무작위 배치 없음")] [SerializeField] private ConsumableConfigAsset _consumableConfig;
         [Tooltip("고를 수 있는 캐릭터 (2026-10-21). 비우거나 창이 없으면 고르지 않고 Player.asset 모습으로 시작")] [SerializeField] private CharacterCatalogAsset _characters;
@@ -208,7 +209,10 @@ namespace ProjectM
             World.Scheduler.AddSystem(TickPhase.ManaRegen, new EnemyRespawnSystem(World, spawn, enemyDef, enemyAi, sight, dungeonConfig.FloorCount));
             var loot = _lootConfig != null ? _lootConfig.ToConfig() : null;
             if (loot != null) World.Scheduler.AddSystem(TickPhase.ManaRegen, new ItemPickupSystem(World, Items)); // 3-5: 걸어 들어가면 줍기
-            var stairs = new FloorTransition(World, generator, dungeonConfig.FloorCount, enemyDef, spawn, (w, id) => enemyAi, vision, _bossDef.ToDef(), loot);
+            var decor = _floorDecorConfig != null ? _floorDecorConfig.ToConfig() : null;
+            Terrains.TryGet(TerrainEffectType.Water, out var water); // 3-11a: 물 웅덩이 = 사라지지 않는 물 지형
+            var stairs = new FloorTransition(World, generator, dungeonConfig.FloorCount, enemyDef, spawn, (w, id) => enemyAi, vision, _bossDef.ToDef(), loot,
+                decor, water);
 
             if (_pixelMap != null) _pixelMap.Bind(World.Events); // P-3a 2D 맵 — 3D 맵은 묶지 않음
             else _tilemapPresenter.Bind(World.Events);
@@ -222,6 +226,7 @@ namespace ProjectM
             World.Events.Subscribe<RunEndedEvent>(OnRunEnded);
 
             World.Events.Publish(new MapLoadedEvent(World.Map));
+            if (decor != null) FloorDecor.Apply(World, Floor, decor, water); // 3-11a: MapLoaded 뒤에 (화면이 지우지 않게), 적 배치 전
             var playerDef = _playerDef.ToDef();
             if (!string.IsNullOrEmpty(visualId)) playerDef = playerDef.WithVisualId(visualId); // 2026-10-21 캐릭터 선택 — 지금은 외형만
             var player = FloorPopulator.Populate(World, Floor.Start, playerDef, enemyDef, spawn, enemyAi,
