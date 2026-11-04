@@ -49,6 +49,12 @@ namespace ProjectM.Editor
         }
 
         private static readonly ModelSpec Player = new ModelSpec("SheepMage", "Unit_Player", 1f, 0f);
+        /// <summary>G-7 (2026-11-03): 캐릭터 선택의 루멘(hero_blond) · 시아(hero_black) — Mixamo 리깅 모델.</summary>
+        private static readonly (string VisualId, ModelSpec Spec)[] Heroes =
+        {
+            ("hero_blond", new ModelSpec("Hero_Blond_Rigged", "Unit_Lumen", 0.57f, 0f)),
+            ("hero_black", new ModelSpec("Sia_Rigged", "Unit_Sia", 0.57f, 0f)),
+        };
         private static readonly ModelSpec[] MeleeVariants =
         {
             new ModelSpec("Enemy_Rabbit", "Unit_Rabbit", 0.8f, 0f),
@@ -108,6 +114,7 @@ namespace ProjectM.Editor
             var idle = EnsureHumanoid(AnimationDir + "Idle.fbx", "Idle");
             var walk = EnsureHumanoid(AnimationDir + "Walk.fbx", "Walk");
             var controller = idle != null && walk != null ? EnsurePlayerController(idle, walk) : null;
+            EnsureRiggedCharacters();
             if (controller == null) Debug.LogWarning("[VarcoModelSetup] Animation/Idle.fbx · Walk.fbx 없음 — 플레이어 애니메이션 생략 (코드 움직임만)");
 
             var player = BuildPrefab(Player, sheep =>
@@ -117,7 +124,16 @@ namespace ProjectM.Editor
                 AttachWeapons(sheep); // 3-7a: 손에 무기 6종을 꺼 둔 채 붙임 — 들면 EntityPresenter가 켜고 지팡이를 숨김
             });
             catalog.SetPrefab("player", player);
-            foreach (var id in new[] { "hero_blond", "hero_black" }) catalog.SetPrefab(id, player); // 2026-10-21 캐릭터 선택 — 픽셀 전환 전까지 같은 모델
+            foreach (var (id, spec) in Heroes) // 캐릭터 선택 — 양 마법사와 같은 컨트롤러 · 지팡이 · 무기, 모델이 없으면 양 마법사
+            {
+                var hero = BuildPrefab(spec, model =>
+                {
+                    SetupAnimator(model, controller, idle);
+                    AttachStaff(model);
+                    AttachWeapons(model);
+                });
+                catalog.SetPrefab(id, hero != null ? hero : player);
+            }
             var variants = new GameObject[MeleeVariants.Length];
             for (int i = 0; i < MeleeVariants.Length; i++)
                 variants[i] = BuildPrefab(MeleeVariants[i], null);
@@ -207,6 +223,46 @@ namespace ProjectM.Editor
             return null;
         }
 
+        /// <summary>
+        /// G-7 (2026-11-03): Mixamo 리깅한 캐릭터(루멘 · 시아)를 Humanoid로 가져오고, 텍스처를 색(sRGB) · 노멀 맵으로 맞춘다.
+        /// 재질은 FBX에 묻힌 이름(`<이름>_Mat`)이 같은 이름의 Textures/ 그림을 찾는다. 4K 그림(시아 상의 · 하의)은 4096까지 쓴다.
+        /// </summary>
+        private static void EnsureRiggedCharacters()
+        {
+            foreach (var (model, parts) in RiggedCharacters)
+            {
+                foreach (var part in parts)
+                {
+                    EnsureCharacterTexture($"{ModelDir}Textures/{model}_{part}_base_color.png", normal: false);
+                    EnsureCharacterTexture($"{ModelDir}Textures/{model}_{part}_normal.png", normal: true);
+                }
+                var path = $"{ModelDir}{model}_Rigged.fbx";
+                if (AssetImporter.GetAtPath(path) == null) { Debug.LogWarning("[VarcoModelSetup] 없음: " + path); continue; }
+                EnsureHumanoid(path, null);
+                var avatar = AssetDatabase.LoadAssetAtPath<Avatar>(path);
+                if (avatar == null || !avatar.isHuman) Debug.LogWarning("[VarcoModelSetup] Humanoid 아바타가 잡히지 않음: " + path);
+            }
+        }
+
+        private static readonly (string Model, string[] Parts)[] RiggedCharacters =
+        {
+            ("Hero_Blond", new[] { "Body", "Coat", "Head" }),
+            ("Sia", new[] { "Body", "Top", "Bottom", "Head" }),
+        };
+
+        private static void EnsureCharacterTexture(string path, bool normal)
+        {
+            if (!(AssetImporter.GetAtPath(path) is TextureImporter importer)) return;
+            var type = normal ? TextureImporterType.NormalMap : TextureImporterType.Default;
+            importer.GetSourceTextureWidthAndHeight(out int width, out int height);
+            int maxSize = Mathf.Max(width, height) > 2048 ? 4096 : 2048;
+            if (importer.textureType == type && importer.maxTextureSize == maxSize && importer.sRGBTexture == !normal) return;
+            importer.textureType = type;
+            importer.sRGBTexture = !normal;
+            importer.maxTextureSize = maxSize;
+            importer.SaveAndReimport();
+        }
+
         /// <summary>Idle(기본) ↔ Walk 컨트롤러 (bool Moving). 있으면 상태 · 전이만 다시 맞춘다 (GUID 유지).</summary>
         private static AnimatorController EnsurePlayerController(AnimationClip idle, AnimationClip walk)
         {
@@ -293,7 +349,7 @@ namespace ProjectM.Editor
         private static void AttachStaff(GameObject sheep)
         {
             var model = LoadModel(Staff.Model);
-            var hand = FindDeep(sheep.transform, StaffHandBone);
+            var hand = FindHand(sheep);
             if (model == null || hand == null)
             {
                 Debug.LogWarning("[VarcoModelSetup] 지팡이 또는 손 뼈(" + StaffHandBone + ") 없음 — 지팡이 생략");
@@ -315,7 +371,7 @@ namespace ProjectM.Editor
         /// </summary>
         private static void AttachWeapons(GameObject sheep)
         {
-            var hand = FindDeep(sheep.transform, StaffHandBone);
+            var hand = FindHand(sheep);
             if (hand == null) return;
             var upright = sheep.transform.parent; // 프리팹 루트 (Y-up)
             foreach (var spec in WeaponSpecs)
@@ -385,6 +441,14 @@ namespace ProjectM.Editor
             var model = AssetDatabase.LoadAssetAtPath<GameObject>(ModelDir + name + ".fbx");
             if (model == null) Debug.LogWarning("[VarcoModelSetup] 모델 없음: " + ModelDir + name + ".fbx");
             return model;
+        }
+
+        /// <summary>오른손 뼈 — Humanoid 아바타가 있으면 그 매핑(Mixamo는 `mixamorig:RightHand`), 없으면 이름으로.</summary>
+        private static Transform FindHand(GameObject model)
+        {
+            var animator = model.GetComponent<Animator>();
+            var hand = animator != null && animator.isHuman ? animator.GetBoneTransform(HumanBodyBones.RightHand) : null;
+            return hand != null ? hand : FindDeep(model.transform, StaffHandBone);
         }
 
         private static Transform FindDeep(Transform root, string name)

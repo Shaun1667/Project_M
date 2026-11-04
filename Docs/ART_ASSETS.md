@@ -286,14 +286,17 @@ Varco는 모든 모델을 **가장 긴 쪽 1 m**로 보내므로 크기는 프�
 
 ---
 
-### 12-3. 금발 주인공 (G, 2026-11-02 — 파일만, 아직 연결 안 함)
+### 12-3. 주인공 루멘 · 시아 (G-7, 2026-11-02 · 11-03 — 캐릭터 선택에 연결)
 
 | 모델 | 구성 | 크기 (가로 × 높이 × 깊이 m) | 삼각형 | 재질 · 텍스처 | 뼈대 |
 |---|---|---|---|---|---|
-| Hero_Blond | 두상(Varco, 눈 파임을 평평하게 채움) + `Hero_Torso2`(옷 · 바지 · 신발) + `Hero_Coat`(맞춤 셰이프 키 확정) 한 메시 | 1.59 × 1.75 × 0.58 (T자세) | 100,686 (두상 4만 · 옷 3만 · 코트 3.07만) | `Hero_Blond_Head/Body/Coat` 각 `_base_color` · `_normal` (2048) | 없음 |
+| Hero_Blond | 두상(Varco, 눈 파임을 평평하게 채움) + `Hero_Torso2`(옷 · 바지 · 신발) + `Hero_Coat`(맞춤 셰이프 키 확정) 한 메시 | 1.59 × 1.75 × 0.58 (T자세) | 100,686 (두상 4만 · 옷 3만 · 코트 3.07만) | `Hero_Blond_Head/Body/Coat` 각 `_base_color` · `_normal` (2048) | 없음 (리깅 전 원본) |
+| Sia | 두상(머리카락 포함) + 내의 몸통 + 상의(재킷) · 하의(반바지 · 띠) 한 메시 | 1.65 m 높이 (T자세) | 115,000 | `Sia_Head/Body/Top/Bottom` 각 `_base_color` · `_normal` (상의 · 하의 색 4096, 나머지 2048) | 없음 (리깅 전 원본) |
+| Hero_Blond_Rigged · Sia_Rigged | 위 두 모델을 Mixamo 자동 리깅 (턱 · 손목 · 팔꿈치 · 무릎 · 사타구니 표시) | 같음 | 같음 | 같은 재질 이름 → 같은 텍스처 | Mixamo 뼈대, **Humanoid** (Varco Models 메뉴) |
 
 - 원점 = 발밑 가운데, 앞 = +Z. 블렌더 작업 파일은 저장소 밖 scratchpad의 `Hero_Blond_v2.blend` (481 MB라 `Source~/`에 넣지 않음).
-- 플레이어(`SheepMage`, 높이 0.99 m)로 바꾸려면 배율 약 0.57 + 휴머노이드 리깅(Mixamo 등)이 먼저 필요하다 — 연결은 사용자 결정 후.
+- 연결 (2026-11-03): `hero_blond` → `Unit_Lumen`(Hero_Blond_Rigged), `hero_black` → `Unit_Sia`(Sia_Rigged), 배율 둘 다 0.57 (루멘 약 1.0 m · 시아 약 0.94 m, 양 마법사 0.99 m). 양 마법사와 같은 Idle · Walk 컨트롤러 · 지팡이 · 무기 6종을 Humanoid 오른손 뼈(`mixamorig:RightHand`)에 붙인다. `player`(캐릭터를 고르지 않은 경우)는 그대로 양 마법사.
+- 캐릭터 선택 카드 그림 = 7등신 일러스트 `Art/Pixel/Characters/<ID>_illust.png` (시아 = Varco 일러스트 후보 3번).
 
 ### 12-2. 무기 (3-7a, 2026-10-19)
 

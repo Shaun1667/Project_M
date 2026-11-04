@@ -56,7 +56,7 @@ MonoBehaviour:
   - Id: hero_blond
     Sprite: {fileID: 21300000, guid: daf974b677614ce4eb1093f7dc58cde1, type: 3}
     Tint: {r: 1, g: 1, b: 1, a: 1}
-    Prefab: {fileID: 728124216887604353, guid: 6a2daa709e8d65546b3f2e5f5b55f6c1, type: 3}
+    Prefab: {fileID: 139994600976015035, guid: 471d94fad66bcbc4da4b7988411bd931, type: 3}
     Height: 0.9
     Variants: []
     PixelIdle: {fileID: 21300000, guid: daf974b677614ce4eb1093f7dc58cde1, type: 3}
@@ -79,7 +79,7 @@ MonoBehaviour:
   - Id: hero_black
     Sprite: {fileID: 21300000, guid: 84bbeccd5bccd0c488c067fdd3d4c051, type: 3}
     Tint: {r: 1, g: 1, b: 1, a: 1}
-    Prefab: {fileID: 728124216887604353, guid: 6a2daa709e8d65546b3f2e5f5b55f6c1, type: 3}
+    Prefab: {fileID: 3376776256346202009, guid: 877da30ab8bf2694e91766e868fb41e6, type: 3}
     Height: 0.9
     Variants: []
     PixelIdle: {fileID: 0}

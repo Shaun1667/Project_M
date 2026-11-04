@@ -55,7 +55,7 @@ namespace ProjectM.Editor
         private const string CharacterArtDir = "Assets/_Project/Art/Pixel/Characters";
         private const string EnemyArtDir = "Assets/_Project/Art/Pixel/Enemies";
         // 2026-10-21 캐릭터 선택 — 모습 ID (3D Main에서는 픽셀 전환 전까지 둘 다 플레이어 모델)
-        private static readonly (string Id, string Name)[] Characters = { ("hero_blond", "금발의 마법사"), ("hero_black", "흑발의 마법사") };
+        private static readonly (string Id, string Name)[] Characters = { ("hero_blond", "루멘"), ("hero_black", "시아") }; // 이름 2026-11-02 (사용자)
         private const string ProgressionConfigPath = "Assets/_Project/Data/Units/ProgressionConfig.asset";
         private const string ItemVisualCatalogPath = "Assets/_Project/Data/Visuals/ItemVisualCatalog.asset";
         private const string ItemArtDir = "Assets/_Project/Art/Pixel/Items";
