@@ -167,7 +167,7 @@ Assets/
 - 좌표: Grid 오브젝트를 X축 90° 돌려 칸 (x, y) = 월드 (x + 0.5, 0, y + 0.5). 칸 ↔ 월드는 `Grid.GetCellCenterWorld` / 화면 → 칸은 카메라 광선과 바닥 평면(y = 0)의 교점 (물리 · 충돌체를 쓰지 않는다 — 규칙 2). 모델 원점 = 발밑 중앙.
 - 그래픽 작업을 재미 검증(Phase 4)보다 먼저 한다 (변경 2026-10-18, 사용자 결정 — ~~재미 검증 전에는 그래픽 작업을 하지 않는다~~). 프리팹이 없는 VisualId는 그레이박스 도형(캡슐 · 큐브)으로 그린다.
 - Varco 모델 (G-2a): 원본은 `Art/Varco3D/`(텍스처 `<이름>_base_color/_normal`, 재질 `<이름>_Mat`), 표시용 프리팹은 메뉴 `ProjectM/Setup/Varco Models`(멱등)가 `Prefabs/Varco/`에 만들고 카탈로그 · 타일 세트에 연결한다. 크기 · 방향 보정은 그 스크립트 표 = ART_ASSETS.md 12번. 새 모델은 같은 표에 한 줄 추가. Varco FBX는 묻힌 텍스처 이름이 모두 같으므로 꺼낼 때 이름을 바꾼다.
-- 칸 3D 모듈은 `TileVisualSet`(타입별 Module · 기둥 · 서는 높이)에서 고르고 `TilemapPresenter`가 세운다. 높은 모듈만 시야를 따르고 낮은 바닥 판은 안개 Tilemap이 가린다. Grid cellSize z는 0 (아니면 칸 중앙이 바닥 아래).
+- 칸 3D 모듈은 `TileVisualSet`(타입별 Module · 기둥 · 서는 높이)에서 고르고 `TilemapPresenter`가 세운다. 높은 모듈은 시야를 따르고(보임 · 어둡게 · 숨김), 낮은 모듈(바닥 판 · 짧은 풀 등)은 본 칸이면 안개 Tilemap이 가리고 안 가본 칸이면 숨긴다 (2026-11-05 — 안개 위로 솟은 낮은 모듈이 보이던 문제). Grid cellSize z는 0 (아니면 칸 중앙이 바닥 아래).
 - 유닛 움직임 (G-2b): 이벤트 핸들러는 목표만 바꾸고 `EntityPresenter.Advance(dt)`가 프레임마다 그린다 — 테스트는 `Advance`/`FinishMotions`로 진행. 새 연출은 이벤트 → `EntityView` 타이머 → `Pose` 순서로 넣고 0.4초 안에 끝낸다. 애니메이션 클립이 생기면 같은 이벤트 지점에서 재생.
 - 애니메이션 (G-2c): 클립(Mixamo 등)과 Varco 모델은 뼈 이름이 달라 **Humanoid 리타깃**으로 붙인다 — `VarcoModelSetup`이 모델 · 클립을 Humanoid로 가져오고(루트 회전 · 높이는 굽고, 앞뒤 이동 XZ는 굽지 않고 루트로 빼서 `applyRootMotion = false`로 버림 — 구우면 몸이 앞으로 밀려 나감) 컨트롤러를 만든다. 위치 · 방향은 `EntityPresenter`가 맡고 Animator에는 파라미터만 넘긴다(지금 bool `Moving` = Walk). 애니메이션 모델은 코드 통통 튐 · 숨쉬기를 끈다. 새 클립 = `Assets/_Project/Animation/` + 컨트롤러 상태 한 줄 + 이벤트 지점에서 파라미터.
 - 상태 · 지형 표시는 타일 오버레이와 상태 아이콘 데이터로 정의한다 (2.5D/2D 공용).

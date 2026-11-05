@@ -340,12 +340,15 @@ namespace ProjectM.Presentation
             {
                 var cell = pair.Value;
                 var shown = Shown.Visible;
-                if (cell.Tall && !_revealAll && _visibility != null)
+                if (!_revealAll && _visibility != null)
                 {
                     int index = pair.Key.Y * _visibility.Width + pair.Key.X;
                     bool visible = _visibility.IsVisible(pair.Key);
                     bool explored = visible || (index >= 0 && index < _visibility.Explored.Length && _visibility.Explored[index]);
-                    shown = visible ? Shown.Visible : explored ? Shown.Dim : Shown.Hidden;
+                    // 높은 모듈: 보임 / 본 적 있음(어둡게) / 못 봄(숨김). 낮은 모듈(바닥 · 짧은 풀 등)은 본 칸은 안개가 덮고,
+                    // 못 본 칸은 숨김 — 짧은 풀처럼 안개 판보다 솟은 모듈이 안 가본 곳에서 보이지 않게 (2026-11-05 플레이 확인: 적이 밟은 풀)
+                    shown = cell.Tall ? (visible ? Shown.Visible : explored ? Shown.Dim : Shown.Hidden)
+                        : explored ? Shown.Visible : Shown.Hidden;
                 }
                 if (shown == cell.Shown) continue;
                 cell.Shown = shown;
