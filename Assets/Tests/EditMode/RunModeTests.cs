@@ -116,22 +116,45 @@ namespace ProjectM.Tests
             Assert.That(SeedInput.Hash("abc"), Is.EqualTo(SeedInput.Hash("abc")));
         }
 
-        // 타이틀: 저장 있으면 이어하기 맨 위, 게임 시작 → 모드 · 시드 → 시작
+        // 타이틀 (3-30 슬롯): 게임 시작 → 슬롯 5칸 — 찬 슬롯 = 요약 → 시작 / 삭제(한 번 더 묻기), 빈 슬롯 = 모드 · 시드 → 시작
         [Test]
         public void TitleMenu_Flow()
         {
+            var slots = new[]
+            {
+                new SlotInfo(true, "루멘 · Lv 3 · 2층 · 턴제", "요약"),
+                new SlotInfo(false, null, null), new SlotInfo(false, null, null), new SlotInfo(false, null, null), new SlotInfo(false, null, null),
+            };
             var m = new TitleMenuModel();
-            m.Open(canContinue: false);
-            Assert.That(m.Items, Is.EqualTo(new[] { TitleItem.NewGame, TitleItem.Quit }));
-            m.Open(canContinue: true);
-            Assert.That(m.Items[0], Is.EqualTo(TitleItem.Continue));
-            bool continued = false;
-            m.ContinueChosen += () => continued = true;
+            m.Open(slots);
+            Assert.That(m.Items, Is.EqualTo(new[] { TitleItem.NewGame, TitleItem.Quit }), "3-30: 이어하기는 슬롯 화면으로 합침");
             m.Confirm();
-            Assert.That(continued && !m.IsOpen, Is.True, "이어하기");
+            Assert.That(m.Screen, Is.EqualTo(TitleScreen.Slots));
 
-            m.Open(canContinue: true);
+            // 찬 슬롯 1 → 요약 → 시작 = 이어하기(슬롯 1)
+            int continued = 0;
+            m.ContinueChosen += s => continued = s;
+            m.Confirm();
+            Assert.That(m.Screen, Is.EqualTo(TitleScreen.SlotDetail));
+            m.Confirm();
+            Assert.That((continued, m.IsOpen), Is.EqualTo((1, false)));
+
+            // 삭제: 요약 → 데이터 삭제 → 확인 화면(처음은 '취소') → 삭제
+            m.Open(slots);
+            m.Confirm(); m.Confirm();
             m.Move(1);
+            m.Confirm();
+            Assert.That((m.Screen, m.OptionSelected), Is.EqualTo((TitleScreen.ConfirmDelete, 1)), "안전하게 취소에서 시작");
+            m.Confirm();
+            Assert.That(m.Screen, Is.EqualTo(TitleScreen.SlotDetail), "취소 = 요약으로");
+            m.Move(1); m.Confirm();
+            int deleted = 0;
+            m.DeleteChosen += s => deleted = s;
+            m.Move(-1); m.Confirm();
+            Assert.That((deleted, m.Screen), Is.EqualTo((1, TitleScreen.Slots)));
+
+            // 빈 슬롯 3 → 새 게임 → 시드 · 모드 → 시작(슬롯 3)
+            m.Select(2);
             m.Confirm();
             Assert.That(m.Screen, Is.EqualTo(TitleScreen.NewGame));
             m.Type('a'); m.Type('\n'); m.Type('7'); m.Backspace(); m.Type('9');
@@ -140,18 +163,19 @@ namespace ProjectM.Tests
             Assert.That(m.SeedText.Length, Is.EqualTo(SeedInput.MaxLength));
             m.ToggleMode();
             Assert.That(m.Mode, Is.EqualTo(RunMode.RealTime));
+            int startedSlot = 0;
+            RunMode chosen = RunMode.TurnBased;
+            m.StartChosen += (s, mode, text) => { startedSlot = s; chosen = mode; };
+            m.Confirm();
+            Assert.That((startedSlot, chosen, m.IsOpen), Is.EqualTo((3, RunMode.RealTime, false)));
+
+            // Esc: 새 게임 → 슬롯 → 첫 화면
+            m.Open(slots);
+            m.Confirm(); m.Select(1); m.Confirm();
+            m.Back();
+            Assert.That(m.Screen, Is.EqualTo(TitleScreen.Slots));
             m.Back();
             Assert.That(m.Screen, Is.EqualTo(TitleScreen.Main));
-            m.Move(-1);
-            m.Move(1);
-            m.Confirm(); // 게임 시작 (칸 1)
-            RunMode chosen = RunMode.TurnBased;
-            string seed = null;
-            m.StartChosen += (mode, text) => { chosen = mode; seed = text; };
-            m.Confirm();
-            Assert.That(chosen, Is.EqualTo(RunMode.RealTime), "모드가 남아 있다");
-            Assert.That(seed, Has.Length.EqualTo(SeedInput.MaxLength), "시드 글이 남아 있다");
-            Assert.That(m.IsOpen, Is.False);
         }
 
         // 판 글자: 모드 이름 · 결과 화면 안내
@@ -160,6 +184,11 @@ namespace ProjectM.Tests
         {
             Assert.That(HudText.ModeName(RunMode.RealTime), Is.EqualTo("실시간"));
             Assert.That(HudText.ModeName(RunMode.TurnBased), Is.EqualTo("턴제"));
+            // 3-30 슬롯 글
+            Assert.That(HudText.SlotLabel(2, false, null), Does.Contain("슬롯 2").And.Contain(HudText.SlotEmpty));
+            Assert.That(HudText.SlotLine("루멘", 5, 7, RunMode.RealTime), Is.EqualTo("루멘 · Lv 5 · 7층 · 실시간"));
+            var detail = new HudText().SlotDetail("루멘", "근접형", 5, 40, 18, 30, 6, 14, 11, 12, 6, "창+1", null, new[] { "생명석 부적" }, 7, RunMode.TurnBased, -5, 120, 6, 23, 980);
+            Assert.That(detail, Does.Contain("HP 18/30").And.Contain("7층").And.Contain("생명석 부적").And.Contain("에테르 6").And.Contain("980턴"));
             Assert.That(HudText.TitleItemName(TitleItem.Continue), Is.EqualTo("이어하기"));
             Assert.That(HudText.ResultRestart, Does.Contain("타이틀"));
         }

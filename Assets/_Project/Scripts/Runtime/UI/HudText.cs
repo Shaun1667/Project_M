@@ -344,6 +344,38 @@ namespace ProjectM.UI
         public const string StartButton = "시작";
         public const string NewGameHint = "← → 모드 · 글자 입력 = 시드 · Backspace 지우기 · Enter 시작 · Esc 뒤로";
         public const string Paused = "일시정지 — P로 계속";
+
+        // ── 저장 슬롯 (3-30) ──
+        public const string SlotsTitle = "저장 슬롯 — 고르기";
+        public const string SlotHint = "↑ ↓ 고르기 · Enter/클릭 · Esc 뒤로";
+        public const string SlotChoiceHint = "← → 고르기 · Enter/클릭 · Esc 뒤로";
+        public const string SlotEmpty = "비어 있음 — 새 게임";
+        public static string SlotLabel(int slot, bool filled, string label) => $"슬롯 {slot}   " + (filled ? label : $"<color=#888888>{SlotEmpty}</color>");
+        public const string SlotStart = "시작";
+        public const string SlotDelete = "데이터 삭제";
+        public const string SlotBack = "뒤로";
+        public static string SlotDeleteQuestion(int slot) => $"슬롯 {slot}의 데이터를 지울까요?\n<size=70%><color=#AAAAAA>되돌릴 수 없습니다</color></size>";
+        public const string SlotDeleteYes = "삭제";
+        public const string SlotDeleteNo = "취소";
+        public const string SlotUnreadable = "<color=#FF8A65>읽을 수 없는 저장 (버전이 다르거나 깨짐)</color>";
+
+        /// <summary>슬롯 한 줄: "루멘 · Lv 5 · 7층 · 턴제".</summary>
+        public static string SlotLine(string character, int level, int floor, RunMode mode) => $"{character} · Lv {level} · {floor}층 · {ModeName(mode)}";
+
+        /// <summary>찬 슬롯 요약 (3-30 — 캐릭터 · 능력치 · 현재 층 · 장비 · 유물 · 재화 · 진행).</summary>
+        public string SlotDetail(string character, string formName, int level, int exp, int hp, int maxHp, int mana, int maxMana, int strength, int accuracy, int evasion,
+            string weapon, string armor, System.Collections.Generic.IReadOnlyList<string> relics, int floor, RunMode mode, long seed, int gold, int ether, int kills, long turns)
+        {
+            var sb = new System.Text.StringBuilder();
+            sb.Append($"<b>{character}</b>{(string.IsNullOrEmpty(formName) ? string.Empty : "  <color=#AAAAAA>" + formName + "</color>")}\n");
+            sb.Append($"Lv {level}  (경험치 {exp})    HP {hp}/{maxHp}    MP {mana}/{maxMana}\n");
+            sb.Append($"힘 {strength}    명중 {accuracy}    회피 {evasion}\n");
+            sb.Append($"무기: {weapon ?? NoEquipment}    갑옷: {armor ?? NoEquipment}\n");
+            sb.Append($"유물: {(relics != null && relics.Count > 0 ? string.Join(" · ", relics) : NoEquipment)}\n\n");
+            sb.Append($"<b>{floor}층</b>    {ModeName(mode)}    {turns}턴    처치 {kills}\n");
+            sb.Append($"금화 {gold}    에테르 {ether}    <color=#888888>시드 {seed}</color>");
+            return sb.ToString();
+        }
         public const string RealTimeStarted = "실시간 모드 — 1초마다 시간이 흐른다 (P 일시정지)";
         public const string RunContinued = "저장한 곳에서 이어한다";
 

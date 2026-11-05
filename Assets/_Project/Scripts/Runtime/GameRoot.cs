@@ -152,9 +152,15 @@ namespace ProjectM
             if (Config == null) return;
             if (_title != null)
             {
-                _title.Model.ContinueChosen += () => Defer(ContinueRun);
-                _title.Model.StartChosen += (mode, seedText) => Defer(() =>
+                _title.Model.ContinueChosen += slot => Defer(() => ContinueRun(slot)); // 3-30 슬롯
+                _title.Model.DeleteChosen += slot =>
                 {
+                    RunSaveStore.Delete(slot); // 3-30 데이터 삭제 (타이틀이 한 번 더 물은 뒤)
+                    _title.Model.SetSlots(SlotInfos());
+                };
+                _title.Model.StartChosen += (slot, mode, seedText) => Defer(() =>
+                {
+                    _pendingSlot = slot;
                     _pendingMode = mode;
                     _pendingSeed = SeedInput.TryParse(seedText, out var s) ? s : (ulong?)null;
                     BeginCharacterSelect();
@@ -166,6 +172,9 @@ namespace ProjectM
 
         // ── 타이틀 · 모드 · 시드 (3-27, 결정 2026-11-05) ──
 
+        /// <summary>3-30: 이 판이 저장되는 슬롯 (1 ~ 5, 0 = 없음) · 새 게임을 고른 슬롯.</summary>
+        private int _slot;
+        private int _pendingSlot = 1;
         private RunMode _pendingMode;
         private ulong? _pendingSeed;
         private System.Action _deferred;
@@ -191,7 +200,51 @@ namespace ProjectM
                 BeginCharacterSelect();
                 return;
             }
-            _title.Open(RunSaveStore.Exists());
+            RunSaveStore.MigrateLegacy(); // 3-27 단일 저장 → 슬롯 1
+            _title.Open(SlotInfos());
+        }
+
+        /// <summary>3-30 저장 슬롯 5칸의 화면 정보 — 찬 슬롯은 스냅샷에서 플레이어 요약을 만든다 (읽을 수 없으면 그 표시).</summary>
+        private System.Collections.Generic.List<SlotInfo> SlotInfos()
+        {
+            var list = new System.Collections.Generic.List<SlotInfo>(RunSaveStore.SlotCount);
+            for (int slot = 1; slot <= RunSaveStore.SlotCount; slot++)
+            {
+                if (!RunSaveStore.Exists(slot))
+                {
+                    list.Add(new SlotInfo(false, null, null));
+                    continue;
+                }
+                var snap = RunSaveStore.Load(slot);
+                var player = snap != null ? PlayerOf(snap) : (ProjectM.Core.UnitState?)null;
+                if (snap == null || player == null)
+                {
+                    list.Add(new SlotInfo(true, HudText.SlotUnreadable, HudText.SlotUnreadable));
+                    continue;
+                }
+                var p = player.Value;
+                string character = CharacterNameOf(p.VisualId);
+                string form = null;
+                if (snap.FormId != null && _hudText.FormNames != null) _hudText.FormNames.TryGetValue(snap.FormId, out form);
+                var relics = new System.Collections.Generic.List<string>();
+                foreach (var r in p.Relics) if (!r.IsEmpty) relics.Add(_hudText.Entry(r));
+                string weapon = p.Weapon.IsEmpty ? null : _hudText.WeaponName(p.Weapon);
+                string armor = p.Armor.IsEmpty ? null : _hudText.ArmorName(p.Armor);
+                list.Add(new SlotInfo(true, HudText.SlotLine(character, p.Level, snap.Floor, snap.Mode),
+                    _hudText.SlotDetail(character, form, p.Level, p.Exp, p.Hp, p.MaxHp, p.Mana, p.MaxMana, p.Strength, p.Accuracy, p.Evasion,
+                        weapon, armor, relics, snap.Floor, snap.Mode, (long)snap.RngSeed, snap.Gold, snap.Ether, snap.Kills, snap.CurrentTick)));
+            }
+            return list;
+        }
+
+        private static ProjectM.Core.UnitState? PlayerOf(WorldSnapshot snap)
+        {
+            foreach (var a in snap.Actors)
+            {
+                if (!a.IsPlayer) continue;
+                foreach (var u in snap.Units) if (u.Id == a.Id) return u;
+            }
+            return null;
         }
 
         private static void Quit()
@@ -203,13 +256,14 @@ namespace ProjectM
 #endif
         }
 
-        /// <summary>저장에서 이어하기 (3-27). 저장이 깨졌으면 타이틀로.</summary>
-        private void ContinueRun()
+        /// <summary>저장에서 이어하기 (3-27 · 3-30 슬롯). 저장이 깨졌으면 그 슬롯을 비우고 타이틀로.</summary>
+        private void ContinueRun(int slot)
         {
-            var snapshot = RunSaveStore.Load();
+            _slot = slot;
+            var snapshot = RunSaveStore.Load(slot);
             if (snapshot == null)
             {
-                RunSaveStore.Delete();
+                RunSaveStore.Delete(slot);
                 OpenTitle();
                 return;
             }
@@ -220,7 +274,7 @@ namespace ProjectM
             catch (System.Exception ex)
             {
                 Debug.LogError($"[GameRoot] 저장을 불러오지 못했다 — 지우고 타이틀로: {ex}");
-                RunSaveStore.Delete();
+                RunSaveStore.Delete(slot);
                 OpenTitle();
             }
         }
@@ -304,7 +358,7 @@ namespace ProjectM
             if (World == null || _runEnded || _playerDead || !_playerId.IsValid || World.Events.FlushCount == _savedFlush) return;
             try
             {
-                RunSaveStore.Save(World);
+                if (_slot > 0) RunSaveStore.Save(World, _slot); // 3-30 이 판의 슬롯
                 _savedFlush = World.Events.FlushCount;
             }
             catch (System.Exception ex)
@@ -321,7 +375,8 @@ namespace ProjectM
         {
             // 3-27: 시드 = 타이틀 입력 칸 → 인스펙터 고정 시드 → 지금 시각
             ulong seed = _pendingSeed ?? (_fixedSeed != 0 ? (ulong)_fixedSeed : (ulong)System.DateTime.UtcNow.Ticks);
-            RunSaveStore.Delete(); // 새 판 = 지난 저장은 버림 (저장은 하나)
+            _slot = _pendingSlot; // 3-30: 고른 슬롯에 새 판 (그 슬롯의 지난 저장은 버림)
+            RunSaveStore.Delete(_slot);
             BeginRun(null, visualId, characterSpells, classId, _pendingMode, seed);
         }
 
@@ -948,7 +1003,7 @@ namespace ProjectM
         {
             _runEnded = true;
             _realTime = null; // 3-27: 실시간 시계 멈춤
-            RunSaveStore.Delete(); // 3-27: 패배 · 승리 = 저장 삭제 (되돌리기 없음)
+            if (_slot > 0) RunSaveStore.Delete(_slot); // 3-27 · 3-30: 패배 · 승리 = 그 슬롯을 비움 (되돌리기 없음)
             _input.Unbind();
             _result.Show(ResultModel.From(World, Seed, _player, _hudText));
             Debug.Log($"[GameRoot] 판 끝: {e.Outcome} — R로 새 판");
