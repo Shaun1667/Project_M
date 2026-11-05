@@ -133,6 +133,7 @@ namespace ProjectM
             _hudText.TalentNames = _classCatalog != null ? _classCatalog.TalentNames() : null; // 3-21c
             _input.Text = _hudText;
             _input.HintChanged += _hud.SetHint;
+            _input.InfoChanged += _hud.SetInfo;
             // 2026-10-20: 이동 · 공격 · 주문 연출이 끝날 때까지 다음 행동(= 다음 틱)을 받지 않는다
             _input.PresentationBusy = () => _entityPresenter.IsAnimating || (_fx != null && _fx.IsPlaying)
                 || (_characterSelect != null && _characterSelect.IsOpen); // 3-21b: 형태 선택 창이 열려 있으면 행동을 받지 않음
@@ -141,6 +142,7 @@ namespace ProjectM
         private void OnDestroy()
         {
             if (_input != null && _hud != null) _input.HintChanged -= _hud.SetHint;
+            if (_input != null && _hud != null) _input.InfoChanged -= _hud.SetInfo;
         }
 
         private void Start()

@@ -77,6 +77,57 @@ namespace ProjectM.UI
             Redraw();
         }
 
+        private RectTransform _infoPanel;
+        private TMP_Text _infoText;
+        private static readonly Color InfoColor = new Color(0.08f, 0.08f, 0.1f, 0.88f);
+
+        /// <summary>
+        /// 정보 모드 창 (3-24, SPD — E): 화면 아래 가운데 상자에 칸 설명. null · 빈 문자열 = 숨김.
+        /// 상자는 처음 부를 때 안내 줄과 같은 캔버스 · 폰트로 만든다 (Setup 변경 없음).
+        /// </summary>
+        public void SetInfo(string info)
+        {
+            if (string.IsNullOrEmpty(info))
+            {
+                if (_infoPanel != null) _infoPanel.gameObject.SetActive(false);
+                return;
+            }
+            if (_infoPanel == null && !CreateInfoPanel()) return;
+            _infoText.text = info;
+            _infoPanel.gameObject.SetActive(true);
+        }
+
+        private bool CreateInfoPanel()
+        {
+            if (_hintText == null || _hintText.canvas == null) return false;
+            var go = new GameObject("ExamineInfo", typeof(RectTransform), typeof(Image), typeof(VerticalLayoutGroup), typeof(ContentSizeFitter));
+            _infoPanel = (RectTransform)go.transform;
+            _infoPanel.SetParent(_hintText.canvas.transform, false);
+            _infoPanel.anchorMin = _infoPanel.anchorMax = new Vector2(0.5f, 0f);
+            _infoPanel.pivot = new Vector2(0.5f, 0f);
+            _infoPanel.anchoredPosition = new Vector2(0f, 24f);
+            go.GetComponent<Image>().color = InfoColor;
+            go.GetComponent<Image>().raycastTarget = false;
+            var layout = go.GetComponent<VerticalLayoutGroup>();
+            layout.padding = new RectOffset(16, 16, 10, 10);
+            layout.childControlWidth = layout.childControlHeight = true;
+            var fitter = go.GetComponent<ContentSizeFitter>();
+            fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            var textGo = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
+            textGo.transform.SetParent(_infoPanel, false);
+            var text = textGo.GetComponent<TextMeshProUGUI>();
+            text.font = _hintText.font;
+            text.fontSize = _hintText.fontSize;
+            text.color = Color.white;
+            text.alignment = TextAlignmentOptions.Left;
+            text.textWrappingMode = TextWrappingModes.NoWrap;
+            text.raycastTarget = false;
+            _infoText = text;
+            return true;
+        }
+
         /// <summary>강조할 빠른 칸 (조준 중인 칸 · 등록할 칸). -1 = 없음.</summary>
         public void SetHighlightSlot(int slot)
         {

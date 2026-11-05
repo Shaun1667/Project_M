@@ -615,6 +615,8 @@ SPD 규칙 그대로: 방어 굴림 = 강화 ~ 티어 × (2 + 강화) (SPD Armor
 |---|---|---|---|
 | 찾기 반경 | `_searchRadius` | **2** 칸 | 찾기 행동(**Z** 키)이 둘레(대각선 포함)의 숨겨진 함정 · 문을 **확실히** 드러냄 |
 | 찾기 비용 | `_searchCostTicks` | **2** 틱 | |
+| 빠른 찾기 반경 | `_quickSearchRadius` | **1** 칸 | 3-24 정보 모드(E)에서 E를 한 번 더 — 주변 8칸을 확실히 |
+| 빠른 찾기 비용 | `_quickSearchCostTicks` | **1** 틱 | |
 | 저절로 발견 | `_passiveSearchPercent` | **10** % | 플레이어 둘레 `_passiveSearchRadius`(**1**)칸의 숨겨진 것마다 매 틱 (난수 `RngStream.Search`) |
 
 - 지도 주문서(14번)는 층의 숨겨진 함정 · 문을 모두 드러낸다.

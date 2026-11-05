@@ -223,6 +223,63 @@ namespace ProjectM.UI
         public const string SearchFoundNothing = "주변을 살폈지만 아무것도 없다";
         public const string HiddenDoorFound = "숨겨진 문을 찾았다";
 
+        // ── 정보 모드 (3-24, SPD — E) ──
+        public const string ExamineHint = "정보: 방향키 · 마우스로 칸 고르기 · E 한 번 더 = 주변 8칸 찾기 (1턴) · Esc/우클릭 닫기";
+        public const string CellUnknown = "알 수 없는 곳";
+
+        public static string Tile(TileType type)
+        {
+            switch (type)
+            {
+                case TileType.Floor: return "바닥";
+                case TileType.Wall:
+                case TileType.HiddenDoor: return "벽"; // 숨겨진 문은 찾기 전까지 벽
+                case TileType.StairsDown: return "내려가는 계단";
+                case TileType.StairsUp: return "올라가는 계단";
+                case TileType.Grass: return "풀";
+                case TileType.TallGrass: return "키 큰 풀";
+                case TileType.Door: return "닫힌 문";
+                case TileType.OpenDoor: return "열린 문";
+                case TileType.LockedDoor: return "잠긴 문";
+                case TileType.AlchemyPot: return "연금 솥";
+                case TileType.SealedStairs: return "봉인된 계단";
+                default: return CellUnknown;
+            }
+        }
+
+        /// <summary>
+        /// 정보 모드 칸 설명 (3-24): 유닛(이름 · 체력 · 상태) · 지형 효과(남은 턴) — 지금 보이는 칸만, 함정(드러난 것) · 바닥 아이템 · 칸 종류 — 가 본 칸.
+        /// 한 줄에 하나, 위에서부터 유닛 → 지형 효과 → 함정 → 아이템 → 칸.
+        /// </summary>
+        public string CellInfo(World world, GridPos pos, bool explored, bool visible)
+        {
+            if (world == null || !world.Map.InBounds(pos) || !explored) return CellUnknown;
+            var lines = new List<string>();
+            if (visible && world.Units.TryGetAt(pos, out var unit) && unit.IsAlive) lines.Add(UnitInfo(world, unit));
+            if (visible)
+                foreach (var t in world.Terrain.At(pos))
+                    lines.Add(t.Remaining == TerrainLayer.Permanent ? Terrain(t.Type) : $"{Terrain(t.Type)} ({t.Remaining}턴)");
+            if (world.Traps.TryGet(pos, out var trap) && !trap.Hidden) lines.Add($"<color=#FF8A65>{Trap(trap.Type)}</color>");
+            foreach (var item in world.FloorItems.ItemsAt(pos))
+            {
+                string name = item.ItemId == Loot.GoldItemId ? $"금화 {item.Quantity}개" : item.Quantity > 1 ? $"{Item(item.ItemId)} ×{item.Quantity}" : Item(item.ItemId);
+                lines.Add(item.Price > 0 ? $"{name} — 금화 {item.Price}" : name);
+            }
+            lines.Add($"<color=#AAAAAA>{Tile(world.Map.Get(pos))}</color>");
+            return string.Join("\n", lines);
+        }
+
+        private static string UnitInfo(World world, Unit unit)
+        {
+            string name = unit.Id == world.Scheduler.PlayerId ? "나"
+                : unit.Faction == Faction.Ally ? "아군"
+                : unit.Faction == Faction.Neutral ? "상인"
+                : Enemy(unit.Id);
+            var sb = new System.Text.StringBuilder($"<b>{name}</b>  HP {unit.Hp}/{unit.MaxHp}");
+            foreach (var s in unit.Statuses) sb.Append($" · {Status(s.Type)} {s.Remaining}턴");
+            return sb.ToString();
+        }
+
         /// <summary>함정 발견 로그 (3-12b): "함정 발견: 화염 함정"</summary>
         public static string TrapFound(ProjectM.Dungeon.TrapType type) => $"함정 발견: {Trap(type)}";
 

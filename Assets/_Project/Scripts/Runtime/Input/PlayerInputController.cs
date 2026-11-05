@@ -88,6 +88,10 @@ namespace ProjectM.Input
         }
         /// <summary>찾기 키 (3-12b) — S는 이동(WASD)이라 Z.</summary>
         private const Key SearchKey = Key.Z;
+        private const Key ExamineKey = Key.E; // 3-24 정보 모드 (SPD)
+        private static readonly Key[] ExamineCursorKeys = { Key.UpArrow, Key.DownArrow, Key.RightArrow, Key.LeftArrow };
+        private bool _examining;
+        private GridPos _examineCursor;
         private bool _stairsHintShown;
 
         private static readonly Key[] StairsKeys = { Key.Enter, Key.NumpadEnter };
@@ -110,6 +114,10 @@ namespace ProjectM.Input
 
         /// <summary>HUD에 보일 안내 한 줄 (조준 안내 · 시전 불가 이유 · 인벤토리 안내). 빈 문자열 = 지움.</summary>
         public event System.Action<string> HintChanged;
+
+        /// <summary>정보 모드 칸 설명 (3-24). 빈 문자열 = 창 닫기. GameRoot가 HudPresenter.SetInfo에 연결.</summary>
+        public event System.Action<string> InfoChanged;
+        public bool IsExamining => _examining;
 
         public bool IsAiming => _aimSpellId != null || !_aimThrow.IsEmpty;
 
@@ -216,6 +224,7 @@ namespace ProjectM.Input
         {
             CancelPath();
             CancelAim();
+            EndExamine();
             _inventory.Close();
             if (_world != null)
             {
@@ -233,6 +242,7 @@ namespace ProjectM.Input
             if (_world == null) return;
             if (!PlayerActions.TryGetPlayer(_world, out var player))
             {
+                EndExamine();
                 CancelPath();
                 CancelAim();
                 _inventory.Close();
@@ -255,12 +265,19 @@ namespace ProjectM.Input
             HandleWheel(mouse);
             if (keyboard != null && (keyboard[Key.I].wasPressedThisFrame || keyboard[Key.F].wasPressedThisFrame)) // 3-10b: F로도 (SPD 배낭)
             {
+                EndExamine();
                 OpenInventory();
                 return;
             }
             if (IsAiming)
             {
                 HandleAim(player, keyboard, mouse);
+                return;
+            }
+            if (_examining && HandleExamine(player, keyboard, mouse)) return;
+            if (keyboard != null && keyboard[ExamineKey].wasPressedThisFrame) // 3-24 정보 모드 (SPD)
+            {
+                BeginExamine(player);
                 return;
             }
             if (keyboard != null)
@@ -725,6 +742,109 @@ namespace ProjectM.Input
                     if (clicked) TryCast(player);
                 }
             }
+        }
+
+        // ── 정보 모드 (3-24, SPD — 결정 2026-11-05): E = 칸 정보 (차례 안 씀), E 한 번 더 = 주변 빠른 찾기 ──
+
+        private void BeginExamine(Unit player)
+        {
+            CancelPath();
+            _examining = true;
+            _examineCursor = player.Pos;
+            _lastMousePos = Mouse.current != null ? Mouse.current.position.ReadValue() : Vector2.zero; // 마우스를 움직이기 전에는 내 칸
+            Hint(HudText.ExamineHint);
+            RefreshExamine(player);
+        }
+
+        /// <returns>이번 프레임 입력을 정보 모드가 다 썼으면 true. false면 정보 모드를 닫았고 같은 입력을 평소처럼 처리한다.</returns>
+        private bool HandleExamine(Unit player, Keyboard keyboard, Mouse mouse)
+        {
+            if (keyboard != null)
+            {
+                if (keyboard[Key.Escape].wasPressedThisFrame)
+                {
+                    EndExamine();
+                    return true;
+                }
+                if (keyboard[ExamineKey].wasPressedThisFrame)
+                {
+                    EndExamine();
+                    if (_search != null) _clock.SubmitPlayerCommand(PlayerActions.QuickSearch(_world, _search)); // 주변 8칸 · 1턴
+                    return true;
+                }
+                // 화살표: 커서 한 칸씩 (누르고 있으면 반복). 그 밖의 키 = 닫고 그 행동
+                int x = 0, y = 0;
+                bool arrowNow = false;
+                foreach (var key in ExamineCursorKeys)
+                {
+                    var control = keyboard[key];
+                    if (control.wasPressedThisFrame) arrowNow = true;
+                    if (!control.isPressed && !control.wasPressedThisFrame) continue;
+                    if (key == Key.UpArrow) y++;
+                    else if (key == Key.DownArrow) y--;
+                    else if (key == Key.RightArrow) x++;
+                    else x--;
+                }
+                var dir = new GridPos(System.Math.Sign(x), System.Math.Sign(y));
+                if (dir != default && (arrowNow || Time.time >= _nextRepeatTime))
+                {
+                    var moved = _examineCursor + dir;
+                    if (_world.Map.InBounds(moved)) _examineCursor = moved;
+                    _nextRepeatTime = Time.time + (arrowNow ? _keyRepeatDelay : _keyRepeatInterval);
+                    RefreshExamine(player);
+                    return true;
+                }
+                if (!arrowNow && keyboard.anyKey.wasPressedThisFrame)
+                {
+                    EndExamine();
+                    return false;
+                }
+                if (dir != default) return true; // 화살표를 누르고 있는 중 (반복 대기)
+            }
+            if (mouse != null)
+            {
+                if (mouse.rightButton.wasPressedThisFrame)
+                {
+                    EndExamine();
+                    return true;
+                }
+                if (mouse.leftButton.wasPressedThisFrame)
+                {
+                    EndExamine(); // 클릭 = 닫고 평소처럼 (이동 · 공격 · 빠른 칸)
+                    return false;
+                }
+                var screen = mouse.position.ReadValue();
+                if (_camera != null && _grid != null && (screen - _lastMousePos).sqrMagnitude > 0.01f)
+                {
+                    _lastMousePos = screen;
+                    var cell = ScreenToCell(screen);
+                    if (_world.Map.InBounds(cell) && cell != _examineCursor)
+                    {
+                        _examineCursor = cell;
+                        RefreshExamine(player);
+                    }
+                }
+            }
+            return true;
+        }
+
+        private void RefreshExamine(Unit player)
+        {
+            var map = _world.Map;
+            var pos = _examineCursor;
+            bool explored = map.InBounds(pos) && _world.Explored[pos.Y * map.Width + pos.X];
+            bool visible = map.InBounds(pos) && (pos == player.Pos || _sight.CanSee(map, player.Pos, pos, player.SightRange));
+            if (_aimPreview != null) _aimPreview.Show(pos, null, true); // 커서 칸만
+            InfoChanged?.Invoke(Text.CellInfo(_world, pos, explored || visible, visible));
+        }
+
+        private void EndExamine()
+        {
+            if (!_examining) return;
+            _examining = false;
+            if (_aimPreview != null) _aimPreview.Hide();
+            InfoChanged?.Invoke(string.Empty);
+            Hint(string.Empty);
         }
 
         private void TryCast(Unit player)

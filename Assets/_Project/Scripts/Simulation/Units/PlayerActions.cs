@@ -63,6 +63,9 @@ namespace ProjectM.Units
         /// <summary>찾기 (3-12b): 둘레를 확실히 찾는 행동 — 비용은 SearchConfig.</summary>
         public static ICommand Search(World world, ProjectM.Dungeon.SearchConfig config) => new ProjectM.Dungeon.SearchCommand(world, config);
 
+        /// <summary>빠른 찾기 (3-24): 정보 모드에서 E를 한 번 더 — 둘레 QuickRadius 칸 · 비용 QuickCostTicks.</summary>
+        public static ICommand QuickSearch(World world, ProjectM.Dungeon.SearchConfig config) => new ProjectM.Dungeon.SearchCommand(world, config, quick: true);
+
         public static bool TryGetPlayer(World world, out Unit player)
         {
             if (world == null) throw new ArgumentNullException(nameof(world));

@@ -14,13 +14,20 @@ namespace ProjectM.Dungeon
         /// <summary>저절로 발견: 반경 안의 숨겨진 것마다 매 틱 이 확률(%)로 찾는다. 0이면 없음.</summary>
         public int PassivePercent { get; }
         public int PassiveRadius { get; }
+        /// <summary>빠른 찾기 (3-24, SPD — 정보 모드에서 E를 한 번 더): 둘레 QuickRadius 칸, 비용 QuickCostTicks.</summary>
+        public int QuickRadius { get; }
+        public int QuickCostTicks { get; }
 
-        public SearchConfig(int radius, int costTicks, int passivePercent, int passiveRadius)
+        public SearchConfig(int radius, int costTicks, int passivePercent, int passiveRadius, int quickRadius = 1, int quickCostTicks = 1)
         {
             if (radius < 0) throw new ArgumentOutOfRangeException(nameof(radius));
             if (costTicks < 1) throw new ArgumentOutOfRangeException(nameof(costTicks));
             if (passivePercent < 0 || passivePercent > 100) throw new ArgumentOutOfRangeException(nameof(passivePercent));
             if (passiveRadius < 0) throw new ArgumentOutOfRangeException(nameof(passiveRadius));
+            if (quickRadius < 0) throw new ArgumentOutOfRangeException(nameof(quickRadius));
+            if (quickCostTicks < 1) throw new ArgumentOutOfRangeException(nameof(quickCostTicks));
+            QuickRadius = quickRadius;
+            QuickCostTicks = quickCostTicks;
             Radius = radius;
             CostTicks = costTicks;
             PassivePercent = passivePercent;
@@ -78,10 +85,13 @@ namespace ProjectM.Dungeon
         private readonly World _world;
         private readonly SearchConfig _config;
 
-        public int CostTicks => _config.CostTicks;
+        public int CostTicks => _quick ? _config.QuickCostTicks : _config.CostTicks;
+        private readonly bool _quick;
 
-        public SearchCommand(World world, SearchConfig config)
+        /// <param name="quick">true면 빠른 찾기 (QuickRadius · QuickCostTicks, 3-24).</param>
+        public SearchCommand(World world, SearchConfig config, bool quick = false)
         {
+            _quick = quick;
             _world = world ?? throw new ArgumentNullException(nameof(world));
             _config = config ?? throw new ArgumentNullException(nameof(config));
         }
@@ -89,7 +99,7 @@ namespace ProjectM.Dungeon
         public void Execute(in TickContext context)
         {
             if (!_world.Units.TryGet(context.Actor, out var actor) || !actor.IsAlive) return;
-            Searching.Search(_world, actor.Id, actor.Pos, _config.Radius);
+            Searching.Search(_world, actor.Id, actor.Pos, _quick ? _config.QuickRadius : _config.Radius);
         }
     }
 
