@@ -268,6 +268,8 @@ namespace ProjectM.Core
                 IdentifiedItems = new List<string>(Run.Identified).ToArray(),
                 Traps = CaptureTraps(),
                 Gold = Run.Gold,
+                ClassId = Run.ClassId, // 24 (3-21b)
+                FormId = Run.FormId,
             };
         }
 
@@ -367,6 +369,8 @@ namespace ProjectM.Core
             world._storedFloors.AddRange(snapshot.StoredFloors);
             world.Run.Kills = snapshot.Kills;
             world.Run.Gold = snapshot.Gold;
+            world.Run.ClassId = snapshot.ClassId; // 24 (3-21b)
+            world.Run.FormId = snapshot.FormId;
             world.Run.Outcome = snapshot.Outcome;
             world.Run.BossId = snapshot.BossId;
             world.Run.LastPlayerDamage = snapshot.LastPlayerDamage;

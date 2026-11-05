@@ -99,6 +99,8 @@ namespace ProjectM.Core
                 // 18 (3-12a): 함정
                 WriteTraps(w, snapshot.Traps);
                 w.Write(snapshot.Gold); // 21 (3-15a)
+                w.Write(snapshot.ClassId ?? string.Empty); // 24 (3-21b)
+                w.Write(snapshot.FormId ?? string.Empty);
 
                 w.Flush();
                 return stream.ToArray();
@@ -191,6 +193,10 @@ namespace ProjectM.Core
 
                 s.Traps = ReadTraps(r);
                 s.Gold = r.ReadInt32();
+                var classId = r.ReadString(); // 24 (3-21b)
+                s.ClassId = classId.Length > 0 ? classId : null;
+                var formId = r.ReadString();
+                s.FormId = formId.Length > 0 ? formId : null;
 
                 if (stream.Position != stream.Length)
                     throw new InvalidDataException("스냅샷 끝에 남는 데이터가 있다.");

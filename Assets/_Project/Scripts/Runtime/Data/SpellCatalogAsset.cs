@@ -31,6 +31,23 @@ namespace ProjectM.Data
             [Tooltip("이 무기(아이템 ID)를 들면 강화. 비면 없음")] public string BoostWeaponId;
             [Tooltip("강화 피해 % (내림). 무기가 비면 쓰지 않음")] [Min(0)] public int BoostDamagePercent;
             [Tooltip("강화 사거리 +")] [Min(0)] public int BoostRange;
+            [Header("빛의 창 형태 기술 (3-21b)")]
+            [Tooltip("한 대상을 몇 번 때리는지 (연속 찌르기). 0 = 1")] [Min(0)] public int HitCount;
+            [Tooltip("여러 대상(Multi) 모양의 최대 대상 수. 다른 모양은 0")] [Min(0)] public int MaxTargets;
+        }
+
+        /// <summary>에디터 Setup용 (3-21b): 맞히는 횟수가 비어 있으면(0) 채운다.</summary>
+        public bool SetHitCountIfEmpty(string id, int hitCount)
+        {
+            for (int i = 0; i < _spells.Count; i++)
+            {
+                if (_spells[i].Id != id || _spells[i].HitCount != 0) continue;
+                var e = _spells[i];
+                e.HitCount = hitCount;
+                _spells[i] = e;
+                return true;
+            }
+            return false;
         }
 
         /// <summary>에디터 Setup용 (3-21a): 무기 강화가 비어 있을 때만 채운다.</summary>
@@ -58,7 +75,8 @@ namespace ProjectM.Data
             foreach (var e in _spells)
                 defs.Add(new SpellDef(e.Id, e.Element, e.Shape, e.Range, e.Damage, e.ManaCost, e.Radius, e.AppliesStatus, e.StatusChancePercent,
                     e.LeavesTerrain, boostWeaponId: e.BoostWeaponId,
-                    boostDamagePercent: string.IsNullOrEmpty(e.BoostWeaponId) ? 100 : e.BoostDamagePercent, boostRange: e.BoostRange));
+                    boostDamagePercent: string.IsNullOrEmpty(e.BoostWeaponId) ? 100 : e.BoostDamagePercent, boostRange: e.BoostRange,
+                    hitCount: Math.Max(1, e.HitCount), maxTargets: e.MaxTargets));
             return new SpellBook(defs, statuses, terrains, reactions);
         }
 

@@ -27,7 +27,7 @@
 | 18 | 허기 · 음식 (3-14) | `Assets/_Project/Data/Units/HungerConfig.asset` (`HungerConfigAsset`) + `ItemCatalog.asset`의 음식 5줄 | `ProjectM.Units.HungerConfig` · `Hunger` · `HungerSystem` · `EatCommand` | 사용 중 (3-14) |
 | 17 | 함정 (3-12a) | `Assets/_Project/Data/Dungeon/TrapCatalog.asset` (`TrapCatalogAsset`) + `SpellCatalog.asset`의 `trap_*` 5줄 | `ProjectM.Dungeon.TrapBook` · `Traps` · `TrapSystem` | 사용 중 (3-12a) |
 | 16 | 층 꾸미기 (풀 · 물 웅덩이) | `Assets/_Project/Data/Dungeon/FloorDecorConfig.asset` (`FloorDecorConfigAsset`) | `ProjectM.Dungeon.FloorDecorConfig` · `FloorDecor` · `GrassTrampleSystem` | 사용 중 (3-11a) |
-| 21 | 직업 — 루멘 빛의 창 (3-21) | `SpellCatalog.asset`의 `light_spear_*` 줄(무기 강화 필드) + `Data/Units/CharacterCatalog.asset`(`ClassId` · `StartingSpells`) | `ProjectM.Magic.SpellDef` · `SpellModifiers` · `UnitDef.WithExtraStartingSpells` | 사용 중 (3-21a) |
+| 21 | 직업 — 루멘 빛의 창 (3-21) | `SpellCatalog.asset`의 `light_spear_*` 줄(무기 강화 필드) + `Data/Units/CharacterCatalog.asset`(`ClassId` · `StartingSpells`) + `Data/Units/ClassCatalog.asset`(`ClassCatalogAsset` — 형태, 3-21b) | `ProjectM.Magic.SpellDef` · `SpellModifiers` · `UnitDef.WithExtraStartingSpells` · `ProjectM.Units.ClassBook` · `ClassForms` | 사용 중 (3-21a · b) |
 | 14 | 물약 · 주문서 (효과 · 식별 · 무작위 배치 · 던지기) | `Assets/_Project/Data/Items/ConsumableConfig.asset` (`ConsumableConfigAsset`) + `ItemCatalog.asset`의 `Effect` · `Weight` (9번) | `ProjectM.Items.ConsumableConfig` · `Consumables` · `Identification` · `Throwing` | 사용 중 (3-9) |
 
 **데이터 구조 규칙 (0-4 결정)**
@@ -739,6 +739,21 @@ SPD 규칙 그대로: 방어 굴림 = 강화 ~ 티어 × (2 + 강화) (SPD Armor
 - 결과: 마나당 피해 찌르기 2(1명) ~ 4(2명 일렬) · 던지기 1.33 — 불꽃 화살(5/3 = 1.67)보다 약하지만 반응이 없어 젖음 · 빙결 같은 상태를 깨지 않는다. 창을 들면 6/2 = 3 · 6/3 = 2. 창(2틱 공격 · 2칸)과 같이 쓰는 근접형 빌드의 바탕.
 
 검산 (`LightSpearTests.ProjectAssets_MatchBalanceTable`).
+
+**3-21b 형태 — 5층 보스 뒤 한 번 선택** (`Data/Units/ClassCatalog.asset` 루멘 줄 `ChooseAtFloor` **5**). 모두 무속성 · 창 강화 150% · +1
+
+| 형태 | ID | 이름 | 모양 | 사거리 | 피해 | 마나 | 비고 |
+|---|---|---|---|---|---|---|---|
+| 근접형 `melee` | `light_spear_flurry` | 연속 찌르기 | Bolt · `HitCount` **3** | **1** | **2** × 3 | **3** | 한 대상 3번 = 6 |
+| | `light_spear_pierce` | 관통 찌르기 | Beam | **3** | **5** | **3** | |
+| | `light_spear_charge` | 돌진 | Dash (새 모양) | **4** | **6** | **4** | 첫 유닛 바로 앞까지 이동 후 맞힘, 없으면 이동만 |
+| 원거리형 `ranged` | `light_spear_lance` | 관통 발사 | Beam | **7** | **5** | **4** | |
+| | `light_spear_volley` | 다중 발사 | Multi (새 모양) · `MaxTargets` **3** | **6** | **4** | **5** | 사거리 6은 Claude 임시 (문서에 없던 값) |
+| | `light_spear_throw_plus` | 빛의 창 던지기+ | Bolt | **7** | **4** | **2** | 던지기를 같은 칸에서 바꿈 (`ReplaceSpells`) |
+
+결과: 근접형 마나당 피해 연속 2 · 관통 1.67 × 맞은 수 · 돌진 1.5(+ 이동). 원거리형 관통 1.25 × 맞은 수 · 다중 0.8 × 맞은 수(3명이면 2.4) · 던지기+ 2. 창을 들면 모두 × 1.5 (연속 3 × 3 = 9, 사거리 1 → 2).
+
+검산 (`ClassFormTests.ProjectAssets_MatchBalanceTable`).
 
 ---
 

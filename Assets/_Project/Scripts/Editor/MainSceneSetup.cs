@@ -57,6 +57,7 @@ namespace ProjectM.Editor
         private const string PixelTileSetPath = "Assets/_Project/Data/Visuals/PixelTileSet.asset";
         private const string SpriteUnlitMaterialPath = "Assets/_Project/Art/Pixel/SpriteUnlit.mat";
         private const string CharacterCatalogPath = "Assets/_Project/Data/Units/CharacterCatalog.asset";
+        private const string ClassCatalogPath = "Assets/_Project/Data/Units/ClassCatalog.asset"; // 3-21b
         private const string CharacterArtDir = "Assets/_Project/Art/Pixel/Characters";
         private const string EnemyArtDir = "Assets/_Project/Art/Pixel/Enemies";
         // 2026-10-21 캐릭터 선택 — 모습 ID (3D Main에서는 픽셀 전환 전까지 둘 다 플레이어 모델)
@@ -301,6 +302,7 @@ namespace ProjectM.Editor
                 ("_consumableConfig", consumableConfig),
                 ("_characters", characterCatalog),
                 ("_characterSelect", characterSelect),
+                ("_classCatalog", EnsureClassCatalog()), // 3-21b 직업 · 형태
                 ("_progressionConfig", progressionConfig),
                 ("_floorItems", floorItems),
                 ("_terrainOverlay", terrainOverlay),
@@ -575,7 +577,24 @@ namespace ProjectM.Editor
             changed |= catalog.AddIfMissing(new SpellCatalogAsset.Entry
                 { Id = "light_spear_throw", Element = Element.Neutral, Shape = SpellShape.Bolt, Range = 5, Damage = 4, ManaCost = 3 });
             changed |= catalog.SetDisplayNameIfEmpty("light_spear_throw", "빛의 창 던지기");
-            foreach (var id in new[] { "light_spear_thrust", "light_spear_throw" })
+            // 3-21b 형태 기술 (Docs/직업_루멘.md 3번) — 근접형: 연속 찌르기 · 관통 찌르기 · 돌진, 원거리형: 관통 발사 · 다중 발사 · 던지기 강화
+            foreach (var (id, name, shape, range, damage, mana, maxTargets) in new[]
+            {
+                ("light_spear_flurry", "연속 찌르기", SpellShape.Bolt, 1, 2, 3, 0),
+                ("light_spear_pierce", "관통 찌르기", SpellShape.Beam, 3, 5, 3, 0),
+                ("light_spear_charge", "돌진", SpellShape.Dash, 4, 6, 4, 0),
+                ("light_spear_lance", "관통 발사", SpellShape.Beam, 7, 5, 4, 0),
+                ("light_spear_volley", "다중 발사", SpellShape.Multi, 6, 4, 5, 3),
+                ("light_spear_throw_plus", "빛의 창 던지기+", SpellShape.Bolt, 7, 4, 2, 0),
+            })
+            {
+                changed |= catalog.AddIfMissing(new SpellCatalogAsset.Entry
+                    { Id = id, Element = Element.Neutral, Shape = shape, Range = range, Damage = damage, ManaCost = mana, MaxTargets = maxTargets });
+                changed |= catalog.SetDisplayNameIfEmpty(id, name);
+            }
+            changed |= catalog.SetHitCountIfEmpty("light_spear_flurry", 3);
+            foreach (var id in new[] { "light_spear_thrust", "light_spear_throw", "light_spear_flurry", "light_spear_pierce", "light_spear_charge",
+                         "light_spear_lance", "light_spear_volley", "light_spear_throw_plus" })
                 changed |= catalog.SetBoostIfNone(id, "spear", 150, 1);
             // 3-12a 함정 효과 주문 (BALANCE 17번): 함정 칸 중심 3×3, 시전자 없음 · 마나 0 · 배우지 않음. 마비 가스는 바람 속성(반응 없음)
             foreach (var (id, name, element, damage, status, chance, terrain) in new[]
@@ -1386,6 +1405,36 @@ namespace ProjectM.Editor
         }
 
         /// <summary>캐릭터 목록 (2026-10-21): 초상 이미지를 픽셀 설정으로 가져오고, 없는 캐릭터만 추가 (사용자가 고친 이름은 그대로).</summary>
+        /// <summary>3-21b 직업 · 형태 표 (Docs/직업_루멘.md 3번, BALANCE 21번) — 없는 직업만 더한다.</summary>
+        private static ClassCatalogAsset EnsureClassCatalog()
+        {
+            var catalog = LoadOrCreate<ClassCatalogAsset>(ClassCatalogPath);
+            bool changed = catalog.AddIfMissing(new ClassCatalogAsset.ClassEntry
+            {
+                Id = "lumen",
+                ChooseAtFloor = 5,
+                Forms = new List<ClassCatalogAsset.Form>
+                {
+                    new ClassCatalogAsset.Form
+                    {
+                        Id = "melee", DisplayName = "근접형 — 창술",
+                        Description = "빛의 창을 들고 싸운다\n\n연속 찌르기 — 옆 칸 적을 3번\n관통 찌르기 — 직선 3칸\n돌진 — 4칸 달려가 공격",
+                        LearnSpells = new List<string> { "light_spear_flurry", "light_spear_pierce", "light_spear_charge" },
+                        ReplaceSpells = new List<ClassCatalogAsset.SpellSwap>(),
+                    },
+                    new ClassCatalogAsset.Form
+                    {
+                        Id = "ranged", DisplayName = "원거리형 — 투창",
+                        Description = "빛의 창을 날려 공격한다\n\n관통 발사 — 직선 7칸\n다중 발사 — 적 3명에게 한 발씩\n던지기 강화 — 사거리 7 · 마나 2",
+                        LearnSpells = new List<string> { "light_spear_lance", "light_spear_volley" },
+                        ReplaceSpells = new List<ClassCatalogAsset.SpellSwap> { new ClassCatalogAsset.SpellSwap { From = "light_spear_throw", To = "light_spear_throw_plus" } },
+                    },
+                },
+            });
+            if (changed) EditorUtility.SetDirty(catalog);
+            return catalog;
+        }
+
         private static CharacterCatalogAsset EnsureCharacterCatalog()
         {
             var catalog = LoadOrCreate<CharacterCatalogAsset>(CharacterCatalogPath);

@@ -115,9 +115,57 @@ namespace ProjectM.Magic
                         }
                     return new SpellPreview(path, area);
                 }
+                case SpellShape.Dash:
+                {
+                    // 3-21b 돌진: 조준선(첫 유닛에서 멈춤)을 달려간다 — 끝 칸이 유닛이면 그 유닛을 맞힘(멈추는 칸은 바로 앞), 아니면 이동만
+                    var path = targeting.Trace(map, caster, target, spell.Range, world.Units.IsOccupied);
+                    var hit = new List<GridPos>();
+                    if (path.Count > 0 && world.Units.IsOccupied(path[path.Count - 1])) hit.Add(path[path.Count - 1]);
+                    return new SpellPreview(path, hit);
+                }
+                case SpellShape.Multi:
+                    return PreviewMulti(world, targeting, caster, spell, target);
                 default:
                     throw new ArgumentOutOfRangeException(nameof(spell), spell.Shape, "알 수 없는 주문 모양");
             }
+        }
+
+        /// <summary>
+        /// 3-21b 다중 발사: 시전자와 적대하는 살아 있는 유닛 중 사거리 안 · 조준선이 그 유닛에서 끝나는(앞이 막히지 않은) 유닛을
+        /// 조준 칸의 유닛 먼저, 그다음 가까운 순(체비셰프) · EntityId 순으로 MaxTargets명. 경로 = 첫 대상까지 (없으면 빈 경로 = 막힘).
+        /// </summary>
+        private static SpellPreview PreviewMulti(World world, ITargetingRule targeting, GridPos caster, SpellDef spell, GridPos target)
+        {
+            var empty = new List<GridPos>();
+            if (!world.Units.TryGetAt(caster, out var self)) return new SpellPreview(empty, empty);
+            var candidates = new List<ProjectM.Units.Unit>();
+            foreach (var unit in world.Units.ToSortedList())
+            {
+                if (!unit.IsAlive || !ProjectM.Units.Factions.AreHostile(self.Faction, unit.Faction)) continue;
+                if (!targeting.InRange(caster, unit.Pos, spell.Range)) continue;
+                var line = targeting.Trace(world.Map, caster, unit.Pos, spell.Range, world.Units.IsOccupied);
+                if (line.Count > 0 && line[line.Count - 1] == unit.Pos) candidates.Add(unit);
+            }
+            candidates.Sort((a, b) =>
+            {
+                bool at = a.Pos == target, bt = b.Pos == target;
+                if (at != bt) return at ? -1 : 1;
+                int da = GridMovement.Chebyshev(caster, a.Pos), db = GridMovement.Chebyshev(caster, b.Pos);
+                return da != db ? da.CompareTo(db) : a.Id.Value.CompareTo(b.Id.Value);
+            });
+            var hit = new List<GridPos>();
+            for (int i = 0; i < candidates.Count && hit.Count < spell.MaxTargets; i++) hit.Add(candidates[i].Pos);
+            var path = hit.Count > 0 ? targeting.Trace(world.Map, caster, hit[0], spell.Range, world.Units.IsOccupied) : empty;
+            return new SpellPreview(path, hit);
+        }
+
+        /// <summary>돌진(3-21b)이 멈추는 칸: 맞힌 유닛이 있으면 그 바로 앞 칸(바로 옆이면 제자리), 없으면 경로 끝.</summary>
+        public static GridPos DashLanding(GridPos caster, SpellPreview preview)
+        {
+            var path = preview.Path;
+            if (path.Count == 0) return caster;
+            if (preview.AffectedCells.Count == 0) return path[path.Count - 1];
+            return path.Count >= 2 ? path[path.Count - 2] : caster;
         }
 
         /// <summary>
@@ -188,7 +236,8 @@ namespace ProjectM.Magic
             }
             if (spell.Damage > 0) // 피해 0 주문(3-2 물)은 "피해 0" 이벤트를 내지 않는다
                 foreach (var victim in victims)
-                    Combat.ApplyDamage(world, casterId, victim, spell.Damage, DamageCause.Spell(spell.Id));
+                    for (int h = 0; h < spell.HitCount && victim.IsAlive; h++) // 3-21b 연속 찌르기: 한 대상 여러 번
+                        Combat.ApplyDamage(world, casterId, victim, spell.Damage, DamageCause.Spell(spell.Id));
 
             // 반응 (3-1): 맞은 유닛의 기존 상태 · 주문이 닿은 칸의 지형 × 주문 속성
             var cells = CastSpellCommand.TerrainCells(spell, preview);
@@ -270,6 +319,16 @@ namespace ProjectM.Magic
 
             var preview = SpellCasting.Preview(_world, _targeting, caster.Pos, spell, Target);
             _world.Events.Publish(new SpellCastEvent(caster.Id, spell.Id, spell.Element, Target, preview));
+            if (spell.Shape == SpellShape.Dash) // 3-21b 돌진: 맞히기 전에 멈추는 칸으로 (틱 하나 안 — 지나간 칸은 밟지 않음)
+            {
+                var from = caster.Pos;
+                var landing = SpellCasting.DashLanding(from, preview);
+                if (landing != from && !_world.Units.IsOccupied(landing))
+                {
+                    _world.Units.Move(caster.Id, landing);
+                    _world.Events.Publish(new EntityMovedEvent(caster.Id, from, landing));
+                }
+            }
             SpellCasting.ApplyEffect(_world, _book, caster.Id, spell, preview);
         }
 

@@ -343,6 +343,27 @@ namespace ProjectM.Items
             PublishQuickSlots(world, unit);
         }
 
+        /// <summary>
+        /// 인벤토리의 from을 같은 칸에서 to로 바꾼다 (3-21b 직업 형태 — 빛의 창 던지기 → 강화). 빠른 칸에 등록돼 있었으면 그 칸도 to로.
+        /// from이 없거나 to가 이미 있으면 false.
+        /// </summary>
+        public static bool Replace(World world, Unit unit, InventoryRef from, InventoryRef to)
+        {
+            Validate(world, unit);
+            if (from.IsEmpty || to.IsEmpty) return false;
+            int index = Array.IndexOf(unit.InventorySlots, from);
+            if (index < 0 || Array.IndexOf(unit.InventorySlots, to) >= 0) return false;
+            unit.InventorySlots[index] = to;
+            PublishInventory(world, unit);
+            int quick = Array.IndexOf(unit.QuickSlots, from);
+            if (quick >= 0)
+            {
+                unit.QuickSlots[quick] = to;
+                PublishQuickSlots(world, unit);
+            }
+            return true;
+        }
+
         /// <summary>그 항목이 등록된 빠른 칸 번호, 없으면 -1.</summary>
         public static int QuickSlotOf(Unit unit, InventoryRef entry) => entry.IsEmpty ? -1 : Array.IndexOf(unit.QuickSlots, entry);
 

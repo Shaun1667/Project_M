@@ -58,12 +58,17 @@ namespace ProjectM.UI
         /// 창을 연다. portraits · names는 같은 길이, onConfirm(고른 칸 번호)은 확정 때 한 번.
         /// illustrations(같은 길이, 칸이 null이면 없음)가 있으면 그 카드는 일러스트를 카드에 맞춰 보여 주고, 없으면 64px 초상을 정수 배율로.
         /// </summary>
+        /// <param name="title">제목 (null = 캐릭터 선택). 3-21b 직업 형태 선택 창도 이 창을 쓴다.</param>
+        /// <param name="hint">아래 안내 (null = 캐릭터 선택 안내).</param>
+        /// <param name="details">카드 가운데 설명 글 (같은 길이, 그림이 없는 카드용 — 3-21b 형태 설명). null이면 없음.</param>
         public void Open(IReadOnlyList<Sprite> portraits, IReadOnlyList<string> names, int initial, Action<int> onConfirm,
-            IReadOnlyList<Sprite> illustrations = null)
+            IReadOnlyList<Sprite> illustrations = null, string title = null, string hint = null, IReadOnlyList<string> details = null)
         {
             if (_panel == null) return;
             _onConfirm = onConfirm;
-            Build(portraits, names, illustrations);
+            Build(portraits, names, illustrations, details);
+            _title.text = title ?? HudText.CharacterSelectTitle;
+            _hint.text = hint ?? HudText.CharacterSelectHint;
             _panel.gameObject.SetActive(true);
             _panel.SetAsLastSibling();
             if (Mouse.current != null) _lastMouse = Mouse.current.position.ReadValue();
@@ -112,7 +117,7 @@ namespace ProjectM.UI
             return -1;
         }
 
-        private void Build(IReadOnlyList<Sprite> portraits, IReadOnlyList<string> names, IReadOnlyList<Sprite> illustrations)
+        private void Build(IReadOnlyList<Sprite> portraits, IReadOnlyList<string> names, IReadOnlyList<Sprite> illustrations, IReadOnlyList<string> details)
         {
             foreach (var c in _cards) Destroy(c.rect.gameObject);
             _cards.Clear();
@@ -136,7 +141,13 @@ namespace ProjectM.UI
                 box.raycastTarget = false;
 
                 var illustration = illustrations != null && i < illustrations.Count ? illustrations[i] : null;
-                var sprite = illustration != null ? illustration : i < portraits.Count ? portraits[i] : null;
+                var sprite = illustration != null ? illustration : portraits != null && i < portraits.Count ? portraits[i] : null;
+                if (details != null && i < details.Count && !string.IsNullOrEmpty(details[i]))
+                {
+                    var detail = MakeText(rect, "Detail", new Vector2(0, 30), new Vector2(_cardSize.x - 30, _cardSize.y - 110), 24);
+                    detail.alignment = TextAlignmentOptions.Top;
+                    detail.text = details[i];
+                }
                 if (sprite != null)
                 {
                     var portrait = new GameObject("Portrait", typeof(RectTransform), typeof(Image));

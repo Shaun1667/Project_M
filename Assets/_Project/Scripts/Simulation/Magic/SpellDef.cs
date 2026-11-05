@@ -30,6 +30,10 @@ namespace ProjectM.Magic
         Beam = 1,
         /// <summary>범위 폭발: 투사체가 멈춘 칸 중심, 반지름(체비셰프) 안의 모든 유닛 — 시전자 포함.</summary>
         Burst = 2,
+        /// <summary>돌진 (3-21b 빛의 창): 조준선을 따라 사거리까지 달려가, 처음 만난 유닛 바로 앞 칸에 멈추고 그 유닛을 맞힌다. 유닛이 없으면 끝 칸까지 이동만.</summary>
+        Dash = 3,
+        /// <summary>여러 대상 (3-21b 다중 발사): 사거리 안 · 조준선이 막히지 않은 적대 유닛을 조준한 유닛 먼저 → 가까운 순으로 MaxTargets명.</summary>
+        Multi = 4,
     }
 
     /// <summary>
@@ -65,11 +69,21 @@ namespace ProjectM.Magic
         public string BoostWeaponId { get; }
         public int BoostDamagePercent { get; }
         public int BoostRange { get; }
+        /// <summary>맞은 유닛 하나를 몇 번 때리는지 (3-21b 연속 찌르기). 기본 1 — 피해 이벤트가 그만큼 난다.</summary>
+        public int HitCount { get; }
+        /// <summary>Multi 모양의 최대 대상 수 (3-21b 다중 발사). 다른 모양은 0.</summary>
+        public int MaxTargets { get; }
 
         public SpellDef(string id, Element element, SpellShape shape, int range, int damage, int manaCost, int radius = 0,
             StatusType appliesStatus = StatusType.None, int statusChancePercent = 100, TerrainEffectType leavesTerrain = TerrainEffectType.None,
-            int terrainDurationTicks = 0, bool triggersReactions = true, string boostWeaponId = null, int boostDamagePercent = 100, int boostRange = 0)
+            int terrainDurationTicks = 0, bool triggersReactions = true, string boostWeaponId = null, int boostDamagePercent = 100, int boostRange = 0,
+            int hitCount = 1, int maxTargets = 0)
         {
+            if (hitCount < 1) throw new ArgumentOutOfRangeException(nameof(hitCount), hitCount, "맞히는 횟수는 1 이상.");
+            if (shape == SpellShape.Multi ? maxTargets < 1 : maxTargets != 0)
+                throw new ArgumentOutOfRangeException(nameof(maxTargets), maxTargets, "여러 대상(Multi)만 대상 수 1 이상, 나머지는 0.");
+            HitCount = hitCount;
+            MaxTargets = maxTargets;
             BoostWeaponId = string.IsNullOrEmpty(boostWeaponId) ? null : boostWeaponId;
             if (boostDamagePercent < 0) throw new ArgumentOutOfRangeException(nameof(boostDamagePercent), boostDamagePercent, "강화 피해 %는 0 이상.");
             if (boostRange < 0) throw new ArgumentOutOfRangeException(nameof(boostRange), boostRange, "강화 사거리는 0 이상.");
@@ -101,7 +115,7 @@ namespace ProjectM.Magic
 
         /// <summary>무기 강화를 적용한 사본 (SpellModifiers 전용) — 같은 ID, 강화 필드는 지워 두 번 적용되지 않게.</summary>
         internal SpellDef Boosted() => new SpellDef(Id, Element, Shape, Range + BoostRange, (int)((long)Damage * BoostDamagePercent / 100), ManaCost, Radius,
-            AppliesStatus, StatusChancePercent, LeavesTerrain, TerrainDurationTicks, TriggersReactions);
+            AppliesStatus, StatusChancePercent, LeavesTerrain, TerrainDurationTicks, TriggersReactions, hitCount: HitCount, maxTargets: MaxTargets);
     }
 
     /// <summary>

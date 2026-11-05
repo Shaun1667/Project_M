@@ -200,6 +200,21 @@ namespace ProjectM.Tests
             Assert.That(hud.Log, Is.EqualTo(new[] { $"독화! 적 {s.Enemy.Id}", "gas_explosion!" }));
         }
 
+        // 3-21b: 형태를 고르면 "근접형 — 창술을 골랐다 — 새 기술: …" (이름 = ClassCatalog · SpellCatalog, 없으면 ID)
+        [Test]
+        public void FormChosen_LogsFormAndLearnedSpells()
+        {
+            var s = Start();
+            var text = new HudText(new Dictionary<string, string> { { "light_spear_flurry", "연속 찌르기" }, { "light_spear_charge", "돌진" } })
+                { FormNames = new Dictionary<string, string> { { "melee", "근접형 — 창술" } } };
+            var hud = new HudModel(8, text);
+            hud.Bind(s.World.Events, s.Player, s.Book);
+            s.World.Events.Publish(new ProjectM.Units.ClassFormChosenEvent("lumen", "melee", new[] { "light_spear_flurry", "light_spear_charge" }));
+            s.World.Events.Publish(new ProjectM.Units.ClassFormChosenEvent("lumen", "ranged", new string[0]));
+            s.World.Events.Flush();
+            Assert.That(hud.Log, Is.EqualTo(new[] { "근접형 — 창술을 골랐다 — 새 기술: 연속 찌르기, 돌진", "ranged을(를) 골랐다" }), "이름이 없으면 ID (한글이 아니면 을(를))");
+        }
+
         // 3-2a: 빠른 칸을 바꾸면 HUD 칸 · 비용이 따라 바뀐다 (3-1 장착 칸 테스트를 옮김)
         [Test]
         public void QuickSlotsChange_UpdatesSlotsAndCosts()

@@ -42,6 +42,7 @@ namespace ProjectM
         [Tooltip("물약 · 주문서 수치 · 겉모습 (3-9). 비우면 식별 · 무작위 배치 없음")] [SerializeField] private ConsumableConfigAsset _consumableConfig;
         [Tooltip("고를 수 있는 캐릭터 (2026-10-21). 비우거나 창이 없으면 고르지 않고 Player.asset 모습으로 시작")] [SerializeField] private CharacterCatalogAsset _characters;
         [SerializeField] private CharacterSelectPresenter _characterSelect;
+        [Tooltip("직업 · 형태 표 (3-21b). 비우면 형태 선택 없음")] [SerializeField] private ClassCatalogAsset _classCatalog;
         [SerializeField] private TilemapPresenter _tilemapPresenter;
         [Tooltip("2D 픽셀 맵 (P-3a). 있으면 3D TilemapPresenter 대신 이것을 쓴다")] [SerializeField] private PixelMapPresenter _pixelMap;
         [SerializeField] private EntityPresenter _entityPresenter;
@@ -68,6 +69,8 @@ namespace ProjectM
         public ReactionBook Reactions { get; private set; }
         public ItemBook Items { get; private set; }
         public FusionBook Fusions { get; private set; }
+        /// <summary>직업 · 형태 표 (3-21b). 없으면 null.</summary>
+        public ClassBook Classes { get; private set; }
         public World World { get; private set; }
         public DungeonFloor Floor { get; private set; }
         /// <summary>이번 판의 시드 (디버그 창 · 콘솔 표시용).</summary>
@@ -118,16 +121,19 @@ namespace ProjectM
             Spells = _spellCatalog.ToBook(Statuses, Terrains, Reactions);
             Items = _itemCatalog.ToBook();
             Fusions = _fusionCatalog.ToBook(Statuses, Terrains);
+            Classes = _classCatalog != null ? _classCatalog.ToBook() : null; // 3-21b
             foreach (var id in _playerDef.ToDef().StartingSpells)
             {
                 if (!Spells.TryGet(id, out _))
                     Debug.LogWarning($"[GameRoot] 시작 주문 '{id}'가 SpellCatalog에 없다 — 쓸 수 없다.", this);
             }
             _hudText = new HudText(_spellCatalog.DisplayNames(), _reactionCatalog.DisplayNames(), _itemCatalog.DisplayNames(), _fusionCatalog.DisplayNames());
+            _hudText.FormNames = FormNames(); // 3-21b
             _input.Text = _hudText;
             _input.HintChanged += _hud.SetHint;
             // 2026-10-20: 이동 · 공격 · 주문 연출이 끝날 때까지 다음 행동(= 다음 틱)을 받지 않는다
-            _input.PresentationBusy = () => _entityPresenter.IsAnimating || (_fx != null && _fx.IsPlaying);
+            _input.PresentationBusy = () => _entityPresenter.IsAnimating || (_fx != null && _fx.IsPlaying)
+                || (_characterSelect != null && _characterSelect.IsOpen); // 3-21b: 형태 선택 창이 열려 있으면 행동을 받지 않음
         }
 
         private void OnDestroy()
@@ -165,7 +171,7 @@ namespace ProjectM
             _characterSelect.Open(portraits, names, _characterIndex, index =>
             {
                 _characterIndex = index;
-                StartNewRun(list[index].VisualId, list[index].StartingSpells); // 3-21a: 루멘 = 빛의 창 기술 2개
+                StartNewRun(list[index].VisualId, list[index].StartingSpells, list[index].ClassId); // 3-21a: 루멘 = 빛의 창 기술 2개 · 3-21b 직업
             }, illustrations);
         }
 
@@ -179,7 +185,8 @@ namespace ProjectM
 
         /// <param name="visualId">고른 캐릭터의 모습 ID (null이면 Player.asset 그대로).</param>
         /// <param name="characterSpells">고른 캐릭터(직업)의 시작 주문 (3-21a). null이면 없음.</param>
-        private void StartNewRun(string visualId, System.Collections.Generic.IReadOnlyList<string> characterSpells = null)
+        /// <param name="classId">고른 캐릭터의 직업 ID (3-21b — RunState.ClassId). null이면 직업 없음.</param>
+        private void StartNewRun(string visualId, System.Collections.Generic.IReadOnlyList<string> characterSpells = null, string classId = null)
         {
             ulong seed = _fixedSeed != 0 ? (ulong)_fixedSeed : (ulong)System.DateTime.UtcNow.Ticks;
             Seed = seed;
@@ -191,6 +198,7 @@ namespace ProjectM
                 World.Events.Unsubscribe<EntitySpawnedEvent>(OnEntitySpawned);
                 World.Events.Unsubscribe<UnitDiedEvent>(OnUnitDied);
                 World.Events.Unsubscribe<RunEndedEvent>(OnRunEnded);
+                World.Events.Unsubscribe<StairsUnsealedEvent>(OnStairsUnsealed); // 3-21b
             }
             _result.Hide();
 
@@ -261,6 +269,7 @@ namespace ProjectM
             World.Events.Subscribe<EntitySpawnedEvent>(OnEntitySpawned); // 3-17b 로그의 적 이름
             World.Events.Subscribe<UnitDiedEvent>(OnUnitDied);
             World.Events.Subscribe<RunEndedEvent>(OnRunEnded);
+            World.Events.Subscribe<StairsUnsealedEvent>(OnStairsUnsealed); // 3-21b: 선택 층 보스 처치 → 형태 선택
 
             World.Events.Publish(new MapLoadedEvent(World.Map));
             if (decor != null) FloorDecor.Apply(World, Floor, decor, water, traps); // 3-11a · 3-12a: MapLoaded 뒤에 (화면이 지우지 않게), 적 배치 전
@@ -281,6 +290,7 @@ namespace ProjectM
             else player = FloorPopulator.Populate(World, Floor.Start, playerDef, enemyDef, spawn, enemyAi,
                 Magic.QuickSlotCount, Magic.InventorySlotCount);
             _playerId = player.Id;
+            ClassForms.SetClass(World, classId); // 3-21b: 형태는 선택 층 보스 뒤에
             var startingArmor = playerDef.StartingArmor;
             if (startingArmor != null && !Armors.Wear(World, Items, player, startingArmor)) // 3-10a: 천 갑옷을 입고 시작 (SPD)
                 Debug.LogWarning($"[GameRoot] 시작 갑옷 '{startingArmor}'가 ItemCatalog에 없다.", this);
@@ -344,6 +354,42 @@ namespace ProjectM
             if (e.Id != _playerId) return;
             _playerDead = true;
             Debug.Log("[GameRoot] 플레이어 사망 — R로 새 판");
+        }
+
+        /// <summary>형태 ID → 표시 이름 (ClassCatalog, HUD 로그용 — 3-21b).</summary>
+        private System.Collections.Generic.Dictionary<string, string> FormNames()
+        {
+            var names = new System.Collections.Generic.Dictionary<string, string>();
+            if (_classCatalog == null) return names;
+            foreach (var c in _classCatalog.Classes)
+                if (c.Forms != null)
+                    foreach (var f in c.Forms) if (!string.IsNullOrEmpty(f.Id)) names[f.Id] = string.IsNullOrEmpty(f.DisplayName) ? f.Id : f.DisplayName;
+            return names;
+        }
+
+        /// <summary>
+        /// 3-21b: 선택 층 보스를 쓰러뜨려 봉인 계단이 열리면, 아직 형태를 안 고른 직업이면 형태 선택 창을 연다 (캐릭터 선택 창을 같이 씀).
+        /// 고르면 틱 밖 변경(ClassForms.Choose) 뒤 이벤트를 비운다. 창이 열린 동안 입력은 PresentationBusy로 막힌다.
+        /// </summary>
+        private void OnStairsUnsealed(StairsUnsealedEvent e)
+        {
+            if (_characterSelect == null || Classes == null || _player == null) return;
+            if (ClassForms.CanChoose(World, Classes, bossDefeated: true) != ChooseFormResult.Chosen) return;
+            if (!_classCatalog.TryGetClass(World.Run.ClassId, out var entry) || entry.Forms == null || entry.Forms.Count == 0) return;
+            var names = new System.Collections.Generic.List<string>();
+            var details = new System.Collections.Generic.List<string>();
+            foreach (var f in entry.Forms)
+            {
+                names.Add(string.IsNullOrEmpty(f.DisplayName) ? f.Id : f.DisplayName);
+                details.Add(f.Description);
+            }
+            var world = World;
+            _characterSelect.Open(null, names, 0, index =>
+            {
+                if (World != world || _player == null) return; // 그새 새 판
+                ClassForms.Choose(World, Classes, Spells, _player, entry.Forms[index].Id);
+                World.Events.Flush();
+            }, title: HudText.FormSelectTitle, hint: HudText.FormSelectHint, details: details);
         }
 
         /// <summary>판이 끝남 (3-4b): 입력을 멈추고 결과 화면. R로 새 판.</summary>

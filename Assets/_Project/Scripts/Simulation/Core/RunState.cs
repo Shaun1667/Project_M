@@ -77,6 +77,11 @@ namespace ProjectM.Core
 
         public void SetBoss(EntityId id) => BossId = id;
 
+        /// <summary>플레이어 직업 ID (3-21b — 루멘 = lumen, CharacterCatalog). null = 직업 없음. 스냅샷 v24.</summary>
+        public string ClassId { get; internal set; }
+        /// <summary>고른 직업 형태 ID (3-21b — 근접형 melee · 원거리형 ranged). null = 아직 안 고름. 스냅샷 v24.</summary>
+        public string FormId { get; internal set; }
+
         private readonly System.Collections.Generic.List<PendingFloorItem> _pendingFloorItems = new System.Collections.Generic.List<PendingFloorItem>();
         /// <summary>아직 가 보지 않은 층에 놓을 아이템 (3-5 마법서 배치 계획), 층 → 나눠 준 순서. 처음 가는 층에서 꺼내 놓는다.</summary>
         public System.Collections.Generic.IReadOnlyList<PendingFloorItem> PendingFloorItems => _pendingFloorItems;

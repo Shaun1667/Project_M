@@ -112,7 +112,7 @@ namespace ProjectM.Tests
         [Test]
         public void Snapshot_RoundTripsBossState()
         {
-            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.EqualTo(23));
+            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.GreaterThanOrEqualTo(23), "3-17d (정확한 값은 ClassFormTests — 24)");
             var r = Start("charger", new GridPos(3, 2));
             r.Boss.ChargeTarget = new GridPos(5, 1);
             r.Boss.Summoned = true;

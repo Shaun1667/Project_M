@@ -27,6 +27,8 @@ MonoBehaviour:
     BoostWeaponId: 
     BoostDamagePercent: 0
     BoostRange: 0
+    HitCount: 0
+    MaxTargets: 0
   - Id: ice_basic
     Element: 1
     Shape: 0
@@ -41,6 +43,8 @@ MonoBehaviour:
     BoostWeaponId: 
     BoostDamagePercent: 0
     BoostRange: 0
+    HitCount: 0
+    MaxTargets: 0
   - Id: lightning_basic
     Element: 2
     Shape: 1
@@ -55,6 +59,8 @@ MonoBehaviour:
     BoostWeaponId: 
     BoostDamagePercent: 0
     BoostRange: 0
+    HitCount: 0
+    MaxTargets: 0
   - Id: poison_basic
     Element: 3
     Shape: 2
@@ -69,6 +75,8 @@ MonoBehaviour:
     BoostWeaponId: 
     BoostDamagePercent: 0
     BoostRange: 0
+    HitCount: 0
+    MaxTargets: 0
   - Id: water_basic
     Element: 6
     Shape: 2
@@ -83,6 +91,8 @@ MonoBehaviour:
     BoostWeaponId: 
     BoostDamagePercent: 0
     BoostRange: 0
+    HitCount: 0
+    MaxTargets: 0
   - Id: trap_fire
     Element: 0
     Shape: 2
@@ -97,6 +107,8 @@ MonoBehaviour:
     BoostWeaponId: 
     BoostDamagePercent: 0
     BoostRange: 0
+    HitCount: 0
+    MaxTargets: 0
   - Id: trap_toxic
     Element: 3
     Shape: 2
@@ -111,6 +123,8 @@ MonoBehaviour:
     BoostWeaponId: 
     BoostDamagePercent: 0
     BoostRange: 0
+    HitCount: 0
+    MaxTargets: 0
   - Id: trap_paralytic
     Element: 5
     Shape: 2
@@ -125,6 +139,8 @@ MonoBehaviour:
     BoostWeaponId: 
     BoostDamagePercent: 0
     BoostRange: 0
+    HitCount: 0
+    MaxTargets: 0
   - Id: trap_flood
     Element: 6
     Shape: 2
@@ -139,6 +155,8 @@ MonoBehaviour:
     BoostWeaponId: 
     BoostDamagePercent: 0
     BoostRange: 0
+    HitCount: 0
+    MaxTargets: 0
   - Id: trap_shock
     Element: 2
     Shape: 2
@@ -153,6 +171,8 @@ MonoBehaviour:
     BoostWeaponId: 
     BoostDamagePercent: 0
     BoostRange: 0
+    HitCount: 0
+    MaxTargets: 0
   - Id: plant_firebloom
     Element: 0
     Shape: 2
@@ -167,6 +187,8 @@ MonoBehaviour:
     BoostWeaponId: 
     BoostDamagePercent: 0
     BoostRange: 0
+    HitCount: 0
+    MaxTargets: 0
   - Id: plant_icecap
     Element: 1
     Shape: 2
@@ -181,6 +203,8 @@ MonoBehaviour:
     BoostWeaponId: 
     BoostDamagePercent: 0
     BoostRange: 0
+    HitCount: 0
+    MaxTargets: 0
   - Id: plant_sorrowmoss
     Element: 3
     Shape: 2
@@ -195,6 +219,8 @@ MonoBehaviour:
     BoostWeaponId: 
     BoostDamagePercent: 0
     BoostRange: 0
+    HitCount: 0
+    MaxTargets: 0
   - Id: enemy_fire_bolt
     Element: 0
     Shape: 0
@@ -209,6 +235,8 @@ MonoBehaviour:
     BoostWeaponId: 
     BoostDamagePercent: 0
     BoostRange: 0
+    HitCount: 0
+    MaxTargets: 0
   - Id: enemy_sand_bolt
     Element: 4
     Shape: 0
@@ -223,6 +251,8 @@ MonoBehaviour:
     BoostWeaponId: 
     BoostDamagePercent: 0
     BoostRange: 0
+    HitCount: 0
+    MaxTargets: 0
   - Id: boss_slime_slam
     Element: 6
     Shape: 2
@@ -237,6 +267,8 @@ MonoBehaviour:
     BoostWeaponId: 
     BoostDamagePercent: 0
     BoostRange: 0
+    HitCount: 0
+    MaxTargets: 0
   - Id: boss_sand_storm
     Element: 4
     Shape: 2
@@ -251,6 +283,8 @@ MonoBehaviour:
     BoostWeaponId: 
     BoostDamagePercent: 0
     BoostRange: 0
+    HitCount: 0
+    MaxTargets: 0
   - Id: enemy_frost_bolt
     Element: 1
     Shape: 0
@@ -265,6 +299,8 @@ MonoBehaviour:
     BoostWeaponId: 
     BoostDamagePercent: 0
     BoostRange: 0
+    HitCount: 0
+    MaxTargets: 0
   - Id: boss_blizzard
     Element: 1
     Shape: 2
@@ -279,6 +315,8 @@ MonoBehaviour:
     BoostWeaponId: 
     BoostDamagePercent: 0
     BoostRange: 0
+    HitCount: 0
+    MaxTargets: 0
   - Id: enemy_fireball
     Element: 0
     Shape: 0
@@ -293,6 +331,8 @@ MonoBehaviour:
     BoostWeaponId: 
     BoostDamagePercent: 0
     BoostRange: 0
+    HitCount: 0
+    MaxTargets: 0
   - Id: boss_lava_eruption
     Element: 0
     Shape: 2
@@ -307,6 +347,8 @@ MonoBehaviour:
     BoostWeaponId: 
     BoostDamagePercent: 0
     BoostRange: 0
+    HitCount: 0
+    MaxTargets: 0
   - Id: enemy_time_bolt
     Element: 2
     Shape: 0
@@ -321,6 +363,8 @@ MonoBehaviour:
     BoostWeaponId: 
     BoostDamagePercent: 0
     BoostRange: 0
+    HitCount: 0
+    MaxTargets: 0
   - Id: boss_time_collapse
     Element: 2
     Shape: 2
@@ -335,6 +379,8 @@ MonoBehaviour:
     BoostWeaponId: 
     BoostDamagePercent: 0
     BoostRange: 0
+    HitCount: 0
+    MaxTargets: 0
   - Id: light_spear_thrust
     Element: 7
     Shape: 1
@@ -349,6 +395,8 @@ MonoBehaviour:
     BoostWeaponId: spear
     BoostDamagePercent: 150
     BoostRange: 1
+    HitCount: 0
+    MaxTargets: 0
   - Id: light_spear_throw
     Element: 7
     Shape: 0
@@ -363,3 +411,101 @@ MonoBehaviour:
     BoostWeaponId: spear
     BoostDamagePercent: 150
     BoostRange: 1
+    HitCount: 0
+    MaxTargets: 0
+  - Id: light_spear_flurry
+    Element: 7
+    Shape: 0
+    Range: 1
+    Damage: 2
+    ManaCost: 3
+    Radius: 0
+    AppliesStatus: 0
+    StatusChancePercent: 0
+    LeavesTerrain: 0
+    DisplayName: "\uC5F0\uC18D \uCC0C\uB974\uAE30"
+    BoostWeaponId: spear
+    BoostDamagePercent: 150
+    BoostRange: 1
+    HitCount: 3
+    MaxTargets: 0
+  - Id: light_spear_pierce
+    Element: 7
+    Shape: 1
+    Range: 3
+    Damage: 5
+    ManaCost: 3
+    Radius: 0
+    AppliesStatus: 0
+    StatusChancePercent: 0
+    LeavesTerrain: 0
+    DisplayName: "\uAD00\uD1B5 \uCC0C\uB974\uAE30"
+    BoostWeaponId: spear
+    BoostDamagePercent: 150
+    BoostRange: 1
+    HitCount: 0
+    MaxTargets: 0
+  - Id: light_spear_charge
+    Element: 7
+    Shape: 3
+    Range: 4
+    Damage: 6
+    ManaCost: 4
+    Radius: 0
+    AppliesStatus: 0
+    StatusChancePercent: 0
+    LeavesTerrain: 0
+    DisplayName: "\uB3CC\uC9C4"
+    BoostWeaponId: spear
+    BoostDamagePercent: 150
+    BoostRange: 1
+    HitCount: 0
+    MaxTargets: 0
+  - Id: light_spear_lance
+    Element: 7
+    Shape: 1
+    Range: 7
+    Damage: 5
+    ManaCost: 4
+    Radius: 0
+    AppliesStatus: 0
+    StatusChancePercent: 0
+    LeavesTerrain: 0
+    DisplayName: "\uAD00\uD1B5 \uBC1C\uC0AC"
+    BoostWeaponId: spear
+    BoostDamagePercent: 150
+    BoostRange: 1
+    HitCount: 0
+    MaxTargets: 0
+  - Id: light_spear_volley
+    Element: 7
+    Shape: 4
+    Range: 6
+    Damage: 4
+    ManaCost: 5
+    Radius: 0
+    AppliesStatus: 0
+    StatusChancePercent: 0
+    LeavesTerrain: 0
+    DisplayName: "\uB2E4\uC911 \uBC1C\uC0AC"
+    BoostWeaponId: spear
+    BoostDamagePercent: 150
+    BoostRange: 1
+    HitCount: 0
+    MaxTargets: 3
+  - Id: light_spear_throw_plus
+    Element: 7
+    Shape: 0
+    Range: 7
+    Damage: 4
+    ManaCost: 2
+    Radius: 0
+    AppliesStatus: 0
+    StatusChancePercent: 0
+    LeavesTerrain: 0
+    DisplayName: "\uBE5B\uC758 \uCC3D \uB358\uC9C0\uAE30+"
+    BoostWeaponId: spear
+    BoostDamagePercent: 150
+    BoostRange: 1
+    HitCount: 0
+    MaxTargets: 0

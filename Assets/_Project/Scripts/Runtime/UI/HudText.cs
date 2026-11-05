@@ -293,6 +293,22 @@ namespace ProjectM.UI
         // ── 캐릭터 선택 (2026-10-21) ──
         public const string CharacterSelectTitle = "캐릭터 선택";
         public const string CharacterSelectHint = "← → 고르기 · Enter/클릭 시작";
+        // 3-21b 직업 형태 선택 창 · 로그
+        public const string FormSelectTitle = "빛의 창 — 형태를 고르세요";
+        public const string FormSelectHint = "← → 고르기 · Enter/클릭 확정 (한 번만 고를 수 있음)";
+
+        /// <summary>형태 ID → 표시 이름 (ClassCatalog, 3-21b). 없으면 ID.</summary>
+        public IReadOnlyDictionary<string, string> FormNames { get; set; }
+
+        /// <summary>형태를 골랐다 — 배운 주문 이름들 (3-21b).</summary>
+        public string FormChosen(string formId, IReadOnlyList<string> learned)
+        {
+            string name = FormNames != null && formId != null && FormNames.TryGetValue(formId, out var n) ? n : formId;
+            if (learned == null || learned.Count == 0) return $"{Eul(name)} 골랐다";
+            var spells = new List<string>();
+            foreach (var id in learned) spells.Add(Spell(id));
+            return $"{Eul(name)} 골랐다 — 새 기술: {string.Join(", ", spells)}";
+        }
 
         // ── 마법서 (3-5) ──
         public string PickedUp(string itemId) => $"{Eul(Item(itemId))} 주웠다";

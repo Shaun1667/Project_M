@@ -2404,6 +2404,7 @@ MonoBehaviour:
   _consumableConfig: {fileID: 11400000, guid: 7d1f47f21ed95914f9a5c96aa853962e, type: 2}
   _characters: {fileID: 11400000, guid: 21f72d5c53d4acb4d98107ca78876dff, type: 2}
   _characterSelect: {fileID: 2085256671}
+  _classCatalog: {fileID: 11400000, guid: 1323dea68b16d9b41a23e07e6f26f4f9, type: 2}
   _tilemapPresenter: {fileID: 2048705274}
   _pixelMap: {fileID: 0}
   _entityPresenter: {fileID: 2108178770}
