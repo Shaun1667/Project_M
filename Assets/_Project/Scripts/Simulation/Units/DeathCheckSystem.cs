@@ -9,7 +9,7 @@ namespace ProjectM.Units
     /// 3-4b: 죽은 적은 처치 수에 더하고, 보스가 죽으면 승리 · 플레이어가 죽으면 패배 → World.Run.Outcome + RunEndedEvent (한 번만).
     /// 같은 틱에 둘 다면 패배가 먼저다 (EntityId 순 — 플레이어가 먼저 생성됨).
     /// </summary>
-    public sealed class DeathCheckSystem : ITickSystem
+    public sealed class DeathCheckSystem : IInstantTickSystem // 3-27 실시간 즉시 행동 뒤에도
     {
         private readonly World _world;
         private readonly ProgressionConfig _progression;

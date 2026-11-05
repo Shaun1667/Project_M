@@ -133,7 +133,7 @@ namespace ProjectM.Tests
         [Test]
         public void Snapshot_RoundTripsHitsPerAttack()
         {
-            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.EqualTo(26));
+            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.GreaterThanOrEqualTo(26)); // 정확한 값은 RunModeTests (27)
             var s = Start();
             Hold(s, "knuckle");
             var restored = World.Restore(WorldSnapshotCodec.Decode(WorldSnapshotCodec.Encode(s.World.Capture())), (w, id) => null);

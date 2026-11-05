@@ -67,7 +67,9 @@ namespace ProjectM.Items
             if (unit == null) throw new ArgumentNullException(nameof(unit));
             if (inventoryIndex < 0 || inventoryIndex >= unit.InventorySlots.Length) return false;
             var entry = unit.InventorySlots[inventoryIndex];
-            if (entry.Kind != InventoryKind.Item || !items.TryGet(entry.Id, out var item) || item.Use != ItemUse.EquipArmor) return false;
+            if (entry.Kind != InventoryKind.Item || !items.TryGet(entry.Id, out var item)) return false;
+            if (item.Use == ItemUse.Relic) return Relics.Equip(world, items, unit, inventoryIndex) == RelicEquipResult.Equipped; // 3-28a 유물도 같은 끼기 행동
+            if (item.Use != ItemUse.EquipArmor) return false;
 
             var previous = unit.Armor;
             Inventory.RemoveAt(world, unit, inventoryIndex);

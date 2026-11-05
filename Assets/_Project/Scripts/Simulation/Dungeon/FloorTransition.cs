@@ -31,6 +31,7 @@ namespace ProjectM.Dungeon
         private readonly TerrainDef _water;
         private readonly TrapBook _traps;
         private readonly ShopConfig _shop;
+        private readonly ProjectM.Items.WorkbenchConfig _workbench;
         private readonly ItemBook _items;
         private readonly ZoneBook _zones;
         private readonly TerrainBook _terrains;
@@ -45,8 +46,10 @@ namespace ProjectM.Dungeon
         public FloorTransition(World world, DungeonGenerator generator, int floorCount, UnitDef enemyDef, SpawnConfig spawn,
             Func<World, EntityId, ICommandSource> aiFactory, PlayerVisionSystem vision, UnitDef bossDef = null, LootConfig loot = null,
             FloorDecorConfig decor = null, TerrainDef water = null, TrapBook traps = null, ShopConfig shop = null, ItemBook items = null,
-            ZoneBook zones = null, TerrainBook terrains = null, GhostRecord ghost = null, UnitDef ghostDef = null)
+            ZoneBook zones = null, TerrainBook terrains = null, GhostRecord ghost = null, UnitDef ghostDef = null,
+            ProjectM.Items.WorkbenchConfig workbench = null)
         {
+            _workbench = workbench; // 3-28b: 구역마다 한 층 작업실
             _ghost = ghost; // 3-23b: 있으면 마지막 보스 층(GhostFloor)의 보스 = 지난 회차 플레이어
             _ghostDef = ghostDef;
             _terrains = terrains;
@@ -79,6 +82,9 @@ namespace ProjectM.Dungeon
 
         public int StairsDirection() => StairsDirection(_world, _floorCount);
 
+        /// <summary>판의 층 수 (마지막 층 번호).</summary>
+        public int FloorCount => _floorCount;
+
         /// <summary>서 있는 계단을 쓴다. 계단 위가 아니면 false. 플레이어 입력이 처리되지 않고 남아 있으면 쓰지 않는다.</summary>
         public bool TryUse()
         {
@@ -86,6 +92,15 @@ namespace ProjectM.Dungeon
             if (delta == 0 || _world.PlayerInput.HasCommand) return false;
             PlayerActions.TryGetPlayer(_world, out var player);
             Change(player, _world.Floor + delta, delta);
+            return true;
+        }
+
+        /// <summary>디버그 창 "다음 층" (2026-11-05): 계단 위가 아니어도 한 층 아래로 (계단을 쓴 것과 같은 길 — 도착은 그 층의 올라가는 계단). 마지막 층이면 false.</summary>
+        public bool TryDescendAnywhere()
+        {
+            if (_world.Floor >= _floorCount || _world.PlayerInput.HasCommand) return false;
+            if (!PlayerActions.TryGetPlayer(_world, out var player) || !player.IsAlive) return false;
+            Change(player, _world.Floor + 1, 1);
             return true;
         }
 
@@ -134,6 +149,8 @@ namespace ProjectM.Dungeon
                 _world.EnterNewFloor(target, floor.Map);
                 if (_decor != null) FloorDecor.Apply(_world, floor, _decor, PuddleOf(target), _traps, _zones == null || _zones.ZoneOf(target).Grass); // 3-11a · 3-12a: 이벤트는 아래 Announce가 맵 · 지형 · 함정을 다시 보낸다
                 Shop.Build(_world, floor, _shop, _items, _world.Rng.Get(RngStream.Decor), new IdleNeutralAi()); // 3-15c: 상점 층이면
+                if (_workbench != null && ProjectM.Items.Workbench.IsWorkshopFloor(_zones, _world.Rng.Seed, target))
+                    ProjectM.Items.Workbench.BuildRoom(_world, floor, _workbench, _world.Rng.Get(RngStream.Decor)); // 3-28b 작업실 (상점 다음)
                 _world.Units.Teleport(player.Id, floor.Start);
                 if (_zones != null)
                 {
@@ -176,20 +193,39 @@ namespace ProjectM.Dungeon
         /// 화면을 새 층으로: 맵 → 지형 → (돌아온 층이면) 유닛 생성 · 상태 → 플레이어 위치.
         /// 처음 가는 층의 적은 UnitSpawner가 이미 생성 이벤트를 냈다.
         /// </summary>
-        private void Announce(Unit player, bool restored)
+        private void Announce(Unit player, bool restored) => Announce(_world, player, restored, includePlayer: false);
+
+        /// <summary>
+        /// 저장에서 이어하기 (3-27): 화면에 지금 층 전체를 알린다 — 맵 · 지형 · 함정 · 바닥 아이템 · 플레이어 포함 모든 유닛(상태 · 든 무기 · 입은 갑옷) · 플레이어 위치.
+        /// 시야는 부른 쪽이 PlayerVisionSystem.Refresh로.
+        /// </summary>
+        public static void AnnounceRestored(World world)
         {
-            var events = _world.Events;
-            events.Publish(new MapLoadedEvent(_world.Map));
-            foreach (var pair in _world.Terrain.ToSortedList())
+            if (world == null) throw new ArgumentNullException(nameof(world));
+            if (!PlayerActions.TryGetPlayer(world, out var player)) return;
+            Announce(world, player, restored: true, includePlayer: true);
+            if (!player.Weapon.IsEmpty) world.Events.Publish(new ProjectM.Items.WeaponEquippedEvent(player.Id, player.Weapon, null));
+            if (!player.Armor.IsEmpty) world.Events.Publish(new ProjectM.Items.ArmorEquippedEvent(player.Id, player.Armor, null));
+            world.Events.Publish(new ProjectM.Items.GoldChangedEvent(world.Run.Gold, 0)); // 3-28b: HUD 금화 · 에테르 맞춤 (변화 0 = 로그 없음)
+            world.Events.Publish(new ProjectM.Items.EtherChangedEvent(world.Run.Ether, 0));
+            for (int i = 0; i < player.Relics.Length; i++)
+                if (!player.Relics[i].IsEmpty) world.Events.Publish(new ProjectM.Items.RelicEquippedEvent(player.Id, i, player.Relics[i].Id, null, player.Hp, player.MaxHp, silent: true));
+        }
+
+        private static void Announce(World world, Unit player, bool restored, bool includePlayer)
+        {
+            var events = world.Events;
+            events.Publish(new MapLoadedEvent(world.Map));
+            foreach (var pair in world.Terrain.ToSortedList())
                 foreach (var t in pair.Value)
-                    events.Publish(new TerrainChangedEvent(_world.Terrain.PosOf(pair.Key), t.Type, t.Remaining));
-            foreach (var pair in _world.Traps.ToSortedList()) // 3-12a: 드러난 함정만
-                if (!pair.Value.Hidden) events.Publish(new TrapChangedEvent(_world.Traps.PosOf(pair.Key), pair.Value.Type, true));
-            foreach (var item in _world.FloorItems.All)
-                events.Publish(new FloorItemPlacedEvent(item.Pos, item.ItemId, ProjectM.Items.Identification.VisualOf(_world, item.ItemId)));
-            foreach (var unit in _world.Units.ToSortedList())
+                    events.Publish(new TerrainChangedEvent(world.Terrain.PosOf(pair.Key), t.Type, t.Remaining));
+            foreach (var pair in world.Traps.ToSortedList()) // 3-12a: 드러난 함정만
+                if (!pair.Value.Hidden) events.Publish(new TrapChangedEvent(world.Traps.PosOf(pair.Key), pair.Value.Type, true));
+            foreach (var item in world.FloorItems.All)
+                events.Publish(new FloorItemPlacedEvent(item.Pos, item.ItemId, ProjectM.Items.Identification.VisualOf(world, item.ItemId)));
+            foreach (var unit in world.Units.ToSortedList())
             {
-                if (!restored || unit.Id == player.Id) continue;
+                if (!restored || (unit.Id == player.Id && !includePlayer)) continue;
                 events.Publish(new EntitySpawnedEvent(unit.Id, unit.Pos, unit.VisualId));
                 foreach (var s in unit.Statuses)
                     events.Publish(new StatusChangedEvent(unit.Id, s.Type, s.Remaining, true));

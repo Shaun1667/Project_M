@@ -36,10 +36,11 @@ namespace ProjectM.Units
         }
 
         /// <summary>중립 유닛 생성 (3-15c 상인).</summary>
-        public static Unit SpawnNeutral(World world, UnitDef def, GridPos pos, ICommandSource ai)
+        /// <param name="inventorySize">3-29 상인: 화나면 가게 물건을 챙길 칸 수.</param>
+        public static Unit SpawnNeutral(World world, UnitDef def, GridPos pos, ICommandSource ai, int inventorySize = 0)
         {
             if (ai == null) throw new ArgumentNullException(nameof(ai));
-            var unit = Create(world, def, Faction.Neutral, pos, 0, 0);
+            var unit = Create(world, def, Faction.Neutral, pos, 0, inventorySize);
             world.Scheduler.RegisterActor(unit.Id, ai);
             Announce(world, unit);
             return unit;

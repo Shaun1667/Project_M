@@ -142,6 +142,20 @@ namespace ProjectM.Tests
             Assert.That((e.Strength, e.Gained), Is.EqualTo((11, 1)));
         }
 
+        [Test]
+        public void AddStrength_DebugMinus_StopsAtOne()
+        {
+            var s = Start(); // 힘 10
+            Assert.That(Consumables.AddStrength(s.World, s.Player, -3), Is.EqualTo(-3));
+            Assert.That(s.Player.Strength, Is.EqualTo(7));
+            Assert.That(Consumables.AddStrength(s.World, s.Player, -20), Is.EqualTo(-6), "1 아래로 안 내려감");
+            Assert.That(s.Player.Strength, Is.EqualTo(1));
+            s.Events.Clear();
+            Assert.That(Consumables.AddStrength(s.World, s.Player, -1), Is.EqualTo(0));
+            s.World.Events.Flush();
+            Assert.That(s.Events.Exists(x => x is StrengthChangedEvent), Is.False, "안 바뀌면 이벤트 없음");
+        }
+
         // ── 강화 주문서 ──
 
         [Test]

@@ -85,6 +85,8 @@ namespace ProjectM.Items
         Seed = 11,
         /// <summary>유물 (3-23a 시간의 모래시계): 걸어 들어가 주우면 판이 승리로 끝난다. 배낭에 넣지 않는다.</summary>
         Artifact = 12,
+        /// <summary>유물 장비 (3-28a, 결정 2026-11-05): 유물 칸(2칸)에 끼면 RelicEffects가 켜진다 (특성 효과 표와 같음 — 강화 단계 n이면 Values[n]). 같은 종류는 한 칸만. 모래시계(Artifact)와 다름.</summary>
+        Relic = 13,
     }
 
     /// <summary>
@@ -179,13 +181,25 @@ namespace ProjectM.Items
         public ProjectM.Dungeon.TrapType PlantTrap { get; }
         /// <summary>연금 솥에 넣으면 나오는 물약 (3-16c). 없으면 null.</summary>
         public string BrewsInto { get; }
+        /// <summary>유물 효과 (3-28a — 특성 효과 표, 강화 0 = Values[0]). 유물이 아니면 비어 있음.</summary>
+        public System.Collections.Generic.IReadOnlyList<ProjectM.Units.TalentEffectDef> RelicEffects { get; }
+        /// <summary>쓰는 시간 유물 (3-28c) — None이면 지속 효과 유물. 게이지 최대 = TimeGauge[강화], 힘(가속기 한 턴 행동 수) = TimePower[강화].</summary>
+        public TimeRelicKind TimeKind { get; }
+        public System.Collections.Generic.IReadOnlyList<int> TimeGauge { get; }
+        public System.Collections.Generic.IReadOnlyList<int> TimePower { get; }
 
         public ItemDef(string id, ItemUse use, string spellId = null, WeaponDef weapon = null, int amount = 0,
             ConsumableEffect effect = ConsumableEffect.None, int weight = 0, ArmorDef armor = null,
             int food = 0, bool risky = false, string fireTransformsTo = null, string iceTransformsTo = null, int value = 0,
             int throwMinDamage = 0, int throwMaxDamage = 0, int breakPercent = 0, ProjectM.Dungeon.TrapType plantTrap = ProjectM.Dungeon.TrapType.None,
-            string brewsInto = null)
+            string brewsInto = null, System.Collections.Generic.IReadOnlyList<ProjectM.Units.TalentEffectDef> relicEffects = null,
+            TimeRelicKind timeKind = TimeRelicKind.None, System.Collections.Generic.IReadOnlyList<int> timeGauge = null, System.Collections.Generic.IReadOnlyList<int> timePower = null)
         {
+            TimeKind = use == ItemUse.Relic ? timeKind : TimeRelicKind.None;
+            if (TimeKind != TimeRelicKind.None && (timeGauge == null || timeGauge.Count == 0)) throw new ArgumentException("시간 유물에 게이지가 없다: " + id, nameof(timeGauge));
+            TimeGauge = TimeKind != TimeRelicKind.None ? timeGauge : Array.Empty<int>();
+            TimePower = TimeKind != TimeRelicKind.None && timePower != null ? timePower : Array.Empty<int>();
+            RelicEffects = use == ItemUse.Relic && relicEffects != null ? relicEffects : Array.Empty<ProjectM.Units.TalentEffectDef>();
             BrewsInto = use == ItemUse.Seed && !string.IsNullOrEmpty(brewsInto) ? brewsInto : null;
             if (use == ItemUse.Seed && plantTrap == ProjectM.Dungeon.TrapType.None) throw new ArgumentException("씨앗에 식물이 없다: " + id, nameof(plantTrap));
             PlantTrap = use == ItemUse.Seed ? plantTrap : ProjectM.Dungeon.TrapType.None;
@@ -233,8 +247,13 @@ namespace ProjectM.Items
         /// <summary>갑옷 공통 수치 (3-10a) — 방어 나누기 · 힘 모자람 벌점.</summary>
         public ArmorRules ArmorRules { get; }
 
-        public ItemBook(IEnumerable<ItemDef> defs, WeaponRules weaponRules = null, ArmorRules armorRules = null)
+        /// <summary>시간 유물 게이지가 1칸 차는 틱 (3-28c, BALANCE 24번).</summary>
+        public int RelicChargeTicks { get; }
+
+        public ItemBook(IEnumerable<ItemDef> defs, WeaponRules weaponRules = null, ArmorRules armorRules = null, int relicChargeTicks = 10)
         {
+            if (relicChargeTicks < 1) throw new ArgumentOutOfRangeException(nameof(relicChargeTicks));
+            RelicChargeTicks = relicChargeTicks;
             if (defs == null) throw new ArgumentNullException(nameof(defs));
             WeaponRules = weaponRules ?? WeaponRules.Identity;
             ArmorRules = armorRules ?? ArmorRules.Identity;
@@ -335,7 +354,7 @@ namespace ProjectM.Items
         {
             Validate(world, unit);
             if (slot < 0 || slot >= unit.QuickSlots.Length) throw new ArgumentOutOfRangeException(nameof(slot), slot, "빠른 칸 밖");
-            if (!entry.IsEmpty && Array.IndexOf(unit.InventorySlots, entry) < 0)
+            if (!entry.IsEmpty && Array.IndexOf(unit.InventorySlots, entry) < 0 && Array.IndexOf(unit.Relics, entry) < 0) // 3-28c: 낀 유물(시간 유물)도
                 throw new ArgumentException("인벤토리에 없는 항목은 등록할 수 없다: " + entry, nameof(entry));
 
             if (!entry.IsEmpty)

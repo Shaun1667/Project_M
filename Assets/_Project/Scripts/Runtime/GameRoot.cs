@@ -42,6 +42,7 @@ namespace ProjectM
         [Tooltip("물약 · 주문서 수치 · 겉모습 (3-9). 비우면 식별 · 무작위 배치 없음")] [SerializeField] private ConsumableConfigAsset _consumableConfig;
         [Tooltip("고를 수 있는 캐릭터 (2026-10-21). 비우거나 창이 없으면 고르지 않고 Player.asset 모습으로 시작")] [SerializeField] private CharacterCatalogAsset _characters;
         [SerializeField] private CharacterSelectPresenter _characterSelect;
+        [Tooltip("타이틀 화면 (3-27 — 이어하기 · 게임 시작 → 모드 · 시드). 비우면 바로 캐릭터 선택 (턴제 · 무작위 시드)")] [SerializeField] private TitlePresenter _title;
         [Tooltip("직업 · 형태 표 (3-21b). 비우면 형태 선택 없음")] [SerializeField] private ClassCatalogAsset _classCatalog;
         [SerializeField] private TilemapPresenter _tilemapPresenter;
         [Tooltip("2D 픽셀 맵 (P-3a). 있으면 3D TilemapPresenter 대신 이것을 쓴다")] [SerializeField] private PixelMapPresenter _pixelMap;
@@ -97,6 +98,77 @@ namespace ProjectM
             }
         }
 
+        private bool _debugInvulnerable;
+        private PlayerVisionSystem _vision;
+        private ProgressionConfig _progression;
+
+        /// <summary>[상태 변경] 디버그 무적 (2026-11-05): 플레이어가 피해를 받지 않는다 (World.DebugInvulnerable — 저장 안 함, 새 판 · 이어하기에도 유지).</summary>
+        public bool DebugInvulnerable
+        {
+            get => _debugInvulnerable;
+            set
+            {
+                _debugInvulnerable = value;
+                if (World != null) World.DebugInvulnerable = value;
+            }
+        }
+
+        /// <summary>[상태 변경] 디버그 레벨: 플레이어를 levels만큼 올린다 (다음 레벨까지 경험치를 주는 평소 경로 — 체력 · 마나 · 명중 · 회피 · 특성 점수 그대로). 올린 레벨 수.</summary>
+        public int DebugAddLevels(int levels)
+        {
+            if (World == null || _progression == null || !World.Units.TryGet(_playerId, out var player)) return 0;
+            int start = player.Level;
+            for (int i = 0; i < levels && player.Level < _progression.MaxLevel; i++)
+                Progression.GainExp(World, player, System.Math.Max(1, _progression.ExpToNext(player.Level) - player.Exp), _progression);
+            World.Events.Flush(); // 틱 밖 변경 → HUD에 바로
+            return player.Level - start;
+        }
+
+        private FloorTransition _stairs;
+
+        /// <summary>[상태 변경] 디버그 다음 층 (2026-11-05): 계단 위가 아니어도 한 층 아래로 (계단과 같은 길 — 보스 층 · 작업실 · 저장 그대로). 갔으면 true.</summary>
+        public bool DebugNextFloor()
+        {
+            if (World == null || _stairs == null || !_stairs.TryDescendAnywhere()) return false;
+            _input.ResetAfterFloorChange();
+            World.Events.Flush(); // 틱 밖 변경 → 화면에 바로
+            return true;
+        }
+
+        /// <summary>디버그: 다음 층이 있는지 (마지막 층이면 false).</summary>
+        public bool DebugHasNextFloor => World != null && _stairs != null && World.Floor < _stairs.FloorCount;
+
+        /// <summary>[상태 변경] 디버그 힘 ± (2026-11-05): 힘 물약과 같은 길(Consumables.AddStrength — 1 아래로는 안 내려감). 바뀐 양.</summary>
+        public int DebugAddStrength(int amount)
+        {
+            if (World == null || !World.Units.TryGet(_playerId, out var player)) return 0;
+            int changed = Consumables.AddStrength(World, player, amount);
+            World.Events.Flush();
+            return changed;
+        }
+
+        /// <summary>디버그 레벨 최대치 (없으면 0).</summary>
+        public int DebugMaxLevel => _progression != null ? _progression.MaxLevel : 0;
+
+        /// <summary>[상태 변경] 디버그 순간이동: 다음 맵 클릭 칸으로 플레이어를 옮긴다 (Esc · 오른쪽 클릭 = 취소). 시작했으면 true.</summary>
+        public bool DebugBeginTeleport() => _input != null && World != null && _input.BeginCellPick(DebugTeleport, HudText.DebugTeleportPick);
+
+        /// <summary>디버그 순간이동을 기다리는 중.</summary>
+        public bool DebugTeleportPending => _input != null && _input.IsPickingCell;
+
+        /// <summary>[상태 변경] 플레이어를 칸으로 옮긴다 — 걸을 수 있는 빈 칸만 (바닥 · 풀 · 계단 · 문, 벽 · 다른 유닛 칸은 거절). 틱을 쓰지 않는다. 옮겼으면 true.</summary>
+        public bool DebugTeleport(GridPos to)
+        {
+            if (World == null || !World.Units.TryGet(_playerId, out var player)) return false;
+            if (!World.Map.InBounds(to) || !GridMap.IsWalkableType(World.Map.Get(to)) || World.Units.IsOccupied(to)) return false;
+            var from = player.Pos;
+            World.Units.Move(player.Id, to);
+            World.Events.Publish(new EntityMovedEvent(player.Id, from, to));
+            _vision?.Refresh(); // 틱 밖 이동 → 시야 바로
+            World.Events.Flush();
+            return true;
+        }
+
         private EntityId _playerId;
         private Unit _player;
         private bool _playerDead;
@@ -131,22 +203,151 @@ namespace ProjectM
             _hudText = new HudText(_spellCatalog.DisplayNames(), _reactionCatalog.DisplayNames(), _itemCatalog.DisplayNames(), _fusionCatalog.DisplayNames());
             _hudText.FormNames = FormNames(); // 3-21b
             _hudText.TalentNames = _classCatalog != null ? _classCatalog.TalentNames() : null; // 3-21c
+            _workbench = _floorDecorConfig != null ? _floorDecorConfig.ToWorkbench() : null; // 3-28b 마법 제작대 수치
             _input.Text = _hudText;
             _input.HintChanged += _hud.SetHint;
+            _input.InfoChanged += _hud.SetInfo;
             // 2026-10-20: 이동 · 공격 · 주문 연출이 끝날 때까지 다음 행동(= 다음 틱)을 받지 않는다
             _input.PresentationBusy = () => _entityPresenter.IsAnimating || (_fx != null && _fx.IsPlaying)
-                || (_characterSelect != null && _characterSelect.IsOpen); // 3-21b: 형태 선택 창이 열려 있으면 행동을 받지 않음
+                || (_characterSelect != null && _characterSelect.IsOpen) || (_title != null && _title.IsOpen); // 3-21b: 형태 선택 창이 열려 있으면 행동을 받지 않음 · 3-27 타이틀
         }
 
         private void OnDestroy()
         {
             if (_input != null && _hud != null) _input.HintChanged -= _hud.SetHint;
+            if (_input != null && _hud != null) _input.InfoChanged -= _hud.SetInfo;
         }
 
         private void Start()
         {
             if (Config == null) return;
-            BeginCharacterSelect();
+            if (_title != null)
+            {
+                _title.Model.ContinueChosen += slot => Defer(() => ContinueRun(slot)); // 3-30 슬롯
+                _title.Model.DeleteChosen += slot =>
+                {
+                    RunSaveStore.Delete(slot); // 3-30 데이터 삭제 (타이틀이 한 번 더 물은 뒤)
+                    _title.Model.SetSlots(SlotInfos());
+                };
+                _title.Model.StartChosen += (slot, mode, seedText) => Defer(() =>
+                {
+                    _pendingSlot = slot;
+                    _pendingMode = mode;
+                    _pendingSeed = SeedInput.TryParse(seedText, out var s) ? s : (ulong?)null;
+                    BeginCharacterSelect();
+                });
+                _title.Model.QuitChosen += Quit;
+            }
+            OpenTitle();
+        }
+
+        // ── 타이틀 · 모드 · 시드 (3-27, 결정 2026-11-05) ──
+
+        /// <summary>3-30: 이 판이 저장되는 슬롯 (1 ~ 5, 0 = 없음) · 새 게임을 고른 슬롯.</summary>
+        private int _slot;
+        private int _pendingSlot = 1;
+        private RunMode _pendingMode;
+        private ulong? _pendingSeed;
+        private System.Action _deferred;
+        private int _deferredFrame;
+        private RealTimeClock _realTime; // 실시간 판이면 시계 (턴제면 null)
+        private bool _paused;
+        private long _savedFlush = -1; // 자동 저장: 마지막으로 저장한 SimEventBus.FlushCount
+
+        /// <summary>확정한 프레임의 키(Enter)가 다음 창에 또 읽히지 않게 다음 프레임에 연다.</summary>
+        private void Defer(System.Action action)
+        {
+            _deferred = action;
+            _deferredFrame = Time.frameCount;
+        }
+
+        /// <summary>타이틀을 연다 (게임 처음 · 판이 끝난 뒤 R). 타이틀이 없으면 바로 턴제 · 무작위 시드로 캐릭터 선택.</summary>
+        private void OpenTitle()
+        {
+            if (_title == null)
+            {
+                _pendingMode = RunMode.TurnBased;
+                _pendingSeed = null;
+                BeginCharacterSelect();
+                return;
+            }
+            RunSaveStore.MigrateLegacy(); // 3-27 단일 저장 → 슬롯 1
+            _title.Open(SlotInfos());
+        }
+
+        /// <summary>3-30 저장 슬롯 5칸의 화면 정보 — 찬 슬롯은 스냅샷에서 플레이어 요약을 만든다 (읽을 수 없으면 그 표시).</summary>
+        private System.Collections.Generic.List<SlotInfo> SlotInfos()
+        {
+            var list = new System.Collections.Generic.List<SlotInfo>(RunSaveStore.SlotCount);
+            for (int slot = 1; slot <= RunSaveStore.SlotCount; slot++)
+            {
+                if (!RunSaveStore.Exists(slot))
+                {
+                    list.Add(new SlotInfo(false, null, null));
+                    continue;
+                }
+                var snap = RunSaveStore.Load(slot);
+                var player = snap != null ? PlayerOf(snap) : (ProjectM.Core.UnitState?)null;
+                if (snap == null || player == null)
+                {
+                    list.Add(new SlotInfo(true, HudText.SlotUnreadable, HudText.SlotUnreadable));
+                    continue;
+                }
+                var p = player.Value;
+                string character = CharacterNameOf(p.VisualId);
+                string form = null;
+                if (snap.FormId != null && _hudText.FormNames != null) _hudText.FormNames.TryGetValue(snap.FormId, out form);
+                var relics = new System.Collections.Generic.List<string>();
+                foreach (var r in p.Relics) if (!r.IsEmpty) relics.Add(_hudText.Entry(r));
+                string weapon = p.Weapon.IsEmpty ? null : _hudText.WeaponName(p.Weapon);
+                string armor = p.Armor.IsEmpty ? null : _hudText.ArmorName(p.Armor);
+                list.Add(new SlotInfo(true, HudText.SlotLine(character, p.Level, snap.Floor, snap.Mode),
+                    _hudText.SlotDetail(character, form, p.Level, p.Exp, p.Hp, p.MaxHp, p.Mana, p.MaxMana, p.Strength, p.Accuracy, p.Evasion,
+                        weapon, armor, relics, snap.Floor, snap.Mode, (long)snap.RngSeed, snap.Gold, snap.Ether, snap.Kills, snap.CurrentTick)));
+            }
+            return list;
+        }
+
+        private static ProjectM.Core.UnitState? PlayerOf(WorldSnapshot snap)
+        {
+            foreach (var a in snap.Actors)
+            {
+                if (!a.IsPlayer) continue;
+                foreach (var u in snap.Units) if (u.Id == a.Id) return u;
+            }
+            return null;
+        }
+
+        private static void Quit()
+        {
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
+        }
+
+        /// <summary>저장에서 이어하기 (3-27 · 3-30 슬롯). 저장이 깨졌으면 그 슬롯을 비우고 타이틀로.</summary>
+        private void ContinueRun(int slot)
+        {
+            _slot = slot;
+            var snapshot = RunSaveStore.Load(slot);
+            if (snapshot == null)
+            {
+                RunSaveStore.Delete(slot);
+                OpenTitle();
+                return;
+            }
+            try
+            {
+                BeginRun(snapshot, null, null, null, snapshot.Mode, snapshot.RngSeed);
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"[GameRoot] 저장을 불러오지 못했다 — 지우고 타이틀로: {ex}");
+                RunSaveStore.Delete(slot);
+                OpenTitle();
+            }
         }
 
         /// <summary>지난 판에 고른 캐릭터 (다음 선택 창의 처음 칸). 저장 대상 아님 — 판의 캐릭터는 플레이어 유닛의 모습 ID에 남는다.</summary>
@@ -175,18 +376,67 @@ namespace ProjectM
                 _characterIndex = index;
                 _characterName = string.IsNullOrEmpty(list[index].DisplayName) ? list[index].Id : list[index].DisplayName; // 3-23b 기록 이름
                 StartNewRun(list[index].VisualId, list[index].StartingSpells, list[index].ClassId); // 3-21a: 루멘 = 빛의 창 기술 2개 · 3-21b 직업
-            }, illustrations);
+            }, illustrations, onCancel: _title != null ? () => Defer(OpenTitle) : (System.Action)null); // 3-27 Esc = 타이틀로
         }
 
         private void Update()
         {
             // 입력만 읽는다 — 규칙은 틱으로만 진행한다.
+            if (_deferred != null && Time.frameCount > _deferredFrame)
+            {
+                var action = _deferred;
+                _deferred = null;
+                action();
+                return;
+            }
             var keyboard = Keyboard.current;
-            if (_runEnded && keyboard != null && keyboard.rKey.wasPressedThisFrame && (_characterSelect == null || !_characterSelect.IsOpen))
-                BeginCharacterSelect();
+            bool titleOpen = _title != null && _title.IsOpen;
+            if (_runEnded && keyboard != null && keyboard.rKey.wasPressedThisFrame && !titleOpen && (_characterSelect == null || !_characterSelect.IsOpen))
+                OpenTitle(); // 3-27: 판이 끝나면 타이틀로 (모드 · 시드를 다시 고름)
             else if (!_runEnded && World != null && keyboard != null && keyboard.tKey.wasPressedThisFrame
                      && _characterSelect != null && !_characterSelect.IsOpen && !_entityPresenter.IsAnimating)
                 OpenTalents(); // 3-21c 특성 창
+            else if (_realTime != null && !_runEnded && keyboard != null && keyboard.pKey.wasPressedThisFrame)
+            {
+                _paused = !_paused; // 3-27 실시간 일시정지
+                _hud.SetHint(_paused ? HudText.Paused : string.Empty);
+            }
+
+            // 3-27 실시간: 1초마다 1틱 — 일시정지 · 창(캐릭터 · 형태 · 특성 · 배낭 · 타이틀)이 열려 있으면 멈춤
+            if (_realTime != null && !_runEnded && !_paused && !titleOpen && (_characterSelect == null || !_characterSelect.IsOpen) && !_input.Inventory.IsOpen)
+            {
+                if (_timeClock != null) _timeClock.Update(Time.deltaTime); else _realTime.Update(Time.deltaTime); // 3-28c: 스톱워치 = 멈춤 · 가속기 = 느려짐
+                if (_realTime.LastTicks > 0) World.Events.Flush();
+            }
+        }
+
+        /// <summary>3-27 자동 저장 (결정 2026-11-05 — 매 행동 · 매 틱): 이번 프레임에 화면에 보낸 이벤트가 있었으면(= 무언가 바뀜) 저장. 판이 끝났으면 안 함.</summary>
+        private void LateUpdate()
+        {
+            RecordHistory(); // 3-28c 타임머신 기록 (저장보다 먼저 — 같은 프레임 상태)
+            AutoSave();
+        }
+
+        private void OnApplicationQuit() => AutoSave();
+
+        private void OnApplicationPause(bool paused)
+        {
+            if (paused) AutoSave();
+        }
+
+        private void AutoSave()
+        {
+            if (World == null || _runEnded || _playerDead || !_playerId.IsValid || World.Events.FlushCount == _savedFlush) return;
+            try
+            {
+                if (_slot > 0) RunSaveStore.Save(World, _slot); // 3-30 이 판의 슬롯
+                _savedFlush = World.Events.FlushCount;
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogWarning($"[GameRoot] 자동 저장 실패: {ex.Message}");
+                _savedFlush = World.Events.FlushCount; // 같은 상태로 매 프레임 다시 시도하지 않게
+            }
         }
 
         /// <param name="visualId">고른 캐릭터의 모습 ID (null이면 Player.asset 그대로).</param>
@@ -194,7 +444,23 @@ namespace ProjectM
         /// <param name="classId">고른 캐릭터의 직업 ID (3-21b — RunState.ClassId). null이면 직업 없음.</param>
         private void StartNewRun(string visualId, System.Collections.Generic.IReadOnlyList<string> characterSpells = null, string classId = null)
         {
-            ulong seed = _fixedSeed != 0 ? (ulong)_fixedSeed : (ulong)System.DateTime.UtcNow.Ticks;
+            // 3-27: 시드 = 타이틀 입력 칸 → 인스펙터 고정 시드 → 지금 시각
+            ulong seed = _pendingSeed ?? (_fixedSeed != 0 ? (ulong)_fixedSeed : (ulong)System.DateTime.UtcNow.Ticks);
+            _slot = _pendingSlot; // 3-30: 고른 슬롯에 새 판 (그 슬롯의 지난 저장은 버림)
+            RunSaveStore.Delete(_slot);
+            BeginRun(null, visualId, characterSpells, classId, _pendingMode, seed);
+        }
+
+        /// <summary>
+        /// 판을 연결한다 (3-27): snapshot이 null이면 새 판(seed로 1층 생성 · 플레이어 · 적 · 배치 계획), 있으면 저장에서 복원(World.Restore → 시스템 · 규칙을 다시 연결 → 화면에 지금 층 전체 알림).
+        /// 규칙 연결(시스템 · 적 · 아이템 · 직업 규칙 · 계단 · 입력)은 두 경우 같은 코드.
+        /// </summary>
+        private void BeginRun(WorldSnapshot snapshot, string visualId, System.Collections.Generic.IReadOnlyList<string> characterSpells, string classId,
+            RunMode mode, ulong seed, System.Action<World> afterRestore = null)
+        {
+            _history.Clear(); // 3-28c: 새 판 · 이어하기 · 되돌리기 — 기록은 이 World 기준으로 다시
+            bool restoring = snapshot != null;
+            _paused = false;
             Seed = seed;
             Debug.Log($"[GameRoot] 시드 {(long)seed}");
             // 3-23b: 지난 회차 기록(있으면 마지막 보스 = 그 플레이어) · 그 보스 주문을 더한 판 주문 표
@@ -223,17 +489,56 @@ namespace ProjectM
 
             var dungeonConfig = _dungeonConfig.ToConfig();
             var generator = new DungeonGenerator(dungeonConfig);
-            DungeonFloor floor = null;
-            World = World.Create(seed, rng =>
-            {
-                floor = generator.Generate(rng, stairsUp: false, stairsDown: dungeonConfig.FloorCount > 1);
-                return floor.Map;
-            });
-            Floor = floor;
             var sight = new ShadowcastSightRule();
+            // 적 · 아군 AI: 복원(World.Restore)은 새 World를 만들며 AI를 물어 오므로 처음 물을 때 그 World로 만든다 (상태 없음 — 규칙 6)
+            var enemiesBook = _zoneCatalog != null ? _zoneCatalog.ToEnemyBook() : null; // 3-17b 적 종류 행동
+            if (enemiesBook != null && _ghost != null) enemiesBook = enemiesBook.With(GhostBoss.Traits(_ghost)); // 3-23b 그림자 보스 행동
+            var shopConfig = _floorDecorConfig != null ? _floorDecorConfig.ToShop() : null; // 3-29 화난 상인 AI에 필요 (복원 전에)
+            var aiProgression = _progressionConfig != null ? _progressionConfig.ToConfig() : null;
+            var aiConsumableConfig = _consumableConfig != null ? _consumableConfig.ToConfig() : ConsumableConfig.Default;
+            ShopkeeperAi keeperAi = null;
+            MeleeChaserAi enemyAi = null;
+            AllyAi allyAi = null;
+            void EnsureAi(World w)
+            {
+                if (enemyAi != null) return;
+                enemyAi = new MeleeChaserAi(w, Config, sight, Statuses, enemiesBook, Spells, new BresenhamTargetingRule()); // 3-13a: 투명 · 3-17b 행동
+                allyAi = new AllyAi(w, Config, sight); // 3-13b 분신
+                if (shopConfig != null) // 3-29: 화난 상인 = 물건을 쓰며 쫓아옴 (근접은 적 AI)
+                    keeperAi = new ShopkeeperAi(w, Config, new ConsumableRules(Items, aiConsumableConfig, Statuses, Terrains, aiProgression, sight, allyAi, Spells),
+                        new BresenhamTargetingRule(), sight, shopConfig, enemyAi);
+            }
+            System.Func<World, EntityId, ICommandSource> aiFactory = (w, id) =>
+            {
+                EnsureAi(w);
+                return !w.Units.TryGet(id, out var u) ? enemyAi : u.Faction == Faction.Ally ? allyAi
+                    : keeperAi != null && u.Faction == Faction.Enemy && u.VisualId == shopConfig.KeeperVisualId ? keeperAi // 3-29 화난 상인
+                    : u.Faction == Faction.Neutral ? new ProjectM.Dungeon.IdleNeutralAi() : (ICommandSource)enemyAi; // 떠났던 층의 분신 · 상인
+            };
+            if (restoring)
+            {
+                World = World.Restore(snapshot, aiFactory);
+                afterRestore?.Invoke(World); // 3-28c 타임머신: 지금의 배낭 · 유물 · 바닥 아이템을 옮김 (화면 알림 전)
+                Floor = null;
+            }
+            else
+            {
+                DungeonFloor floor = null;
+                World = World.Create(seed, rng =>
+                {
+                    floor = generator.Generate(rng, stairsUp: false, stairsDown: dungeonConfig.FloorCount > 1);
+                    return floor.Map;
+                });
+                Floor = floor;
+                World.Run.Mode = mode; // 3-27: 판 시작 때 고정 (스냅샷 v27)
+            }
+            EnsureAi(World);
             var progression = _progressionConfig != null ? _progressionConfig.ToConfig() : null;
             var hunger = _hungerConfig != null ? _hungerConfig.ToConfig() : null; // 3-14
             var vision = World.InstallCoreSystems(sight, Magic, Statuses, Terrains, progression, _terrainCatalog.ToFireSpread(), hunger); // 3-11b 불 번짐 · 3-14 허기
+            _vision = vision; // 디버그 순간이동 뒤 시야
+            _progression = progression; // 디버그 레벨
+            World.DebugInvulnerable = _debugInvulnerable; // 디버그 무적 (저장 안 함 — 판마다 다시)
             var lootRules = _lootConfig != null ? _lootConfig.ToConfig() : null;
             // 3-14 · 3-15a: 바닥 고기 요리 · 적이 고기 · 금화 떨어뜨리기 (규칙 연결)
             World.SetItemRules((element, cells) => { if (hunger != null) ProjectM.Units.Hunger.TransformFloorItems(World, Items, element, cells); },
@@ -241,10 +546,11 @@ namespace ProjectM
                 {
                     if (hunger != null) ProjectM.Units.Hunger.DropFood(World, hunger, dead);
                     if (lootRules != null) Loot.DropGold(World, lootRules, dead);
+                    if (lootRules != null && World.Run.BossId.IsValid && dead.Id == World.Run.BossId) Loot.DropBossRelic(World, Items, lootRules, dead.Pos); // 3-28a 구역 보스 보상
+                    AngryShopkeeper.DropStock(World, dead); // 3-29 화난 상인을 이기면 물건 전부
                 },
                 pos => { if (lootRules != null) Loot.DropSeed(World, lootRules, pos); }); // 3-16b
             var consumableConfig = _consumableConfig != null ? _consumableConfig.ToConfig() : ConsumableConfig.Default;
-            var allyAi = new AllyAi(World, Config, sight); // 3-13b 분신
             var consumables = new ConsumableRules(Items, consumableConfig, Statuses, Terrains, progression, sight, allyAi, Spells); // 3-9 물약 · 주문서 효과
 
             // 3-4a: 적 재생성(⑤) · 계단 사용(틱 밖 — 입력이 부른다)
@@ -255,18 +561,15 @@ namespace ProjectM
             if (zones != null && zones.FloorCount != dungeonConfig.FloorCount)
                 Debug.LogWarning($"[GameRoot] 구역 표의 층 수 {zones.FloorCount} ≠ DungeonGenConfig 층 수 {dungeonConfig.FloorCount}", this);
             var kindRng = World.Rng.Get(RngStream.EnemyKind);
-            var enemies = _zoneCatalog != null ? _zoneCatalog.ToEnemyBook() : null; // 3-17b 적 종류 행동
-            if (enemies != null && _ghost != null) enemies = enemies.With(GhostBoss.Traits(_ghost)); // 3-23b 그림자 보스 행동
-            if (enemies != null) World.SetEnemyRules(new EnemyRules(enemies, Spells, Statuses, Terrains));
+            if (enemiesBook != null) World.SetEnemyRules(new EnemyRules(enemiesBook, Spells, Statuses, Terrains));
+            if (keeperAi != null) World.SetShopRules(new ShopRules(shopConfig, zones, keeperAi, Items)); // 3-29 화난 상인
             _unitVisuals.Clear();
             _enemyNames = _zoneCatalog != null ? _zoneCatalog.DisplayNames() : new System.Collections.Generic.Dictionary<string, string>();
             if (_ghost != null) _enemyNames[_ghost.VisualId] = _ghost.DisplayName; // 3-23b "루멘의 그림자 #12"
+            if (shopConfig != null && !_enemyNames.ContainsKey(shopConfig.KeeperVisualId)) _enemyNames[shopConfig.KeeperVisualId] = HudText.KeeperName; // 3-29 화난 상인 로그 이름
             HudText.EnemyName = id => _unitVisuals.TryGetValue(id, out var v) && _enemyNames.TryGetValue(v, out var n) ? n : null;
-            var enemyAi = new MeleeChaserAi(World, Config, sight, Statuses, enemies, Spells, new BresenhamTargetingRule()); // 3-13a: 투명 · 3-17b 행동
-            System.Func<World, EntityId, ICommandSource> aiFactory = (w, id) =>
-                !w.Units.TryGet(id, out var u) ? enemyAi : u.Faction == Faction.Ally ? allyAi
-                : u.Faction == Faction.Neutral ? new ProjectM.Dungeon.IdleNeutralAi() : (ICommandSource)enemyAi; // 떠났던 층의 분신 · 상인
             World.Scheduler.AddSystem(TickPhase.ManaRegen, new EnemyRespawnSystem(World, spawn, enemyDef, enemyAi, sight, dungeonConfig.FloorCount, zones));
+            World.Scheduler.AddSystem(TickPhase.ManaRegen, new TimeRelicSystem(World, Items)); // 3-28c 시간 유물 정지 · 가속 · 게이지
             var loot = _lootConfig != null ? _lootConfig.ToConfig() : null;
             if (loot != null) World.Scheduler.AddSystem(TickPhase.ManaRegen, new ItemPickupSystem(World, Items)); // 3-5: 걸어 들어가면 줍기
             var decor = _floorDecorConfig != null ? _floorDecorConfig.ToConfig() : null;
@@ -278,7 +581,9 @@ namespace ProjectM
             var stairs = new FloorTransition(World, generator, dungeonConfig.FloorCount, enemyDef, spawn, aiFactory, vision, _bossDef.ToDef(), loot,
                 decor, water, traps, _floorDecorConfig != null ? _floorDecorConfig.ToShop() : null, Items, zones, Terrains, // 3-15c 상점 · 3-17a 구역 · 3-18 구역별 웅덩이
                 _ghost, _ghost != null && _zoneCatalog != null
-                    ? GhostBoss.ToUnitDef(_ghost, _zoneCatalog.GhostHpPercent, _zoneCatalog.GhostExpReward, _zoneCatalog.GhostExpMaxLevel) : null); // 3-23b 그림자 보스
+                    ? GhostBoss.ToUnitDef(_ghost, _zoneCatalog.GhostHpPercent, _zoneCatalog.GhostExpReward, _zoneCatalog.GhostExpMaxLevel) : null, // 3-23b 그림자 보스
+                _workbench); // 3-28b 작업실
+            _stairs = stairs; // 디버그 다음 층
 
             if (_pixelMap != null) _pixelMap.Bind(World.Events); // P-3a 2D 맵 — 3D 맵은 묶지 않음
             else _tilemapPresenter.Bind(World.Events, World.Floor); // G-15: 구역 타일 세트 (이어하기 = 저장된 층)
@@ -297,7 +602,81 @@ namespace ProjectM
             World.Events.Subscribe<StairsUnsealedEvent>(OnStairsUnsealed); // 3-21b: 선택 층 보스 처치 → 형태 선택
             World.Events.Subscribe<LevelUpEvent>(OnLevelUp); // 3-21c: 특성 점수 안내
             World.SetClassRules(Classes); // 3-21c: 특성 효과 조회 (규칙 연결 — 저장 안 함)
+            World.SetRelicRules(Items); // 3-28a: 유물 효과 조회 (규칙 연결 — 저장 안 함)
+            _input.WorkbenchRequested = OpenWorkbench; // 3-28b 제작대에 부딪힘 → 창
+            _input.TimeMachineRequested = OpenTimeMachine; // 3-28c 타임머신 → 몇 턴 전 창
+            var consumableConfigForRun = consumableConfig;
 
+            Unit player;
+            if (restoring)
+            {
+                // 3-27 이어하기: 저장된 판 그대로 — 화면에 지금 층 전체를 알린다
+                if (!PlayerActions.TryGetPlayer(World, out player)) throw new System.InvalidOperationException("저장에 플레이어가 없다.");
+                _characterName = CharacterNameOf(player.VisualId);
+                FloorTransition.AnnounceRestored(World);
+                _playerId = player.Id;
+                _player = player;
+                _playerDead = false;
+                _runEnded = false;
+            }
+            else
+            {
+                player = SpawnNewRun(visualId, characterSpells, classId, decor, water, traps, zones, kindRng, spawn, enemyDef, enemyAi, hunger, loot, dungeonConfig, consumableConfigForRun);
+            }
+            vision.Refresh(); // 첫 시야 — 이후는 매 틱 ⑥ 단계에서
+
+            _hudText.Run = World.Run; // 3-9: 모르는 물약 · 주문서는 겉모습 이름으로
+            _hud.Bind(World.Events, player, Spells, _hudText, progression, World.Floor); // G-18: 층 표시판 (이어하기 = 저장된 층)
+            // 3-27: 판의 시계 — 턴제(행동 = 틱) / 실시간(1초 = 1틱, 플레이어 즉시 행동)
+            ITickClock clock;
+            if (World.Run.Mode == RunMode.RealTime)
+            {
+                _realTime = new RealTimeClock(World.Scheduler, Config.RealtimeTickIntervalSeconds);
+                clock = _realTime;
+            }
+            else
+            {
+                _realTime = null;
+                clock = new TurnClock(World.Scheduler, World.PlayerInput);
+            }
+            _timeClock = new TimeRelicClock(World, clock, World.Run.Mode == RunMode.RealTime); // 3-28c 시간 유물이 시계를 감쌈
+            _input.Bind(World, Config, _timeClock, sight, Spells, new BresenhamTargetingRule(), Items, Fusions, stairs, consumables, search, hunger, _floorDecorConfig != null ? _floorDecorConfig.ToShop() : null);
+            World.Events.Flush();
+            _savedFlush = -1; // 새 판 · 이어하기 바로 저장
+            if (restoring) _hud.Model?.AddNotice(HudText.RunContinued); // 2026-11-05: 안내 줄이 아니라 로그 (계속 남지 않게)
+            else if (_realTime != null) _hud.Model?.AddNotice(HudText.RealTimeStarted);
+
+            if (_camera != null)
+            {
+                _camera.SetPanBounds(World.Map.Width, World.Map.Height); // 둘러보기 범위 = 맵
+                _camera.SnapToTarget(_entityPresenter.CellCenter(player.Pos));
+            }
+            if (restoring) OpenFormSelectIfReady(bossDefeated: !HasSealedStairs()); // 형태를 고르기 전에 껐으면 다시 묻는다
+        }
+
+        /// <summary>캐릭터 모습 ID → 캐릭터 이름 (3-23b 기록 이름 — 이어하기에서 다시 찾음).</summary>
+        private string CharacterNameOf(string visualId)
+        {
+            if (_characters != null && _characters.Characters != null)
+                foreach (var c in _characters.Characters)
+                    if (c.VisualId == visualId) return string.IsNullOrEmpty(c.DisplayName) ? c.Id : c.DisplayName;
+            return visualId;
+        }
+
+        private bool HasSealedStairs()
+        {
+            var map = World.Map;
+            for (int y = 0; y < map.Height; y++)
+                for (int x = 0; x < map.Width; x++)
+                    if (map.Get(new GridPos(x, y)) == TileType.SealedStairs) return true;
+            return false;
+        }
+
+        /// <summary>새 판 (3-27 이전 StartNewRun 그대로): 1층 꾸미기 → 플레이어 · 적 → 직업 · 갑옷 · 식량 → 배치 계획 · 1층 아이템. 플레이어를 돌려준다.</summary>
+        private Unit SpawnNewRun(string visualId, System.Collections.Generic.IReadOnlyList<string> characterSpells, string classId,
+            FloorDecorConfig decor, TerrainDef water, TrapBook traps, ProjectM.Dungeon.ZoneBook zones, IRng kindRng, SpawnConfig spawn, UnitDef enemyDef,
+            ICommandSource enemyAi, HungerConfig hunger, LootConfig loot, DungeonGenConfig dungeonConfig, ConsumableConfig consumableConfig)
+        {
             World.Events.Publish(new MapLoadedEvent(World.Map));
             if (decor != null) FloorDecor.Apply(World, Floor, decor, water, traps); // 3-11a · 3-12a: MapLoaded 뒤에 (화면이 지우지 않게), 적 배치 전
             var playerDef = _playerDef.ToDef();
@@ -339,24 +718,14 @@ namespace ProjectM
                 if (hunger != null) Loot.PlanFood(World, Items, hunger, dungeonConfig.FloorCount); // 3-14: 층마다 식량 1 + 가끔 빵 (앞 계획 뒤)
             }
             Identification.AssignLooks(World, Items, consumableConfig); // 3-9: 판마다 겉모습 (배치 계획 모두 뒤 — 앞 계획은 그대로)
+            if (loot != null) Loot.PlanRelics(World, Items, loot, dungeonConfig.FloorCount); // 3-28a: 유물 (겉모습 뒤 — 앞 계획 · 겉모습은 그대로)
             if (loot != null)
             {
                 Loot.PlaceFloorItems(World, Floor.Start, loot);
                 Loot.PlaceGold(World, Floor.Start, loot); // 3-15a
                 Loot.PlaceThrown(World, Floor.Start, loot); // 3-16a
             }
-            vision.Refresh(); // 첫 시야 — 이후는 매 틱 ⑥ 단계에서
-
-            _hudText.Run = World.Run; // 3-9: 모르는 물약 · 주문서는 겉모습 이름으로
-            _hud.Bind(World.Events, player, Spells, _hudText, progression, World.Floor); // G-18: 층 표시판 (이어하기 = 저장된 층)
-            _input.Bind(World, Config, new TurnClock(World.Scheduler, World.PlayerInput), sight, Spells, new BresenhamTargetingRule(), Items, Fusions, stairs, consumables, search, hunger, _floorDecorConfig != null ? _floorDecorConfig.ToShop() : null);
-            World.Events.Flush();
-
-            if (_camera != null)
-            {
-                _camera.SetPanBounds(World.Map.Width, World.Map.Height); // 둘러보기 범위 = 맵
-                _camera.SnapToTarget(_entityPresenter.CellCenter(Floor.Start));
-            }
+            return player;
         }
 
         /// <summary>3-17b: 엔티티 → 모습 ID (로그의 적 이름 — 죽은 뒤에도 남겨 둠, 판마다 비움).</summary>
@@ -425,10 +794,13 @@ namespace ProjectM
         /// 3-21b: 선택 층 보스를 쓰러뜨려 봉인 계단이 열리면, 아직 형태를 안 고른 직업이면 형태 선택 창을 연다 (캐릭터 선택 창을 같이 씀).
         /// 고르면 틱 밖 변경(ClassForms.Choose) 뒤 이벤트를 비운다. 창이 열린 동안 입력은 PresentationBusy로 막힌다.
         /// </summary>
-        private void OnStairsUnsealed(StairsUnsealedEvent e)
+        private void OnStairsUnsealed(StairsUnsealedEvent e) => OpenFormSelectIfReady(bossDefeated: true);
+
+        /// <summary>형태를 고를 때면 형태 선택 창 (봉인 계단 열림 · 3-27 이어하기 — 고르기 전에 껐을 때).</summary>
+        private void OpenFormSelectIfReady(bool bossDefeated)
         {
             if (_characterSelect == null || Classes == null || _player == null) return;
-            if (ClassForms.CanChoose(World, Classes, bossDefeated: true) != ChooseFormResult.Chosen) return;
+            if (ClassForms.CanChoose(World, Classes, bossDefeated) != ChooseFormResult.Chosen) return;
             if (!_classCatalog.TryGetClass(World.Run.ClassId, out var entry) || entry.Forms == null || entry.Forms.Count == 0) return;
             var names = new System.Collections.Generic.List<string>();
             var details = new System.Collections.Generic.List<string>();
@@ -443,7 +815,7 @@ namespace ProjectM
                 if (World != world || _player == null) return; // 그새 새 판
                 ClassForms.Choose(World, Classes, Spells, _player, entry.Forms[index].Id);
                 World.Events.Flush();
-            }, title: HudText.FormSelectTitle, hint: HudText.FormSelectHint, details: details);
+            }, title: HudText.FormSelectTitle(_characterName), hint: HudText.FormSelectHint, details: details);
         }
 
         /// <summary>남은 특성 점수 (모든 단계 — 2단계는 형태를 고른 뒤에만 셈).</summary>
@@ -499,10 +871,214 @@ namespace ProjectM
                details: details, onCancel: () => { });
         }
 
+        // ── 시간 유물 (3-28c, 결정 2026-11-05): 시계 감싸기 · 타임머신 기록(게임 중 메모리만 — 층이 바뀌거나 이어하면 비움) · 되돌리기 ──
+
+        private TimeRelicClock _timeClock;
+        /// <summary>틱마다의 스냅샷 (오래된 것부터). 최대 MaxHistory — 타임머신 +3 게이지(15)보다 하나 더.</summary>
+        private readonly System.Collections.Generic.List<(long tick, int floor, byte[] bytes)> _history = new System.Collections.Generic.List<(long, int, byte[])>();
+        private const int MaxHistory = 16;
+
+        private void RecordHistory()
+        {
+            if (World == null || _runEnded || _playerDead || !_playerId.IsValid) return;
+            long tick = World.Scheduler.CurrentTick;
+            if (_history.Count > 0 && _history[_history.Count - 1].floor != World.Floor) _history.Clear(); // 층이 바뀜
+            if (_history.Count > 0 && _history[_history.Count - 1].tick == tick) return;
+            try
+            {
+                _history.Add((tick, World.Floor, WorldSnapshotCodec.Encode(World.Capture())));
+                if (_history.Count > MaxHistory) _history.RemoveAt(0);
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogWarning($"[GameRoot] 타임머신 기록 실패: {ex.Message}");
+            }
+        }
+
+        /// <summary>타임머신: "n턴 전" 카드 (n ≤ 게이지 · 기록). 고르면 그 턴의 세계로 — 배낭 · 유물 · 게이지 · 바닥 아이템 · 에테르 · 금화는 지금 그대로.</summary>
+        private void OpenTimeMachine(string relicId)
+        {
+            if (_characterSelect == null || _player == null || _runEnded) return;
+            int slot = TimeRelics.WornSlot(_player, relicId);
+            if (slot < 0) return;
+            int charge = TimeRelics.Charge(World, Items, _player.Relics[slot]);
+            long now = World.Scheduler.CurrentTick;
+            var choices = new System.Collections.Generic.List<int>();
+            foreach (var h in _history)
+            {
+                int turns = (int)(now - h.tick);
+                if (turns >= 1 && turns <= charge && h.floor == World.Floor) choices.Add(turns);
+            }
+            choices.Sort();
+            if (choices.Count == 0)
+            {
+                _hud.SetHint(HudText.TimeMachineNoHistory);
+                return;
+            }
+            var names = new System.Collections.Generic.List<string>();
+            var details = new System.Collections.Generic.List<string>();
+            foreach (var n in choices)
+            {
+                names.Add(HudText.TimeMachineTurns(n));
+                details.Add(HudText.TimeMachineDetail + "\n\n" + HudText.TimeRelicGauge(charge - n, TimeRelics.MaxCharge(Items, _player.Relics[slot])));
+            }
+            var world = World;
+            _characterSelect.Open(null, names, 0, index =>
+            {
+                if (World != world || _player == null) return;
+                Rewind(relicId, choices[index]);
+            }, title: HudText.TimeMachineTitle(charge), hint: HudText.WorkbenchHint, details: details, onCancel: () => { });
+        }
+
+        private void Rewind(string relicId, int turns)
+        {
+            long target = World.Scheduler.CurrentTick - turns;
+            int at = _history.FindLastIndex(h => h.tick == target && h.floor == World.Floor);
+            if (at < 0) return;
+            if (TimeRelics.SpendRewind(World, Items, _player, relicId, turns) != TimeRelicResult.Done) return;
+            var oldWorld = World;
+            var oldPlayer = _player;
+            var past = WorldSnapshotCodec.Decode(_history[at].bytes);
+            var kept = _history.GetRange(0, at); // 그 앞 기록은 계속 쓸 수 있다
+            BeginRun(past, null, null, null, past.Mode, past.RngSeed, w =>
+            {
+                if (PlayerActions.TryGetPlayer(w, out var p)) TimeRelics.CarryOver(oldWorld, oldPlayer, w, p);
+            });
+            _history.AddRange(kept);
+            _hud.Model?.AddNotice(HudText.TimeMachineRewound(turns));
+        }
+
+        // ── 마법 제작대 (3-28b, 결정 2026-11-05): 만들기 · 강화 · 분해 — 카드 창(형태 · 특성 창과 같음), 모두 틱 밖 ──
+
+        private WorkbenchConfig _workbench;
+
+        private System.Collections.Generic.List<string> RelicIds()
+        {
+            var ids = new System.Collections.Generic.List<string>();
+            foreach (var id in Items.Ids) if (Relics.IsRelic(Items, id)) ids.Add(id);
+            return ids;
+        }
+
+        private string RelicEffectsText(string id, int upgrade)
+        {
+            var lines = new System.Collections.Generic.List<string>();
+            foreach (var e in Relics.EffectsOf(Items, id)) lines.Add(HudText.RelicEffect(e, 1 + upgrade));
+            return string.Join("\n", lines);
+        }
+
+        /// <summary>제작대 첫 창: 만들기 · 강화 · 분해 (Esc 닫기).</summary>
+        private void OpenWorkbench()
+        {
+            if (_characterSelect == null || _workbench == null || _player == null || _runEnded) return;
+            var names = new System.Collections.Generic.List<string> { HudText.WorkbenchCraft, HudText.WorkbenchUpgrade, HudText.WorkbenchDisassemble };
+            var details = new System.Collections.Generic.List<string>
+            {
+                HudText.WorkbenchCraftDetail(_workbench.CraftCost),
+                HudText.WorkbenchUpgradeDetail(_workbench.UpgradeCosts),
+                HudText.WorkbenchDisassembleDetail(_workbench.DisassembleGain),
+            };
+            var world = World;
+            _characterSelect.Open(null, names, 0, index =>
+            {
+                if (World != world || _player == null) return;
+                if (index == 0) OpenWorkbenchCraft();
+                else if (index == 1) OpenWorkbenchUpgrade();
+                else OpenWorkbenchDisassemble();
+            }, title: HudText.WorkbenchTitle(World.Run.Ether), hint: HudText.WorkbenchHint, details: details, onCancel: () => { });
+        }
+
+        private void OpenWorkbenchCraft()
+        {
+            var ids = RelicIds();
+            if (ids.Count == 0) return;
+            var names = new System.Collections.Generic.List<string>();
+            var details = new System.Collections.Generic.List<string>();
+            foreach (var id in ids)
+            {
+                names.Add(_hudText.Item(id));
+                details.Add(RelicEffectsText(id, 0) + "\n\n" + HudText.EtherCost(_workbench.CraftCost));
+            }
+            var world = World;
+            _characterSelect.Open(null, names, 0, index =>
+            {
+                if (World != world || _player == null) return;
+                AfterWorkbench(Workbench.Craft(World, Items, _workbench, _player, ids[index]));
+            }, title: HudText.WorkbenchTitle(World.Run.Ether), hint: HudText.WorkbenchHint, details: details, onCancel: OpenWorkbench);
+        }
+
+        /// <summary>강화 대상: 낀 유물(칸) → 배낭 유물(칸 번호) 순.</summary>
+        private void OpenWorkbenchUpgrade()
+        {
+            var targets = new System.Collections.Generic.List<(int slot, int index, InventoryRef relic)>();
+            for (int i = 0; i < _player.Relics.Length; i++)
+                if (!_player.Relics[i].IsEmpty) targets.Add((i, -1, _player.Relics[i]));
+            for (int i = 0; i < _player.InventorySlots.Length; i++)
+                if (_player.InventorySlots[i].Kind == InventoryKind.Item && Relics.IsRelic(Items, _player.InventorySlots[i].Id)) targets.Add((-1, i, _player.InventorySlots[i]));
+            if (targets.Count == 0)
+            {
+                _hud.SetHint(HudText.NoRelics);
+                OpenWorkbench();
+                return;
+            }
+            var names = new System.Collections.Generic.List<string>();
+            var details = new System.Collections.Generic.List<string>();
+            foreach (var t in targets)
+            {
+                names.Add(_hudText.Entry(t.relic) + (t.slot >= 0 ? HudText.RelicWornMark : string.Empty));
+                int cost = _workbench.UpgradeCost(t.relic.Upgrade);
+                details.Add(cost < 0 ? RelicEffectsText(t.relic.Id, t.relic.Upgrade) + "\n\n" + HudText.RelicMaxUpgrade
+                    : $"{RelicEffectsText(t.relic.Id, t.relic.Upgrade)}\n→ {RelicEffectsText(t.relic.Id, t.relic.Upgrade + 1)}\n\n{HudText.EtherCost(cost)}");
+            }
+            var world = World;
+            _characterSelect.Open(null, names, 0, index =>
+            {
+                if (World != world || _player == null) return;
+                var t = targets[index];
+                AfterWorkbench(Workbench.Upgrade(World, Items, _workbench, _player, t.slot, t.index));
+            }, title: HudText.WorkbenchTitle(World.Run.Ether), hint: HudText.WorkbenchHint, details: details, onCancel: OpenWorkbench);
+        }
+
+        private void OpenWorkbenchDisassemble()
+        {
+            var indices = new System.Collections.Generic.List<int>();
+            for (int i = 0; i < _player.InventorySlots.Length; i++)
+                if (_player.InventorySlots[i].Kind == InventoryKind.Item && Relics.IsRelic(Items, _player.InventorySlots[i].Id)) indices.Add(i);
+            if (indices.Count == 0)
+            {
+                _hud.SetHint(HudText.NoRelicsInBackpack);
+                OpenWorkbench();
+                return;
+            }
+            var names = new System.Collections.Generic.List<string>();
+            var details = new System.Collections.Generic.List<string>();
+            foreach (var i in indices)
+            {
+                var r = _player.InventorySlots[i];
+                names.Add(_hudText.Entry(r));
+                details.Add(RelicEffectsText(r.Id, r.Upgrade) + "\n\n" + HudText.EtherGain(_workbench.DisassembleGain));
+            }
+            var world = World;
+            _characterSelect.Open(null, names, 0, index =>
+            {
+                if (World != world || _player == null) return;
+                AfterWorkbench(Workbench.Disassemble(World, Items, _workbench, _player, indices[index]));
+            }, title: HudText.WorkbenchTitle(World.Run.Ether), hint: HudText.WorkbenchHint, details: details, onCancel: OpenWorkbench);
+        }
+
+        /// <summary>제작대 결과: 이벤트를 비우고(로그 · 저장), 안 됐으면 이유 — 첫 창으로 돌아간다.</summary>
+        private void AfterWorkbench(WorkbenchResult result)
+        {
+            World.Events.Flush();
+            _hud.SetHint(result == WorkbenchResult.Done ? string.Empty : HudText.WorkbenchFailed(result));
+            OpenWorkbench();
+        }
+
         /// <summary>판이 끝남 (3-4b): 입력을 멈추고 결과 화면. R로 새 판.</summary>
         private void OnRunEnded(RunEndedEvent e)
         {
             _runEnded = true;
+            _realTime = null; // 3-27: 실시간 시계 멈춤
+            if (_slot > 0) RunSaveStore.Delete(_slot); // 3-27 · 3-30: 패배 · 승리 = 그 슬롯을 비움 (되돌리기 없음)
             _input.Unbind();
             _result.Show(ResultModel.From(World, Seed, _player, _hudText));
             Debug.Log($"[GameRoot] 판 끝: {e.Outcome} — R로 새 판");

@@ -32,8 +32,11 @@ namespace ProjectM.Data
         [Tooltip("찾기 행동 비용 (틱)")] [Min(1)] [SerializeField] private int _searchCostTicks = 2;
         [Tooltip("저절로 발견: 반경 안의 숨겨진 것마다 매 턴 확률 %")] [Range(0, 100)] [SerializeField] private int _passiveSearchPercent = 10;
         [Tooltip("저절로 발견 반경 (칸)")] [Min(0)] [SerializeField] private int _passiveSearchRadius = 1;
+        [Tooltip("빠른 찾기(정보 모드에서 E 한 번 더, 3-24) 반경 (칸)")] [Min(0)] [SerializeField] private int _quickSearchRadius = 1;
+        [Tooltip("빠른 찾기 비용 (틱)")] [Min(1)] [SerializeField] private int _quickSearchCostTicks = 1;
 
-        public SearchConfig ToSearch() => new SearchConfig(_searchRadius, _searchCostTicks, _passiveSearchPercent, _passiveSearchRadius);
+        public SearchConfig ToSearch() => new SearchConfig(_searchRadius, _searchCostTicks, _passiveSearchPercent, _passiveSearchRadius,
+            _quickSearchRadius, _quickSearchCostTicks);
 
         public TrapBook ToBook(SpellBook spells)
         {

@@ -99,6 +99,14 @@ namespace ProjectM.Core
                 // 18 (3-12a): 함정
                 WriteTraps(w, snapshot.Traps);
                 w.Write(snapshot.Gold); // 21 (3-15a)
+                w.Write((int)snapshot.Mode); // 27 (3-27)
+                w.Write(snapshot.Ether); // 29 (3-28b)
+                w.Write(snapshot.RelicCharges.Length); // 30 (3-28c)
+                foreach (var c in snapshot.RelicCharges)
+                {
+                    w.Write(c.TalentId ?? string.Empty);
+                    w.Write(c.Points);
+                }
                 w.Write(snapshot.ClassId ?? string.Empty); // 24 (3-21b)
                 w.Write(snapshot.FormId ?? string.Empty);
                 w.Write(snapshot.Talents.Length); // 25 (3-21c)
@@ -199,6 +207,14 @@ namespace ProjectM.Core
 
                 s.Traps = ReadTraps(r);
                 s.Gold = r.ReadInt32();
+                s.Mode = (RunMode)r.ReadInt32(); // 27 (3-27)
+                s.Ether = r.ReadInt32(); // 29 (3-28b)
+                s.RelicCharges = new TalentPoint[ReadCount(r)]; // 30 (3-28c)
+                for (int i = 0; i < s.RelicCharges.Length; i++)
+                {
+                    var relicId = r.ReadString();
+                    s.RelicCharges[i] = new TalentPoint(relicId, r.ReadInt32());
+                }
                 var classId = r.ReadString(); // 24 (3-21b)
                 s.ClassId = classId.Length > 0 ? classId : null;
                 var formId = r.ReadString();
@@ -357,6 +373,12 @@ namespace ProjectM.Core
                 w.Write(u.Hunger); // 20 (3-14)
                 WriteOptionalPos(w, u.ChargeTarget); // 23 (3-17d)
                 w.Write(u.Summoned);
+                WriteRefs(w, u.Relics); // 28 (3-28a)
+                w.Write(u.TimeFrozenTicks); // 30 (3-28c)
+                w.Write(u.AccelTicks);
+                w.Write(u.AccelActions);
+                w.Write(u.AccelUsed);
+                w.Write(u.StopActions);
             }
         }
 
@@ -411,9 +433,11 @@ namespace ProjectM.Core
                 int hunger = r.ReadInt32(); // 20 (3-14)
                 var chargeTarget = ReadOptionalPos(r); // 23 (3-17d)
                 bool summoned = r.ReadBoolean();
+                var relics = ReadRefs(r); // 28 (3-28a)
+                int frozen = r.ReadInt32(), accelTicks = r.ReadInt32(), accelActions = r.ReadInt32(), accelUsed = r.ReadInt32(), stopActions = r.ReadInt32(); // 30 (3-28c)
                 units[i] = new UnitState(id, faction, visualId, maxHp, attackDamage, sightRange, x, y, hp, hasLastSeen, lastSeenX, lastSeenY,
                     maxMana, mana, inventory, quick, previousPos, wanderTarget, statuses, accuracy, evasion, expReward, expMaxLevel, level, exp, weapon, strength, armor, hunger,
-                    chargeTarget, summoned);
+                    chargeTarget, summoned, relics, frozen, accelTicks, accelActions, accelUsed, stopActions);
             }
             return units;
         }

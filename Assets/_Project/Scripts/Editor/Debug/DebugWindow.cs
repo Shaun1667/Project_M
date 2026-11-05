@@ -50,6 +50,8 @@ namespace ProjectM.Editor.Debugging
             EditorGUILayout.Space();
             DrawView(root);
             EditorGUILayout.Space();
+            DrawCheats(root);
+            EditorGUILayout.Space();
             DrawInventory(root);
             EditorGUILayout.Space();
             DrawMana(root);
@@ -73,6 +75,72 @@ namespace ProjectM.Editor.Debugging
                 ProjectM.Magic.Mana.Restore(root.World, player, player.MaxMana - player.Mana);
                 root.World.Events.Flush(); // 틱 밖 변경 → HUD에 바로 보이게
             }
+        }
+
+        /// <summary>
+        /// [상태 변경] 무적 · 레벨 · 순간이동 (2026-11-05): 무적은 플레이어 피해 0(저장 안 함, 새 판에도 유지),
+        /// 레벨은 경험치를 주는 평소 경로(레벨업 보상 그대로 — 내리기는 없음), 순간이동은 버튼을 누른 뒤 게임 화면의 칸을 클릭.
+        /// </summary>
+        private static void DrawCheats(GameRoot root)
+        {
+            EditorGUILayout.LabelField("[상태 변경] 무적 · 레벨 · 힘 · 층 · 순간이동", EditorStyles.boldLabel);
+            if (!root.World.Units.TryGet(root.PlayerId, out var player))
+            {
+                EditorGUILayout.HelpBox("플레이어가 없다.", MessageType.None);
+                return;
+            }
+
+            using (new EditorGUI.IndentLevelScope())
+            {
+                bool invulnerable = EditorGUILayout.ToggleLeft(
+                    new GUIContent("무적", "플레이어가 피해를 받지 않는다 (공격 · 주문 · 반응 · 상태 · 지형 · 허기 모두). 저장되지 않는다."),
+                    root.DebugInvulnerable);
+                if (invulnerable != root.DebugInvulnerable) root.DebugInvulnerable = invulnerable;
+
+                int max = root.DebugMaxLevel;
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    EditorGUILayout.LabelField("레벨", max > 0 ? $"{player.Level} / {max}" : "경험치 설정 없음");
+                    using (new EditorGUI.DisabledScope(max <= 0 || player.Level >= max))
+                    {
+                        if (GUILayout.Button("+1", GUILayout.Width(40))) root.DebugAddLevels(1);
+                        if (GUILayout.Button("+5", GUILayout.Width(40))) root.DebugAddLevels(5);
+                        if (GUILayout.Button("최대", GUILayout.Width(48))) root.DebugAddLevels(max);
+                    }
+                }
+
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    EditorGUILayout.LabelField("힘", player.Strength.ToString());
+                    using (new EditorGUI.DisabledScope(player.Strength <= 1))
+                        if (GUILayout.Button("−", GUILayout.Width(40))) root.DebugAddStrength(-1);
+                    if (GUILayout.Button("+", GUILayout.Width(40))) root.DebugAddStrength(1);
+                }
+
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    EditorGUILayout.LabelField("층", root.World.Floor.ToString());
+                    using (new EditorGUI.DisabledScope(!root.DebugHasNextFloor))
+                        if (GUILayout.Button("다음 층으로", GUILayout.Width(100)) && !root.DebugNextFloor())
+                            Debug.LogWarning("[DebugWindow] 다음 층으로 가지 못함 — 입력 처리 중이거나 마지막 층");
+                }
+
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    EditorGUILayout.LabelField("순간이동", root.DebugTeleportPending ? "게임 화면에서 칸 클릭 (Esc = 취소)" : player.Pos.ToString());
+                    using (new EditorGUI.DisabledScope(root.DebugTeleportPending))
+                    {
+                        if (GUILayout.Button("칸 고르기", GUILayout.Width(80)) && root.DebugBeginTeleport())
+                            FocusGameView(); // 바로 클릭할 수 있게
+                    }
+                }
+            }
+        }
+
+        private static void FocusGameView()
+        {
+            var gameView = System.Type.GetType("UnityEditor.GameView,UnityEditor");
+            if (gameView != null) FocusWindowIfItsOpen(gameView);
         }
 
         private int _spellPick;

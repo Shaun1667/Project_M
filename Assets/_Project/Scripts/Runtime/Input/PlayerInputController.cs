@@ -88,6 +88,17 @@ namespace ProjectM.Input
         }
         /// <summary>찾기 키 (3-12b) — S는 이동(WASD)이라 Z.</summary>
         private const Key SearchKey = Key.Z;
+        private const Key AttackKey = Key.Q; // 3-25 공격 대상 (SPD)
+        // 3-25: 마지막에 공격한 적 / 지금 표시 중인 적 / 표시 칸 그림 — 화면 편의라 저장하지 않음
+        private EntityId _lastAttacked;
+        private EntityId _shownTarget;
+        private string _shownText;
+        private bool _marking;
+        private GridPos _markedPos;
+        private const Key ExamineKey = Key.E; // 3-24 정보 모드 (SPD)
+        private static readonly Key[] ExamineCursorKeys = { Key.UpArrow, Key.DownArrow, Key.RightArrow, Key.LeftArrow };
+        private bool _examining;
+        private GridPos _examineCursor;
         private bool _stairsHintShown;
 
         private static readonly Key[] StairsKeys = { Key.Enter, Key.NumpadEnter };
@@ -110,6 +121,68 @@ namespace ProjectM.Input
 
         /// <summary>HUD에 보일 안내 한 줄 (조준 안내 · 시전 불가 이유 · 인벤토리 안내). 빈 문자열 = 지움.</summary>
         public event System.Action<string> HintChanged;
+
+        /// <summary>정보 모드 칸 설명 (3-24). 빈 문자열 = 창 닫기. GameRoot가 HudPresenter.SetInfo에 연결.</summary>
+        public event System.Action<string> InfoChanged;
+
+        /// <summary>마법 제작대에 부딪혔다 (3-28b). GameRoot가 만들기 · 강화 · 분해 창을 연다. null이면 아무 일 없음.</summary>
+        public System.Action WorkbenchRequested { get; set; }
+        public bool IsExamining => _examining;
+
+        private System.Func<GridPos, bool> _cellPick;
+        private string _cellPickHint;
+
+        /// <summary>칸 고르기를 기다리는 중 (디버그 순간이동, 2026-11-05).</summary>
+        public bool IsPickingCell => _cellPick != null;
+
+        /// <summary>
+        /// 다음 맵 클릭 칸을 onPicked에 넘긴다 (디버그 창 순간이동). onPicked가 false면(못 가는 칸) 계속 기다린다. Esc · 오른쪽 클릭 = 취소.
+        /// 다른 입력(이동 · 조준 · 정보 모드)은 고르는 동안 받지 않는다. 시작했으면 true.
+        /// </summary>
+        public bool BeginCellPick(System.Func<GridPos, bool> onPicked, string hint)
+        {
+            if (onPicked == null || _world == null) return false;
+            EndExamine();
+            CancelPath();
+            CancelAim();
+            _cellPick = onPicked;
+            _cellPickHint = hint ?? "";
+            Hint(_cellPickHint);
+            return true;
+        }
+
+        /// <summary>입력 밖에서 층이 바뀌었을 때 (디버그 다음 층): 걷던 길 · 조준 · 정보 모드 · 칸 고르기를 끝낸다.</summary>
+        public void ResetAfterFloorChange()
+        {
+            CancelPath();
+            CancelAim();
+            EndExamine();
+            if (_cellPick != null) EndCellPick();
+        }
+
+        private void EndCellPick()
+        {
+            _cellPick = null;
+            Hint("");
+        }
+
+        /// <returns>칸 고르기 중이면 true (이번 프레임 입력을 썼음).</returns>
+        private bool HandleCellPick(Keyboard keyboard, Mouse mouse)
+        {
+            if (_cellPick == null) return false;
+            _pressing = _dragging = false;
+            if ((keyboard != null && keyboard[Key.Escape].wasPressedThisFrame) || (mouse != null && mouse.rightButton.wasPressedThisFrame))
+            {
+                EndCellPick();
+                return true;
+            }
+            if (mouse == null || !mouse.leftButton.wasPressedThisFrame || _camera == null || _grid == null) return true;
+            var screen = mouse.position.ReadValue();
+            if (_hud != null && _hud.QuickSlotAt(screen) >= 0) return true; // HUD 위 클릭은 무시
+            if (_cellPick(ScreenToCell(screen))) EndCellPick();
+            else Hint(_cellPickHint); // 못 가는 칸 — 계속 기다림
+            return true;
+        }
 
         public bool IsAiming => _aimSpellId != null || !_aimThrow.IsEmpty;
 
@@ -170,6 +243,9 @@ namespace ProjectM.Input
             _world.Events.Subscribe<InventoryChangedEvent>(OnInventoryChanged);
             _world.Events.Subscribe<QuickSlotsChangedEvent>(OnQuickSlotsChanged);
             _world.Events.Subscribe<ProjectM.Dungeon.FloorChangedEvent>(OnFloorChanged);
+            _world.Events.Subscribe<UnitDamagedEvent>(OnUnitDamaged);
+            _world.Events.Subscribe<AttackMissedEvent>(OnAttackMissed);
+            _lastAttacked = default;
             _world.Events.Subscribe<EntityMovedEvent>(OnEntityMoved);
         }
 
@@ -216,6 +292,8 @@ namespace ProjectM.Input
         {
             CancelPath();
             CancelAim();
+            EndExamine();
+            ClearAttackTarget();
             _inventory.Close();
             if (_world != null)
             {
@@ -223,6 +301,8 @@ namespace ProjectM.Input
                 _world.Events.Unsubscribe<QuickSlotsChangedEvent>(OnQuickSlotsChanged);
                 _world.Events.Unsubscribe<ProjectM.Dungeon.FloorChangedEvent>(OnFloorChanged);
                 _world.Events.Unsubscribe<EntityMovedEvent>(OnEntityMoved);
+                _world.Events.Unsubscribe<UnitDamagedEvent>(OnUnitDamaged);
+                _world.Events.Unsubscribe<AttackMissedEvent>(OnAttackMissed);
             }
             _world = null;
             _clock = null;
@@ -233,8 +313,11 @@ namespace ProjectM.Input
             if (_world == null) return;
             if (!PlayerActions.TryGetPlayer(_world, out var player))
             {
+                _cellPick = null;
+                EndExamine();
                 CancelPath();
                 CancelAim();
+                ClearAttackTarget();
                 _inventory.Close();
                 return;
             }
@@ -252,15 +335,24 @@ namespace ProjectM.Input
                 HandleInventory(player, keyboard, mouse);
                 return;
             }
+            RefreshAttackTarget(player);
             HandleWheel(mouse);
+            if (HandleCellPick(keyboard, mouse)) return; // 디버그 순간이동 칸 고르기
             if (keyboard != null && (keyboard[Key.I].wasPressedThisFrame || keyboard[Key.F].wasPressedThisFrame)) // 3-10b: F로도 (SPD 배낭)
             {
+                EndExamine();
                 OpenInventory();
                 return;
             }
             if (IsAiming)
             {
                 HandleAim(player, keyboard, mouse);
+                return;
+            }
+            if (_examining && HandleExamine(player, keyboard, mouse)) return;
+            if (keyboard != null && keyboard[ExamineKey].wasPressedThisFrame) // 3-24 정보 모드 (SPD)
+            {
+                BeginExamine(player);
                 return;
             }
             if (keyboard != null)
@@ -271,6 +363,18 @@ namespace ProjectM.Input
                     UseQuickSlot(player, slot);
                     return;
                 }
+                if (keyboard[AttackKey].wasPressedThisFrame) // 3-25 공격 대상 (SPD)
+                {
+                    AttackShownTarget(player);
+                    return;
+                }
+                if (keyboard[Key.Tab].wasPressedThisFrame)
+                {
+                    var next = AttackTargets.Next(_world, _sight, player, _shownTarget);
+                    if (next != null) _lastAttacked = next.Id; // 고른 적을 우선으로
+                    RefreshAttackTarget(player);
+                    return;
+                }
                 if (HandleKeyboard(keyboard)) return;
             }
 
@@ -279,6 +383,7 @@ namespace ProjectM.Input
                 var screen = mouse.position.ReadValue();
                 int slot = _hud != null ? _hud.QuickSlotAt(screen) : -1;
                 if (slot >= 0) UseQuickSlot(player, slot);
+                else if (_hud != null && _hud.AttackIndicatorAt(screen)) AttackShownTarget(player); // 3-25 상자 클릭 = 공격
                 else BeginPress(screen); // 칸 클릭은 놓을 때 — 그 전에 끌면 둘러보기
                 return;
             }
@@ -350,7 +455,45 @@ namespace ProjectM.Input
                 return;
             }
             if (entry.Kind == InventoryKind.Spell) TryStartAim(player, entry.Id, slot);
+            else if (TimeRelics.IsTimeRelic(_items, entry.Id, out _)) UseTimeRelic(player, entry);
             else UseItem(entry);
+        }
+
+        /// <summary>타임머신 (3-28c): 몇 턴 전으로 되돌릴지 고르는 창은 GameRoot (기록 · 다시 연결이 Runtime에 있음).</summary>
+        public System.Action<string> TimeMachineRequested { get; set; }
+
+        /// <summary>
+        /// 시간 유물 발동 (3-28c, 결정 2026-11-05 — 껴야 쓸 수 있음 · 빠른 칸): 틱 밖 — 이벤트를 바로 비운다.
+        /// 회중시계는 발동 뒤 멈춘 턴만큼 시계가 흐른다 (턴제). 끼지 않았거나 게이지가 비면 이유만.
+        /// </summary>
+        private void UseTimeRelic(Unit player, InventoryRef entry)
+        {
+            TimeRelics.IsTimeRelic(_items, entry.Id, out var def);
+            int slot = TimeRelics.WornSlot(player, entry.Id);
+            if (slot < 0)
+            {
+                Hint(Text.TimeRelicNotWorn(entry.Id));
+                return;
+            }
+            if (def.TimeKind == TimeRelicKind.TimeMachine)
+            {
+                if (TimeRelics.Charge(_world, _items, player.Relics[slot]) <= 0) Hint(Text.TimeRelicEmpty(entry.Id, _items.RelicChargeTicks));
+                else TimeMachineRequested?.Invoke(entry.Id);
+                return;
+            }
+            var result = TimeRelics.Activate(_world, _items, player, entry.Id);
+            _world.Events.Flush();
+            if (result == TimeRelicResult.Empty) Hint(Text.TimeRelicEmpty(entry.Id, _items.RelicChargeTicks));
+            else if (result == TimeRelicResult.AlreadyActive) Hint(HudText.TimeRelicBusy);
+            else if (result == TimeRelicResult.Done)
+            {
+                Hint(string.Empty);
+                if (def.TimeKind == TimeRelicKind.PocketWatch && _clock is TimeRelicClock timeClock)
+                {
+                    timeClock.AdvanceWhileFrozen(); // 턴제: 멈춘 턴만큼 세계가 흐른다
+                    _world.Events.Flush();
+                }
+            }
         }
 
         /// <summary>
@@ -368,9 +511,14 @@ namespace ProjectM.Input
                 else Hint(string.Empty); // 배운 내용은 로그에 (SpellLearnedEvent)
                 return;
             }
-            if (_items.TryGet(entry.Id, out var weapon) && (weapon.Use == ItemUse.EquipWeapon || weapon.Use == ItemUse.EquipArmor)
-                && PlayerActions.TryGetPlayer(_world, out var holder)) // 3-10a: 갑옷도 같은 행동 (입기)
+            if (_items.TryGet(entry.Id, out var weapon) && (weapon.Use == ItemUse.EquipWeapon || weapon.Use == ItemUse.EquipArmor || weapon.Use == ItemUse.Relic)
+                && PlayerActions.TryGetPlayer(_world, out var holder)) // 3-10a: 갑옷도 같은 행동 (입기) · 3-28a 유물 (끼기)
             {
+                if (weapon.Use == ItemUse.Relic && Relics.IsWearing(holder, entry.Id))
+                {
+                    Hint(Text.RelicSameKind(entry.Id)); // 같은 종류는 한 칸만 — 차례를 쓰지 않음
+                    return;
+                }
                 // 3-7a: 무기 장착 = 차례 1 (결정 2026-10-19). 인벤토리를 닫고 행동으로 넘긴다
                 int index = System.Array.IndexOf(holder.InventorySlots, entry);
                 CloseInventory();
@@ -645,7 +793,7 @@ namespace ProjectM.Input
             _aimSpellId = spellId;
             _aimFusionSecond = fusionSecondId;
             _aimSlot = slot;
-            _aimCursor = NearestVisibleEnemy(player, range) ?? player.Pos;
+            _aimCursor = LastAttackedInRange(player, range) ?? NearestVisibleEnemy(player, range) ?? player.Pos; // 3-26 마지막에 공격한 적 → 가까운 적
             if (Mouse.current != null) _lastMousePos = Mouse.current.position.ReadValue();
             _nextRepeatTime = Time.time + _keyRepeatDelay;
             if (_hud != null) _hud.SetHighlightSlot(_aimSlot);
@@ -657,9 +805,14 @@ namespace ProjectM.Input
             if (keyboard != null)
             {
                 int slot = PressedSlotKey(keyboard, player.QuickSlots.Length);
-                if (keyboard[Key.Escape].wasPressedThisFrame || (slot >= 0 && slot == _aimSlot))
+                if (keyboard[Key.Escape].wasPressedThisFrame)
                 {
                     CancelAim();
+                    return;
+                }
+                if (slot >= 0 && slot == _aimSlot)
+                {
+                    TryCast(player); // 3-26 같은 칸 다시 = 조준한 곳에 발사 (SPD) — 막히면 이유만 보이고 조준은 그대로
                     return;
                 }
                 if (slot >= 0)
@@ -705,8 +858,13 @@ namespace ProjectM.Input
                     int slot = _hud.QuickSlotAt(screen);
                     if (slot >= 0)
                     {
+                        if (slot == _aimSlot)
+                        {
+                            TryCast(player); // 3-26 같은 칸 다시 = 조준한 곳에 발사 (SPD)
+                            return;
+                        }
                         CancelAim();
-                        if (slot != _aimSlot) UseQuickSlot(player, slot);
+                        UseQuickSlot(player, slot);
                         return;
                     }
                 }
@@ -725,6 +883,166 @@ namespace ProjectM.Input
                     if (clicked) TryCast(player);
                 }
             }
+        }
+
+        // ── 공격 대상 표시 (3-25, SPD — 결정 2026-11-05): 근접으로 닿는 보이는 적 → 오른쪽 아래 상자 · 적 칸 붉게, Q · 클릭 = 공격 ──
+
+        private void OnUnitDamaged(UnitDamagedEvent e) => RememberAttack(e.Attacker, e.Target);
+        private void OnAttackMissed(AttackMissedEvent e) => RememberAttack(e.Attacker, e.Target);
+
+        private void RememberAttack(EntityId attacker, EntityId target)
+        {
+            if (_world != null && attacker.IsValid && attacker == _world.Scheduler.PlayerId && target != attacker) _lastAttacked = target;
+        }
+
+        /// <summary>대상을 다시 고르고 바뀐 것만 HUD · 칸 표시에 알린다 (프레임마다 — 보이는 적 몇 명만 훑음).</summary>
+        private void RefreshAttackTarget(Unit player)
+        {
+            var target = AttackTargets.Pick(_world, _sight, player, _lastAttacked);
+            _shownTarget = target != null ? target.Id : default;
+            string text = target != null ? HudText.AttackTargetName(target) : null;
+            if (_hud != null && text != _shownText) _hud.SetAttackTarget(text, target != null ? target.Hp : 0, target != null ? target.MaxHp : 0);
+            _shownText = text;
+
+            if (_aimPreview == null) return;
+            bool canMark = !IsAiming && !_examining && !_inventory.IsOpen; // 그 밖에는 조준 · 정보 커서가 쓴다
+            if (!canMark)
+            {
+                _marking = false;
+                return;
+            }
+            if (target != null)
+            {
+                if (!_marking || !_aimPreview.IsShowing || _markedPos != target.Pos) _aimPreview.Show(target.Pos, null, castable: false); // 붉은 칸
+                _marking = true;
+                _markedPos = target.Pos;
+            }
+            else if (_marking)
+            {
+                _aimPreview.Hide();
+                _marking = false;
+            }
+        }
+
+        private void AttackShownTarget(Unit player)
+        {
+            if (!_shownTarget.IsValid || !_world.Units.TryGet(_shownTarget, out var target)) return;
+            if (!PlayerActions.TryAttackAt(_world, _config, player, target.Pos, out var command)) return;
+            CancelPath();
+            _lastAttacked = target.Id;
+            _clock.SubmitPlayerCommand(command);
+        }
+
+        private void ClearAttackTarget()
+        {
+            _shownTarget = default;
+            _shownText = null;
+            if (_hud != null) _hud.SetAttackTarget(null, 0, 0);
+            if (_marking && _aimPreview != null) _aimPreview.Hide();
+            _marking = false;
+        }
+
+        // ── 정보 모드 (3-24, SPD — 결정 2026-11-05): E = 칸 정보 (차례 안 씀), E 한 번 더 = 주변 빠른 찾기 ──
+
+        private void BeginExamine(Unit player)
+        {
+            CancelPath();
+            _examining = true;
+            _examineCursor = player.Pos;
+            _lastMousePos = Mouse.current != null ? Mouse.current.position.ReadValue() : Vector2.zero; // 마우스를 움직이기 전에는 내 칸
+            Hint(HudText.ExamineHint);
+            RefreshExamine(player);
+        }
+
+        /// <returns>이번 프레임 입력을 정보 모드가 다 썼으면 true. false면 정보 모드를 닫았고 같은 입력을 평소처럼 처리한다.</returns>
+        private bool HandleExamine(Unit player, Keyboard keyboard, Mouse mouse)
+        {
+            if (keyboard != null)
+            {
+                if (keyboard[Key.Escape].wasPressedThisFrame)
+                {
+                    EndExamine();
+                    return true;
+                }
+                if (keyboard[ExamineKey].wasPressedThisFrame)
+                {
+                    EndExamine();
+                    if (_search != null) _clock.SubmitPlayerCommand(PlayerActions.QuickSearch(_world, _search)); // 주변 8칸 · 1턴
+                    return true;
+                }
+                // 화살표: 커서 한 칸씩 (누르고 있으면 반복). 그 밖의 키 = 닫고 그 행동
+                int x = 0, y = 0;
+                bool arrowNow = false;
+                foreach (var key in ExamineCursorKeys)
+                {
+                    var control = keyboard[key];
+                    if (control.wasPressedThisFrame) arrowNow = true;
+                    if (!control.isPressed && !control.wasPressedThisFrame) continue;
+                    if (key == Key.UpArrow) y++;
+                    else if (key == Key.DownArrow) y--;
+                    else if (key == Key.RightArrow) x++;
+                    else x--;
+                }
+                var dir = new GridPos(System.Math.Sign(x), System.Math.Sign(y));
+                if (dir != default && (arrowNow || Time.time >= _nextRepeatTime))
+                {
+                    var moved = _examineCursor + dir;
+                    if (_world.Map.InBounds(moved)) _examineCursor = moved;
+                    _nextRepeatTime = Time.time + (arrowNow ? _keyRepeatDelay : _keyRepeatInterval);
+                    RefreshExamine(player);
+                    return true;
+                }
+                if (!arrowNow && keyboard.anyKey.wasPressedThisFrame)
+                {
+                    EndExamine();
+                    return false;
+                }
+                if (dir != default) return true; // 화살표를 누르고 있는 중 (반복 대기)
+            }
+            if (mouse != null)
+            {
+                if (mouse.rightButton.wasPressedThisFrame)
+                {
+                    EndExamine();
+                    return true;
+                }
+                if (mouse.leftButton.wasPressedThisFrame)
+                {
+                    EndExamine(); // 클릭 = 닫고 평소처럼 (이동 · 공격 · 빠른 칸)
+                    return false;
+                }
+                var screen = mouse.position.ReadValue();
+                if (_camera != null && _grid != null && (screen - _lastMousePos).sqrMagnitude > 0.01f)
+                {
+                    _lastMousePos = screen;
+                    var cell = ScreenToCell(screen);
+                    if (_world.Map.InBounds(cell) && cell != _examineCursor)
+                    {
+                        _examineCursor = cell;
+                        RefreshExamine(player);
+                    }
+                }
+            }
+            return true;
+        }
+
+        private void RefreshExamine(Unit player)
+        {
+            var map = _world.Map;
+            var pos = _examineCursor;
+            bool explored = map.InBounds(pos) && _world.Explored[pos.Y * map.Width + pos.X];
+            bool visible = map.InBounds(pos) && (pos == player.Pos || _sight.CanSee(map, player.Pos, pos, player.SightRange));
+            if (_aimPreview != null) _aimPreview.Show(pos, null, true); // 커서 칸만
+            InfoChanged?.Invoke(Text.CellInfo(_world, pos, explored || visible, visible));
+        }
+
+        private void EndExamine()
+        {
+            if (!_examining) return;
+            _examining = false;
+            if (_aimPreview != null) _aimPreview.Hide();
+            InfoChanged?.Invoke(string.Empty);
+            Hint(string.Empty);
         }
 
         private void TryCast(Unit player)
@@ -828,6 +1146,14 @@ namespace ProjectM.Input
                 return a.Id.Value.CompareTo(b.Id.Value);
             });
             return list;
+        }
+
+        /// <summary>3-26: 마지막에 공격한 적(3-25)이 살아 있고 보이며 사거리 안이면 그 칸.</summary>
+        private GridPos? LastAttackedInRange(Unit player, int range)
+        {
+            if (!_lastAttacked.IsValid || !_world.Units.TryGet(_lastAttacked, out var unit) || !unit.IsAlive) return null;
+            if (!Factions.AreHostile(unit.Faction, player.Faction) || !_targeting.InRange(player.Pos, unit.Pos, range)) return null;
+            return _sight.CanSee(_world.Map, player.Pos, unit.Pos, player.SightRange) ? unit.Pos : (GridPos?)null;
         }
 
         private GridPos? NearestVisibleEnemy(Unit player, int range)
@@ -939,6 +1265,12 @@ namespace ProjectM.Input
                 if (ProjectM.Dungeon.UnlockCommand.KeySlot(_items, bumper) >= 0)
                     _clock.SubmitPlayerCommand(new ProjectM.Dungeon.UnlockCommand(_world, _items, bumper.Pos + direction, _config.DefaultActionCostTicks));
                 else Hint(HudText.DoorLocked);
+            }
+            else if (WorkbenchRequested != null && PlayerActions.TryGetPlayer(_world, out var crafter) && _world.Map.InBounds(crafter.Pos + direction)
+                && _world.Map.Get(crafter.Pos + direction) == TileType.ArtifactBench) // 3-28b 마법 제작대 — 창은 GameRoot (카드 창, 틱 밖)
+            {
+                CancelPath();
+                WorkbenchRequested();
             }
             else if (PlayerActions.TryGetPlayer(_world, out var brewer) && _world.Map.InBounds(brewer.Pos + direction)
                 && _world.Map.Get(brewer.Pos + direction) == TileType.AlchemyPot) // 3-16c 연금 솥

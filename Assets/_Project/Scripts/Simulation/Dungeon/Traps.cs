@@ -279,7 +279,7 @@ namespace ProjectM.Dungeon
     /// ⑤ 함정 발동 (3-12a, 결정 2026-11-04 — 적도 밟으면 발동): 함정 칸에 선 살아 있는 유닛마다 (EntityId 순) 그 함정을 발동한다.
     /// 숨겨진 함정도 발동한다. 상태를 갖지 않는다.
     /// </summary>
-    public sealed class TrapSystem : ITickSystem
+    public sealed class TrapSystem : IInstantTickSystem // 3-27 실시간 즉시 행동 뒤에도
     {
         private readonly World _world;
         private readonly TrapBook _traps;

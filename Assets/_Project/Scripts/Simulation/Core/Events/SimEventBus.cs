@@ -28,6 +28,9 @@ namespace ProjectM.Core
 
         public int PendingCount => _pending.Count;
 
+        /// <summary>이벤트를 하나 이상 보낸 Flush 횟수 (3-27 자동 저장 — 바뀐 것이 있었는지 화면 쪽이 비교).</summary>
+        public long FlushCount { get; private set; }
+
         public void Publish(ISimEvent simEvent)
         {
             if (simEvent == null) throw new ArgumentNullException(nameof(simEvent));
@@ -59,6 +62,7 @@ namespace ProjectM.Core
         {
             if (_isFlushing) throw new InvalidOperationException("Flush 도중에 Flush를 다시 부를 수 없다.");
             if (_pending.Count == 0) return;
+            FlushCount++;
 
             (_pending, _flushing) = (_flushing, _pending);
             _isFlushing = true;

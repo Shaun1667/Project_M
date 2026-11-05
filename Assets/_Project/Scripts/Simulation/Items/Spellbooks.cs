@@ -41,13 +41,19 @@ namespace ProjectM.Items
         public int SeedsPerFloor { get; }
         public IReadOnlyList<string> SeedItems { get; }
         public int SeedDropPercent { get; }
+        /// <summary>유물 (3-28a): 한 판에 바닥에 놓는 수(종류 안 겹침, 1~마지막 전 층) · 구역 보스가 죽을 때 하나 떨어뜨릴 확률 (%).</summary>
+        public int RelicsPerRun { get; }
+        public int BossRelicPercent { get; }
 
         public LootConfig(int maxBooksPerFloor, int minDistanceFromStart, int weaponsPerRun = 0, int upgradeScrollsPerRun = 0, int strengthPotionsPerRun = 0,
             int armorsPerRun = 0, int goldPilesPerFloor = 0, int goldMinBase = 0, int goldMinPerFloor = 0, int goldMaxBase = 0, int goldMaxPerFloor = 0,
             int enemyGoldPercent = 0, int enemyGoldMin = 0, int enemyGoldMax = 0,
             int thrownPerFloor = 0, IReadOnlyList<string> thrownItems = null, IReadOnlyList<int> thrownBundles = null,
-            int seedsPerFloor = 0, IReadOnlyList<string> seedItems = null, int seedDropPercent = 0)
+            int seedsPerFloor = 0, IReadOnlyList<string> seedItems = null, int seedDropPercent = 0, int relicsPerRun = 0, int bossRelicPercent = 0)
         {
+            if (relicsPerRun < 0 || bossRelicPercent < 0 || bossRelicPercent > 100) throw new ArgumentOutOfRangeException(nameof(bossRelicPercent));
+            RelicsPerRun = relicsPerRun;
+            BossRelicPercent = bossRelicPercent;
             if (seedsPerFloor < 0 || seedDropPercent < 0 || seedDropPercent > 100) throw new ArgumentOutOfRangeException(nameof(seedDropPercent));
             SeedsPerFloor = seedsPerFloor;
             SeedItems = seedItems ?? Array.Empty<string>();
@@ -418,6 +424,49 @@ namespace ProjectM.Items
         /// <summary>
         /// 씨앗 떨어뜨리기 (3-16b, SPD): 높은 풀이 밟히면 SeedDropPercent로 그 칸에 무작위 씨앗 (RngStream.Loot) — World.OnGrassTrampled.
         /// </summary>
+        /// <summary>
+        /// 유물 (3-28a, 결정 2026-11-05): 한 판에 RelicsPerRun개 — 유물 종류 중 시드로 고름(같은 종류 안 겹침), 1~마지막 전 층에 무작위 (RngStream.Loot). 계획 끝에 붙인다.
+        /// </summary>
+        public static void PlanRelics(World world, ItemBook items, LootConfig config, int floorCount)
+        {
+            if (world == null) throw new ArgumentNullException(nameof(world));
+            if (items == null || config == null || config.RelicsPerRun == 0) return;
+            var relics = RelicIds(items);
+            var rng = world.Rng.Get(RngStream.Loot);
+            for (int i = 0; i < relics.Count - 1; i++)
+            {
+                int j = rng.Range(i, relics.Count);
+                (relics[i], relics[j]) = (relics[j], relics[i]);
+            }
+            int floors = Math.Max(1, floorCount - 1);
+            int count = Math.Min(config.RelicsPerRun, relics.Count);
+            var plan = new List<PendingFloorItem>(count);
+            for (int k = 0; k < count; k++)
+                plan.Add(new PendingFloorItem(1 + rng.Range(0, floors), relics[k]));
+            if (plan.Count > 0) world.Run.AddPendingFloorItems(StableByFloor(plan));
+        }
+
+        /// <summary>구역 보스가 죽었다 (3-28a): BossRelicPercent로 유물 하나를 그 칸에 (종류 무작위, RngStream.Loot).</summary>
+        public static void DropBossRelic(World world, ItemBook items, LootConfig config, GridPos pos)
+        {
+            if (world == null || items == null || config == null || config.BossRelicPercent == 0) return;
+            var relics = RelicIds(items);
+            if (relics.Count == 0) return;
+            var rng = world.Rng.Get(RngStream.Loot);
+            if (rng.Range(0, 100) >= config.BossRelicPercent) return;
+            var id = relics[rng.Range(0, relics.Count)];
+            world.FloorItems.Add(pos, id);
+            world.Events.Publish(new FloorItemPlacedEvent(pos, id, id));
+        }
+
+        private static List<string> RelicIds(ItemBook items)
+        {
+            var list = new List<string>();
+            foreach (var id in items.Ids)
+                if (items.TryGet(id, out var def) && def.Use == ItemUse.Relic) list.Add(id);
+            return list;
+        }
+
         public static void DropSeed(World world, LootConfig config, GridPos pos)
         {
             if (config == null || config.SeedDropPercent == 0 || config.SeedItems.Count == 0) return;
@@ -506,7 +555,7 @@ namespace ProjectM.Items
     /// 인벤토리가 꽉 차면 바닥에 남기고 ItemPickupFailedEvent (HUD가 같은 칸이면 한 번만 알림). 차례를 더 쓰지 않는다. 상태를 갖지 않는다.
     /// 등록: TickPhase.ManaRegen (⑤, 행동 다음).
     /// </summary>
-    public sealed class ItemPickupSystem : ITickSystem
+    public sealed class ItemPickupSystem : IInstantTickSystem // 3-27 실시간 즉시 행동 뒤에도
     {
         private readonly World _world;
         private readonly ItemBook _items;

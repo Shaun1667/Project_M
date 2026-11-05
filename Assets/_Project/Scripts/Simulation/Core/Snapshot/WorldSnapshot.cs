@@ -84,7 +84,7 @@ namespace ProjectM.Core
     public sealed class WorldSnapshot
     {
         /// <summary>1: 1-4 최초. 2: 유닛(Units) 추가 (1-6). 3: 탐험 기록(Explored) · 유닛 기억(LastSeen) 추가 (1-7). 4: 유닛 마나 · 주문 장착 칸 (2-1). 5: 유닛 발자국(PreviousPos) · 배회 목적지(WanderTarget). 6: 유닛 상태 이상 (2-3). 7: 지형 효과 레이어 (2-4). 8: 주문 장착 칸 → 인벤토리 · 빠른 칸 (3-2a). 9: 층 번호 · 떠난 층들 (3-4a). 10: 한 판 기록 — 처치 수 · 결과 · 보스 · 사망 원인 (3-4b). 11: 바닥 아이템(지금 층 · 떠난 층) · 마법서 배치 계획 (3-5). 12: 유닛 명중 · 회피 · 처치 경험치 · 경험치 최고 레벨 · 레벨 · 경험치 (3-6 · 3-7). 13: 유닛이 든 무기 (3-7a). 14: 유닛 힘 · 무기 강화 단계 · 요구 힘 · 인벤토리 칸 강화 단계 (3-7b). 15: 무기 기습 최소 % · 방어 (3-7c). 16: 물약 · 주문서 겉모습 · 식별 (3-9). 17: 유닛이 입은 갑옷 (3-10a).</summary>
-        public const int CurrentFormatVersion = 26; // 24 (3-21b): 직업 · 형태 (RunState ClassId · FormId) · 25 (3-21c): 특성 점수 · 26 (3-22a): 무기 타격 수 (너클)
+        public const int CurrentFormatVersion = 30; // 30 (3-28c): 시간 유물 (유닛 정지 · 가속 · 스톱워치, 게이지) · 29 (3-28b): 에테르 · 28 (3-28a): 유닛 유물 칸 · 27 (3-27): 판의 시계 (RunState.Mode) · 24 (3-21b): 직업 · 형태 (RunState ClassId · FormId) · 25 (3-21c): 특성 점수 · 26 (3-22a): 무기 타격 수 (너클)
 
         public int FormatVersion = CurrentFormatVersion;
 
@@ -134,6 +134,13 @@ namespace ProjectM.Core
 
         // 21 (3-15a): 금화
         public int Gold;
+
+        // 27 (3-27): 판의 시계 (턴제 / 실시간)
+        public RunMode Mode;
+        // 29 (3-28b): 에테르
+        public int Ether;
+        // 30 (3-28c): 시간 유물 게이지 (유물 ID · 칸)
+        public TalentPoint[] RelicCharges = Array.Empty<TalentPoint>();
 
         // 24 (3-21b): 직업 · 고른 형태 (null = 없음)
         public string ClassId;
@@ -216,14 +223,25 @@ namespace ProjectM.Core
         /// <summary>패턴 보스 (3-17d, v23).</summary>
         public readonly GridPos? ChargeTarget;
         public readonly bool Summoned;
+        /// <summary>낀 유물 (3-28a, v28).</summary>
+        public readonly InventoryRef[] Relics;
+        /// <summary>시간 유물 상태 (3-28c, v30).</summary>
+        public readonly int TimeFrozenTicks, AccelTicks, AccelActions, AccelUsed, StopActions;
 
         public UnitState(EntityId id, Faction faction, string visualId, int maxHp, int attackDamage, int sightRange, int x, int y, int hp,
             bool hasLastSeen, int lastSeenX, int lastSeenY, int maxMana, int mana, InventoryRef[] inventorySlots, InventoryRef[] quickSlots,
             GridPos? previousPos, GridPos? wanderTarget, UnitStatusState[] statuses,
             int accuracy = 0, int evasion = 0, int expReward = 0, int expMaxLevel = 0, int level = 1, int exp = 0,
             EquippedWeapon weapon = default, int strength = 0, EquippedArmor armor = default, int hunger = 0,
-            GridPos? chargeTarget = null, bool summoned = false)
+            GridPos? chargeTarget = null, bool summoned = false, InventoryRef[] relics = null,
+            int timeFrozenTicks = 0, int accelTicks = 0, int accelActions = 0, int accelUsed = 0, int stopActions = 0)
         {
+            TimeFrozenTicks = timeFrozenTicks;
+            AccelTicks = accelTicks;
+            AccelActions = accelActions;
+            AccelUsed = accelUsed;
+            StopActions = stopActions;
+            Relics = relics ?? Array.Empty<InventoryRef>();
             ChargeTarget = chargeTarget;
             Summoned = summoned;
             Hunger = hunger;

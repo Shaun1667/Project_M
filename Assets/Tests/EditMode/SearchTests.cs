@@ -19,7 +19,7 @@ namespace ProjectM.Tests
         private static readonly UnitDef PlayerDef = new UnitDef("player", 20, 3, 8, 10);
 
         /// <summary>BALANCE.md 17번 찾기 값.</summary>
-        private static SearchConfig BalanceSearch() => new SearchConfig(radius: 2, costTicks: 2, passivePercent: 10, passiveRadius: 1);
+        private static SearchConfig BalanceSearch() => new SearchConfig(radius: 2, costTicks: 2, passivePercent: 10, passiveRadius: 1, quickRadius: 1, quickCostTicks: 1);
 
         private sealed class Session
         {
@@ -57,6 +57,41 @@ namespace ProjectM.Tests
             Assert.That(s.Searched.Count, Is.EqualTo(1));
             Assert.That(s.Searched[0].Found, Is.EqualTo(1));
             Assert.That(s.World.Scheduler.CurrentTick - tick, Is.EqualTo(2), "찾기 = 2틱");
+        }
+
+        // 3-24 빠른 찾기 (정보 모드에서 E 한 번 더): 주변 8칸만 · 1틱
+        [Test]
+        public void QuickSearch_RevealsAdjacentOnly()
+        {
+            var s = Start();
+            Traps.Place(s.World, new GridPos(3, 3), TrapType.Fire, hidden: true);   // 거리 1
+            Traps.Place(s.World, new GridPos(4, 2), TrapType.Alarm, hidden: true);  // 거리 2
+            long tick = s.World.Scheduler.CurrentTick;
+            s.Clock.SubmitPlayerCommand(PlayerActions.QuickSearch(s.World, BalanceSearch()));
+            s.World.Events.Flush();
+            Assert.That(s.World.Traps.TryGet(new GridPos(3, 3), out var near) && !near.Hidden, Is.True, "옆 칸");
+            Assert.That(s.World.Traps.TryGet(new GridPos(4, 2), out var far) && far.Hidden, Is.True, "두 칸 떨어진 곳은 그대로");
+            Assert.That(s.Searched.Count, Is.EqualTo(1));
+            Assert.That(s.World.Scheduler.CurrentTick - tick, Is.EqualTo(1), "빠른 찾기 = 1틱");
+        }
+
+        // 3-24 정보 모드 글: 모르는 칸 · 바닥 · 드러난 함정 / 숨은 함정 · 숨겨진 문 = 벽 · 나
+        [Test]
+        public void HudText_CellInfo()
+        {
+            var s = Start();
+            var text = new HudText();
+            Assert.That(text.CellInfo(s.World, new GridPos(5, 2), explored: false, visible: false), Is.EqualTo(HudText.CellUnknown));
+            Assert.That(text.CellInfo(s.World, new GridPos(5, 2), true, true), Does.Contain("바닥"));
+            Traps.Place(s.World, new GridPos(4, 2), TrapType.Fire, hidden: true);
+            Assert.That(text.CellInfo(s.World, new GridPos(4, 2), true, true), Does.Not.Contain(HudText.Trap(TrapType.Fire)), "숨은 함정은 안 보임");
+            Traps.Reveal(s.World, new GridPos(4, 2));
+            Assert.That(text.CellInfo(s.World, new GridPos(4, 2), true, true), Does.Contain(HudText.Trap(TrapType.Fire)));
+            s.World.Map.Set(new GridPos(3, 3), TileType.HiddenDoor);
+            Assert.That(text.CellInfo(s.World, new GridPos(3, 3), true, true), Does.Contain("벽"));
+            var self = text.CellInfo(s.World, s.Player.Pos, true, true);
+            Assert.That(self, Does.Contain("나").And.Contain($"HP {s.Player.Hp}/{s.Player.MaxHp}"));
+            Assert.That(text.CellInfo(s.World, s.Player.Pos, true, visible: false), Does.Not.Contain("HP"), "안 보이는 칸의 유닛은 숨김");
         }
 
         // 숨겨진 문: 벽처럼 못 지나가고 시야를 막다가, 찾으면 닫힌 문
@@ -166,6 +201,7 @@ namespace ProjectM.Tests
             var c = traps.ToSearch();
             var e = BalanceSearch();
             Assert.That((c.Radius, c.CostTicks, c.PassivePercent, c.PassiveRadius), Is.EqualTo((e.Radius, e.CostTicks, e.PassivePercent, e.PassiveRadius)));
+            Assert.That((c.QuickRadius, c.QuickCostTicks), Is.EqualTo((e.QuickRadius, e.QuickCostTicks)), "3-24 빠른 찾기");
             var decor = AssetDatabase.LoadAssetAtPath<FloorDecorConfigAsset>("Assets/_Project/Data/Dungeon/FloorDecorConfig.asset").ToConfig();
             Assert.That(decor.HiddenDoorPercent, Is.EqualTo(15));
         }

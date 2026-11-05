@@ -126,8 +126,96 @@ namespace ProjectM.UI
         /// <summary>배낭 창 제목 (3-10b, SPD).</summary>
         public const string BackpackTitle = "배낭  <size=70%><color=#AAAAAA>I · F 열기 · Esc 닫기</color></size>";
 
-        /// <summary>장비 5칸 이름 (3-10b — 결정 2026-10-20: 무기 · 갑옷 · 유물 · 기타 · 반지, 뒤의 셋은 틀만).</summary>
-        public static readonly string[] EquipSlotNames = { "무기", "갑옷", "유물", "기타", "반지" };
+        /// <summary>장비 5칸 이름 (3-10b — 결정 2026-10-20 · 3-28a 2026-11-05: 무기 · 갑옷 · 유물 · 유물 · 반지 — 유물 2칸, 반지는 틀만). 유물 칸 = 2 · 3번.</summary>
+        public static readonly string[] EquipSlotNames = { "무기", "갑옷", "유물", "유물", "반지" };
+        public const int FirstRelicSlot = 2;
+
+        // ── 유물 (3-28a) ──
+        public string RelicSameKind(string id) => $"{Item(id)}: 같은 유물은 하나만 낄 수 있다";
+        public string RelicEquipped(string id, string previous) => previous == null ? $"{Item(id)}을(를) 꼈다" : $"{Item(id)}을(를) 꼈다 ({Item(previous)} → 배낭)";
+
+        // ── 시간 유물 (3-28c) ──
+        public string TimeRelicNotWorn(string id) => $"{Item(id)}: 유물 칸에 껴야 쓸 수 있다";
+        public string TimeRelicEmpty(string id, int chargeTicks) => $"{Item(id)}: 게이지가 비었다 ({chargeTicks}턴마다 1칸)";
+        public const string TimeRelicBusy = "이미 시간 유물 효과가 이어지고 있다";
+        public static string TimeKindDesc(ProjectM.Items.TimeRelicKind kind, int gauge, int power)
+        {
+            switch (kind)
+            {
+                case ProjectM.Items.TimeRelicKind.PocketWatch: return $"내 시간을 멈춘다 — 최대 {gauge}턴 (그동안 행동 못 함 · 무적, 세계는 흐름)";
+                case ProjectM.Items.TimeRelicKind.TimeMachine: return $"세계를 되돌린다 — 최대 {gauge}턴 전 (배낭 · 바닥 아이템은 지금 그대로)";
+                case ProjectM.Items.TimeRelicKind.Accelerator: return $"시간을 가속 — {gauge}턴 동안 한 턴에 {power}번 행동";
+                case ProjectM.Items.TimeRelicKind.Stopwatch: return $"나를 뺀 모든 것의 시간을 멈춘다 — 최대 {gauge}번 행동";
+                default: return string.Empty;
+            }
+        }
+        public string TimeRelicUsed(string id, ProjectM.Items.TimeRelicKind kind, int amount, int power)
+        {
+            switch (kind)
+            {
+                case ProjectM.Items.TimeRelicKind.PocketWatch: return $"{Item(id)}: 내 시간이 멈췄다 ({amount}턴)";
+                case ProjectM.Items.TimeRelicKind.Accelerator: return $"{Item(id)}: 시간이 빨라졌다 ({amount}턴 동안 한 턴에 {power}번)";
+                case ProjectM.Items.TimeRelicKind.Stopwatch: return $"{Item(id)}: 세계가 멈췄다 (행동 {amount}번)";
+                default: return $"{Item(id)}을(를) 썼다";
+            }
+        }
+        public static string TimeRelicEnded(ProjectM.Items.TimeRelicKind kind) =>
+            kind == ProjectM.Items.TimeRelicKind.PocketWatch ? "멈춘 시간이 다시 흐른다"
+            : kind == ProjectM.Items.TimeRelicKind.Accelerator ? "가속이 끝났다"
+            : kind == ProjectM.Items.TimeRelicKind.Stopwatch ? "세계가 다시 움직인다" : string.Empty;
+        public static string TimeMachineTitle(int charge) => $"타임머신 — 몇 턴 전으로? (게이지 {charge})";
+        public static string TimeMachineTurns(int turns) => $"{turns}턴 전";
+        public const string TimeMachineDetail = "위치 · 체력 · 상태 · 적이 그때로\n배낭 · 바닥 아이템은 지금 그대로";
+        public const string TimeMachineNoHistory = "되돌아갈 기록이 없다 (층에 들어온 뒤의 턴만)";
+        public static string TimeMachineRewound(int turns) => $"시간을 {turns}턴 되돌렸다";
+        public static string TimeRelicGauge(int charge, int max) => $"게이지 {charge}/{max}";
+
+        // ── 마법 제작대 · 에테르 (3-28b) ──
+        public static string EtherLabel(int ether) => ether > 0 ? $"<color=#B39DDB>에테르 {ether}</color>" : string.Empty;
+        public static string WorkbenchTitle(int ether) => $"마법 제작대 — 에테르 {ether}";
+        public const string WorkbenchHint = "← → 고르기 · Enter/클릭 확정 · Esc 뒤로";
+        public const string WorkbenchCraft = "유물 만들기";
+        public const string WorkbenchUpgrade = "유물 강화";
+        public const string WorkbenchDisassemble = "유물 분해";
+        // 카드 폭에 맞춰 줄을 직접 나눔 (2026-11-05 플레이 확인 — 저절로 줄바꿈되면 "만든 / 다"처럼 끊김)
+        public static string WorkbenchCraftDetail(int cost) => $"유물 목록에서\n골라 만든다\n\n에테르 {cost}";
+        public static string WorkbenchUpgradeDetail(System.Collections.Generic.IReadOnlyList<int> costs) =>
+            $"낀 유물이나\n배낭 유물을 강화\n(최대 +{costs.Count})\n\n에테르 {string.Join(" / ", costs)}";
+        public static string WorkbenchDisassembleDetail(int gain) => $"배낭 유물을 없애고\n에테르를 얻는다\n(강화는 사라짐)\n\n에테르 +{gain}";
+        public static string EtherCost(int cost) => $"에테르 {cost}";
+        public static string EtherGain(int gain) => $"에테르 +{gain}";
+        public const string RelicWornMark = " (낀 것)";
+        public const string RelicMaxUpgrade = "최대 강화";
+        public const string NoRelics = "강화할 유물이 없다";
+        public const string NoRelicsInBackpack = "배낭에 분해할 유물이 없다";
+        public static string WorkbenchFailed(ProjectM.Items.WorkbenchResult result) =>
+            result == ProjectM.Items.WorkbenchResult.NotEnoughEther ? "에테르가 모자라다"
+            : result == ProjectM.Items.WorkbenchResult.BackpackFull ? "배낭이 가득 찼다"
+            : result == ProjectM.Items.WorkbenchResult.MaxUpgrade ? "이미 최대로 강화했다"
+            : "할 수 없다";
+        public string WorkbenchUsed(ProjectM.Items.WorkbenchAction action, string id, int upgrade, int ether) =>
+            action == ProjectM.Items.WorkbenchAction.Craft ? $"{Item(id)}을(를) 만들었다 (에테르 {ether})"
+            : action == ProjectM.Items.WorkbenchAction.Upgrade ? $"강화: {Item(id)}+{upgrade} (에테르 {ether})"
+            : $"{Item(id)}{(upgrade > 0 ? "+" + upgrade : string.Empty)}을(를) 분해했다 (에테르 {ether})";
+
+        /// <summary>유물 효과 한 줄 (3-28a, 데이터 → 글 — 유물마다 글을 따로 두지 않음).</summary>
+        public static string RelicEffect(TalentEffectDef e, int points)
+        {
+            int v = e.ValueAt(points);
+            string target = e.AppliesTo("__none__", ProjectM.Magic.Element.Fire) ? (e.AppliesTo("__none__", ProjectM.Magic.Element.Neutral) ? "모든 주문" : "속성 주문") : "주문";
+            switch (e.Effect)
+            {
+                case TalentEffect.SpellDamage: return $"{target} 피해 {Signed(v)}";
+                case TalentEffect.MaxHp: return $"최대 체력 {Signed(v)}";
+                case TalentEffect.ManaRegenInterval: return $"마나 회복 간격 {Signed(v)}턴";
+                case TalentEffect.HitManaChance: return $"근접 · {target}이 맞으면 {v}% 확률로 마나 +1";
+                case TalentEffect.UnseenDamagePercent: return $"나를 못 본 적에게 {target} 피해 +{v}%";
+                case TalentEffect.MeleeDamage: return $"근접 피해 {Signed(v)}";
+                default: return $"{e.Effect} {Signed(v)}";
+            }
+        }
+
+        private static string Signed(int v) => v >= 0 ? "+" + v : v.ToString();
 
         /// <summary>배낭 설명 줄 (3-10b): 고른 칸의 종류와 쓰는 법. 모르는 물약 · 주문서는 "정체를 모름".</summary>
         public static string ItemInfo(HudText text, ItemBook items, InventoryRef entry)
@@ -149,6 +237,15 @@ namespace ProjectM.UI
                 case ItemUse.Thrown: return $"{text.Entry(entry)}{count} — 던지는 무기. 던지기 = 피해 {def.ThrowMinDamage}~{def.ThrowMaxDamage}" + (def.BreakPercent > 0 ? $" · {def.BreakPercent}%로 부러짐" : " · 다시 주울 수 있음");
                 case ItemUse.Key: return $"{text.Entry(entry)}{count} — 열쇠. 잠긴 문에 부딪히면 열린다";
                 case ItemUse.Food: return $"{text.Entry(entry)}{count} — 음식. 먹으면 허기 −{def.Food}" + (def.Risky ? " · 탈이 날 수 있음 (불에 구우면 안전)" : string.Empty);
+                case ItemUse.Relic:
+                {
+                    if (def.TimeKind != ProjectM.Items.TimeRelicKind.None) // 3-28c 시간 유물
+                        return $"{text.Entry(entry)} — 시간 유물. 유물 칸에 끼고 빠른 칸으로 쓴다\n"
+                            + TimeKindDesc(def.TimeKind, ProjectM.Items.TimeRelics.MaxCharge(items, entry), ProjectM.Items.TimeRelics.Power(items, entry));
+                    var lines = new System.Collections.Generic.List<string>();
+                    foreach (var e in def.RelicEffects) lines.Add(RelicEffect(e, ProjectM.Items.Relics.PointsOf(entry)));
+                    return $"{text.Entry(entry)} — 유물. 사용 = 끼기 (유물 칸 2 · 같은 종류는 하나)\n" + string.Join(" · ", lines);
+                }
                 default: return text.Entry(entry);
             }
         }
@@ -171,6 +268,9 @@ namespace ProjectM.UI
         /// <summary>상점 (3-15c).</summary>
         public const string SellTitle = "팔기 — 고른 물건을 값의 절반에  <size=70%><color=#AAAAAA>Esc 닫기</color></size>";
         public const string NothingToSell = "팔 물건이 없다";
+        // 3-29 화난 상인
+        public const string KeeperName = "상인";
+        public static string ShopkeeperAngered(int taken) => taken > 0 ? $"상인이 분노했다! 가게 물건 {taken}개를 챙겨 덤벼든다" : "상인이 분노했다!";
         public string Bought(string id, int price) => $"샀다: {Item(id)} (금화 {price})";
         public string Sold(string id, int price) => $"팔았다: {Item(id)} (금화 {price})";
         public string CannotAfford(string id, int price) => $"{Item(id)} — 금화 {price}개가 필요하다";
@@ -223,6 +323,122 @@ namespace ProjectM.UI
         public const string SearchFoundNothing = "주변을 살폈지만 아무것도 없다";
         public const string HiddenDoorFound = "숨겨진 문을 찾았다";
 
+        // ── 정보 모드 (3-24, SPD — E) ──
+        public const string ExamineHint = "정보: 방향키 · 마우스로 칸 고르기 · E 한 번 더 = 주변 8칸 찾기 (1턴) · Esc/우클릭 닫기";
+        public const string CellUnknown = "알 수 없는 곳";
+
+        // ── 타이틀 · 모드 · 시드 · 저장 · 실시간 (3-27) ──
+        public const string GameTitle = "MoaDungeon"; // 2026-11-05 사용자: 타이틀 이름 (~~Project M~~)
+        /// <summary>디버그 순간이동 칸 고르기 안내 (2026-11-05).</summary>
+        public const string DebugTeleportPick = "[디버그] 순간이동할 칸을 누르세요 (Esc · 오른쪽 클릭 = 취소)";
+        public const string GameSubtitle = "원소와 시간의 던전";
+        public static string TitleItemName(TitleItem item) =>
+            item == TitleItem.Continue ? "이어하기" : item == TitleItem.NewGame ? "게임 시작" : "종료";
+        public const string TitleHint = "↑ ↓ 고르기 · Enter/클릭";
+        public const string NewGameTitle = "게임 시작 — 모드 고르기";
+        public const string ModeTurnName = "턴제";
+        public const string ModeTurnDesc = "내가 행동해야 시간이 흐른다\n\n천천히 생각하며 한 수씩";
+        public const string ModeRealName = "실시간";
+        public const string ModeRealDesc = "1초마다 시간이 흐른다\n\n내 행동은 기다림 없이 바로 —\n원하는 만큼 움직이고 쏜다\nP 일시정지";
+        public static string ModeName(RunMode mode) => mode == RunMode.RealTime ? ModeRealName : ModeTurnName;
+        public const string SeedLabel = "시드";
+        public const string SeedPlaceholder = "비우면 무작위 (숫자 또는 글자)";
+        public const string StartButton = "시작";
+        public const string NewGameHint = "← → 모드 · 글자 입력 = 시드 · Backspace 지우기 · Enter 시작 · Esc 뒤로";
+        public const string Paused = "일시정지 — P로 계속";
+
+        // ── 저장 슬롯 (3-30) ──
+        public const string SlotsTitle = "저장 슬롯 — 고르기";
+        public const string SlotHint = "↑ ↓ 고르기 · Enter/클릭 · Esc 뒤로";
+        public const string SlotChoiceHint = "← → 고르기 · Enter/클릭 · Esc 뒤로";
+        public const string SlotEmpty = "비어 있음 — 새 게임";
+        public static string SlotLabel(int slot, bool filled, string label) => $"슬롯 {slot}   " + (filled ? label : $"<color=#888888>{SlotEmpty}</color>");
+        public const string SlotStart = "시작";
+        public const string SlotDelete = "데이터 삭제";
+        public const string SlotBack = "뒤로";
+        public static string SlotDeleteQuestion(int slot) => $"슬롯 {slot}의 데이터를 지울까요?\n<size=70%><color=#AAAAAA>되돌릴 수 없습니다</color></size>";
+        public const string SlotDeleteYes = "삭제";
+        public const string SlotDeleteNo = "취소";
+        public const string SlotUnreadable = "<color=#FF8A65>읽을 수 없는 저장 (버전이 다르거나 깨짐)</color>";
+
+        /// <summary>슬롯 한 줄: "루멘 · Lv 5 · 7층 · 턴제".</summary>
+        public static string SlotLine(string character, int level, int floor, RunMode mode) => $"{character} · Lv {level} · {floor}층 · {ModeName(mode)}";
+
+        /// <summary>찬 슬롯 요약 (3-30 — 캐릭터 · 능력치 · 현재 층 · 장비 · 유물 · 재화 · 진행).</summary>
+        public string SlotDetail(string character, string formName, int level, int exp, int hp, int maxHp, int mana, int maxMana, int strength, int accuracy, int evasion,
+            string weapon, string armor, System.Collections.Generic.IReadOnlyList<string> relics, int floor, RunMode mode, long seed, int gold, int ether, int kills, long turns)
+        {
+            var sb = new System.Text.StringBuilder();
+            sb.Append($"<b>{character}</b>{(string.IsNullOrEmpty(formName) ? string.Empty : "  <color=#AAAAAA>" + formName + "</color>")}\n");
+            sb.Append($"Lv {level}  (경험치 {exp})    HP {hp}/{maxHp}    MP {mana}/{maxMana}\n");
+            sb.Append($"힘 {strength}    명중 {accuracy}    회피 {evasion}\n");
+            sb.Append($"무기: {weapon ?? NoEquipment}    갑옷: {armor ?? NoEquipment}\n");
+            sb.Append($"유물: {(relics != null && relics.Count > 0 ? string.Join(" · ", relics) : NoEquipment)}\n\n");
+            sb.Append($"<b>{floor}층</b>    {ModeName(mode)}    {turns}턴    처치 {kills}\n");
+            sb.Append($"금화 {gold}    에테르 {ether}    <color=#888888>시드 {seed}</color>");
+            return sb.ToString();
+        }
+        public const string RealTimeStarted = "실시간 모드 — 1초마다 시간이 흐른다 (P 일시정지)";
+        public const string RunContinued = "저장한 곳에서 이어한다";
+
+        // ── 공격 대상 표시 (3-25, SPD) ──
+        public const string AttackIndicatorHint = "Q 공격 · Tab 다음 적";
+        public static string AttackTargetName(Unit target) => $"{Enemy(target.Id)}  HP {target.Hp}/{target.MaxHp}";
+
+        public static string Tile(TileType type)
+        {
+            switch (type)
+            {
+                case TileType.Floor: return "바닥";
+                case TileType.Wall:
+                case TileType.HiddenDoor: return "벽"; // 숨겨진 문은 찾기 전까지 벽
+                case TileType.StairsDown: return "내려가는 계단";
+                case TileType.StairsUp: return "올라가는 계단";
+                case TileType.Grass: return "풀";
+                case TileType.TallGrass: return "키 큰 풀";
+                case TileType.Door: return "닫힌 문";
+                case TileType.OpenDoor: return "열린 문";
+                case TileType.LockedDoor: return "잠긴 문";
+                case TileType.AlchemyPot: return "연금 솥";
+                case TileType.SealedStairs: return "봉인된 계단";
+                case TileType.ArtifactBench: return "마법 제작대";
+                default: return CellUnknown;
+            }
+        }
+
+        /// <summary>
+        /// 정보 모드 칸 설명 (3-24): 유닛(이름 · 체력 · 상태) · 지형 효과(남은 턴) — 지금 보이는 칸만, 함정(드러난 것) · 바닥 아이템 · 칸 종류 — 가 본 칸.
+        /// 한 줄에 하나, 위에서부터 유닛 → 지형 효과 → 함정 → 아이템 → 칸.
+        /// </summary>
+        public string CellInfo(World world, GridPos pos, bool explored, bool visible)
+        {
+            if (world == null || !world.Map.InBounds(pos) || !explored) return CellUnknown;
+            var lines = new List<string>();
+            if (visible && world.Units.TryGetAt(pos, out var unit) && unit.IsAlive) lines.Add(UnitInfo(world, unit));
+            if (visible)
+                foreach (var t in world.Terrain.At(pos))
+                    lines.Add(t.Remaining == TerrainLayer.Permanent ? Terrain(t.Type) : $"{Terrain(t.Type)} ({t.Remaining}턴)");
+            if (world.Traps.TryGet(pos, out var trap) && !trap.Hidden) lines.Add($"<color=#FF8A65>{Trap(trap.Type)}</color>");
+            foreach (var item in world.FloorItems.ItemsAt(pos))
+            {
+                string name = item.ItemId == Loot.GoldItemId ? $"금화 {item.Quantity}개" : item.Quantity > 1 ? $"{Item(item.ItemId)} ×{item.Quantity}" : Item(item.ItemId);
+                lines.Add(item.Price > 0 ? $"{name} — 금화 {item.Price}" : name);
+            }
+            lines.Add($"<color=#AAAAAA>{Tile(world.Map.Get(pos))}</color>");
+            return string.Join("\n", lines);
+        }
+
+        private static string UnitInfo(World world, Unit unit)
+        {
+            string name = unit.Id == world.Scheduler.PlayerId ? "나"
+                : unit.Faction == Faction.Ally ? "아군"
+                : unit.Faction == Faction.Neutral ? "상인"
+                : Enemy(unit.Id);
+            var sb = new System.Text.StringBuilder($"<b>{name}</b>  HP {unit.Hp}/{unit.MaxHp}");
+            foreach (var s in unit.Statuses) sb.Append($" · {Status(s.Type)} {s.Remaining}턴");
+            return sb.ToString();
+        }
+
         /// <summary>함정 발견 로그 (3-12b): "함정 발견: 화염 함정"</summary>
         public static string TrapFound(ProjectM.Dungeon.TrapType type) => $"함정 발견: {Trap(type)}";
 
@@ -257,7 +473,7 @@ namespace ProjectM.UI
 
         // ── 조준 안내 ── slot = 빠른 칸 번호, -1 = 인벤토리에서 바로 씀
         public string AimHint(int slot, string spellId, int manaCost) =>
-            $"{SlotPrefix(slot)}{Spell(spellId)} ({manaCost} MP): Space/클릭 시전 · Tab 다음 대상 · Esc 취소";
+            $"{SlotPrefix(slot)}{Spell(spellId)} ({manaCost} MP): {(slot >= 0 ? $"{slot + 1} 다시 · " : string.Empty)}Space/클릭 시전 · Tab 다음 대상 · Esc 취소"; // 3-26
 
         public static string EmptySlot(int slot) => $"[{slot + 1}] 빈 칸";
 
@@ -289,13 +505,13 @@ namespace ProjectM.UI
         public const string MenuClose = "닫기";
         public const string MenuThrow = "던지기";
 
-        public const string DeadHint = "쓰러졌다 — R 키로 새 판";
+        public const string DeadHint = "쓰러졌다 — R 키로 타이틀";
 
         // ── 캐릭터 선택 (2026-10-21) ──
         public const string CharacterSelectTitle = "캐릭터 선택";
         public const string CharacterSelectHint = "← → 고르기 · Enter/클릭 시작";
         // 3-21b 직업 형태 선택 창 · 로그
-        public const string FormSelectTitle = "빛의 창 — 형태를 고르세요";
+        public static string FormSelectTitle(string characterName) => string.IsNullOrEmpty(characterName) ? "형태를 고르세요" : $"{characterName} — 형태를 고르세요"; // 2026-11-05: 캐릭터마다 (~~"빛의 창 — …" 고정~~)
         public const string FormSelectHint = "← → 고르기 · Enter/클릭 확정 (한 번만 고를 수 있음)";
 
         // 3-23b 지난 회차 플레이어 보스
@@ -353,6 +569,7 @@ namespace ProjectM.UI
 
         // 3-7b 힘 · 강화
         public static string StrengthGained(int strength) => $"힘이 올랐다 (힘 {strength})";
+        public static string StrengthLost(int strength) => $"힘이 내려갔다 (힘 {strength})"; // 디버그 창 힘 − (2026-11-05)
         public string Upgraded(EquippedWeapon weapon) => $"강화: {WeaponName(weapon)} ({weapon.MinDamage}~{weapon.MaxDamage}, 요구 힘 {weapon.StrengthRequirement})";
         public const string NoWeaponToUpgrade = "강화할 장비가 없다 — 무기를 들거나 갑옷을 입어야 한다";
 
@@ -433,7 +650,7 @@ namespace ProjectM.UI
         public static string FloorPlaque(int floor) => $"{floor}층";
         // ── 결과 화면 (3-4b) ──
         public static string ResultTitle(RunOutcome outcome) => outcome == RunOutcome.Victory ? "승리 — 보스를 쓰러뜨렸다" : "패배 — 쓰러졌다";
-        public const string ResultRestart = "R 키로 새 판";
+        public const string ResultRestart = "R 키로 타이틀"; // 3-27: 판이 끝나면 타이틀 (모드 · 시드를 다시 고름)
         public const string NoEquipment = "없음";
 
         public static string Terrain(TerrainEffectType type)

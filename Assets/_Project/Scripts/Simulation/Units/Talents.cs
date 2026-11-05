@@ -39,6 +39,8 @@ namespace ProjectM.Units
         MeleeDamage = 12,
         /// <summary>기본 근접 공격이 맞으면 값% 확률로 한 번 더 친다 (3-22c 시아 빠른 손 — 공격 속도, 추가 타격은 다시 추가 타격을 부르지 않음).</summary>
         MeleeExtraHitChance = 13,
+        /// <summary>마나 회복 간격 + 값 틱 (3-28a 마나 샘 펜던트 — 음수 = 빨라짐, 1틱 아래로는 안 감).</summary>
+        ManaRegenInterval = 14,
     }
 
     /// <summary>특성 하나의 효과 한 줄: 종류 · 찍은 점수별 값(Values[점수 − 1], 누적 값) · 대상 주문(비면 효과 종류에 따라 없음) · 무기 · 상태.</summary>
@@ -66,11 +68,19 @@ namespace ProjectM.Units
         /// <summary>points점일 때 값 (0점 = 0, 표보다 많으면 마지막 값).</summary>
         public int ValueAt(int points) => points <= 0 ? 0 : Values[Math.Min(points, Values.Count) - 1];
 
-        public bool AppliesTo(string spellId)
+        /// <summary>대상 주문인지. SpellIds의 "*" = 모든 주문, "*elemental" = 속성 주문(무속성 직업 기술 제외 — 3-28a 유물).</summary>
+        public bool AppliesTo(string spellId, ProjectM.Magic.Element? element = null)
         {
-            foreach (var id in SpellIds) if (id == spellId) return true;
+            foreach (var id in SpellIds)
+            {
+                if (id == spellId || id == AllSpells) return true;
+                if (id == ElementalSpells && element.HasValue && element.Value != ProjectM.Magic.Element.Neutral) return true;
+            }
             return false;
         }
+
+        public const string AllSpells = "*";
+        public const string ElementalSpells = "*elemental";
     }
 
     /// <summary>특성 하나: 단계(1 = 공통 · 2 = 형태) · 형태 ID(2단계만) · 최대 점수 · 효과.</summary>
@@ -181,9 +191,9 @@ namespace ProjectM.Units
         /// <summary>찍은 특성의 그 효과 값 합 (filter가 true인 효과 줄만). 플레이어(진영)만 특성이 있다.</summary>
         public static int Sum(World world, Unit unit, TalentEffect effect, Func<TalentEffectDef, bool> filter = null)
         {
-            if (world == null || unit == null || unit.Faction != Faction.Player || world.Classes == null) return 0;
-            if (!world.Classes.TryGet(world.Run.ClassId, out var def)) return 0;
-            int total = 0;
+            if (world == null || unit == null || unit.Faction != Faction.Player) return 0;
+            int total = RelicSum(world, unit, effect, filter); // 3-28a 낀 유물 (직업이 없어도)
+            if (world.Classes == null || !world.Classes.TryGet(world.Run.ClassId, out var def)) return total;
             foreach (var t in def.Talents)
             {
                 int points = world.Run.TalentPoints(t.Id);
@@ -198,6 +208,24 @@ namespace ProjectM.Units
             return total;
         }
 
+        /// <summary>낀 유물의 그 효과 값 합 (3-28a — 강화 단계 n → Values[n]).</summary>
+        private static int RelicSum(World world, Unit unit, TalentEffect effect, Func<TalentEffectDef, bool> filter)
+        {
+            if (world.RelicItems == null) return 0;
+            int total = 0;
+            foreach (var relic in unit.Relics)
+            {
+                if (relic.IsEmpty) continue;
+                int points = ProjectM.Items.Relics.PointsOf(relic);
+                foreach (var e in ProjectM.Items.Relics.EffectsOf(world.RelicItems, relic.Id))
+                    if (e.Effect == effect && (filter == null || filter(e))) total += e.ValueAt(points);
+            }
+            return total;
+        }
+
+        /// <summary>마나 회복 간격 보너스 (3-28a 마나 샘 펜던트 — 음수).</summary>
+        public static int ManaRegenIntervalBonus(World world, Unit unit) => Sum(world, unit, TalentEffect.ManaRegenInterval);
+
         /// <summary>기본 근접 공격 피해 보너스 (3-22b 연타 자세).</summary>
         public static int MeleeDamageBonus(World world, Unit attacker) => Sum(world, attacker, TalentEffect.MeleeDamage);
 
@@ -205,8 +233,8 @@ namespace ProjectM.Units
         public static int MeleeExtraHitPercent(World world, Unit attacker) => Sum(world, attacker, TalentEffect.MeleeExtraHitChance);
 
         /// <summary>주문 하나에 걸린 효과 값 합.</summary>
-        public static int ForSpell(World world, Unit caster, TalentEffect effect, string spellId) =>
-            Sum(world, caster, effect, e => e.AppliesTo(spellId));
+        public static int ForSpell(World world, Unit caster, TalentEffect effect, string spellId, ProjectM.Magic.Element? element = null) =>
+            Sum(world, caster, effect, e => e.AppliesTo(spellId, element));
 
         /// <summary>근접 명중 보너스 (든 무기가 WeaponId인 효과만).</summary>
         public static int AccuracyBonus(World world, Unit attacker) =>

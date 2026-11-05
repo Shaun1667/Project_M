@@ -458,9 +458,9 @@ namespace ProjectM.Tests
             Assert.That(presenter.CurrentTint(id), Is.EqualTo(Color.white));
         }
 
-        // 바닥 · 계단은 모듈이 있으면 3D (Tilemap에는 안 그림), 외톨이 벽 = 기둥 + 아래 바닥, 낮은 바닥 판은 안개 덮개가 가리므로 시야와 무관
+        // 바닥 · 계단은 모듈이 있으면 3D (Tilemap에는 안 그림), 외톨이 벽 = 기둥 + 아래 바닥, 낮은 바닥 판은 본 칸이면 안개가 가리고 안 가본 칸이면 숨김 (2026-11-05)
         [Test]
-        public void Modules3D_FloorStairsPillar_LowModulesIgnoreVisibility()
+        public void Modules3D_FloorStairsPillar_LowModulesHiddenUntilExplored()
         {
             _tileVisuals.SetModule(TileType.Floor, TestModule("Floor", 0.06f, sunk: true), randomRotation: true);
             _tileVisuals.SetModule(TileType.StairsDown, TestModule("Stairs", 0.4f));
@@ -489,9 +489,14 @@ namespace ProjectM.Tests
             Assert.That(presenter.WallCount, Is.EqualTo(7 * 2 + 3 * 2 + 1), "둘레 20 + 기둥 1");
 
             var none = new bool[7 * 5];
-            _bus.Publish(new ProjectM.Units.VisibilityChangedEvent(7, 5, none, (bool[])none.Clone()));
+            var explored = new bool[7 * 5];
+            explored[1 * 7 + 1] = true; // (1,1) 바닥만 본 적 있음
+            _bus.Publish(new ProjectM.Units.VisibilityChangedEvent(7, 5, none, explored));
             _bus.Flush();
-            Assert.That(floor.GetComponentInChildren<Renderer>().enabled, Is.True, "낮은 바닥 판은 숨기지 않음 (안개가 가림)");
+            Assert.That(floor.GetComponentInChildren<Renderer>().enabled, Is.True, "본 적 있는 낮은 바닥 판은 그대로 (안개가 어둡게 가림)");
+            presenter.TryGetModule(new GridPos(2, 1), out var unseenFloor);
+            Assert.That(unseenFloor.GetComponentInChildren<Renderer>().enabled, Is.False,
+                "안 가본 칸의 낮은 모듈도 숨김 (2026-11-05 플레이 확인 — 밟힌 짧은 풀이 안개 위로 보였음)");
             presenter.TryGetModule(new GridPos(5, 2), out var stairs);
             Assert.That(stairs.GetComponentInChildren<Renderer>().enabled, Is.False, "높은 모듈(계단)은 안 본 칸이면 숨김");
         }

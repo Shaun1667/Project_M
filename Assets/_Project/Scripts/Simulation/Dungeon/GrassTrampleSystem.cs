@@ -7,7 +7,7 @@ namespace ProjectM.Dungeon
     /// ⑤ 풀 밟기 (3-11a, SPD): 높은 풀 칸에 선 살아 있는 유닛(플레이어 · 적 모두)이 있으면 그 칸을 짧은 풀로 바꾼다.
     /// ⑥ 시야 갱신 전에 돌아 같은 틱에 시야가 열린다. 상태를 갖지 않는다.
     /// </summary>
-    public sealed class GrassTrampleSystem : ITickSystem
+    public sealed class GrassTrampleSystem : IInstantTickSystem // 3-27 실시간 즉시 행동 뒤에도
     {
         private readonly World _world;
         private readonly ProjectM.Status.StatusBook _statuses;

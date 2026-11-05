@@ -127,6 +127,11 @@ namespace ProjectM.UI
             _bus.Subscribe<DamageBlockedEvent>(OnBlocked);
             _bus.Subscribe<ConsumableUsedEvent>(OnConsumableUsed);
             _bus.Subscribe<ArmorEquippedEvent>(OnArmorEquipped);
+            _bus.Subscribe<RelicEquippedEvent>(OnRelicEquipped); // 3-28a
+            _bus.Subscribe<RelicRejectedEvent>(OnRelicRejected);
+            _bus.Subscribe<TimeRelicUsedEvent>(OnTimeRelicUsed); // 3-28c
+            _bus.Subscribe<TimeRelicEndedEvent>(OnTimeRelicEnded);
+            _bus.Subscribe<ProjectM.Dungeon.ShopkeeperAngeredEvent>(OnShopkeeperAngered); // 3-29
             _bus.Subscribe<ArmorUpgradedEvent>(OnArmorUpgraded);
             _bus.Subscribe<ItemIdentifiedEvent>(OnIdentified);
             _bus.Subscribe<ProjectM.Dungeon.TrapTriggeredEvent>(OnTrapTriggered);
@@ -135,6 +140,8 @@ namespace ProjectM.UI
             _bus.Subscribe<ItemTransmutedEvent>(OnTransmuted);
             _bus.Subscribe<HungerChangedEvent>(OnHungerChanged);
             _bus.Subscribe<GoldChangedEvent>(OnGoldChanged);
+            _bus.Subscribe<EtherChangedEvent>(OnEtherChanged); // 3-28b
+            _bus.Subscribe<WorkbenchUsedEvent>(OnWorkbenchUsed);
             _bus.Subscribe<ProjectM.Dungeon.DoorUnlockedEvent>(OnDoorUnlocked);
             _bus.Subscribe<ProjectM.Dungeon.ItemBoughtEvent>(OnBought);
             _bus.Subscribe<ThrownBrokeEvent>(OnThrownBroke);
@@ -247,6 +254,43 @@ namespace ProjectM.UI
             Changed?.Invoke();
         }
 
+        // 3-28a: "생명석 부적을 꼈다 (원소 증폭 수정 → 배낭)" · 체력 막대 (최대 체력 유물)
+        private void OnRelicEquipped(RelicEquippedEvent e)
+        {
+            if (e.Unit != _playerId) return;
+            Hp = e.Hp;
+            MaxHp = e.MaxHp;
+            if (!e.Silent) AddLog(Text.RelicEquipped(e.ItemId, e.Previous));
+            Changed?.Invoke();
+        }
+
+        private void OnTimeRelicUsed(TimeRelicUsedEvent e)
+        {
+            if (e.Unit != _playerId) return;
+            AddLog(Text.TimeRelicUsed(e.RelicId, e.Kind, e.Amount, e.Power));
+            Changed?.Invoke();
+        }
+
+        private void OnShopkeeperAngered(ProjectM.Dungeon.ShopkeeperAngeredEvent e)
+        {
+            AddLog(HudText.ShopkeeperAngered(e.Taken));
+            Changed?.Invoke();
+        }
+
+        private void OnTimeRelicEnded(TimeRelicEndedEvent e)
+        {
+            if (e.Unit != _playerId) return;
+            AddLog(HudText.TimeRelicEnded(e.Kind));
+            Changed?.Invoke();
+        }
+
+        private void OnRelicRejected(RelicRejectedEvent e)
+        {
+            if (e.Unit != _playerId) return;
+            AddLog(Text.RelicSameKind(e.ItemId));
+            Changed?.Invoke();
+        }
+
         private void OnArmorUpgraded(ArmorUpgradedEvent e)
         {
             if (e.Unit != _playerId) return;
@@ -268,7 +312,7 @@ namespace ProjectM.UI
         {
             if (e.Unit != _playerId) return;
             Strength = e.Strength;
-            AddLog(HudText.StrengthGained(e.Strength));
+            AddLog(e.Gained < 0 ? HudText.StrengthLost(e.Strength) : HudText.StrengthGained(e.Strength));
             Changed?.Invoke();
         }
 
@@ -406,6 +450,21 @@ namespace ProjectM.UI
             Changed?.Invoke();
         }
 
+        /// <summary>가진 에테르 (3-28b — 금화 옆, 0이면 안 보임).</summary>
+        public int Ether { get; private set; }
+
+        private void OnEtherChanged(EtherChangedEvent e)
+        {
+            Ether = e.Ether;
+            Changed?.Invoke();
+        }
+
+        private void OnWorkbenchUsed(WorkbenchUsedEvent e)
+        {
+            AddLog(Text.WorkbenchUsed(e.Action, e.ItemId, e.Upgrade, e.Ether));
+            Changed?.Invoke();
+        }
+
         private void OnGoldChanged(GoldChangedEvent e)
         {
             Gold = e.Gold;
@@ -490,6 +549,11 @@ namespace ProjectM.UI
             _bus.Unsubscribe<DamageBlockedEvent>(OnBlocked);
             _bus.Unsubscribe<ConsumableUsedEvent>(OnConsumableUsed);
             _bus.Unsubscribe<ArmorEquippedEvent>(OnArmorEquipped);
+            _bus.Unsubscribe<RelicEquippedEvent>(OnRelicEquipped);
+            _bus.Unsubscribe<RelicRejectedEvent>(OnRelicRejected);
+            _bus.Unsubscribe<TimeRelicUsedEvent>(OnTimeRelicUsed);
+            _bus.Unsubscribe<TimeRelicEndedEvent>(OnTimeRelicEnded);
+            _bus.Unsubscribe<ProjectM.Dungeon.ShopkeeperAngeredEvent>(OnShopkeeperAngered);
             _bus.Unsubscribe<ArmorUpgradedEvent>(OnArmorUpgraded);
             _bus.Unsubscribe<ItemIdentifiedEvent>(OnIdentified);
             _bus.Unsubscribe<ProjectM.Dungeon.TrapTriggeredEvent>(OnTrapTriggered);
@@ -498,6 +562,8 @@ namespace ProjectM.UI
             _bus.Unsubscribe<ItemTransmutedEvent>(OnTransmuted);
             _bus.Unsubscribe<HungerChangedEvent>(OnHungerChanged);
             _bus.Unsubscribe<GoldChangedEvent>(OnGoldChanged);
+            _bus.Unsubscribe<EtherChangedEvent>(OnEtherChanged);
+            _bus.Unsubscribe<WorkbenchUsedEvent>(OnWorkbenchUsed);
             _bus.Unsubscribe<ProjectM.Dungeon.DoorUnlockedEvent>(OnDoorUnlocked);
             _bus.Unsubscribe<ProjectM.Dungeon.ItemBoughtEvent>(OnBought);
             _bus.Unsubscribe<ThrownBrokeEvent>(OnThrownBroke);
@@ -540,11 +606,12 @@ namespace ProjectM.UI
         private void OnDamaged(UnitDamagedEvent e)
         {
             bool fromStatus = !e.Attacker.IsValid; // 상태 이상(화상 · 중독) · 지형 피해
+            bool silent = fromStatus && e.Amount == 0; // 저항 등으로 0이 된 지속 피해는 로그를 남기지 않음 (2026-11-05 플레이 확인)
             if (e.Target == _playerId)
             {
                 Hp = e.Hp;
                 MaxHp = e.MaxHp;
-                AddLog(fromStatus
+                if (!silent) AddLog(fromStatus
                     ? $"나: 지속 피해 {e.Amount} (HP {e.Hp}/{e.MaxHp})"
                     : $"{HudText.Enemy(e.Attacker)}의 공격: 피해 {e.Amount} (HP {e.Hp}/{e.MaxHp})");
             }
@@ -552,7 +619,7 @@ namespace ProjectM.UI
             {
                 AddLog($"{HudText.Enemy(e.Target)}에게 피해 {e.Amount} ({e.Hp}/{e.MaxHp})");
             }
-            else if (fromStatus)
+            else if (fromStatus && !silent)
             {
                 AddLog($"{HudText.Enemy(e.Target)}: 지속 피해 {e.Amount} ({e.Hp}/{e.MaxHp})");
             }
@@ -606,6 +673,14 @@ namespace ProjectM.UI
             {
                 AddLog($"{HudText.Enemy(e.Id)} 쓰러짐");
             }
+            Changed?.Invoke();
+        }
+
+        /// <summary>로그에 안내 한 줄 (판 시작 · 이어하기 · 되돌리기처럼 이벤트가 아닌 알림 — 안내 줄에 계속 남지 않게, 2026-11-05).</summary>
+        public void AddNotice(string line)
+        {
+            if (string.IsNullOrEmpty(line)) return;
+            AddLog(line);
             Changed?.Invoke();
         }
 

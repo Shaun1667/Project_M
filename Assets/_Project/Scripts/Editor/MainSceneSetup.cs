@@ -8,6 +8,7 @@ using ProjectM.Magic;
 using ProjectM.Status;
 using ProjectM.Presentation;
 using ProjectM.UI;
+using ProjectM.Units;
 using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -82,6 +83,7 @@ namespace ProjectM.Editor
         private const string OpenDoorTilePath = VisualsDir + "/OpenDoorTile.asset";
         private const string LockedDoorTilePath = VisualsDir + "/LockedDoorTile.asset";
         private const string AlchemyPotTilePath = VisualsDir + "/AlchemyPotTile.asset";
+        private const string ArtifactBenchTilePath = VisualsDir + "/ArtifactBenchTile.asset"; // 3-28b
         private const string PlayerSpritePath = "Assets/_Project/Art/Greybox/player.png";
         private const string UnitCircleSpritePath = "Assets/_Project/Art/Greybox/unit_circle.png";
         private const string WhiteSquareSpritePath = "Assets/_Project/Art/Greybox/white_square.png";
@@ -246,6 +248,7 @@ namespace ProjectM.Editor
 
             var (hud, inventoryView, result) = EnsureHud();
             var characterSelect = EnsureCharacterSelect(); // 2026-10-21 판 시작 캐릭터 선택 창
+            var title = EnsureTitle(); // 3-27 타이틀 (이어하기 · 게임 시작 → 모드 · 시드) — 캐릭터 선택 창보다 위
             var characterCatalog = EnsureCharacterCatalog();
 
             // 3-5: 바닥 아이템(마법서) — 배치 수치(없을 때만 BALANCE 11번 값) · 표시 (색 · 반짝임은 메뉴 ProjectM/Setup/FX가 채움)
@@ -305,6 +308,7 @@ namespace ProjectM.Editor
                 ("_consumableConfig", consumableConfig),
                 ("_characters", characterCatalog),
                 ("_characterSelect", characterSelect),
+                ("_title", title), // 3-27
                 ("_classCatalog", EnsureClassCatalog()), // 3-21b 직업 · 형태
                 ("_progressionConfig", progressionConfig),
                 ("_floorItems", floorItems),
@@ -336,6 +340,7 @@ namespace ProjectM.Editor
             set.Set(TileType.OpenDoor, EnsureTintTile(OpenDoorTilePath, new Color(0.7f, 0.55f, 0.35f))); // 3-11c: 밝은 갈색
             set.Set(TileType.LockedDoor, EnsureTintTile(LockedDoorTilePath, new Color(0.75f, 0.6f, 0.15f))); // 3-15b: 금빛
             set.Set(TileType.AlchemyPot, EnsureTintTile(AlchemyPotTilePath, new Color(0.55f, 0.3f, 0.75f))); // 3-16c: 보라
+            set.Set(TileType.ArtifactBench, EnsureTintTile(ArtifactBenchTilePath, new Color(0.3f, 0.75f, 0.8f))); // 3-28b 마법 제작대: 청록 (3D 모델 전 그레이박스)
             EditorUtility.SetDirty(set);
             return set;
         }
@@ -1149,6 +1154,23 @@ namespace ProjectM.Editor
             changed |= catalog.AddIfMissing(knuckle);
             // 3-23a 유물: 시간의 모래시계 (26층 제단) — 주우면 판이 승리로 끝남
             changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "time_hourglass", DisplayName = "시간의 모래시계", Use = ItemUse.Artifact });
+            // 3-28a 유물 5종 (결정 2026-11-05 — 이름 가제 · 값 초안, BALANCE 24번): 유물 칸 2칸에 끼면 효과 (특성 효과 표). 값 0 = 상점에서 못 팜
+            changed |= catalog.AddIfMissing(Relic("relic_elemental_crystal", "원소 증폭 수정", TalentEffect.SpellDamage, 2, TalentEffectDef.ElementalSpells));
+            changed |= catalog.AddIfMissing(Relic("relic_life_stone", "생명석 부적", TalentEffect.MaxHp, 10, null));
+            changed |= catalog.AddIfMissing(Relic("relic_mana_spring", "마나 샘 펜던트", TalentEffect.ManaRegenInterval, -1, null));
+            changed |= catalog.AddIfMissing(Relic("relic_predator_fang", "포식자의 이빨", TalentEffect.HitManaChance, 25, TalentEffectDef.AllSpells));
+            changed |= catalog.AddIfMissing(Relic("relic_shadow_cloak", "그림자 망토", TalentEffect.UnseenDamagePercent, 30, TalentEffectDef.AllSpells));
+            // 3-28b 유물 강화 값 (결정 2026-11-05 — 강화 0 / +1 / +2 / +3, BALANCE 24번)
+            changed |= catalog.FillRelicValues("relic_elemental_crystal", 2, 3, 4, 5);
+            changed |= catalog.FillRelicValues("relic_life_stone", 10, 15, 20, 25);
+            changed |= catalog.FillRelicValues("relic_mana_spring", -1, -1, -2, -2);
+            changed |= catalog.FillRelicValues("relic_predator_fang", 25, 35, 45, 55);
+            changed |= catalog.FillRelicValues("relic_shadow_cloak", 30, 45, 60, 75);
+            // 3-28c 시간 유물 4종 (결정 2026-11-05 — 껴야 쓰고 빠른 칸으로 발동, 게이지 = 강화 0 / +1 / +2 / +3, BALANCE 24번)
+            changed |= catalog.AddIfMissing(TimeRelic("relic_pocket_watch", "마도구 회중시계", TimeRelicKind.PocketWatch, new[] { 5, 6, 7, 8 }, null));
+            changed |= catalog.AddIfMissing(TimeRelic("relic_time_machine", "타임머신", TimeRelicKind.TimeMachine, new[] { 5, 8, 11, 15 }, null));
+            changed |= catalog.AddIfMissing(TimeRelic("relic_accelerator", "가속기", TimeRelicKind.Accelerator, new[] { 3, 3, 4, 5 }, new[] { 2, 2, 3, 4 }));
+            changed |= catalog.AddIfMissing(TimeRelic("relic_stopwatch", "스톱워치", TimeRelicKind.Stopwatch, new[] { 3, 4, 5, 6 }, null));
             changed |= catalog.FillWeaponStrength(12); // 3-7b: 요구 힘 (SPD 2티어) — 3-7a 줄에도
             changed |= catalog.FillWeaponSpecials("dirk", 67, 0); // 3-7c: 더크 기습 최소 피해 67%
             changed |= catalog.FillWeaponSpecials("quarterstaff", 0, 2); // 3-7c: 육척봉 방어 0~2
@@ -1438,6 +1460,23 @@ namespace ProjectM.Editor
             GetOrAdd<Image>(panelGo).raycastTarget = false;
             panelGo.transform.SetAsLastSibling();
             var view = GetOrAdd<CharacterSelectPresenter>(canvasGo);
+            SetRefs(view, ("_panel", panel), ("_font", font));
+            return view;
+        }
+
+        /// <summary>타이틀 화면 (3-27): HUD 위를 덮는 판 — 글 · 칸은 실행 중에 만든다. 캐릭터 선택 창보다 뒤에 만들어 맨 위.</summary>
+        private static TitlePresenter EnsureTitle()
+        {
+            var canvasGo = FindOrCreate("HUD", null);
+            var font = EnsureHudFont();
+            var panelGo = FindOrCreate("Title", canvasGo.transform);
+            var panel = GetOrAdd<RectTransform>(panelGo);
+            panel.anchorMin = Vector2.zero;
+            panel.anchorMax = Vector2.one;
+            panel.offsetMin = panel.offsetMax = Vector2.zero;
+            GetOrAdd<Image>(panelGo).raycastTarget = true;
+            panelGo.transform.SetAsLastSibling();
+            var view = GetOrAdd<TitlePresenter>(canvasGo);
             SetRefs(view, ("_panel", panel), ("_font", font));
             return view;
         }
@@ -1782,6 +1821,37 @@ namespace ProjectM.Editor
             so.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(asset);
         }
+
+        /// <summary>3-28a 유물 한 줄: 효과 하나 · 강화 0 값 (강화 값은 3-28b에서 Values에 더함). spells = 대상 주문 ("*" · "*elemental" · null).</summary>
+        private static ItemCatalogAsset.Entry Relic(string id, string name, TalentEffect effect, int value, string spells) =>
+            new ItemCatalogAsset.Entry
+            {
+                Id = id,
+                DisplayName = name,
+                Use = ItemUse.Relic,
+                RelicEffects = new List<ClassCatalogAsset.TalentEffectEntry>
+                {
+                    new ClassCatalogAsset.TalentEffectEntry
+                    {
+                        Effect = effect,
+                        Values = new List<int> { value },
+                        SpellIds = spells != null ? new List<string> { spells } : new List<string>(),
+                    },
+                },
+            };
+
+        /// <summary>3-28c 시간 유물 한 줄 (지속 효과 없음 — 빠른 칸으로 발동).</summary>
+        private static ItemCatalogAsset.Entry TimeRelic(string id, string name, TimeRelicKind kind, int[] gauge, int[] power) =>
+            new ItemCatalogAsset.Entry
+            {
+                Id = id,
+                DisplayName = name,
+                Use = ItemUse.Relic,
+                RelicEffects = new List<ClassCatalogAsset.TalentEffectEntry>(),
+                TimeKind = kind,
+                TimeGauge = new List<int>(gauge),
+                TimePower = power != null ? new List<int>(power) : new List<int>(),
+            };
 
         private static ItemCatalogAsset.Entry Weapon(string id, string name, int maxDamage, int efficiency, float accuracy, int cost, int reach) =>
             new ItemCatalogAsset.Entry

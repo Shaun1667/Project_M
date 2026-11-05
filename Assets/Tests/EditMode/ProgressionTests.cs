@@ -145,6 +145,25 @@ namespace ProjectM.Tests
             Assert.That(Of<ExpGainedEvent>(s), Is.Empty);
         }
 
+        // ── 디버그 무적 (2026-11-05) ──
+
+        [Test]
+        public void DebugInvulnerable_PlayerTakesNoDamage_EnemiesStillDo()
+        {
+            var s = Start();
+            var rat = SpawnRat(s, new GridPos(3, 1));
+            s.World.DebugInvulnerable = true;
+
+            Combat.ApplyDamage(s.World, rat.Id, s.Player, 15, DamageCause.Attack);
+            Combat.ApplyDamage(s.World, s.Player.Id, rat, 3, DamageCause.Attack);
+            Assert.That(s.Player.Hp, Is.EqualTo(20), "무적: 플레이어 피해 0");
+            Assert.That(rat.Hp, Is.EqualTo(5), "적은 그대로 맞음");
+
+            s.World.DebugInvulnerable = false;
+            Combat.ApplyDamage(s.World, rat.Id, s.Player, 15, DamageCause.Attack);
+            Assert.That(s.Player.Hp, Is.EqualTo(5));
+        }
+
         [Test]
         public void NoProgressionConfig_NoExp()
         {

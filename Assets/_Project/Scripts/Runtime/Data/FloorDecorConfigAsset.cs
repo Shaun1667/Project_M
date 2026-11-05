@@ -56,8 +56,22 @@ namespace ProjectM.Data
         [Tooltip("파는 값 = 아이템 값 × %")] [Min(0)] [SerializeField] private int _shopSellPercent = 50;
         [SerializeField] private string _shopkeeperVisualId = "shopkeeper";
         [Min(1)] [SerializeField] private int _shopkeeperHp = 999;
+        [Tooltip("3-29 화난 상인 체력 = 그 구역 보스 체력 × %")] [Min(1)] [SerializeField] private int _angryKeeperHpPercent = 150;
+        [Tooltip("3-29 화난 상인이 차례마다 물건(해로운 물약 · 던지는 무기)을 던질 확률 %")] [Range(0, 100)] [SerializeField] private int _angryKeeperItemPercent = 35;
+        [Tooltip("3-29 화난 상인이 치유 물약을 마시는 체력 % (이 아래)")] [Range(0, 100)] [SerializeField] private int _angryKeeperHealBelowPercent = 50;
 
-        public ShopConfig ToShop() => new ShopConfig(_shopFloor, _shopStock, _shopStockCount, _shopBuyPercent, _shopSellPercent, _shopkeeperVisualId, _shopkeeperHp);
+        public ShopConfig ToShop() => new ShopConfig(_shopFloor, _shopStock, _shopStockCount, _shopBuyPercent, _shopSellPercent, _shopkeeperVisualId, _shopkeeperHp,
+            _angryKeeperHpPercent, _angryKeeperItemPercent, _angryKeeperHealBelowPercent);
+
+        [Header("작업실 · 마법 제작대 (3-28b — BALANCE 24번)")]
+        [Tooltip("유물 하나 만들기 (에테르)")] [Min(0)] [SerializeField] private int _relicCraftCost = 12;
+        [Tooltip("유물 하나 분해 (에테르, 강화와 무관)")] [Min(0)] [SerializeField] private int _relicDisassembleGain = 6;
+        [Tooltip("강화 비용 — +1, +2, +3 … (길이 = 최대 강화)")] [SerializeField] private int[] _relicUpgradeCosts = { 6, 9, 12 };
+        [Tooltip("작업실 방 안쪽 크기 (최소 · 최대)")] [Min(2)] [SerializeField] private int _workshopMinSize = 3;
+        [Min(2)] [SerializeField] private int _workshopMaxSize = 4;
+
+        public ProjectM.Items.WorkbenchConfig ToWorkbench() =>
+            new ProjectM.Items.WorkbenchConfig(_relicCraftCost, _relicDisassembleGain, _relicUpgradeCosts ?? new int[0], _workshopMinSize, _workshopMaxSize);
 
         public FloorDecorConfig ToConfig() => new FloorDecorConfig(_grassPatchCount, _grassPatchMinSize, _grassPatchMaxSize, _tallGrassPercent,
             _puddleCount, _puddleMinSize, _puddleMaxSize, _doorPercent, _hiddenDoorPercent,

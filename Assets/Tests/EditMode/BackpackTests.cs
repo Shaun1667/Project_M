@@ -124,7 +124,7 @@ namespace ProjectM.Tests
         [Test]
         public void Texts()
         {
-            Assert.That(HudText.EquipSlotNames, Is.EqualTo(new[] { "무기", "갑옷", "유물", "기타", "반지" }));
+            Assert.That(HudText.EquipSlotNames, Is.EqualTo(new[] { "무기", "갑옷", "유물", "유물", "반지" })); // 3-28a: 유물 2칸 ('기타' → 유물)
             var text = new HudText();
             Assert.That(HudText.ItemInfo(text, Items, InventoryRef.Item("potion_healing").WithCount(2)), Does.Contain("(2개) — 물약. 마시기 · 던지기"));
             Assert.That(HudText.ItemInfo(text, Items, InventoryRef.Empty), Is.Empty);
