@@ -108,6 +108,10 @@ namespace ProjectM.Editor
             new Row("burst.Water", Hovl + "AoE effects/Smoke AOE explosion", 0.33f, Water, 1.6f, 1f, 0.02f),
             new Row("burst.Lightning", Hovl + "Hits and explosions/Electro hit", 1f, Lightning, 1.3f, 0.8f, 0.02f),
             new Row("burst.Neutral", Hovl + "AoE effects/Ground AOE explosion", 0.33f, LightGold, 1.6f, 1f, 0.02f), // 3-22b 진각 (내 둘레 — 시전자 자리)
+            new Row("burst.Earth", Hovl + "AoE effects/Smoke AOE explosion", 0.36f, Sand, 1.6f, 1f, 0.02f), // G-12 (2026-11-05): 파라오 모래 폭풍 · 대지 3×3 — 모래빛 연기 폭발
+            new Row("burst.Wind", Hovl + "AoE effects/Smoke AOE explosion", 0.33f, Gust, 1.8f, 1f, 0.02f),
+            // G-12 보스 예고 칸 (3-17d 지형 Warning): 칸마다 붉은 마법진이 돈다 — 바닥 무늬(fx_warning 줄무늬)와 함께
+            new Row("terrain.Warning", Hovl + "Magic circles/Magic circle", 0.13f, new Color(1f, 0.15f, 0.1f), 1.5f, 0f, 0.03f),
             // 융합 주문 (맞는 효과만 바꿈)
             new Row("fusion.fusion_fire_water", Hovl + "AoE effects/Meteors AOE", 0.33f, Keep, 2f, 1f, 0.02f),
             new Row("fusion.fusion_water_poison", Hovl + "AoE effects/Smoke AOE explosion", 0.33f, Dirty, 1.6f, 1f, 0.02f),
@@ -287,8 +291,11 @@ namespace ProjectM.Editor
             var overlay = UnityEngine.Object.FindAnyObjectByType<TerrainOverlayPresenter>();
             if (overlay != null)
                 SetRefs(overlay, ("_fireZoneTile", tiles["fx_scorch"]), ("_poisonCloudTile", tiles["fx_haze"]), ("_waterTile", tiles["fx_water"]),
-                    ("_contaminatedWaterTile", tiles["fx_dirty_water"]), ("_icePatchTile", tiles["fx_ice"]));
+                    ("_contaminatedWaterTile", tiles["fx_dirty_water"]), ("_icePatchTile", tiles["fx_ice"]), ("_warningTile", tiles["fx_warning"]));
             else Debug.LogWarning("[FxSetup] TerrainOverlayPresenter 없음 — 먼저 ProjectM/Setup/Main Scene");
+
+            var traps = UnityEngine.Object.FindAnyObjectByType<TrapPresenter>(); // G-12 함정 문양 (종류 순서 = TrapType 1 ~ 7)
+            if (traps != null) traps.ConfigureTypeTiles(new TileBase[] { tiles["trap_fire"], tiles["trap_toxic"], tiles["trap_paralytic"], tiles["trap_flood"], tiles["trap_shock"], tiles["trap_teleport"], tiles["trap_alarm"] });
 
             var aim = UnityEngine.Object.FindAnyObjectByType<AimPreviewPresenter>();
             if (aim != null)
@@ -357,6 +364,16 @@ namespace ProjectM.Editor
             Make("fx_water", (u, v) => Mathf.Clamp01(0.45f + 0.3f * Ripple(u, v)));
             Make("fx_dirty_water", (u, v) => Mathf.Clamp01(0.5f + 0.2f * Ripple(u, v) + (Noise(u, v, 4f, 3) > 0.62f ? 0.3f : 0f)));
             Make("fx_ice", (u, v) => Mathf.Clamp01(0.5f + 0.15f * Noise(u, v, 2f, 4) + Crack(u, v) + 0.2f * Mathf.Clamp01(1f - Mathf.Abs(u - v) * 6f)));
+            // G-12 (2026-11-05) 보스 예고 칸: 두꺼운 테두리 + 사선 경고 줄무늬 (색은 TerrainOverlayPresenter의 붉은 경고색)
+            Make("fx_warning", (u, v) => Border(u, v, 0.08f) > 0f ? 1f : (Mathf.Repeat((u + v) * 4f, 1f) < 0.45f ? 0.75f : 0.15f));
+            // G-12 함정 문양 7종 (드러난 함정 — 색은 TrapPresenter 종류 색): 둥근 테 + 종류 기호
+            Make("trap_fire", (u, v) => Mathf.Max(Ring(u, v), Flame(u, v)));
+            Make("trap_toxic", (u, v) => Mathf.Max(Ring(u, v), Mathf.Max(Dot(u, v, 0.4f, 0.42f, 0.09f), Mathf.Max(Dot(u, v, 0.6f, 0.44f, 0.08f), Dot(u, v, 0.5f, 0.62f, 0.1f)))));
+            Make("trap_paralytic", (u, v) => Mathf.Max(Ring(u, v), Mathf.Max(Dot(u, v, 0.5f, 0.5f, 0.06f), Mathf.Abs(Dist(u, v) - 0.17f) < 0.025f ? 1f : 0f)));
+            Make("trap_flood", (u, v) => Mathf.Max(Ring(u, v), Wave(u, v, 0.42f) + Wave(u, v, 0.58f)));
+            Make("trap_shock", (u, v) => Mathf.Max(Ring(u, v), Bolt(u, v)));
+            Make("trap_teleport", (u, v) => Mathf.Max(Ring(u, v), Spiral(u, v)));
+            Make("trap_alarm", (u, v) => Mathf.Max(Ring(u, v), (Mathf.Abs(u - 0.5f) < 0.045f && v > 0.42f && v < 0.72f) || Dot(u, v, 0.5f, 0.33f, 0.05f) > 0f ? 1f : 0f));
             // 조준 데칼
             Make("aim_path", (u, v) => Mathf.Clamp01(1f - (Dist(u, v) - 0.12f) / 0.06f));
             Make("aim_affected", (u, v) => Border(u, v, 0.09f) > 0f ? 1f : 0.28f);
@@ -369,6 +386,43 @@ namespace ProjectM.Editor
         private static float Dist(float u, float v) => Mathf.Sqrt((u - 0.5f) * (u - 0.5f) + (v - 0.5f) * (v - 0.5f));
         private static float Ripple(float u, float v) => Mathf.Sin((v * 3f + 0.12f * Mathf.Sin(u * Mathf.PI * 4f)) * Mathf.PI * 2f); // 칸 경계에서 이어지게 정수 주기
         private static float Border(float u, float v, float t) => (u < t || u > 1f - t || v < t || v > 1f - t) ? 1f : 0f;
+
+        // ── G-12 함정 문양 도형 (0 ~ 1 칸 좌표, v = 위) ──
+        private static float Ring(float u, float v) => Mathf.Abs(Dist(u, v) - 0.38f) < 0.035f ? 1f : 0f;
+        private static float Dot(float u, float v, float cx, float cy, float r) => (u - cx) * (u - cx) + (v - cy) * (v - cy) < r * r ? 1f : 0f;
+
+        /// <summary>불꽃: 아래 둥근 몸 + 위로 좁아지는 끝.</summary>
+        private static float Flame(float u, float v)
+        {
+            if (Dot(u, v, 0.5f, 0.4f, 0.14f) > 0f && Dot(u, v, 0.5f, 0.36f, 0.06f) == 0f) return 1f; // 몸 (가운데 작은 구멍 = 불꽃 속)
+            float t = (v - 0.4f) / 0.34f; // 0 = 몸 가운데, 1 = 끝 (위)
+            return t > 0f && t < 1f && Mathf.Abs(u - 0.5f) < 0.14f * Mathf.Pow(1f - t, 0.8f) && Dot(u, v, 0.5f, 0.36f, 0.06f) == 0f ? 1f : 0f;
+        }
+
+        private static float Wave(float u, float v, float y) =>
+            u > 0.24f && u < 0.76f && Mathf.Abs(v - (y + 0.04f * Mathf.Sin((u - 0.24f) * Mathf.PI * 4f))) < 0.025f ? 1f : 0f;
+
+        /// <summary>번개: 위 → 가운데 → 아래로 꺾이는 굵은 선 세 토막.</summary>
+        private static float Bolt(float u, float v)
+        {
+            float Seg(float ax, float ay, float bx, float by)
+            {
+                float dx = bx - ax, dy = by - ay, t = Mathf.Clamp01(((u - ax) * dx + (v - ay) * dy) / (dx * dx + dy * dy));
+                float px = ax + t * dx - u, py = ay + t * dy - v;
+                return px * px + py * py < 0.035f * 0.035f ? 1f : 0f;
+            }
+            return Mathf.Max(Seg(0.56f, 0.72f, 0.42f, 0.5f), Mathf.Max(Seg(0.42f, 0.5f, 0.58f, 0.5f), Seg(0.58f, 0.5f, 0.44f, 0.28f)));
+        }
+
+        /// <summary>소용돌이: 반지름이 각도에 따라 커지는 선.</summary>
+        private static float Spiral(float u, float v)
+        {
+            float d = Dist(u, v);
+            if (d > 0.3f || d < 0.03f) return 0f;
+            float a = Mathf.Atan2(v - 0.5f, u - 0.5f) / (Mathf.PI * 2f) + 0.5f; // 0 ~ 1
+            float turns = (d / 0.09f) - a; // 한 바퀴 = 0.09
+            return Mathf.Abs(turns - Mathf.Round(turns)) < 0.22f ? 1f : 0f;
+        }
 
         private static float Corner(float u, float v)
         {

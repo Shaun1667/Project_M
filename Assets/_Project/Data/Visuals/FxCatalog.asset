@@ -1113,3 +1113,36 @@ MonoBehaviour:
     Fps: 0
     PixelCells: 0
     PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: burst.Earth
+    Prefab: {fileID: 5034656251238326012, guid: 9de2fa19f0390d44491264d9cab8cec5, type: 3}
+    Scale: 0.36
+    Tint: {r: 0.85, g: 0.68, b: 0.38, a: 1}
+    Speed: 1.6
+    Lifetime: 1
+    Height: 0.02
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: burst.Wind
+    Prefab: {fileID: 5034656251238326012, guid: 9de2fa19f0390d44491264d9cab8cec5, type: 3}
+    Scale: 0.33
+    Tint: {r: 0.8, g: 0.95, b: 0.85, a: 1}
+    Speed: 1.8
+    Lifetime: 1
+    Height: 0.02
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: terrain.Warning
+    Prefab: {fileID: 3744133877081091469, guid: a2a060732547fe64581bb0cb3c2bdf1d, type: 3}
+    Scale: 0.13
+    Tint: {r: 1, g: 0.15, b: 0.1, a: 1}
+    Speed: 1.5
+    Lifetime: 0
+    Height: 0.03
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
