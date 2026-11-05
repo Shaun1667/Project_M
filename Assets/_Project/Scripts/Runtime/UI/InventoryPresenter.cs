@@ -81,13 +81,14 @@ namespace ProjectM.UI
             else if (menu.AssignTarget >= 0) _title.text = HudText.AssignHint(menu.AssignTarget);
             else _title.text = menu.State == InventoryMenuState.ChooseSlot ? text.ChooseSlotHint(menu.SelectedEntry(player)) : HudText.BackpackTitle;
 
-            // 3-10b 장비 5칸 (SPD): 무기 · 갑옷 · 유물 · 기타 · 반지 — 유물 · 기타 · 반지는 틀만
+            // 3-10b 장비 5칸 (SPD): 무기 · 갑옷 · 유물 · 유물(3-28a) · 반지 — 반지는 틀만
             for (int i = 0; i < _equipCells.Count; i++)
             {
                 var (box, label) = _equipCells[i];
                 box.color = EquipColor;
                 string item = i == 0 ? (player.Weapon.IsEmpty ? null : text.WeaponName(player.Weapon))
-                    : i == 1 ? (player.Armor.IsEmpty ? null : text.ArmorName(player.Armor)) : null;
+                    : i == 1 ? (player.Armor.IsEmpty ? null : text.ArmorName(player.Armor))
+                    : RelicName(text, player, i - HudText.FirstRelicSlot);
                 label.text = $"<color=#9FB4CC>{HudText.EquipSlotNames[i]}</color> " + (item ?? "<color=#666666>—</color>");
             }
             var selected = menu.SelectedEntry(player);
@@ -175,6 +176,13 @@ namespace ProjectM.UI
                 case InventoryMenuOption.Throw: return HudText.MenuThrow;
                 default: return HudText.MenuClose;
             }
+        }
+
+        /// <summary>유물 칸 relicIndex(0 · 1)의 이름 (3-28a — 강화 단계가 있으면 +n). 비었거나 유물 칸이 아니면 null.</summary>
+        private static string RelicName(HudText text, Unit player, int relicIndex)
+        {
+            if (relicIndex < 0 || relicIndex >= player.Relics.Length || player.Relics[relicIndex].IsEmpty) return null;
+            return text.Entry(player.Relics[relicIndex]);
         }
 
         private void EnsureLayout(int slotCount)

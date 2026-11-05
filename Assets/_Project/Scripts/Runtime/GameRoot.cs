@@ -402,6 +402,7 @@ namespace ProjectM
                 {
                     if (hunger != null) ProjectM.Units.Hunger.DropFood(World, hunger, dead);
                     if (lootRules != null) Loot.DropGold(World, lootRules, dead);
+                    if (lootRules != null && World.Run.BossId.IsValid && dead.Id == World.Run.BossId) Loot.DropBossRelic(World, Items, lootRules, dead.Pos); // 3-28a 구역 보스 보상
                 },
                 pos => { if (lootRules != null) Loot.DropSeed(World, lootRules, pos); }); // 3-16b
             var consumableConfig = _consumableConfig != null ? _consumableConfig.ToConfig() : ConsumableConfig.Default;
@@ -451,6 +452,7 @@ namespace ProjectM
             World.Events.Subscribe<StairsUnsealedEvent>(OnStairsUnsealed); // 3-21b: 선택 층 보스 처치 → 형태 선택
             World.Events.Subscribe<LevelUpEvent>(OnLevelUp); // 3-21c: 특성 점수 안내
             World.SetClassRules(Classes); // 3-21c: 특성 효과 조회 (규칙 연결 — 저장 안 함)
+            World.SetRelicRules(Items); // 3-28a: 유물 효과 조회 (규칙 연결 — 저장 안 함)
             var consumableConfigForRun = consumableConfig;
 
             Unit player;
@@ -563,6 +565,7 @@ namespace ProjectM
                 if (hunger != null) Loot.PlanFood(World, Items, hunger, dungeonConfig.FloorCount); // 3-14: 층마다 식량 1 + 가끔 빵 (앞 계획 뒤)
             }
             Identification.AssignLooks(World, Items, consumableConfig); // 3-9: 판마다 겉모습 (배치 계획 모두 뒤 — 앞 계획은 그대로)
+            if (loot != null) Loot.PlanRelics(World, Items, loot, dungeonConfig.FloorCount); // 3-28a: 유물 (겉모습 뒤 — 앞 계획 · 겉모습은 그대로)
             if (loot != null)
             {
                 Loot.PlaceFloorItems(World, Floor.Start, loot);

@@ -94,7 +94,7 @@ namespace ProjectM.Tests
         [Test]
         public void Snapshot_RoundTripsMode()
         {
-            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.EqualTo(27));
+            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.GreaterThanOrEqualTo(27)); // 정확한 값은 RelicTests (28)
             var (world, _, _) = Start();
             world.Run.Mode = RunMode.RealTime;
             var restored = World.Restore(WorldSnapshotCodec.Decode(WorldSnapshotCodec.Encode(world.Capture())), (w, id) => new IdleAi());

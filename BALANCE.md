@@ -891,6 +891,29 @@ SPD 규칙 그대로: 방어 굴림 = 강화 ~ 티어 × (2 + 강화) (SPD Armor
 
 ---
 
+## 24. 유물 (3-28a) — `ItemCatalog.asset`의 `Relic` 줄(`RelicEffects`) + `LootConfig.asset` 유물 값
+
+결정 (2026-11-05, 사용자): 유물 칸 **2칸** · 같은 종류는 한 칸만 · 효과는 특성 효과 표(`TalentEffect`)와 같은 데이터 — 강화 단계 n이면 `Values[n]`(강화는 3-28b, 지금은 값 하나). 이름은 가제, 값은 초안(Phase 4에서 조정).
+
+| ID | 이름 | 효과 | 값 (강화 0) | 대상 |
+|---|---|---|---|---|
+| `relic_elemental_crystal` | 원소 증폭 수정 | `SpellDamage` | **+2** | `*elemental` (속성 주문 — 무속성 직업 기술 제외) |
+| `relic_life_stone` | 생명석 부적 | `MaxHp` | **+10** | 끼면 최대 · 현재 체력 +10, 빼면 −10 (체력 최소 1) |
+| `relic_mana_spring` | 마나 샘 펜던트 | `ManaRegenInterval` (새 효과 14) | **−1틱** | 마나 회복 3틱 → 2틱마다 (최소 1틱) |
+| `relic_predator_fang` | 포식자의 이빨 | `HitManaChance` | **25%** | `*` (근접 · 모든 주문이 맞으면 마나 +1) |
+| `relic_shadow_cloak` | 그림자 망토 | `UnseenDamagePercent` | **+30%** | `*` (나를 못 본 적에게 주문 피해) |
+
+| 값 | 필드 (`LootConfigAsset`) | 값 | 뜻 |
+|---|---|---|---|
+| 판마다 바닥 유물 | `_relicsPerRun` | **2** | 유물 종류 중 시드로 고름(안 겹침), 1~마지막 전 층 (`RngStream.Loot`, 계획 끝 — 겉모습 뒤) |
+| 보스 보상 | `_bossRelicPercent` | **100%** | 구역 보스(`RunState.BossId`)가 죽은 칸에 유물 하나 (종류 무작위) |
+
+- 유물 값(`Value`) = 0 → 상점에서 팔 수 없음 (에테르 경제는 3-28b 분해로만).
+- 결과: 한 판에 바닥 2 + 보스 5(5 · 10 · 15 · 20 · 25층) ≈ 7개 → 3-28b에서 분해 6 에테르 × 2 = 원하는 유물 하나(12).
+- 검산 `RelicTests.ProjectAssets_MatchBalanceTable`.
+
+---
+
 ## 측정 기준선 · 실험
 
 Phase 4 측정 봇 이후 작성. 형식은 `Docs/Source/claude_all_type_genre.md` 17-4.

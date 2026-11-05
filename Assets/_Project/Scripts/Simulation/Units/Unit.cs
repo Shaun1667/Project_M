@@ -40,6 +40,8 @@ namespace ProjectM.Units
         public int Strength { get; internal set; }
         /// <summary>입은 갑옷 (3-10a). Empty = 맨몸. Items.Armors로만 바꾼다.</summary>
         public EquippedArmor Armor { get; internal set; }
+        /// <summary>낀 유물 (3-28a — 2칸, 빈 칸 = Empty, 강화 단계 = Upgrade). Items.Relics로만 바꾼다. 스냅샷 v28.</summary>
+        public InventoryRef[] Relics { get; } = new InventoryRef[ProjectM.Items.Relics.SlotCount];
         /// <summary>허기 (3-14 — 플레이어만 오름, HungerSystem). 0 = 배부름.</summary>
         public int Hunger { get; internal set; }
 

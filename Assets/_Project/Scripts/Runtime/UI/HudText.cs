@@ -126,8 +126,32 @@ namespace ProjectM.UI
         /// <summary>배낭 창 제목 (3-10b, SPD).</summary>
         public const string BackpackTitle = "배낭  <size=70%><color=#AAAAAA>I · F 열기 · Esc 닫기</color></size>";
 
-        /// <summary>장비 5칸 이름 (3-10b — 결정 2026-10-20: 무기 · 갑옷 · 유물 · 기타 · 반지, 뒤의 셋은 틀만).</summary>
-        public static readonly string[] EquipSlotNames = { "무기", "갑옷", "유물", "기타", "반지" };
+        /// <summary>장비 5칸 이름 (3-10b — 결정 2026-10-20 · 3-28a 2026-11-05: 무기 · 갑옷 · 유물 · 유물 · 반지 — 유물 2칸, 반지는 틀만). 유물 칸 = 2 · 3번.</summary>
+        public static readonly string[] EquipSlotNames = { "무기", "갑옷", "유물", "유물", "반지" };
+        public const int FirstRelicSlot = 2;
+
+        // ── 유물 (3-28a) ──
+        public string RelicSameKind(string id) => $"{Item(id)}: 같은 유물은 하나만 낄 수 있다";
+        public string RelicEquipped(string id, string previous) => previous == null ? $"{Item(id)}을(를) 꼈다" : $"{Item(id)}을(를) 꼈다 ({Item(previous)} → 배낭)";
+
+        /// <summary>유물 효과 한 줄 (3-28a, 데이터 → 글 — 유물마다 글을 따로 두지 않음).</summary>
+        public static string RelicEffect(TalentEffectDef e, int points)
+        {
+            int v = e.ValueAt(points);
+            string target = e.AppliesTo("__none__", ProjectM.Magic.Element.Fire) ? (e.AppliesTo("__none__", ProjectM.Magic.Element.Neutral) ? "모든 주문" : "속성 주문") : "주문";
+            switch (e.Effect)
+            {
+                case TalentEffect.SpellDamage: return $"{target} 피해 {Signed(v)}";
+                case TalentEffect.MaxHp: return $"최대 체력 {Signed(v)}";
+                case TalentEffect.ManaRegenInterval: return $"마나 회복 간격 {Signed(v)}턴";
+                case TalentEffect.HitManaChance: return $"근접 · {target}이 맞으면 {v}% 확률로 마나 +1";
+                case TalentEffect.UnseenDamagePercent: return $"나를 못 본 적에게 {target} 피해 +{v}%";
+                case TalentEffect.MeleeDamage: return $"근접 피해 {Signed(v)}";
+                default: return $"{e.Effect} {Signed(v)}";
+            }
+        }
+
+        private static string Signed(int v) => v >= 0 ? "+" + v : v.ToString();
 
         /// <summary>배낭 설명 줄 (3-10b): 고른 칸의 종류와 쓰는 법. 모르는 물약 · 주문서는 "정체를 모름".</summary>
         public static string ItemInfo(HudText text, ItemBook items, InventoryRef entry)
@@ -149,6 +173,12 @@ namespace ProjectM.UI
                 case ItemUse.Thrown: return $"{text.Entry(entry)}{count} — 던지는 무기. 던지기 = 피해 {def.ThrowMinDamage}~{def.ThrowMaxDamage}" + (def.BreakPercent > 0 ? $" · {def.BreakPercent}%로 부러짐" : " · 다시 주울 수 있음");
                 case ItemUse.Key: return $"{text.Entry(entry)}{count} — 열쇠. 잠긴 문에 부딪히면 열린다";
                 case ItemUse.Food: return $"{text.Entry(entry)}{count} — 음식. 먹으면 허기 −{def.Food}" + (def.Risky ? " · 탈이 날 수 있음 (불에 구우면 안전)" : string.Empty);
+                case ItemUse.Relic:
+                {
+                    var lines = new System.Collections.Generic.List<string>();
+                    foreach (var e in def.RelicEffects) lines.Add(RelicEffect(e, ProjectM.Items.Relics.PointsOf(entry)));
+                    return $"{text.Entry(entry)} — 유물. 사용 = 끼기 (유물 칸 2 · 같은 종류는 하나)\n" + string.Join(" · ", lines);
+                }
                 default: return text.Entry(entry);
             }
         }

@@ -85,6 +85,8 @@ namespace ProjectM.Items
         Seed = 11,
         /// <summary>유물 (3-23a 시간의 모래시계): 걸어 들어가 주우면 판이 승리로 끝난다. 배낭에 넣지 않는다.</summary>
         Artifact = 12,
+        /// <summary>유물 장비 (3-28a, 결정 2026-11-05): 유물 칸(2칸)에 끼면 RelicEffects가 켜진다 (특성 효과 표와 같음 — 강화 단계 n이면 Values[n]). 같은 종류는 한 칸만. 모래시계(Artifact)와 다름.</summary>
+        Relic = 13,
     }
 
     /// <summary>
@@ -179,13 +181,16 @@ namespace ProjectM.Items
         public ProjectM.Dungeon.TrapType PlantTrap { get; }
         /// <summary>연금 솥에 넣으면 나오는 물약 (3-16c). 없으면 null.</summary>
         public string BrewsInto { get; }
+        /// <summary>유물 효과 (3-28a — 특성 효과 표, 강화 0 = Values[0]). 유물이 아니면 비어 있음.</summary>
+        public System.Collections.Generic.IReadOnlyList<ProjectM.Units.TalentEffectDef> RelicEffects { get; }
 
         public ItemDef(string id, ItemUse use, string spellId = null, WeaponDef weapon = null, int amount = 0,
             ConsumableEffect effect = ConsumableEffect.None, int weight = 0, ArmorDef armor = null,
             int food = 0, bool risky = false, string fireTransformsTo = null, string iceTransformsTo = null, int value = 0,
             int throwMinDamage = 0, int throwMaxDamage = 0, int breakPercent = 0, ProjectM.Dungeon.TrapType plantTrap = ProjectM.Dungeon.TrapType.None,
-            string brewsInto = null)
+            string brewsInto = null, System.Collections.Generic.IReadOnlyList<ProjectM.Units.TalentEffectDef> relicEffects = null)
         {
+            RelicEffects = use == ItemUse.Relic && relicEffects != null ? relicEffects : Array.Empty<ProjectM.Units.TalentEffectDef>();
             BrewsInto = use == ItemUse.Seed && !string.IsNullOrEmpty(brewsInto) ? brewsInto : null;
             if (use == ItemUse.Seed && plantTrap == ProjectM.Dungeon.TrapType.None) throw new ArgumentException("씨앗에 식물이 없다: " + id, nameof(plantTrap));
             PlantTrap = use == ItemUse.Seed ? plantTrap : ProjectM.Dungeon.TrapType.None;

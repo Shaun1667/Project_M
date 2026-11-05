@@ -107,6 +107,11 @@ namespace ProjectM.Core
 
         public void SetClassRules(ProjectM.Units.ClassBook classes) => Classes = classes;
 
+        /// <summary>유물 효과 표 (3-28a — 아이템 ID → 효과). GameRoot가 넣는다 — 규칙 연결이라 저장하지 않는다 (낀 유물은 Unit.Relics). null이면 유물 효과 없음.</summary>
+        internal ProjectM.Items.ItemBook RelicItems { get; private set; }
+
+        public void SetRelicRules(ProjectM.Items.ItemBook items) => RelicItems = items;
+
         public void SetItemRules(Action<ProjectM.Magic.Element, IReadOnlyList<GridPos>> onCellsHit, Action<Unit> onUnitDied, Action<GridPos> onGrassTrampled = null)
         {
             OnCellsHit = onCellsHit;
@@ -313,7 +318,7 @@ namespace ProjectM.Core
                 seen.HasValue, seen?.X ?? 0, seen?.Y ?? 0, u.MaxMana, u.Mana, (InventoryRef[])u.InventorySlots.Clone(), (InventoryRef[])u.QuickSlots.Clone(),
                 u.PreviousPos, u.WanderTarget, u.Statuses.ConvertAll(s => new UnitStatusState(s.Type, s.Remaining)).ToArray(),
                 u.Accuracy, u.Evasion, u.ExpReward, u.ExpMaxLevel, u.Level, u.Exp, u.Weapon, u.Strength, u.Armor, u.Hunger,
-                u.ChargeTarget, u.Summoned);
+                u.ChargeTarget, u.Summoned, (InventoryRef[])u.Relics.Clone());
         }
 
         private static Unit ToUnit(UnitState u)
@@ -326,6 +331,7 @@ namespace ProjectM.Core
                 unit.Statuses.Add(new StatusInstance(st.Type, st.Remaining));
             unit.ChargeTarget = u.ChargeTarget; // 3-17d
             unit.Summoned = u.Summoned;
+            for (int i = 0; i < unit.Relics.Length && i < u.Relics.Length; i++) unit.Relics[i] = u.Relics[i]; // 28 (3-28a)
             return unit;
         }
 

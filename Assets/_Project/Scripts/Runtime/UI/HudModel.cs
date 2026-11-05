@@ -115,6 +115,8 @@ namespace ProjectM.UI
             _bus.Subscribe<DamageBlockedEvent>(OnBlocked);
             _bus.Subscribe<ConsumableUsedEvent>(OnConsumableUsed);
             _bus.Subscribe<ArmorEquippedEvent>(OnArmorEquipped);
+            _bus.Subscribe<RelicEquippedEvent>(OnRelicEquipped); // 3-28a
+            _bus.Subscribe<RelicRejectedEvent>(OnRelicRejected);
             _bus.Subscribe<ArmorUpgradedEvent>(OnArmorUpgraded);
             _bus.Subscribe<ItemIdentifiedEvent>(OnIdentified);
             _bus.Subscribe<ProjectM.Dungeon.TrapTriggeredEvent>(OnTrapTriggered);
@@ -232,6 +234,23 @@ namespace ProjectM.UI
             bool alreadyShown = e.Armor.Equals(Armor); // 판 시작 천 갑옷 — Bind가 이미 읽음
             Armor = e.Armor;
             if (!alreadyShown) AddLog(Text.Worn(e.Armor.ItemId));
+            Changed?.Invoke();
+        }
+
+        // 3-28a: "생명석 부적을 꼈다 (원소 증폭 수정 → 배낭)" · 체력 막대 (최대 체력 유물)
+        private void OnRelicEquipped(RelicEquippedEvent e)
+        {
+            if (e.Unit != _playerId) return;
+            Hp = e.Hp;
+            MaxHp = e.MaxHp;
+            AddLog(Text.RelicEquipped(e.ItemId, e.Previous));
+            Changed?.Invoke();
+        }
+
+        private void OnRelicRejected(RelicRejectedEvent e)
+        {
+            if (e.Unit != _playerId) return;
+            AddLog(Text.RelicSameKind(e.ItemId));
             Changed?.Invoke();
         }
 
@@ -477,6 +496,8 @@ namespace ProjectM.UI
             _bus.Unsubscribe<DamageBlockedEvent>(OnBlocked);
             _bus.Unsubscribe<ConsumableUsedEvent>(OnConsumableUsed);
             _bus.Unsubscribe<ArmorEquippedEvent>(OnArmorEquipped);
+            _bus.Unsubscribe<RelicEquippedEvent>(OnRelicEquipped);
+            _bus.Unsubscribe<RelicRejectedEvent>(OnRelicRejected);
             _bus.Unsubscribe<ArmorUpgradedEvent>(OnArmorUpgraded);
             _bus.Unsubscribe<ItemIdentifiedEvent>(OnIdentified);
             _bus.Unsubscribe<ProjectM.Dungeon.TrapTriggeredEvent>(OnTrapTriggered);

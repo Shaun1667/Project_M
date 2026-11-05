@@ -166,7 +166,7 @@ namespace ProjectM.Magic
 
             if (world != null)
             {
-                int T(ProjectM.Units.TalentEffect e) => ProjectM.Units.Talents.ForSpell(world, caster, e, spell.Id);
+                int T(ProjectM.Units.TalentEffect e) => ProjectM.Units.Talents.ForSpell(world, caster, e, spell.Id, spell.Element); // 3-28a: "*elemental" 유물
                 int dDamage = T(ProjectM.Units.TalentEffect.SpellDamage), dRange = T(ProjectM.Units.TalentEffect.SpellRange),
                     dHits = T(ProjectM.Units.TalentEffect.SpellHitCount), dTargets = T(ProjectM.Units.TalentEffect.SpellMaxTargets),
                     dMana = T(ProjectM.Units.TalentEffect.SpellManaCost), dKill = T(ProjectM.Units.TalentEffect.SpellKillMana),

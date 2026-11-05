@@ -53,11 +53,12 @@ namespace ProjectM.Magic
 
         public void Run(in TickContext context)
         {
-            if ((context.Tick + 1) % _config.ManaRegenIntervalTicks != 0) return;
             foreach (var unit in _world.Units.ToSortedList())
             {
-                if (unit.IsAlive && unit.MaxMana > 0)
-                    Mana.Restore(_world, unit, _config.ManaRegenAmount);
+                if (!unit.IsAlive || unit.MaxMana <= 0) continue;
+                // 3-28a 마나 샘 펜던트: 유닛마다 간격 (기본 + 유물 · 특성 보너스, 최소 1틱) — 틱 번호로만 판단 (상태 없음)
+                int interval = Math.Max(1, _config.ManaRegenIntervalTicks + ProjectM.Units.Talents.ManaRegenIntervalBonus(_world, unit));
+                if ((context.Tick + 1) % interval == 0) Mana.Restore(_world, unit, _config.ManaRegenAmount);
             }
         }
     }

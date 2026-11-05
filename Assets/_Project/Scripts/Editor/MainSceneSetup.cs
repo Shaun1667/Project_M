@@ -8,6 +8,7 @@ using ProjectM.Magic;
 using ProjectM.Status;
 using ProjectM.Presentation;
 using ProjectM.UI;
+using ProjectM.Units;
 using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -1150,6 +1151,12 @@ namespace ProjectM.Editor
             changed |= catalog.AddIfMissing(knuckle);
             // 3-23a 유물: 시간의 모래시계 (26층 제단) — 주우면 판이 승리로 끝남
             changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "time_hourglass", DisplayName = "시간의 모래시계", Use = ItemUse.Artifact });
+            // 3-28a 유물 5종 (결정 2026-11-05 — 이름 가제 · 값 초안, BALANCE 24번): 유물 칸 2칸에 끼면 효과 (특성 효과 표). 값 0 = 상점에서 못 팜
+            changed |= catalog.AddIfMissing(Relic("relic_elemental_crystal", "원소 증폭 수정", TalentEffect.SpellDamage, 2, TalentEffectDef.ElementalSpells));
+            changed |= catalog.AddIfMissing(Relic("relic_life_stone", "생명석 부적", TalentEffect.MaxHp, 10, null));
+            changed |= catalog.AddIfMissing(Relic("relic_mana_spring", "마나 샘 펜던트", TalentEffect.ManaRegenInterval, -1, null));
+            changed |= catalog.AddIfMissing(Relic("relic_predator_fang", "포식자의 이빨", TalentEffect.HitManaChance, 25, TalentEffectDef.AllSpells));
+            changed |= catalog.AddIfMissing(Relic("relic_shadow_cloak", "그림자 망토", TalentEffect.UnseenDamagePercent, 30, TalentEffectDef.AllSpells));
             changed |= catalog.FillWeaponStrength(12); // 3-7b: 요구 힘 (SPD 2티어) — 3-7a 줄에도
             changed |= catalog.FillWeaponSpecials("dirk", 67, 0); // 3-7c: 더크 기습 최소 피해 67%
             changed |= catalog.FillWeaponSpecials("quarterstaff", 0, 2); // 3-7c: 육척봉 방어 0~2
@@ -1800,6 +1807,24 @@ namespace ProjectM.Editor
             so.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(asset);
         }
+
+        /// <summary>3-28a 유물 한 줄: 효과 하나 · 강화 0 값 (강화 값은 3-28b에서 Values에 더함). spells = 대상 주문 ("*" · "*elemental" · null).</summary>
+        private static ItemCatalogAsset.Entry Relic(string id, string name, TalentEffect effect, int value, string spells) =>
+            new ItemCatalogAsset.Entry
+            {
+                Id = id,
+                DisplayName = name,
+                Use = ItemUse.Relic,
+                RelicEffects = new List<ClassCatalogAsset.TalentEffectEntry>
+                {
+                    new ClassCatalogAsset.TalentEffectEntry
+                    {
+                        Effect = effect,
+                        Values = new List<int> { value },
+                        SpellIds = spells != null ? new List<string> { spells } : new List<string>(),
+                    },
+                },
+            };
 
         private static ItemCatalogAsset.Entry Weapon(string id, string name, int maxDamage, int efficiency, float accuracy, int cost, int reach) =>
             new ItemCatalogAsset.Entry

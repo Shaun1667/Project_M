@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using ProjectM.Items;
+using ProjectM.Units;
 using UnityEngine;
 
 namespace ProjectM.Data
@@ -47,6 +48,8 @@ namespace ProjectM.Data
             [Tooltip("던질 때 부러질 확률 %")] [Range(0, 100)] public int BreakPercent;
             [Tooltip("씨앗(Seed)만: 자라는 식물 (TrapCatalog)")] public ProjectM.Dungeon.TrapType PlantTrap;
             [Tooltip("씨앗(Seed)만: 연금 솥에서 나오는 물약 (3-16c)")] public string BrewsInto;
+            [Header("유물 (Relic만, 3-28a — BALANCE 24번)")]
+            [Tooltip("끼면 켜지는 효과 (특성 효과 표와 같음 — Values[강화 단계], 대상 주문 \"*\" = 모든 주문 · \"*elemental\" = 속성 주문)")] public List<ClassCatalogAsset.TalentEffectEntry> RelicEffects;
         }
 
         [SerializeField] private List<Entry> _items = new List<Entry>();
@@ -71,9 +74,18 @@ namespace ProjectM.Data
                     : null;
                 var armor = e.Use == ItemUse.EquipArmor ? new ArmorDef(e.Tier, e.StrengthRequirement) : null;
                 defs.Add(new ItemDef(e.Id, e.Use, e.SpellId, weapon, e.Amount, e.Effect, e.Weight, armor, e.Food, e.Risky, e.FireTransformsTo, e.IceTransformsTo, e.Value,
-                    e.ThrowMinDamage, e.ThrowMaxDamage, e.BreakPercent, e.PlantTrap, e.BrewsInto));
+                    e.ThrowMinDamage, e.ThrowMaxDamage, e.BreakPercent, e.PlantTrap, e.BrewsInto, RelicEffectsOf(e)));
             }
             return new ItemBook(defs, new WeaponRules(_weaponDamageDivisor, _weaponMinDamage), new ArmorRules(_armorDefenseDivisor, _armorDeficitPenalty));
+        }
+
+        private static List<TalentEffectDef> RelicEffectsOf(Entry e)
+        {
+            var list = new List<TalentEffectDef>();
+            if (e.Use != ItemUse.Relic || e.RelicEffects == null) return list;
+            foreach (var r in e.RelicEffects)
+                list.Add(new TalentEffectDef(r.Effect, r.Values ?? new List<int>(), r.SpellIds ?? new List<string>(), r.WeaponId, r.Status));
+            return list;
         }
 
         /// <summary>ID → 표시 이름 (이름이 빈 항목은 빠짐).</summary>

@@ -36,9 +36,12 @@ namespace ProjectM.Data
         [Tooltip("층마다 씨앗 수")] [Min(0)] [SerializeField] private int _seedsPerFloor = 2;
         [SerializeField] private string[] _seedItems = { "seed_firebloom", "seed_icecap", "seed_sorrowmoss", "seed_sungrass", "seed_fadeleaf" };
         [Tooltip("높은 풀을 밟으면 씨앗을 떨어뜨릴 확률 %")] [Range(0, 100)] [SerializeField] private int _seedDropPercent = 5;
+        [Header("유물 (3-28a — BALANCE 11번)")]
+        [Tooltip("한 판에 바닥에 놓는 유물 수 (종류 안 겹침)")] [Min(0)] [SerializeField] private int _relicsPerRun = 2;
+        [Tooltip("구역 보스가 죽을 때 유물을 떨어뜨릴 확률 %")] [Range(0, 100)] [SerializeField] private int _bossRelicPercent = 100;
 
         public LootConfig ToConfig() => new LootConfig(_maxBooksPerFloor, _minDistanceFromStart, _weaponsPerRun, _upgradeScrollsPerRun, _strengthPotionsPerRun, _armorsPerRun,
             _goldPilesPerFloor, _goldMinBase, _goldMinPerFloor, _goldMaxBase, _goldMaxPerFloor, _enemyGoldPercent, _enemyGoldMin, _enemyGoldMax,
-            _thrownPerFloor, _thrownItems, _thrownBundles, _seedsPerFloor, _seedItems, _seedDropPercent);
+            _thrownPerFloor, _thrownItems, _thrownBundles, _seedsPerFloor, _seedItems, _seedDropPercent, _relicsPerRun, _bossRelicPercent);
     }
 }

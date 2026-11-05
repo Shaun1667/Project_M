@@ -359,6 +359,7 @@ namespace ProjectM.Core
                 w.Write(u.Hunger); // 20 (3-14)
                 WriteOptionalPos(w, u.ChargeTarget); // 23 (3-17d)
                 w.Write(u.Summoned);
+                WriteRefs(w, u.Relics); // 28 (3-28a)
             }
         }
 
@@ -413,9 +414,10 @@ namespace ProjectM.Core
                 int hunger = r.ReadInt32(); // 20 (3-14)
                 var chargeTarget = ReadOptionalPos(r); // 23 (3-17d)
                 bool summoned = r.ReadBoolean();
+                var relics = ReadRefs(r); // 28 (3-28a)
                 units[i] = new UnitState(id, faction, visualId, maxHp, attackDamage, sightRange, x, y, hp, hasLastSeen, lastSeenX, lastSeenY,
                     maxMana, mana, inventory, quick, previousPos, wanderTarget, statuses, accuracy, evasion, expReward, expMaxLevel, level, exp, weapon, strength, armor, hunger,
-                    chargeTarget, summoned);
+                    chargeTarget, summoned, relics);
             }
             return units;
         }
