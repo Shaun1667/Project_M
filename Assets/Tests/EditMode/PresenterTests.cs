@@ -712,5 +712,36 @@ namespace ProjectM.Tests
             fog.RevealAll = false;
             Assert.That(fogRenderer.enabled, Is.True);
         }
+
+        // 2026-11-05 사용자 "안 보이는 곳 검정 부분이 SPD처럼 경계선이 흐릿하게": 부드러운 안개는 안 본 칸도 텍스처로만 (Tilemap 검정 덮개 없음)
+        [Test]
+        public void Fog_Soft_UnexploredAlsoSoft_NoHardTiles()
+        {
+            var fogGo = new GameObject("Fog");
+            fogGo.transform.SetParent(_root.transform, false);
+            var fogMap = fogGo.AddComponent<Tilemap>();
+            fogGo.AddComponent<TilemapRenderer>();
+            var softGo = new GameObject("FogSoft");
+            softGo.transform.SetParent(fogGo.transform, false);
+            var soft = softGo.AddComponent<SpriteRenderer>();
+            var fog = fogGo.AddComponent<FogPresenter>();
+            fog.Configure(fogMap, _floorTile, soft);
+            fog.Bind(_bus);
+
+            // 5 × 5 맵, x = 0 ~ 3 보임 · x = 4 안 봄. 칸 하나 = 4 텍셀, 둘레 한 칸 (텍셀 x = (칸 x + 1) × 4 + …)
+            _bus.Publish(new MapLoadedEvent(new GridMap(5, 5)));
+            var visible = new System.Collections.Generic.List<GridPos>();
+            for (int y = 0; y < 5; y++) for (int x = 0; x < 4; x++) visible.Add(new GridPos(x, y));
+            _bus.Publish(Visibility(5, 5, visible.ToArray()));
+            _bus.Flush();
+            Assert.That(fogMap.GetTile(new Vector3Int(4, 2, 0)), Is.Null, "안 본 칸도 Tilemap 검정 없음 (번지게)");
+            var tex = soft.sprite.texture;
+            Assert.That(((Color32)tex.GetPixel(10, 14)).a, Is.EqualTo(0), "보이는 칸 (1,2) 가운데 = 투명");
+            Assert.That(((Color32)tex.GetPixel(22, 14)).a, Is.EqualTo(255), "안 본 칸 (4,2) = 검정");
+            byte nearEdge = ((Color32)tex.GetPixel(19, 14)).a, farther = ((Color32)tex.GetPixel(18, 14)).a;
+            Assert.That(nearEdge, Is.GreaterThan(farther).And.LessThan(255), "보이는 칸 (3,2) 안쪽 = 경계에 가까울수록 어둡게 (번짐 폭 1칸)");
+            Assert.That(tex.filterMode, Is.EqualTo(FilterMode.Bilinear), "이중 선형 = 경계가 흐릿");
+            Object.DestroyImmediate(fogGo);
+        }
     }
 }
