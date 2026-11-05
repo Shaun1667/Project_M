@@ -820,7 +820,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: -1183493901
+  m_TextStyleHashCode: 0
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -1171,7 +1171,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: -1183493901
+  m_TextStyleHashCode: 0
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -1653,7 +1653,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: -1183493901
+  m_TextStyleHashCode: 0
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -2917,7 +2917,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: -1183493901
+  m_TextStyleHashCode: 0
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -3161,7 +3161,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: -1183493901
+  m_TextStyleHashCode: 0
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -3738,9 +3738,6 @@ MonoBehaviour:
   _quickSlotSize: {x: 230, y: 40}
   _itemIcons: {fileID: 11400000, guid: 481eb5d51281c1848a2a10324a470689, type: 2}
   _skin: {fileID: 11400000, guid: 252751c2d9975f148addac834dca91ac, type: 2}
-  _statusIconSide: 46
-  _barInset: {x: 7, y: 6}
-  _plaqueSize: {x: 230, y: 64}
 --- !u!114 &2085256666
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3855,7 +3852,6 @@ MonoBehaviour:
   _title: {fileID: 1841486321}
   _body: {fileID: 546779308}
   _skin: {fileID: 11400000, guid: 252751c2d9975f148addac834dca91ac, type: 2}
-  _emblemSize: 200
 --- !u!114 &2085256671
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3937,10 +3933,6 @@ MonoBehaviour:
   _walkHold: 0.2
   _pixel2D: 0
   _damageFont: {fileID: 11400000, guid: 338c26c4c2562ae4faab95c889e4d7f7, type: 2}
-  _numberDuration: 0.8
-  _numberRise: 0.55
-  _numberHeight: 1.15
-  _numberSize: 3.2
   _spriteMaterial: {fileID: 2100000, guid: 86f15b1ede84ed747a44e692fd5e5ea7, type: 2}
   _pixelsPerUnit: 64
   _footPixels: 26

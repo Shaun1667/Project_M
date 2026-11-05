@@ -63,10 +63,5 @@ MonoBehaviour:
     Module: {fileID: 4514046995762527507, guid: f3dc438a5600c9b4889246f8611959c4, type: 3}
     RandomRotation: 0
     StandHeight: 0
-  - Type: 13
-    Tile: {fileID: 11400000, guid: 835db328724bdbc468952edb1c306225, type: 2}
-    Module: {fileID: 0}
-    RandomRotation: 0
-    StandHeight: 0
   _pillarModule: {fileID: 3755136026008039189, guid: 1e8750001f10bd748acf99a84ed93664, type: 3}
   _zoneSets: []

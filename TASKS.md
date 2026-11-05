@@ -1125,7 +1125,57 @@
   - 구현: Varco 모델 17(`Art/Varco3D/Item_*`) + `ConsumableArtSetup.BuildFloorItems`(표 `FloorItemModels` · 색 표 `SpellbookColors` · `SeedColors` · `TintWhite`, `BuildPrefab`에 눕히기 각도) — 메뉴 Setup/Consumables가 프리팹 25개를 만들고 `ItemVisualCatalog`에 연결. 표는 ART_ASSETS 12-6
   - 확인: 컴파일 오류 0 · Setup/Consumables 실행 · 카탈로그 25/25 · 미리보기 렌더(갑옷 · 고기 눕힘 확인). 확인 못 한 것: 게임 화면 · 테스트(표시만 — 테스트 없음)
   - 확인 방법: Main 씬 플레이 → 바닥의 마법서(속성 색) · 갑옷 · 음식 · 금화 · 열쇠(보물 방) · 씨앗 · 다트 · 투창이 회색 상자 대신 모델로
-- [ ] **G-4. UI 아트** — 아이콘 12(모델 렌더) · 막대 · 빠른 칸 · 인벤토리 · 로그 바탕 · 결과 화면 · (폰트 결정) — **일시중지 (2026-10-19, 사용자): 아트 에셋이 없음.** 재개 조건: ART_ASSETS.md 9번 목록의 1차 에셋(아이콘 · 틀)을 받거나, Varco 모델 렌더로 아이콘을 만들기로 정할 때. 재개 시 먼저 물을 것: 아이콘 출처(직접 렌더 / 에셋) · 폰트(Galmuri11 유지 / 한글 일반 폰트) · 범위
+- [x] **G-10. 문 · 풀 · 연금 솥 3D** (2026-11-05 사용자 "풀 · 문 등 남은 에셋 → 문은 SPD처럼 양옆으로 열리는 문") — 플레이 확인 대기
+  - 결정 (2026-11-05, 사용자): 문 = **여닫이 양문**(추천안 — 미닫이 대신), 문 · 풀 · 솥을 함께(추천안)
+  - 구현: Varco 모델 5(문짝 · 자물쇠 문짝 · 짧은 풀 · 높은 풀 · 솥), `VarcoModelSetup` — `BuildDoubleDoorPrefab`(벽 모델 문틀 + 경첩 축 2 · 문짝 2, 열림 = 축 90°) · `BuildModelGrassPrefab` · `BuildModelPotPrefab` · `AddFitted`(모델을 축 맞춘 크기로), 잠긴 문 프리팹 `Tile_LockedDoor` 새로. 표는 ART_ASSETS 12-7
+  - 확인: 컴파일 오류 0 · Setup/Varco Models 실행 · 미리보기 렌더(닫힘 · 열림 · 잠김 · 풀 2 · 솥). 확인 못 한 것: 게임 화면(문 방향 · 열린 문짝 위치) · 테스트(표시만 — 테스트 없음)
+  - 확인 방법: Main 씬 플레이 → 방 입구 문이 나무 양문, 걸어 들어가면 양옆으로 열림 · 보물 방은 자물쇠 문, 풀 칸에 풀 덤불(높은 풀은 키가 커 뒤가 안 보임), 연구실 가운데 솥
+  - 피드백: Varco 3D는 앞뒤가 뚫린 얇은 틀(문틀)의 정면 그림을 십자 모양으로 만들 수 있다 — 틀 · 기둥은 기존 모듈로 짜는 편이 낫다
+- [x] **G-11. 식물 5종 3D** (2026-11-05 사용자 "식물 5종도 Varco로") — 플레이 확인 대기
+  - 구현: Varco 모델 5(`Prop_Plant*`), `TrapPresenter` — 식물 종류면 `_plantModels`(ItemVisualCatalog 키 `plant_*`)의 모델을 칸 위에 세움(발동 · 숨김 · 층 바뀜에 지움), 없으면 예전 색 칸. 표 `ConsumableArtSetup.FloorItemModels`에 5줄, `MainSceneSetup`이 씬에 연결. ART_ASSETS 12-8
+  - 확인: 컴파일 오류 0 · Setup/Main Scene · Consumables 실행 · 카탈로그 5/5 · 씬 연결 · 미리보기 렌더. 확인 못 한 것: 게임 화면 · 테스트(표시만 — 테스트 없음, TrapPresenter 기존 테스트는 실행 안 함)
+  - 확인 방법: Main 씬 플레이 → 씨앗을 사용(발밑에 심기)하거나 던져 심으면 그 칸에 식물 모델, 밟으면 사라짐
+  - 얼음버섯 다시 생성 (2026-11-05, 사용자): 처음 것은 얼음 기둥처럼 보여 갓이 큰 불투명 버섯 한 송이로. 피드백: 투명 · 결정 같은 표현은 Varco 3D가 형태를 잃기 쉽다 — 단단하고 불투명한 모양으로 요청
+- [x] **G-12. 1차 이펙트 3종 — 대지 폭발 · 함정 문양 · 보스 예고 칸** (2026-11-05 사용자 "1차 이펙트 3개 진행") — 플레이 확인 대기
+  - 구현: `FxSetup` 표에 `burst.Earth` · `burst.Wind`(팩 Smoke AOE explosion, 모래 · 바람 색) · `terrain.Warning`(Magic circle, 붉게), 생성 무늬 `fx_warning` · 함정 문양 `trap_fire/toxic/paralytic/flood/shock/teleport/alarm`(코드로 그린 흰 + 알파 64px — `Ring` · `Flame` · `Wave` · `Bolt` · `Spiral` 등). `TerrainOverlayPresenter._warningTile`, `TrapPresenter._typeTiles`(TrapType 1 ~ 7 순서, 종류 색으로 칠함, 비면 예전 마름모) — Setup/FX가 연결
+  - 확인: 컴파일 오류 0 · Setup/FX 실행 · 카탈로그 3키 · 씬 연결(문양 7 · 경고 무늬) · 문양 미리보기 · 모래 폭발 · 마법진 정지 렌더. 확인 못 한 것: 게임 화면에서 움직이는 모습 · 테스트(표시만 — 테스트 없음)
+  - 확인 방법: Main 씬 플레이 → 10층 파라오의 모래 폭풍에 모래빛 폭발, 5 · 10층 보스가 힘을 모으면 붉은 줄무늬 칸 + 마법진, 찾기(Z)로 드러난 함정이 종류별 문양
+- [x] **G-13. 2차 이펙트 8종 — 상태 6 · 지형 2** (2026-11-05 사용자 "2차 이펙트 8종도 진행") — 플레이 확인 대기
+  - 구현: `FxSetup` 표에 `status.Haste`(Buff 오라, 금빛 · 빠르게) · `status.Invisible`(Smoke loop, 옅은 아지랑이) · `status.Levitating`(Magic circle 2, 발밑 하늘색) · `status.MindVision`(Sparks pink, 머리 위 보라) · `status.Asleep`(Sparks white, 머리 위 느리게) · `status.Terrified`(Debuff 오라, 어두운 보라) · `terrain.IcePatch`(Sparks white, 서리 반짝임) · `terrain.ParalyticGas`(Smoke ground, 노랗게). 코드 변경 없음 — 키만 추가 (FxPresenter가 기존 status · terrain 키로 띄움)
+  - 확인: 컴파일 오류 0 · Setup/FX 실행 · 정지 렌더(신속 · 부양 · 정신 시야 · 잠 · 공포 · 마비 가스 보임, 투명은 옅어 크기 0.05 → 0.08로 키움). 확인 못 한 것: 게임 화면에서 움직이는 모습 · 테스트(표시만 — 테스트 없음)
+  - 확인 방법: Main 씬 플레이 → 신속 · 투명 · 부양 · 정신 시야 물약을 마시면 몸 주위 효과, 잠 · 공포 주문서 / 적에게 걸리면 머리 위 · 몸 주위 효과, 얼음 주문이 물을 얼린 빙판 · 마비 가스 함정 칸에 루프 효과
+  - 남음: 투명 = 몸을 반투명하게 하는 재질 바꾸기(EntityPresenter 코드 변경)는 따로 결정
+- [x] **G-14. 3차 이펙트 — 점화 · 아이템 사용 · 함정 발동 · 보스 행동** (2026-11-05 사용자 "3차 이펙트도 진행") — 플레이 확인 대기
+  - 구현: `FxPresenter`가 `ConsumableUsedEvent`(마심 `use.drink` · 읽음 `use.read` = 쓴 유닛, 던짐 `use.shatter` = 떨어진 칸) · `TrapTriggeredEvent`(`trap.triggered`) · `BossChargingEvent`(`boss.charge`) · `BossTeleportedEvent`(`boss.teleport` 떠난 칸 · 도착한 칸) · `BossSummonedEvent`(`boss.summon`, 0마리면 없음)를 구독 — 도우미 `SpawnAtCell` · `SpawnOnUnit`(시야 밖 · 없는 키 건너뜀). 키 앞말 `use.`는 바닥 아이템 반짝임 `item.<ID>`와 겹치지 않게. `FxSetup` 표에 위 7키 + 점화 3키(`reaction.grass_ignite` · `tallgrass_ignite` · `door_ignite` — 반응 표 ID 그대로, 코드 없음)
+  - 확인: 컴파일 오류 0 · Setup/FX 실행 · 카탈로그 10키 · 정지 렌더(0.25 · 0.6초 — 처음엔 점화가 회색 연기 · 함정 · 순간이동 · 소환이 너무 작아 팩 효과 · 크기를 고침. 마지막 수정(함정 = Sparks explode yellow 0.45 · 순간이동 1.2)은 플레이 모드가 다시 켜져 Setup/FX 대신 카탈로그를 같은 값으로 직접 고쳤고 렌더는 못 함). 테스트 4개 작성(`FxPresenterTests` — 마심 · 던짐 자리, 키 없으면 없음, 함정 시야, 순간이동 2곳 · 소환 0마리), 실행 안 함. 확인 못 한 것: 게임 화면에서 움직이는 모습
+  - 확인 방법: Main 씬 플레이 → 물약 마시기 · 주문서 읽기 · 물약 던지기, 함정 · 식물 밟기, 불로 풀 · 문 태우기, 5층 보스(소환 · 순간이동) · 보스 힘 모으기에서 각 효과
+- 결정 (2026-11-05, 사용자 "남은 3차도 진행"): 25 2구역 타일 = Varco 새 모델 5 + 구역별 타일 세트 / 28 갑옷 입은 모습 = 갑옷 부품을 따로 만들어 뼈에 붙임(무기 · 지팡이와 같은 방식) / 29 UI = 모델 렌더 아이콘부터(G-4 재개) / 폰트 = Galmuri11 유지 — 모두 추천안
+- [x] **G-15. 2구역 사막 피라미드 타일 (★ 3차 25)** — 플레이 확인 대기
+  - 구현: Varco 5종(바닥 · 벽 · 기둥 · 내려가는 · 올라가는 계단, 후보는 사용자가 고름 — ART_ASSETS 12-9). `TileVisualSet._zoneSets`(층 범위 → 세트) · `ForFloor` · `CopyEntriesFrom`, `TilemapPresenter.Bind(bus, 층)` + `FloorChangedEvent` → `SetFloor`(세트가 달라질 때만 지금 맵 다시 세움), `GameRoot`가 `World.Floor`로 묶음(이어하기 = 저장된 층 · 해 색도). Setup/Varco Models `BuildDesertTiles`가 기본 세트를 복사해 `TileVisualSet_Desert.asset`(풀 · 문 · 솥은 사막 바닥 위에 다시 짜고 문틀 = 사막 벽)
+  - 확인: 컴파일 오류 0 · Setup/Varco Models 실행 · 7층 세트 = TileVisualSet_Desert(바닥 · 벽 · 기둥 · 계단 · 문 · 풀 모두 사막 프리팹) · 사막 방 정지 렌더. 테스트 1개 작성(`PresenterTests.ZoneTileSet_SwapsWhenFloorEntersAndLeavesZone`), 실행 안 함. 확인 못 한 것: 게임 안 층 이동 · 이어하기. Setup 대기 중 플레이 모드가 여러 번 켜져 있어 기다림
+  - 확인 방법: Main 씬 플레이 → 디버그 창으로 6층에 가면(또는 5층 보스 뒤 계단) 바닥 · 벽 · 기둥 · 계단 · 문이 사암, 11층에서 다시 돌 타일
+- [x] **G-16. 입은 갑옷 부품 (★ 3차 28)** — 플레이 확인 대기
+  - 구현: Varco 몸통 갑옷 5종(후보는 사용자가 고름 — ART_ASSETS 12-10). Setup/Varco Models `AttachArmors`가 루멘 · 시아 가슴 뼈에 `Armor_<ID>`(꺼 둠, 어깨 너비 × 배율 · 목 높이에 맞춤, 캐릭터 배율 `ArmorFits`), `EntityPresenter`가 `ArmorEquippedEvent`로 입은 것만 켬(`ShowArmor` · `WornArmorOf`, 모습보다 먼저 온 장착도 기억)
+  - 확인: 컴파일 오류 0 · Setup 실행 · 프리팹마다 부품 5 · 두 캐릭터 × 맨몸 + 5종 정지 렌더(처음엔 옷 속에 묻혀 크기를 캐릭터별로 키움). 테스트 1개 작성(`PresenterTests.ArmorEquipped_ShowsOnlyWornArmorPart_EvenBeforeSpawn`), 실행 안 함. 확인 못 한 것: 걷기 중 뚫림 · 이어하기 뒤 표시(장착 이벤트가 다시 오지 않음 — 무기와 같은 기존 한계)
+  - 확인 방법: Main 씬 플레이 → 시작하면 천 갑옷 조끼, 다른 갑옷을 주워 입으면 그 갑옷으로 바뀜
+  - 커밋: G-15와 한 커밋 (VarcoModelSetup · PresenterTests를 함께 고쳐 나누지 못함)
+- [x] **G-17. 아이템 아이콘 — 3D 모델 렌더 (★ 3차 29 일부, G-4 재개)** — 플레이 확인 대기
+  - 구현: 메뉴 `ProjectM/Setup/Item Icons`(`ItemIconSetup`, 멱등 — Varco Models · Consumables 다음): `ItemVisualCatalog`의 모델 줄 60개를 바닥 모습 그대로(눕힘 같음) 정사영 카메라(내려봄 50° · 20° 돌림)로 찍고, 검은 · 흰 배경 두 번으로 알파를 구해 `Art/Icons3D/<키>.png`(128 px, 스프라이트) → `Icon3D`. 카탈로그 `_use3DIcons`(= Pixel2D 꺼짐)면 `TryGetIcon`이 3D 그림 먼저, 없으면 픽셀 그림 — 인벤토리 · 빠른 칸 코드는 그대로
+  - 확인: 컴파일 오류 0 · 메뉴 실행 · 아이콘 60장 모아 보기(무기 · 갑옷 · 물약 12 · 주문서 12 · 마법서 · 음식 · 금화 · 열쇠 · 다트 · 투창 · 씨앗 · 식물 · 융합기). 테스트 1개 작성(`PresenterTests.ItemIcon_Prefers3DRender_OnlyWhenEnabled_FallsBackToPixel`), 실행 안 함. 확인 못 한 것: 게임 HUD에서 보이는 모습. 너클은 모델이 없어 아이콘 없음
+  - 확인 방법: Main 씬 플레이 → 인벤토리(I) · 빠른 칸에 3D 렌더 아이콘(물약 · 주문서는 겉모습 그림), 음식 · 금화 · 열쇠 · 씨앗도 그림이 보임
+  - 피드백: 표를 돌면서 같은 표에 연결하면 열거 오류 — 목록을 복사해 돈다
+- 결정 (2026-11-05, 사용자 "남은 UI도 진행"): UI 틀 = Varco 이미지 UI 키트 · 아이콘 = Varco 이미지 · 범위 = ART_ASSETS 9번 1차 + 2차(커서 빼고) — 모두 추천안. 후보 = 추천대로
+- [x] **G-18. UI 그림 — 틀 · 아이콘 · 층 표시판 · 결과 장식 · 피해 숫자 (★ 3차 29 나머지, G-4)** — 플레이 확인 대기
+  - 구현: `UiSkin`(Runtime/UI, 표현 데이터 — 틀 9-slice · 상태 · 속성 아이콘 · `ApplyFrame`), 메뉴 `ProjectM/Setup/UI Art`(`UiArtSetup` — 스프라이트 가져오기 · 테두리 · UiSkin 채움 · 씬 HUD · 인벤토리 · 결과 · EntityPresenter 연결). `HudPresenter`(막대 틀 · 로그 판 · 층 표시판 · 상태 아이콘 · 빠른 칸 4상태 · 주문 속성 아이콘), `HudModel.Floor` · `TryGetSpellElement`, `InventoryPresenter.Paint`, `ResultPresenter` 장식, `EntityPresenter` 피해 · 회복 숫자. `GameRoot`가 `World.Floor`를 HUD에 넘김. 그림 없으면 모두 예전 색 칸 (ART_ASSETS 12-11)
+  - 확인: 컴파일 오류 0 · Setup/UI Art 실행 · 씬 연결 4곳 · UI 목업 정지 렌더(막대 · 상태 · 칸 4상태 · 로그 판 · 인벤토리 · 표시판 · 장식). 테스트 3개 작성(`UiSkinTests`), 실행 안 함. 확인 못 한 것: 실제 HUD 배치 · 겹침, 피해 숫자 움직임, 인벤토리 주문 칸 아이콘(주문 표를 몰라 글자만)
+  - 확인 방법: Main 씬 플레이 → 막대 틀 · 화면 위 "1층" 표시판 · 로그 바탕 판 · 빠른 칸 틀(빈 칸 어둡게, 마나 부족 붉게) · 상태 이상 걸리면 그림 아이콘, I 인벤토리 창 틀, 적을 때리면 머리 위 숫자, 죽거나 이기면 장식
+  - 피드백: Varco 흰 배경 시트는 테두리에서 흰색을 채워 지우고 덩어리로 자르면 그대로 쓸 수 있다 — 장식처럼 안쪽에 흰 틈이 있는 그림은 흰색을 한 번 더 지움
+- [x] **G-19. 3 ~ 5구역 타일 — 얼음 동굴 · 용암 동굴 · 시간 신전 폐허** (2026-11-05 사용자 "11 ~ 25층 테마 Varco3D로 생성 및 적용") — 플레이 확인 대기
+  - 구현: Varco 15종(구역마다 바닥 · 벽 · 기둥 · 계단 둘, 후보 = 사용자 선택 추천대로 — ART_ASSETS 12-12). `VarcoModelSetup`의 사막 전용 코드를 구역 표 `ZoneTiles`(Desert 6 ~ 10 · Ice 11 ~ 15 · Lava 16 ~ 20 · Time 21 ~ 25) + `BuildZoneTiles` 하나로 바꿈, 구역 벽은 `FillCellFootprint`(바닥 면을 칸에 채움). 코드 바꾼 곳은 Setup뿐 — 층 → 세트 고르기는 G-15 그대로
+  - 확인: 컴파일 오류 0 · Setup/Varco Models 실행 · 12 · 18 · 23층 세트 = Ice · Lava · Time(바닥 · 문 · 기둥 모두 구역 프리팹) · 4구역 방 정지 렌더(처음엔 용암 벽 사이 틈 → 칸 채움으로 고침). 확인 못 한 것: 게임 안 층 이동, 테스트(표시만 — G-15 테스트가 구역 세트 고르기를 덮음, 실행 안 함)
+  - 확인 방법: Main 씬 플레이 → 디버그 창으로 11 · 16 · 21층에 가면 눈 덮인 바위 · 현무암 + 용암 금 · 대리석 + 청동 시계 무늬 타일
+  - 참고: 같은 시각 다른 세션이 공유 작업 폴더의 VarcoModelSetup에 3 ~ 5구역 적을 넣는 중이라, 공유 폴더에는 이 변경을 패치로만 넣음 (덮어쓰지 않음)
+- [ ] **G-4. UI 아트** — **재개 (2026-11-05, 사용자 “남은 3차도 진행”): 아이콘 출처 = Varco 모델 렌더 · 폰트 = Galmuri11 유지 · 범위 = 아이템 아이콘부터 → G-17.** 남은 것: 상태 아이콘 · 막대 · 틀 · 로그 바탕 · 결과 화면. (이전 기록:) 아이콘 12(모델 렌더) · 막대 · 빠른 칸 · 인벤토리 · 로그 바탕 · 결과 화면 · (폰트 결정) — **일시중지 (2026-10-19, 사용자): 아트 에셋이 없음.** 재개 조건: ART_ASSETS.md 9번 목록의 1차 에셋(아이콘 · 틀)을 받거나, Varco 모델 렌더로 아이콘을 만들기로 정할 때. 재개 시 먼저 물을 것: 아이콘 출처(직접 렌더 / 에셋) · 폰트(Galmuri11 유지 / 한글 일반 폰트) · 범위
 
 ## Phase 4 — 재미 검증 (멈추고 플레이)
 - [ ] **4-1. 30분 플레이 → 진단** — 원인 번호 매기기 → 방향(A 수치 / B 규모 비례 압력 / C 신규 시스템)
