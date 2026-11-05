@@ -72,7 +72,7 @@ namespace ProjectM.Units
                 var id = player.QuickSlotSpell(i);
                 if (id == null || !seen.Add(id) || spells == null || !spells.TryGet(id, out var def)) continue;
                 if (def.Shape == SpellShape.Leap) continue; // 이동 기술은 보스가 쓸 곳이 없음
-                list.Add(SpellModifiers.For(world, player, def));
+                list.Add(SpellModifiers.For(world, player, def, unlimitedRange: false)); // 3-25b: 적이 되면 원래 사거리
             }
             return new GhostRecord(displayName, player.VisualId, player.Level, player.MaxHp, player.AttackDamage, player.SightRange, player.MaxMana,
                 player.Accuracy + Talents.AccuracyBonus(world, player), player.Evasion, player.Strength, player.Weapon, player.Armor, list);

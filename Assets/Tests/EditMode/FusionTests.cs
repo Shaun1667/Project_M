@@ -141,7 +141,7 @@ namespace ProjectM.Tests
             Assert.That(none, Is.Null);
             Assert.That(s.Check("fire_basic", "water_basic", s.Player.Pos, out var fused), Is.EqualTo(CastBlock.TargetIsSelf));
             Assert.That(fused, Is.Not.Null, "대상 판정 전에 융합 주문은 만들어짐 (입력이 조준 시작 전에 씀)");
-            Assert.That(s.Check("fire_basic", "water_basic", new GridPos(10, 2), out _), Is.EqualTo(CastBlock.OutOfRange));
+            Assert.That(s.Check("fire_basic", "water_basic", new GridPos(10, 2), out _), Is.Not.EqualTo(CastBlock.OutOfRange), "3-25b 플레이어 융합도 사거리 무한");
             Assert.That(s.Check("fire_basic", "water_basic", target, out _), Is.EqualTo(CastBlock.None));
 
             Mana.TrySpend(s.World, s.Player, 6); // 10 → 4 < 5

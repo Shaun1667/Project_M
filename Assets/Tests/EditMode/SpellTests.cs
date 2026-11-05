@@ -150,14 +150,14 @@ namespace ProjectM.Tests
         }
 
         [Test]
-        public void Beam_PiercesAllUnitsToRange()
+        public void Beam_PiercesAllUnitsToWall()
         {
             var s = Start(new GridPos(1, 2), new GridPos(3, 2), new GridPos(5, 2), new GridPos(7, 2));
-            Assert.That(s.Cast(Lightning, new GridPos(3, 2)), Is.EqualTo(CastBlock.None), "가까운 적을 조준해도 사거리 끝까지");
+            Assert.That(s.Cast(Lightning, new GridPos(3, 2)), Is.EqualTo(CastBlock.None), "가까운 적을 조준해도 벽까지 (3-25b 플레이어 사거리 무한)");
 
             Assert.That(s.Enemies[0].Hp, Is.EqualTo(5));
             Assert.That(s.Enemies[1].Hp, Is.EqualTo(5));
-            Assert.That(s.Enemies[2].Hp, Is.EqualTo(8), "(7,2)는 사거리 5 밖");
+            Assert.That(s.Enemies[2].Hp, Is.EqualTo(5), "(7,2)도 — 데이터 사거리 5 밖이지만 플레이어는 무한");
             Assert.That(s.Player.Mana, Is.EqualTo(6));
         }
 
@@ -174,6 +174,24 @@ namespace ProjectM.Tests
             // 바로 옆 칸에 터뜨리면 시전자도 맞는다 (규칙 10)
             Assert.That(s.Cast(Poison, new GridPos(2, 2)), Is.EqualTo(CastBlock.None));
             Assert.That(s.Player.Hp, Is.EqualTo(18));
+        }
+
+        // 3-25b (결정 2026-11-05): 사거리 무한은 플레이어의 속성 주문 · 날아가는 모양만 — 적 · 무속성 · 돌진 · 도약은 데이터 사거리
+        [Test]
+        public void UnlimitedRange_PlayerElementalOnly()
+        {
+            var s = Start(new GridPos(1, 2), new GridPos(9, 2));
+            var fire = s.Book.TryGet("fire_basic", out var f) ? f : null;
+            Assert.That(SpellModifiers.For(s.World, s.Player, fire).Range, Is.EqualTo(System.Math.Max(s.World.Map.Width, s.World.Map.Height)), "플레이어 = 맵 크기");
+            Assert.That(SpellModifiers.For(s.World, s.Player, fire, unlimitedRange: false).Range, Is.EqualTo(fire.Range), "그림자 기록용");
+            Assert.That(SpellModifiers.For(s.World, s.Enemies[0], fire).Range, Is.EqualTo(fire.Range), "적은 그대로");
+            Assert.That(SpellCasting.CheckDef(s.World, Targeting, Sight, s.Enemies[0], fire, s.Player.Pos, out _), Is.EqualTo(CastBlock.OutOfRange), "적 시전은 거리 8 > 6");
+            var neutral = new SpellDef("skill", Element.Neutral, SpellShape.Bolt, 2, 3, 0);
+            var dash = new SpellDef("dash", Element.Fire, SpellShape.Dash, 2, 3, 0);
+            Assert.That(SpellModifiers.HasUnlimitedRange(s.World, s.Player, neutral), Is.False, "무속성 직업 기술");
+            Assert.That(SpellModifiers.HasUnlimitedRange(s.World, s.Player, dash), Is.False, "돌진 · 도약 · 진각");
+            Assert.That(s.Cast(Fire, new GridPos(9, 2)), Is.EqualTo(CastBlock.None), "거리 8 — 플레이어는 쏨");
+            Assert.That(s.Enemies[0].Hp, Is.LessThan(8));
         }
 
         [Test]
@@ -193,7 +211,7 @@ namespace ProjectM.Tests
                 SpellCasting.Check(s.World, s.Book, Targeting, Sight, s.Player, slot, target, out _, out _);
 
             Assert.That(Check(Fire, new GridPos(1, 1)), Is.EqualTo(CastBlock.TargetIsSelf));
-            Assert.That(Check(Fire, new GridPos(8, 3)), Is.EqualTo(CastBlock.OutOfRange), "거리 7 > 사거리 6");
+            Assert.That(Check(Fire, new GridPos(8, 3)), Is.Not.EqualTo(CastBlock.OutOfRange), "거리 7 > 사거리 6이어도 플레이어는 무한 (3-25b)");
             Assert.That(Check(Fire, new GridPos(6, 1)), Is.EqualTo(CastBlock.NotVisible), "기둥 (5,1) 뒤");
             Assert.That(Check(Fire, new GridPos(3, 2)), Is.EqualTo(CastBlock.None));
 

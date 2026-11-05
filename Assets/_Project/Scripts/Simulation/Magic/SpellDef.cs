@@ -143,10 +143,19 @@ namespace ProjectM.Magic
     /// </summary>
     public static class SpellModifiers
     {
+        /// <summary>
+        /// 3-25b 플레이어 속성 주문 사거리 무한 (결정 2026-11-05, 사용자): 플레이어가 쏘는 7속성 주문 · 융합 중 날아가는 모양(투사체 · 빔 · 폭발 · 다중)은
+        /// 보이는 곳이면 어디든. 무속성 직업 기술 · 돌진 · 도약 · 진각 · 적 주문은 데이터 사거리 그대로.
+        /// </summary>
+        public static bool HasUnlimitedRange(ProjectM.Core.World world, ProjectM.Units.Unit caster, SpellDef spell) =>
+            world != null && caster != null && spell != null && caster.Id == world.Scheduler.PlayerId && spell.Element != Element.Neutral
+            && (spell.Shape == SpellShape.Bolt || spell.Shape == SpellShape.Beam || spell.Shape == SpellShape.Burst || spell.Shape == SpellShape.Multi);
+
         /// <summary>무기 강화만 (특성 없음 — 세계가 없는 곳 · 테스트).</summary>
         public static SpellDef For(ProjectM.Units.Unit caster, SpellDef spell) => For(null, caster, spell);
 
-        public static SpellDef For(ProjectM.Core.World world, ProjectM.Units.Unit caster, SpellDef spell)
+        /// <param name="unlimitedRange">false면 3-25b 플레이어 사거리 무한을 빼고 (3-23b 그림자 기록 — 적이 되면 원래 사거리).</param>
+        public static SpellDef For(ProjectM.Core.World world, ProjectM.Units.Unit caster, SpellDef spell, bool unlimitedRange = true)
         {
             if (spell == null || caster == null) return spell;
             int range = spell.Range, damage = spell.Damage, mana = spell.ManaCost, hits = spell.HitCount, targets = spell.MaxTargets;
@@ -183,6 +192,11 @@ namespace ProjectM.Magic
                 changed = true;
                 range += spell.BoostRange;
                 damage = (int)((long)damage * spell.BoostDamagePercent / 100);
+            }
+            if (unlimitedRange && HasUnlimitedRange(world, caster, spell))
+            {
+                int unlimited = Math.Max(world.Map.Width, world.Map.Height); // 맵 어디든 — 시야 · 벽 · 조준선 막힘은 그대로
+                if (range < unlimited) { range = unlimited; changed = true; }
             }
             return changed ? spell.Modified(range, damage, mana, hits, targets, status, chance, killMana, hitMana, unseen) : spell;
         }

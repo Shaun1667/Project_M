@@ -116,6 +116,7 @@ namespace ProjectM.Magic
             if (!spells.TryGet(firstId, out var first) || !spells.TryGet(secondId, out var second)) return CastBlock.UnknownSpell;
             fused = fusions.Build(first, second);
             if (fused == null) return CastBlock.NoFusionRecipe;
+            fused = SpellModifiers.For(world, caster, fused); // 3-25b 플레이어 사거리 무한 — 시전(CastSpellCommand)과 같은 값
             return SpellCasting.CheckDef(world, targeting, sight, caster, fused, target, out preview);
         }
 
