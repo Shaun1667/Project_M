@@ -1312,12 +1312,21 @@ namespace ProjectM.Input
                 return;
             }
 
+            // 2026-11-05 사용자: 상인을 누르면 팔기 창 — 옆이면 바로(부딪히기와 같은 길), 멀면 옆까지 걸어간 뒤
+            bool toKeeper = _shop != null && _world.Units.TryGetAt(target, out var clicked) && clicked.Faction == Faction.Neutral;
+            if (toKeeper && GridMovement.Chebyshev(player.Pos, target) == 1)
+            {
+                Step(new GridPos(target.X - player.Pos.X, target.Y - player.Pos.Y));
+                return;
+            }
+
             // 3-12a: 드러난 함정은 지나가지 않는다 (함정 칸을 직접 누르면 그 칸까지는 간다 — goal 예외)
             var path = GridPathfinder.FindPath(_world.Map, player.Pos, target, p => _world.Units.IsOccupied(p) || ProjectM.Dungeon.Traps.IsKnown(_world, p));
             if (path == null || path.Count == 0) return;
 
             _path = path;
             _pathIndex = 0;
+            if (toKeeper) _shopAfterPath = target;
             CollectVisibleEnemies(player, _enemiesSeenAtPathStart);
             StepPath();
         }
@@ -1327,6 +1336,16 @@ namespace ProjectM.Input
             if (!PlayerActions.TryGetPlayer(_world, out var player))
             {
                 CancelPath();
+                return;
+            }
+
+            // 2026-11-05: 상인에게 걸어가는 중 — 옆에 닿으면 멈추고 팔기 창 (상인이 움직였으면 지금 자리 기준)
+            if (_shopAfterPath.HasValue && _world.Units.TryGetAt(_path[_path.Count - 1], out var keeper) && keeper.Faction == Faction.Neutral
+                && GridMovement.Chebyshev(player.Pos, keeper.Pos) == 1)
+            {
+                var toward = new GridPos(keeper.Pos.X - player.Pos.X, keeper.Pos.Y - player.Pos.Y);
+                CancelPath();
+                Step(toward);
                 return;
             }
 
@@ -1372,6 +1391,9 @@ namespace ProjectM.Input
         {
             _path = null;
             _pathIndex = 0;
+            _shopAfterPath = null;
         }
+
+        private GridPos? _shopAfterPath; // 2026-11-05: 상인을 눌러 걸어가는 중 (그 칸)
     }
 }

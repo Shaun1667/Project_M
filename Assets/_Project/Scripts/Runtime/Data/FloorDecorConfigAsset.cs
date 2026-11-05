@@ -48,7 +48,8 @@ namespace ProjectM.Data
         [Min(0)] [SerializeField] private int _labItemCount = 2;
 
         [Header("상점 (3-15c — BALANCE 16번)")]
-        [Tooltip("상점이 있는 층")] [Min(1)] [SerializeField] private int _shopFloor = 3;
+        [Tooltip("상점이 있는 첫 층")] [Min(1)] [SerializeField] private int _shopFloor = 3;
+        [Tooltip("상점이 더 있는 층 (2026-11-05 사용자 — 구역 시작층 6 · 11 · 16 · 21층)")] [SerializeField] private int[] _moreShopFloors = { 6, 11, 16, 21 };
         [SerializeField] private string[] _shopStock = { "potion_healing", "potion_frost", "scroll_identify", "scroll_magic_mapping", "scroll_teleportation", "scroll_recharging",
             "food_ration", "food_bread", "armor_leather", "shortsword", "hand_axe", "key_iron" };
         [Tooltip("파는 물건 수")] [Min(0)] [SerializeField] private int _shopStockCount = 6;
@@ -61,7 +62,7 @@ namespace ProjectM.Data
         [Tooltip("3-29 화난 상인이 치유 물약을 마시는 체력 % (이 아래)")] [Range(0, 100)] [SerializeField] private int _angryKeeperHealBelowPercent = 50;
 
         public ShopConfig ToShop() => new ShopConfig(_shopFloor, _shopStock, _shopStockCount, _shopBuyPercent, _shopSellPercent, _shopkeeperVisualId, _shopkeeperHp,
-            _angryKeeperHpPercent, _angryKeeperItemPercent, _angryKeeperHealBelowPercent);
+            _angryKeeperHpPercent, _angryKeeperItemPercent, _angryKeeperHealBelowPercent, _moreShopFloors);
 
         [Header("작업실 · 마법 제작대 (3-28b — BALANCE 24번)")]
         [Tooltip("유물 하나 만들기 (에테르)")] [Min(0)] [SerializeField] private int _relicCraftCost = 12;

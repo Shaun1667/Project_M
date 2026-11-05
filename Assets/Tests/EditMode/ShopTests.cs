@@ -88,6 +88,33 @@ namespace ProjectM.Tests
             Assert.That(PlayerActions.TryStep(world, StepConfig, new GridPos(1, 0), out _), Is.False);
         }
 
+        // 2026-11-05 사용자: 상점 = 3층 + 구역 시작층 6 · 11 · 16 · 21층
+        [Test]
+        public void ShopFloors_FirstPlusMore_AndProjectAsset()
+        {
+            var config = new ShopConfig(3, new[] { "potion_healing" }, 1, 100, 50, "shopkeeper", 999, floors: new[] { 6, 11, 6 });
+            Assert.That(config.Floors, Is.EqualTo(new[] { 3, 6, 11 }), "첫 층 + 더 있는 층 (겹치면 한 번)");
+            Assert.That((config.IsShopFloor(3), config.IsShopFloor(11), config.IsShopFloor(5)), Is.EqualTo((true, true, false)));
+            Assert.That(Config().Floors, Is.EqualTo(new[] { 3 }), "더 있는 층을 안 주면 첫 층만");
+            var asset = AssetDatabase.LoadAssetAtPath<FloorDecorConfigAsset>("Assets/_Project/Data/Dungeon/FloorDecorConfig.asset").ToShop();
+            Assert.That(asset.Floors, Is.EqualTo(new[] { 3, 6, 11, 16, 21 }));
+        }
+
+        [Test]
+        public void Build_OnEveryShopFloor()
+        {
+            var gen = new DungeonGenConfig(width: 50, height: 50, roomCount: 10, roomSizeRoll: 20, roomMinSize: 7,
+                wallBlockCount: 20, wallBlockSizeRoll: 10, wallBlockMinSize: 3, wallTunnelCostMultiplier: 5, placementAttemptLimit: 1000, deadEndLoopMinWalkDistance: 10);
+            var config = new ShopConfig(3, new[] { "potion_healing", "shortsword" }, 2, 100, 50, "shopkeeper", 999, floors: new[] { 6, 11, 16, 21 });
+            foreach (int f in new[] { 6, 11, 16, 21 })
+            {
+                DungeonFloor floor = null;
+                var world = World.Create(4UL, rng => (floor = new DungeonGenerator(gen).Generate(rng)).Map); // 위 테스트와 같은 맵 (방을 팔 수 있는 시드)
+                world.EnterNewFloor(f, floor.Map);
+                Assert.That(Shop.Build(world, floor, config, Items, world.Rng.Get(RngStream.Decor), new IdleNeutralAi()), Is.True, $"{f}층");
+            }
+        }
+
         // 상점 짓기: 상점 층에서만, 상인 + 가격표 물건
         [Test]
         public void Build_OnShopFloorOnly()

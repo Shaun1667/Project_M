@@ -9,8 +9,11 @@ namespace ProjectM.Dungeon
     /// <summary>상점 수치 (3-15c). 값은 FloorDecorConfigAsset에서 — 기준은 BALANCE.md 16번.</summary>
     public sealed class ShopConfig
     {
-        /// <summary>상점이 있는 층 (결정 2026-11-04: 3층).</summary>
+        /// <summary>상점이 있는 첫 층 (결정 2026-11-04: 3층). 모든 층은 Floors.</summary>
         public int Floor { get; }
+        /// <summary>상점이 있는 층들 (2026-11-05 사용자: 3층 + 구역 시작층 6 · 11 · 16 · 21층).</summary>
+        public IReadOnlyList<int> Floors { get; }
+        public bool IsShopFloor(int floor) { foreach (var f in Floors) if (f == floor) return true; return false; }
         /// <summary>파는 물건 목록 · 놓는 수 (목록에서 겹치지 않게).</summary>
         public IReadOnlyList<string> Stock { get; }
         public int StockCount { get; }
@@ -27,7 +30,7 @@ namespace ProjectM.Dungeon
         public int HealBelowPercent { get; }
 
         public ShopConfig(int floor, IReadOnlyList<string> stock, int stockCount, int buyPercent, int sellPercent, string keeperVisualId, int keeperHp,
-            int angryHpPercent = 150, int itemUsePercent = 35, int healBelowPercent = 50)
+            int angryHpPercent = 150, int itemUsePercent = 35, int healBelowPercent = 50, IReadOnlyList<int> floors = null)
         {
             if (angryHpPercent < 1 || itemUsePercent < 0 || itemUsePercent > 100 || healBelowPercent < 0 || healBelowPercent > 100) throw new ArgumentOutOfRangeException(nameof(angryHpPercent));
             AngryHpPercent = angryHpPercent;
@@ -35,6 +38,9 @@ namespace ProjectM.Dungeon
             HealBelowPercent = healBelowPercent;
             if (floor < 1 || stockCount < 0 || buyPercent < 1 || sellPercent < 0 || keeperHp < 1) throw new ArgumentOutOfRangeException(nameof(floor));
             Floor = floor;
+            var list = new List<int> { floor };
+            if (floors != null) foreach (var f in floors) { if (f < 1) throw new ArgumentOutOfRangeException(nameof(floors), f, "상점 층은 1 이상이어야 한다."); if (!list.Contains(f)) list.Add(f); }
+            Floors = list;
             Stock = stock ?? Array.Empty<string>();
             StockCount = stockCount;
             BuyPercent = buyPercent;
@@ -61,7 +67,7 @@ namespace ProjectM.Dungeon
         /// </summary>
         public static bool Build(World world, DungeonFloor floor, ShopConfig config, ItemBook items, IRng rng, ICommandSource keeperAi)
         {
-            if (config == null || items == null || keeperAi == null || world.Floor != config.Floor) return false;
+            if (config == null || items == null || keeperAi == null || !config.IsShopFloor(world.Floor)) return false;
             var room = SpecialRooms.CarveEmpty(world, floor, rng, 4, 5, TileType.Door);
             if (room == null) return false;
             var cells = new List<GridPos>(room.Cells);

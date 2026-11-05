@@ -22,6 +22,9 @@ namespace ProjectM.UI
         [SerializeField] private Vector2 _menuItemSize = new Vector2(150, 40);
         [Tooltip("아이템 픽셀 그림 (P-3 ⓒ) — 칸 왼쪽에. 비면 글자만")] [SerializeField] private ProjectM.Presentation.ItemVisualCatalog _itemIcons;
         [Tooltip("G-18 UI 그림 (창 · 칸 틀) — 비면 예전 색 칸")] [SerializeField] private UiSkin _skin;
+        [Tooltip("팔기 창 왼쪽에 보이는 상인 일러스트 (2026-11-05 — Art/Pixel/Characters/shopkeeper_illust). 비면 없음")] [SerializeField] private Sprite _shopkeeperIllustration;
+        [Tooltip("상인 일러스트 높이 (px)")] [SerializeField] private float _shopkeeperHeight = 560f;
+        private Image _shopkeeperImage;
 
         private static readonly Color PanelColor = new Color(0.06f, 0.06f, 0.08f, 0.94f);
         private static readonly Color CellColor = new Color(0.18f, 0.18f, 0.2f, 1f);
@@ -61,6 +64,36 @@ namespace ProjectM.UI
         public void Hide()
         {
             if (_panel != null) _panel.gameObject.SetActive(false);
+            ShowShopkeeper(false);
+        }
+
+        /// <summary>2026-11-05: 팔기 창일 때 창 왼쪽에 상인 일러스트 (패널 밖 — 같은 캔버스, 패널 왼쪽 끝에 맞춤).</summary>
+        private void ShowShopkeeper(bool show)
+        {
+            if (!show)
+            {
+                if (_shopkeeperImage != null) _shopkeeperImage.gameObject.SetActive(false);
+                return;
+            }
+            if (_shopkeeperIllustration == null || _panel == null) return;
+            if (_shopkeeperImage == null)
+            {
+                var go = new GameObject("ShopkeeperIllustration", typeof(RectTransform), typeof(Image));
+                var rect = (RectTransform)go.transform;
+                rect.SetParent(_panel.parent, false);
+                _shopkeeperImage = go.GetComponent<Image>();
+                _shopkeeperImage.sprite = _shopkeeperIllustration;
+                _shopkeeperImage.preserveAspect = true;
+                _shopkeeperImage.raycastTarget = false;
+                var size = _shopkeeperIllustration.rect.size;
+                rect.sizeDelta = new Vector2(_shopkeeperHeight * size.x / Mathf.Max(1f, size.y), _shopkeeperHeight);
+            }
+            var r = (RectTransform)_shopkeeperImage.transform;
+            r.anchorMin = r.anchorMax = _panel.anchorMin;
+            r.pivot = new Vector2(1f, 0.5f); // 오른쪽 끝 = 패널 왼쪽 끝
+            r.anchoredPosition = _panel.anchoredPosition + new Vector2(-_panel.rect.width * _panel.pivot.x - 12f, 0f);
+            _shopkeeperImage.gameObject.SetActive(true);
+            _shopkeeperImage.transform.SetAsLastSibling();
         }
 
         /// <param name="items">설명 줄(3-10b)에 쓰는 아이템 표. null이면 설명 없음.</param>
@@ -78,6 +111,7 @@ namespace ProjectM.UI
 
             bool fusion = menu.State == InventoryMenuState.FusionPick;
             bool picking = menu.State == InventoryMenuState.ItemPick; // 3-10b 대상 고르기
+            ShowShopkeeper(picking && menu.IsSelling); // 2026-11-05 상인 일러스트
             if (picking) _title.text = menu.IsBrewing ? HudText.BrewTitle(menu.BrewPicked) : menu.IsSelling ? HudText.SellTitle : text.PickTitle(menu.PickSource); // 3-15c 팔기 · 3-16c 연금
             else if (fusion) _title.text = text.FusionPickTitle(menu.FusionFirst >= 0 ? slots[menu.FusionFirst] : InventoryRef.Empty);
             else if (menu.AssignTarget >= 0) _title.text = HudText.AssignHint(menu.AssignTarget);

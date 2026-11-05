@@ -1084,6 +1084,10 @@ namespace ProjectM.Editor
             inventoryGo.transform.SetAsLastSibling();
             var inventoryView = GetOrAdd<InventoryPresenter>(canvasGo);
             SetRefs(inventoryView, ("_panel", inventoryPanel), ("_font", font), ("_itemIcons", LoadOrCreate<ItemVisualCatalog>(ItemVisualCatalogPath)));
+            // 2026-11-05: 팔기 창 옆 상인 일러스트
+            Sprite keeperIllust = null;
+            foreach (var a in AssetDatabase.LoadAllAssetsAtPath("Assets/_Project/Art/Pixel/Characters/shopkeeper_illust.png")) if (a is Sprite s) { keeperIllust = s; break; }
+            if (keeperIllust != null) SetRefs(inventoryView, ("_shopkeeperIllustration", keeperIllust));
 
             var hud = GetOrAdd<HudPresenter>(canvasGo);
             SetRefs(hud,
