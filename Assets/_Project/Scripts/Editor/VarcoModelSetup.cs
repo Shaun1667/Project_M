@@ -130,13 +130,12 @@ namespace ProjectM.Editor
                 AttachWeapons(sheep); // 3-7a: 손에 무기 6종을 꺼 둔 채 붙임 — 들면 EntityPresenter가 켜고 지팡이를 숨김
             });
             catalog.SetPrefab("player", player);
-            foreach (var (id, spec) in Heroes) // 캐릭터 선택 — 양 마법사와 같은 컨트롤러 · 지팡이 · 무기, 모델이 없으면 양 마법사
+            foreach (var (id, spec) in Heroes) // 캐릭터 선택 — 양 마법사와 같은 컨트롤러 · 무기, 모델이 없으면 양 마법사
             {
                 var hero = BuildPrefab(spec, model =>
                 {
                     SetupAnimator(model, controller, idle);
-                    AttachStaff(model);
-                    AttachWeapons(model);
+                    AttachWeapons(model); // 2026-11-05 사용자 요청: 루멘 · 시아는 맨손으로 시작 — 지팡이를 붙이지 않음 (무기를 들면 그 무기만)
                 });
                 catalog.SetPrefab(id, hero != null ? hero : player);
             }

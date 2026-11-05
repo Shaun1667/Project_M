@@ -384,7 +384,7 @@ Varco는 모든 모델을 **가장 긴 쪽 1 m**로 보내므로 크기는 프�
 | Hero_Blond_Rigged · Sia_Rigged | 위 두 모델을 Mixamo 자동 리깅 (턱 · 손목 · 팔꿈치 · 무릎 · 사타구니 표시) | 같음 | 같음 | 같은 재질 이름 → 같은 텍스처 | Mixamo 뼈대, **Humanoid** (Varco Models 메뉴) |
 
 - 원점 = 발밑 가운데, 앞 = +Z. 블렌더 작업 파일은 저장소 밖 scratchpad의 `Hero_Blond_v2.blend` (481 MB라 `Source~/`에 넣지 않음).
-- 연결 (2026-11-03): `hero_blond` → `Unit_Lumen`(Hero_Blond_Rigged), `hero_black` → `Unit_Sia`(Sia_Rigged), 배율 둘 다 0.57 (루멘 약 1.0 m · 시아 약 0.94 m, 양 마법사 0.99 m). 양 마법사와 같은 Idle · Walk 컨트롤러 · 지팡이 · 무기 6종을 Humanoid 오른손 뼈(`mixamorig:RightHand`)에 붙인다. `player`(캐릭터를 고르지 않은 경우)는 그대로 양 마법사.
+- 연결 (2026-11-03): `hero_blond` → `Unit_Lumen`(Hero_Blond_Rigged), `hero_black` → `Unit_Sia`(Sia_Rigged), 배율 둘 다 0.57 (루멘 약 1.0 m · 시아 약 0.94 m, 양 마법사 0.99 m). 양 마법사와 같은 Idle · Walk 컨트롤러 · 무기 6종을 Humanoid 오른손 뼈(`mixamorig:RightHand`)에 붙인다. `player`(캐릭터를 고르지 않은 경우)는 그대로 양 마법사. → 변경 (2026-11-05, 사용자): 루멘 · 시아는 **맨손으로 시작** — 지팡이를 붙이지 않음(무기를 들면 그 무기만 손에). 양 마법사(`player`)는 지팡이 그대로.
 - 캐릭터 선택 카드 그림 = 7등신 일러스트 `Art/Pixel/Characters/<ID>_illust.png` (시아 = Varco 일러스트 후보 3번).
 
 ### 12-2. 무기 (3-7a, 2026-10-19)
