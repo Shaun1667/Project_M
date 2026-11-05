@@ -37,12 +37,18 @@ namespace ProjectM.Units
         public UnitDef SummonDef { get; }
         public int SummonCount { get; }
         public int SummonAtHpPercent { get; }
+        /// <summary>원거리 주문 다음에 차례로 시도하는 주문 (3-23b 지난 회차 플레이어 보스 — 빠른 칸 순서). 비면 없음.</summary>
+        public IReadOnlyList<string> ExtraSpellIds { get; }
 
         public EnemyTraits(string id, string displayName = null, int moveSteps = 1, int moveCostTicks = 1,
             StatusType hitStatus = StatusType.None, int hitStatusPercent = 0, TerrainEffectType hurtTerrain = TerrainEffectType.None,
             string spellId = null, int keepDistance = 0, IReadOnlyDictionary<Element, int> damagePercent = null,
-            string chargeSpellId = null, int chargePercent = 0, int teleportPercent = 0, UnitDef summonDef = null, int summonCount = 0, int summonAtHpPercent = 0)
+            string chargeSpellId = null, int chargePercent = 0, int teleportPercent = 0, UnitDef summonDef = null, int summonCount = 0, int summonAtHpPercent = 0,
+            IReadOnlyList<string> extraSpellIds = null)
         {
+            var extra = new List<string>();
+            if (extraSpellIds != null) foreach (var s in extraSpellIds) if (!string.IsNullOrEmpty(s)) extra.Add(s);
+            ExtraSpellIds = extra;
             if (chargePercent < 0 || chargePercent > 100) throw new ArgumentOutOfRangeException(nameof(chargePercent));
             if (teleportPercent < 0 || teleportPercent > 100) throw new ArgumentOutOfRangeException(nameof(teleportPercent));
             ChargeSpellId = string.IsNullOrEmpty(chargeSpellId) ? null : chargeSpellId;
@@ -92,6 +98,15 @@ namespace ProjectM.Units
                 if (_traits.ContainsKey(t.Id)) throw new ArgumentException($"적 종류 '{t.Id}'가 두 번 있다.", nameof(traits));
                 _traits.Add(t.Id, t);
             }
+        }
+
+        /// <summary>이 표 + extra (같은 ID면 extra로 바꿈) — 3-23b 지난 회차 플레이어 보스를 판마다 더할 때.</summary>
+        public EnemyBook With(EnemyTraits extra)
+        {
+            var list = new List<EnemyTraits>();
+            foreach (var t in _traits.Values) if (extra == null || t.Id != extra.Id) list.Add(t);
+            if (extra != null) list.Add(extra);
+            return new EnemyBook(list);
         }
 
         public bool TryGet(string id, out EnemyTraits traits)

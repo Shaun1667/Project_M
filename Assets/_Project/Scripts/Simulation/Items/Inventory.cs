@@ -83,6 +83,8 @@ namespace ProjectM.Items
         Thrown = 10,
         /// <summary>씨앗 (3-16b): 사용 = 발밑에 심기 · 던지기 = 떨어진 칸에 심기 → 식물(PlantTrap). 연금술 재료 (3-16c). 겹친다.</summary>
         Seed = 11,
+        /// <summary>유물 (3-23a 시간의 모래시계): 걸어 들어가 주우면 판이 승리로 끝난다. 배낭에 넣지 않는다.</summary>
+        Artifact = 12,
     }
 
     /// <summary>

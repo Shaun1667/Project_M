@@ -143,15 +143,15 @@ namespace ProjectM.Tests
             var catalog = AssetDatabase.LoadAssetAtPath<ZoneCatalogAsset>("Assets/_Project/Data/Units/ZoneCatalog.asset");
             var book = catalog.ToBook();
             var dungeon = AssetDatabase.LoadAssetAtPath<DungeonGenConfigAsset>("Assets/_Project/Data/Dungeon/DungeonGenConfig.asset").ToConfig();
-            Assert.That(book.Zones.Count, Is.EqualTo(5));
-            Assert.That(book.FloorCount, Is.EqualTo(25));
+            Assert.That(book.Zones.Count, Is.EqualTo(6), "3-23a: + 26층 시간의 제단");
+            Assert.That(book.FloorCount, Is.EqualTo(26), "3-23a: 26층 제단");
             Assert.That(dungeon.FloorCount, Is.EqualTo(book.FloorCount));
             var bossFloors = new List<int>();
             for (int f = 1; f <= 25; f++) if (book.IsBossFloor(f)) bossFloors.Add(f);
             Assert.That(bossFloors, Is.EqualTo(new[] { 5, 10, 15, 20, 25 }), "3-18: 15층 얼음 마녀 · 3-19: 20층 용암 군주");
             var percents = new List<int>();
             foreach (var z in book.Zones) percents.Add(z.StatPercent);
-            Assert.That(percents, Is.EqualTo(new[] { 100, 100, 100, 100, 100 }), "3-17c ~ 3-20: 모든 구역이 적 줄에 세기를 가짐");
+            Assert.That(percents, Is.EqualTo(new[] { 100, 100, 100, 100, 100, 100 }), "3-17c ~ 3-20: 모든 구역이 적 줄에 세기를 가짐 (+ 3-23a 제단)");
             // 3-17c: 2구역 = 사막 4종 (전갈 3 · 자칼 2 · 미라 2 · 사막 주술사 1)
             foreach (int floor in new[] { 6 })
             {
@@ -186,7 +186,7 @@ namespace ProjectM.Tests
             Assert.That(zone.PuddleTerrain, Is.EqualTo(ProjectM.Status.TerrainEffectType.Water));
             Assert.That(zone.Grass, Is.False);
             Assert.That(book.BossOf(25)?.VisualId, Is.EqualTo("boss_time_guardian"));
-            Assert.That(book.FloorCount, Is.EqualTo(25), "25층 = 마지막 층 → 봉인 계단 없음, 처치 = 승리");
+            Assert.That((book.FloorCount, book.LastBossFloor, book.IsAltarFloor(26)), Is.EqualTo((26, 25, true)), "3-23a: 25층 보스 → 봉인 계단 → 26층 제단(모래시계 = 승리)");
             Assert.That(catalog.TryGetLightColor(23, out var light) && light.b > light.g, Is.True, "보랏빛 해");
 
             (int, int, int, int, int, int, int, int) Stats(string id)

@@ -38,14 +38,19 @@ namespace ProjectM.Dungeon
         public TerrainEffectType PuddleTerrain { get; }
         /// <summary>층 꾸미기에 풀을 까는지 (3-19 — 용암 동굴은 안 깖: 용암 웅덩이가 풀로 번져 층이 타지 않게).</summary>
         public bool Grass { get; }
+        /// <summary>제단 구역 (3-23a — 26층 시간의 제단): 적 없는 큰 방 하나 + 유물 아이템(AltarItemId). 적 표는 비어도 된다.</summary>
+        public string AltarItemId { get; }
+        public bool IsAltar => AltarItemId != null;
 
         public ZoneDef(string name, int firstFloor, int lastFloor, IReadOnlyList<ZoneEnemy> enemies, int statPercent = 100, UnitDef boss = null,
-            TerrainEffectType puddleTerrain = TerrainEffectType.Water, bool grass = true)
+            TerrainEffectType puddleTerrain = TerrainEffectType.Water, bool grass = true, string altarItemId = null)
         {
+            AltarItemId = string.IsNullOrEmpty(altarItemId) ? null : altarItemId;
+            if (AltarItemId != null) enemies = enemies ?? Array.Empty<ZoneEnemy>();
             if (puddleTerrain == TerrainEffectType.None) throw new ArgumentException("웅덩이 지형이 없다.", nameof(puddleTerrain));
             if (firstFloor < 1 || lastFloor < firstFloor) throw new ArgumentOutOfRangeException(nameof(lastFloor), "층 범위가 잘못됐다.");
             if (statPercent < 1) throw new ArgumentOutOfRangeException(nameof(statPercent));
-            if (enemies == null || enemies.Count == 0) throw new ArgumentException("구역 적 표가 비어 있다.", nameof(enemies));
+            if (AltarItemId == null && (enemies == null || enemies.Count == 0)) throw new ArgumentException("구역 적 표가 비어 있다.", nameof(enemies));
             int total = 0;
             var scaled = new List<ZoneEnemy>();
             foreach (var e in enemies)
@@ -53,7 +58,8 @@ namespace ProjectM.Dungeon
                 total += e.Weight;
                 scaled.Add(new ZoneEnemy(e.Def.Scaled(statPercent), e.Weight));
             }
-            if (total <= 0) throw new ArgumentException("구역 적 무게 합이 0이다.", nameof(enemies));
+            if (AltarItemId == null && total <= 0) throw new ArgumentException("구역 적 무게 합이 0이다.", nameof(enemies));
+            if (AltarItemId != null && boss != null) throw new ArgumentException("제단 구역에는 보스가 없다.", nameof(boss));
             Name = name ?? string.Empty;
             FirstFloor = firstFloor;
             LastFloor = lastFloor;
@@ -99,6 +105,19 @@ namespace ProjectM.Dungeon
             var z = ZoneOf(floor);
             return z.Boss != null && floor == z.LastFloor;
         }
+
+        /// <summary>가장 깊은 보스 층 (3-23b 지난 회차 플레이어 보스 자리 — 지금 25층). 보스가 없으면 0.</summary>
+        public int LastBossFloor
+        {
+            get
+            {
+                for (int f = FloorCount; f >= 1; f--) if (IsBossFloor(f)) return f;
+                return 0;
+            }
+        }
+
+        /// <summary>제단 층 (3-23a): 제단 구역의 층. 적 배치 · 재생성 · 꾸미기 없음.</summary>
+        public bool IsAltarFloor(int floor) => ZoneOf(floor).IsAltar;
 
         /// <summary>보스 층의 보스, 아니면 null.</summary>
         public UnitDef BossOf(int floor) => IsBossFloor(floor) ? ZoneOf(floor).Boss : null;

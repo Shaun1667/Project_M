@@ -119,6 +119,7 @@ namespace ProjectM.Editor
             }
             // 없으면 필드 초기값(BALANCE 2번)으로 만든다. 있으면 값을 건드리지 않는다.
             var dungeonConfig = LoadOrCreate<DungeonGenConfigAsset>(DungeonConfigPath);
+            ReplaceInt(dungeonConfig, "_floorCount", 25, 26); // 3-23a: 26층 시간의 제단 (구역 표와 같은 층 수)
             // 유닛 수치 — 없을 때만 BALANCE 3번 값으로 만든다. 있으면 값을 건드리지 않는다.
             var playerDef = EnsureAsset<UnitDefAsset>(PlayerDefPath,
                 ("_visualId", PlayerVisualId), ("_maxHp", 20), ("_attackDamage", 3), ("_sightRange", 8),
@@ -836,6 +837,13 @@ namespace ProjectM.Editor
             changed |= catalog.ReplaceBoss(21, BossVisualId, "boss_time_guardian");
             changed |= catalog.SetNoGrass(21);
             changed |= catalog.SetLightColorIfEmpty(21, new Color(0.82f, 0.72f, 1f)); // 시간 신전 폐허: 보랏빛
+            // 3-23a: 26층 = 시간의 제단 — 25층 보스를 쓰러뜨리면 봉인 계단이 열리고(25층이 이제 중간 보스 층), 26층 큰 방에 시간의 모래시계. 주우면 승리
+            changed |= catalog.AddIfMissing(new ZoneCatalogAsset.Zone
+            {
+                Name = "시간의 제단", FirstFloor = 26, LastFloor = 26, StatPercent = 100, BossId = null,
+                Enemies = new System.Collections.Generic.List<ZoneCatalogAsset.ZoneEnemyRow>(), AltarItemId = "time_hourglass",
+                LightColor = new Color(1f, 0.9f, 0.65f), NoGrass = true,
+            });
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }
@@ -1138,6 +1146,8 @@ namespace ProjectM.Editor
             knuckle.StrengthRequirement = 10;
             knuckle.HitsPerAttack = 2;
             changed |= catalog.AddIfMissing(knuckle);
+            // 3-23a 유물: 시간의 모래시계 (26층 제단) — 주우면 판이 승리로 끝남
+            changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "time_hourglass", DisplayName = "시간의 모래시계", Use = ItemUse.Artifact });
             changed |= catalog.FillWeaponStrength(12); // 3-7b: 요구 힘 (SPD 2티어) — 3-7a 줄에도
             changed |= catalog.FillWeaponSpecials("dirk", 67, 0); // 3-7c: 더크 기습 최소 피해 67%
             changed |= catalog.FillWeaponSpecials("quarterstaff", 0, 2); // 3-7c: 육척봉 방어 0~2
@@ -1735,6 +1745,18 @@ namespace ProjectM.Editor
             }
             if (!string.IsNullOrEmpty(prop.stringValue)) return;
             prop.stringValue = value;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(asset);
+        }
+
+        /// <summary>정수 필드가 from이면 to로 (3-23a 층 수 25 → 26 — 사용자가 고친 다른 값은 그대로).</summary>
+        private static void ReplaceInt(ScriptableObject asset, string field, int from, int to)
+        {
+            var so = new SerializedObject(asset);
+            var prop = so.FindProperty(field);
+            if (prop == null) { Debug.LogError($"[MainSceneSetup] {asset.GetType().Name}.{field} 필드 없음"); return; }
+            if (prop.intValue != from) return;
+            prop.intValue = to;
             so.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(asset);
         }

@@ -119,6 +119,7 @@ namespace ProjectM
             Terrains = _terrainCatalog.ToBook(Statuses);
             Reactions = _reactionCatalog.ToBook(Statuses);
             Spells = _spellCatalog.ToBook(Statuses, Terrains, Reactions);
+            _baseSpells = Spells; // 3-23b: 판마다 그림자 보스 주문을 더한 표를 여기서 다시 만든다
             Items = _itemCatalog.ToBook();
             Fusions = _fusionCatalog.ToBook(Statuses, Terrains);
             Classes = _classCatalog != null ? _classCatalog.ToBook() : null; // 3-21b
@@ -172,6 +173,7 @@ namespace ProjectM
             _characterSelect.Open(portraits, names, _characterIndex, index =>
             {
                 _characterIndex = index;
+                _characterName = string.IsNullOrEmpty(list[index].DisplayName) ? list[index].Id : list[index].DisplayName; // 3-23b 기록 이름
                 StartNewRun(list[index].VisualId, list[index].StartingSpells, list[index].ClassId); // 3-21a: 루멘 = 빛의 창 기술 2개 · 3-21b 직업
             }, illustrations);
         }
@@ -195,6 +197,17 @@ namespace ProjectM
             ulong seed = _fixedSeed != 0 ? (ulong)_fixedSeed : (ulong)System.DateTime.UtcNow.Ticks;
             Seed = seed;
             Debug.Log($"[GameRoot] 시드 {(long)seed}");
+            // 3-23b: 지난 회차 기록(있으면 마지막 보스 = 그 플레이어) · 그 보스 주문을 더한 판 주문 표
+            _ghost = GhostStore.Load();
+            Spells = _baseSpells;
+            if (_ghost != null)
+            {
+                var defs = new System.Collections.Generic.List<ProjectM.Magic.SpellDef>();
+                foreach (var id in _baseSpells.Ids) if (_baseSpells.TryGet(id, out var def)) defs.Add(def);
+                defs.AddRange(GhostBoss.SpellsWithPrefix(_ghost));
+                Spells = new ProjectM.Magic.SpellBook(defs, _baseSpells.Statuses, _baseSpells.Terrains, _baseSpells.Reactions);
+                Debug.Log($"[GameRoot] 지난 회차 기록: {_ghost.DisplayName} (레벨 {_ghost.Level}) — 마지막 보스가 된다");
+            }
 
             if (World != null)
             {
@@ -202,6 +215,7 @@ namespace ProjectM
                 World.Events.Unsubscribe<EntitySpawnedEvent>(OnEntitySpawned);
                 World.Events.Unsubscribe<UnitDiedEvent>(OnUnitDied);
                 World.Events.Unsubscribe<RunEndedEvent>(OnRunEnded);
+                World.Events.Unsubscribe<ArtifactObtainedEvent>(OnArtifactObtained);
                 World.Events.Unsubscribe<StairsUnsealedEvent>(OnStairsUnsealed); // 3-21b
                 World.Events.Unsubscribe<LevelUpEvent>(OnLevelUp); // 3-21c
             }
@@ -237,13 +251,16 @@ namespace ProjectM
             var spawn = _spawnConfig.ToConfig();
             var enemyDef = _enemyDef.ToDef();
             var zones = _zoneCatalog != null ? _zoneCatalog.ToBook() : null; // 3-17a
+            _zones = zones;
             if (zones != null && zones.FloorCount != dungeonConfig.FloorCount)
                 Debug.LogWarning($"[GameRoot] 구역 표의 층 수 {zones.FloorCount} ≠ DungeonGenConfig 층 수 {dungeonConfig.FloorCount}", this);
             var kindRng = World.Rng.Get(RngStream.EnemyKind);
             var enemies = _zoneCatalog != null ? _zoneCatalog.ToEnemyBook() : null; // 3-17b 적 종류 행동
+            if (enemies != null && _ghost != null) enemies = enemies.With(GhostBoss.Traits(_ghost)); // 3-23b 그림자 보스 행동
             if (enemies != null) World.SetEnemyRules(new EnemyRules(enemies, Spells, Statuses, Terrains));
             _unitVisuals.Clear();
             _enemyNames = _zoneCatalog != null ? _zoneCatalog.DisplayNames() : new System.Collections.Generic.Dictionary<string, string>();
+            if (_ghost != null) _enemyNames[_ghost.VisualId] = _ghost.DisplayName; // 3-23b "루멘의 그림자 #12"
             HudText.EnemyName = id => _unitVisuals.TryGetValue(id, out var v) && _enemyNames.TryGetValue(v, out var n) ? n : null;
             var enemyAi = new MeleeChaserAi(World, Config, sight, Statuses, enemies, Spells, new BresenhamTargetingRule()); // 3-13a: 투명 · 3-17b 행동
             System.Func<World, EntityId, ICommandSource> aiFactory = (w, id) =>
@@ -259,7 +276,9 @@ namespace ProjectM
             if (traps != null) World.Scheduler.AddSystem(TickPhase.ManaRegen, new TrapSystem(World, traps, Spells)); // ⑤ 밟으면 발동
             Terrains.TryGet(TerrainEffectType.Water, out var water); // 3-11a: 물 웅덩이 = 사라지지 않는 물 지형
             var stairs = new FloorTransition(World, generator, dungeonConfig.FloorCount, enemyDef, spawn, aiFactory, vision, _bossDef.ToDef(), loot,
-                decor, water, traps, _floorDecorConfig != null ? _floorDecorConfig.ToShop() : null, Items, zones, Terrains); // 3-15c 상점 · 3-17a 구역 · 3-18 구역별 웅덩이
+                decor, water, traps, _floorDecorConfig != null ? _floorDecorConfig.ToShop() : null, Items, zones, Terrains, // 3-15c 상점 · 3-17a 구역 · 3-18 구역별 웅덩이
+                _ghost, _ghost != null && _zoneCatalog != null
+                    ? GhostBoss.ToUnitDef(_ghost, _zoneCatalog.GhostHpPercent, _zoneCatalog.GhostExpReward, _zoneCatalog.GhostExpMaxLevel) : null); // 3-23b 그림자 보스
 
             if (_pixelMap != null) _pixelMap.Bind(World.Events); // P-3a 2D 맵 — 3D 맵은 묶지 않음
             else _tilemapPresenter.Bind(World.Events);
@@ -274,6 +293,7 @@ namespace ProjectM
             World.Events.Subscribe<EntitySpawnedEvent>(OnEntitySpawned); // 3-17b 로그의 적 이름
             World.Events.Subscribe<UnitDiedEvent>(OnUnitDied);
             World.Events.Subscribe<RunEndedEvent>(OnRunEnded);
+            World.Events.Subscribe<ArtifactObtainedEvent>(OnArtifactObtained); // 3-23b 모래시계 → 기록
             World.Events.Subscribe<StairsUnsealedEvent>(OnStairsUnsealed); // 3-21b: 선택 층 보스 처치 → 형태 선택
             World.Events.Subscribe<LevelUpEvent>(OnLevelUp); // 3-21c: 특성 점수 안내
             World.SetClassRules(Classes); // 3-21c: 특성 효과 조회 (규칙 연결 — 저장 안 함)
@@ -342,6 +362,26 @@ namespace ProjectM
         /// <summary>3-17b: 엔티티 → 모습 ID (로그의 적 이름 — 죽은 뒤에도 남겨 둠, 판마다 비움).</summary>
         private readonly System.Collections.Generic.Dictionary<EntityId, string> _unitVisuals = new System.Collections.Generic.Dictionary<EntityId, string>();
         private System.Collections.Generic.Dictionary<string, string> _enemyNames = new System.Collections.Generic.Dictionary<string, string>();
+        private ProjectM.Magic.SpellBook _baseSpells; // 3-23b 데이터 주문 표 (판마다 그림자 주문을 더함)
+        private GhostRecord _ghost; // 3-23b 이 판의 지난 회차 기록 (없으면 null)
+        private ProjectM.Dungeon.ZoneBook _zones;
+        private string _characterName; // 3-23b 기록 이름 ("루멘의 그림자")
+
+        /// <summary>3-23b: 시간의 모래시계를 얻으면 지금 플레이어를 기록으로 남긴다 (기록 하나 — 덮어씀).</summary>
+        private void OnArtifactObtained(ArtifactObtainedEvent e)
+        {
+            if (_player == null || e.Unit != _playerId) return;
+            try
+            {
+                var record = GhostBoss.Capture(World, _player, Spells, HudText.GhostName(_characterName ?? _player.VisualId));
+                GhostStore.Save(record);
+                Debug.Log($"[GameRoot] 기록을 남겼다: {record.DisplayName} (레벨 {record.Level}, 주문 {record.Spells.Count}) — {GhostStore.DefaultPath}");
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogWarning($"[GameRoot] 기록을 남기지 못했다: {ex.Message}");
+            }
+        }
 
         private void OnEntitySpawned(EntitySpawnedEvent e) => _unitVisuals[e.Id] = e.VisualId;
 
@@ -358,6 +398,13 @@ namespace ProjectM
 
         private void OnUnitDied(UnitDiedEvent e)
         {
+            // 3-23b: 그림자 보스를 쓰러뜨리면 기록이 사라진다 (다음 판부터 마지막 보스는 원래 보스) — 결정 2026-11-05 "처치할 때까지"
+            if (_ghost != null && World.Run.BossId.IsValid && e.Id == World.Run.BossId && _zones != null && World.Floor == _zones.LastBossFloor)
+            {
+                GhostStore.Delete();
+                _ghost = null;
+                _hud.SetHint(HudText.GhostDefeated);
+            }
             if (e.Id != _playerId) return;
             _playerDead = true;
             Debug.Log("[GameRoot] 플레이어 사망 — R로 새 판");

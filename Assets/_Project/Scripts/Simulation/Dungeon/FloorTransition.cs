@@ -34,6 +34,8 @@ namespace ProjectM.Dungeon
         private readonly ItemBook _items;
         private readonly ZoneBook _zones;
         private readonly TerrainBook _terrains;
+        private readonly UnitDef _ghostDef;
+        private readonly GhostRecord _ghost;
 
         /// <param name="bossDef">마지막 층(보스 층)의 보스 (3-4b). null이면 마지막 층도 일반 층처럼 만든다 (테스트용).</param>
         /// <param name="loot">바닥 아이템 배치 수치 (3-5). null이면 새 층에 아이템을 놓지 않는다.</param>
@@ -43,8 +45,10 @@ namespace ProjectM.Dungeon
         public FloorTransition(World world, DungeonGenerator generator, int floorCount, UnitDef enemyDef, SpawnConfig spawn,
             Func<World, EntityId, ICommandSource> aiFactory, PlayerVisionSystem vision, UnitDef bossDef = null, LootConfig loot = null,
             FloorDecorConfig decor = null, TerrainDef water = null, TrapBook traps = null, ShopConfig shop = null, ItemBook items = null,
-            ZoneBook zones = null, TerrainBook terrains = null)
+            ZoneBook zones = null, TerrainBook terrains = null, GhostRecord ghost = null, UnitDef ghostDef = null)
         {
+            _ghost = ghost; // 3-23b: 있으면 마지막 보스 층(GhostFloor)의 보스 = 지난 회차 플레이어
+            _ghostDef = ghostDef;
             _terrains = terrains;
             _zones = zones; // 3-17a: 있으면 보스 층 · 보스 · 적 종류를 구역 표에서
             _shop = shop;
@@ -103,6 +107,14 @@ namespace ProjectM.Dungeon
                 _world.Units.Teleport(player.Id, arrival);
                 _world.RestoreStoredFloor(target, _aiFactory);
             }
+            else if (_zones != null && _zones.IsAltarFloor(target))
+            {
+                // 3-23a 제단 층 (26층): 보스 방과 같은 큰 방 하나 · 적 없음 · 보스 자리(오른쪽 끝)에 유물. 주우면 승리 (ItemPickupSystem)
+                var floor = _generator.GenerateBossRoom(sealedExit: false);
+                _world.EnterNewFloor(target, floor.Map);
+                _world.Units.Teleport(player.Id, floor.Start);
+                _world.FloorItems.Add(floor.Exit, _zones.ZoneOf(target).AltarItemId); // Announce가 그린다
+            }
             else if (BossOf(target) != null)
             {
                 // 보스 층 (3-4b): 큰 방 하나 + 보스만 (일반 적 · 재생성 없음). 마지막 층 보스가 죽으면 승리,
@@ -111,6 +123,7 @@ namespace ProjectM.Dungeon
                 _world.EnterNewFloor(target, floor.Map);
                 _world.Units.Teleport(player.Id, floor.Start);
                 var boss = UnitSpawner.SpawnEnemy(_world, BossOf(target), floor.Exit, _aiFactory(_world, EntityId.None));
+                if (IsGhostFloor(target)) GhostBoss.Equip(boss, _ghost); // 3-23b: 기록의 무기 · 갑옷
                 _world.Run.SetBoss(boss.Id);
                 if (target < _floorCount) newFloorStart = floor.Start; // 3-17a: 중간 보스 층에도 이 층 몫의 아이템 (계획이 빼지 않음)
             }
@@ -150,7 +163,14 @@ namespace ProjectM.Dungeon
         }
 
         /// <summary>그 층의 보스 (구역 표가 있으면 구역 보스 층, 없으면 마지막 층의 bossDef). 보스 층이 아니면 null.</summary>
-        private UnitDef BossOf(int floor) => _zones != null ? _zones.BossOf(floor) : floor == _floorCount ? _bossDef : null;
+        private UnitDef BossOf(int floor)
+        {
+            var boss = _zones != null ? _zones.BossOf(floor) : floor == _floorCount ? _bossDef : null;
+            return boss != null && IsGhostFloor(floor) ? _ghostDef : boss;
+        }
+
+        /// <summary>지난 회차 플레이어 보스가 나오는 층 (3-23b): 기록이 있으면 마지막 보스 층(구역 표의 가장 깊은 보스 층 — 지금 25층).</summary>
+        public bool IsGhostFloor(int floor) => _ghost != null && _ghostDef != null && _zones != null && floor == _zones.LastBossFloor;
 
         /// <summary>
         /// 화면을 새 층으로: 맵 → 지형 → (돌아온 층이면) 유닛 생성 · 상태 → 플레이어 위치.

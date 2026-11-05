@@ -38,7 +38,7 @@ namespace ProjectM.Units
         {
             int interval = _spawn.RespawnIntervalTicks;
             if (interval <= 0 || (context.Tick + 1) % interval != 0) return;
-            if (_zones != null ? _zones.IsBossFloor(_world.Floor) : _world.Floor == _bossFloor) return;
+            if (_zones != null ? _zones.IsBossFloor(_world.Floor) || _zones.IsAltarFloor(_world.Floor) : _world.Floor == _bossFloor) return; // 3-23a 제단 층도 재생성 없음
             if (!PlayerActions.TryGetPlayer(_world, out var player) || !player.IsAlive) return;
 
             int alive = 0;

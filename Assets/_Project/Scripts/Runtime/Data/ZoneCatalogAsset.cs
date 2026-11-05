@@ -72,6 +72,7 @@ namespace ProjectM.Data
             [Tooltip("구역 분위기 (3-17c): 해 색. 알파 0 = 기본 색 그대로")] public Color LightColor;
             [Tooltip("층 꾸미기 웅덩이의 지형 (3-18): None = 물. 얼음 동굴 = 빙판")] public TerrainEffectType PuddleTerrain;
             [Tooltip("층 꾸미기에 풀을 깔지 않음 (3-19 용암 동굴 — 용암이 풀로 번지지 않게)")] public bool NoGrass;
+            [Tooltip("제단 구역 (3-23a): 이 유물 아이템을 큰 방에 놓고 적은 없음. 비면 보통 구역")] public string AltarItemId;
         }
 
         /// <summary>에디터 Setup용 (3-19): 풀 없음을 켠다 (이미 켜져 있으면 false).</summary>
@@ -166,6 +167,15 @@ namespace ProjectM.Data
         [Min(0)] [SerializeField] private int _lootPlanFloors = 10;
 
         public int LootPlanFloors => _lootPlanFloors;
+
+        [Header("지난 회차 플레이어 보스 (3-23b — 마지막 보스 층)")]
+        [Tooltip("기록 체력 배율 % (결정 2026-11-05 — 체력만 3배)")] [Min(1)] [SerializeField] private int _ghostHpPercent = 300;
+        [Min(0)] [SerializeField] private int _ghostExpReward = 50;
+        [Min(0)] [SerializeField] private int _ghostExpMaxLevel = 30;
+
+        public int GhostHpPercent => _ghostHpPercent;
+        public int GhostExpReward => _ghostExpReward;
+        public int GhostExpMaxLevel => _ghostExpMaxLevel;
         public IReadOnlyList<Enemy> Enemies => _enemies;
 
         public bool TryGetEnemy(string id, out Enemy enemy)
@@ -270,7 +280,7 @@ namespace ProjectM.Data
                     boss = ToDef(b);
                 }
                 var puddle = z.PuddleTerrain == TerrainEffectType.None ? TerrainEffectType.Water : z.PuddleTerrain;
-                zones.Add(new ZoneDef(z.Name, z.FirstFloor, z.LastFloor, enemies, z.StatPercent, boss, puddle, grass: !z.NoGrass));
+                zones.Add(new ZoneDef(z.Name, z.FirstFloor, z.LastFloor, enemies, z.StatPercent, boss, puddle, grass: !z.NoGrass, altarItemId: z.AltarItemId));
             }
             return new ZoneBook(zones);
         }

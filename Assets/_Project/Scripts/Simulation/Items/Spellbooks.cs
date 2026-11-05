@@ -537,6 +537,19 @@ namespace ProjectM.Items
                     picked++;
                     continue;
                 }
+                if (def.Use == ItemUse.Artifact) // 3-23a: 시간의 모래시계 — 주우면 승리 (배낭에 넣지 않음)
+                {
+                    world.FloorItems.Remove(player.Pos, id);
+                    world.Events.Publish(new ItemPickedUpEvent(player.Id, player.Pos, id));
+                    world.Events.Publish(new ArtifactObtainedEvent(player.Id, id));
+                    if (world.Run.Outcome == RunOutcome.None)
+                    {
+                        world.Run.Outcome = RunOutcome.Victory;
+                        world.Events.Publish(new RunEndedEvent(RunOutcome.Victory));
+                    }
+                    picked++;
+                    continue;
+                }
                 if (floorItem.Price > world.Run.Gold) // 3-15c: 가격표 — 금화가 모자라면 그대로
                 {
                     world.Events.Publish(new ProjectM.Dungeon.PurchaseFailedEvent(id, floorItem.Price));
@@ -642,6 +655,19 @@ namespace ProjectM.Items
         public FloorItemRemovedEvent(GridPos pos, string itemId)
         {
             Pos = pos;
+            ItemId = itemId;
+        }
+    }
+
+    /// <summary>유물을 얻었다 (3-23a 시간의 모래시계 — 판이 승리로 끝남, GameRoot가 지난 회차 기록을 남김).</summary>
+    public sealed class ArtifactObtainedEvent : ISimEvent
+    {
+        public EntityId Unit { get; }
+        public string ItemId { get; }
+
+        public ArtifactObtainedEvent(EntityId unit, string itemId)
+        {
+            Unit = unit;
             ItemId = itemId;
         }
     }

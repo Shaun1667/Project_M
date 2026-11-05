@@ -1498,6 +1498,33 @@ MonoBehaviour:
     BreakPercent: 0
     PlantTrap: 0
     BrewsInto: 
+  - Id: time_hourglass
+    DisplayName: "\uC2DC\uAC04\uC758 \uBAA8\uB798\uC2DC\uACC4"
+    Use: 12
+    SpellId: 
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
+    HitsPerAttack: 0
+    Tier: 0
+    Amount: 0
+    Effect: 0
+    Weight: 0
+    Food: 0
+    Risky: 0
+    FireTransformsTo: 
+    IceTransformsTo: 
+    Value: 0
+    ThrowMinDamage: 0
+    ThrowMaxDamage: 0
+    BreakPercent: 0
+    PlantTrap: 0
+    BrewsInto: 
   _weaponDamageDivisor: 3
   _weaponMinDamage: 2
   _armorDefenseDivisor: 3

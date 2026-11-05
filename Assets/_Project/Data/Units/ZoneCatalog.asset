@@ -707,6 +707,7 @@ MonoBehaviour:
     LightColor: {r: 0.85, g: 1, b: 0.88, a: 1}
     PuddleTerrain: 0
     NoGrass: 0
+    AltarItemId: 
   - Name: "\uC0AC\uB9C9 \uD53C\uB77C\uBBF8\uB4DC"
     FirstFloor: 6
     LastFloor: 10
@@ -724,6 +725,7 @@ MonoBehaviour:
     LightColor: {r: 1, g: 0.84, b: 0.58, a: 1}
     PuddleTerrain: 0
     NoGrass: 0
+    AltarItemId: 
   - Name: "\uC5BC\uC74C \uB3D9\uAD74"
     FirstFloor: 11
     LastFloor: 15
@@ -741,6 +743,7 @@ MonoBehaviour:
     LightColor: {r: 0.75, g: 0.88, b: 1, a: 1}
     PuddleTerrain: 5
     NoGrass: 0
+    AltarItemId: 
   - Name: "\uC6A9\uC554 \uB3D9\uAD74"
     FirstFloor: 16
     LastFloor: 20
@@ -758,6 +761,7 @@ MonoBehaviour:
     LightColor: {r: 1, g: 0.68, b: 0.5, a: 1}
     PuddleTerrain: 1
     NoGrass: 1
+    AltarItemId: 
   - Name: "\uC2DC\uAC04 \uC2E0\uC804 \uD3D0\uD5C8"
     FirstFloor: 21
     LastFloor: 25
@@ -775,4 +779,18 @@ MonoBehaviour:
     LightColor: {r: 0.82, g: 0.72, b: 1, a: 1}
     PuddleTerrain: 0
     NoGrass: 1
+    AltarItemId: 
+  - Name: "\uC2DC\uAC04\uC758 \uC81C\uB2E8"
+    FirstFloor: 26
+    LastFloor: 26
+    StatPercent: 100
+    Enemies: []
+    BossId: 
+    LightColor: {r: 1, g: 0.9, b: 0.65, a: 1}
+    PuddleTerrain: 0
+    NoGrass: 1
+    AltarItemId: time_hourglass
   _lootPlanFloors: 10
+  _ghostHpPercent: 300
+  _ghostExpReward: 50
+  _ghostExpMaxLevel: 30

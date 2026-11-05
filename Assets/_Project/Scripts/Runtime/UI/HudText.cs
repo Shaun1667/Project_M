@@ -36,6 +36,7 @@ namespace ProjectM.UI
         {
             if (string.IsNullOrEmpty(id)) return "-";
             if (_spellNames.TryGetValue(id, out var name)) return name;
+            if (id.StartsWith(ProjectM.Units.GhostBoss.SpellPrefix)) return Spell(id.Substring(ProjectM.Units.GhostBoss.SpellPrefix.Length)); // 3-23b 그림자 보스 주문 = 원래 이름
             return _fusionNames.TryGetValue(id, out var fusion) ? fusion : id;
         }
 
@@ -296,6 +297,10 @@ namespace ProjectM.UI
         // 3-21b 직업 형태 선택 창 · 로그
         public const string FormSelectTitle = "빛의 창 — 형태를 고르세요";
         public const string FormSelectHint = "← → 고르기 · Enter/클릭 확정 (한 번만 고를 수 있음)";
+
+        // 3-23b 지난 회차 플레이어 보스
+        public static string GhostName(string characterName) => $"{characterName}의 그림자";
+        public const string GhostDefeated = "그림자를 쓰러뜨렸다 — 지난 회차의 기록이 사라졌다";
 
         // 3-21c 특성 창 · 로그
         public static string TalentSelectTitle(int tier, int unspent) => $"특성 — {tier}단계 (남은 점수 {unspent})";

@@ -79,7 +79,7 @@ namespace ProjectM.Units
                     && GridMovement.Chebyshev(self.Pos, player.Pos) <= Math.Max(1, charge.Range)
                     && _world.Rng.Get(RngStream.Ai).Range(0, 100) < traits.ChargePercent)
                     return new ChargeCommand(_world, _spells, charge.Id, player.Pos, cost); // 3-17d 예고 강타
-                if (traits != null && traits.SpellId != null && TryCast(self, traits, player.Pos, cost, out var cast)) return cast; // 3-17b 주술사
+                if (traits != null && (traits.SpellId != null || traits.ExtraSpellIds.Count > 0) && TryCast(self, traits, player.Pos, cost, out var cast)) return cast; // 3-17b 주술사 · 3-23b 지난 회차 보스
                 if (traits != null && traits.KeepDistance > 0 && GridMovement.Chebyshev(self.Pos, player.Pos) < traits.KeepDistance
                     && self.Mana > 0) // 마나가 있으면 거리를 벌림 (없으면 붙어 싸움)
                 {
@@ -202,7 +202,18 @@ namespace ProjectM.Units
         private bool TryCast(Unit self, EnemyTraits traits, GridPos target, int cost, out ICommand cast)
         {
             cast = null;
-            if (_spells == null || _targeting == null || !_spells.TryGet(traits.SpellId, out var spell)) return false;
+            if (_spells == null || _targeting == null) return false;
+            // 3-23b: 원거리 주문 → 덧붙은 주문(지난 회차 플레이어 보스 — 빠른 칸 순서) 중 처음으로 쓸 수 있는 것
+            if (TryCastOne(self, traits.SpellId, target, cost, out cast)) return true;
+            foreach (var id in traits.ExtraSpellIds)
+                if (TryCastOne(self, id, target, cost, out cast)) return true;
+            return false;
+        }
+
+        private bool TryCastOne(Unit self, string spellId, GridPos target, int cost, out ICommand cast)
+        {
+            cast = null;
+            if (spellId == null || !_spells.TryGet(spellId, out var spell)) return false;
             if (ProjectM.Magic.SpellCasting.CheckDef(_world, _targeting, _sight, self, spell, target, out _) != ProjectM.Magic.CastBlock.None) return false;
             cast = new ProjectM.Magic.CastSpellCommand(_world, _spells, _targeting, spell.Id, target, cost);
             return true;

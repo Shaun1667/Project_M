@@ -247,7 +247,7 @@ namespace ProjectM.Tests
             Assert.That(c.WallTunnelCostMultiplier, Is.EqualTo(expected.WallTunnelCostMultiplier));
             Assert.That(c.PlacementAttemptLimit, Is.EqualTo(expected.PlacementAttemptLimit));
             Assert.That(c.DeadEndLoopMinWalkDistance, Is.EqualTo(expected.DeadEndLoopMinWalkDistance));
-            Assert.That(c.FloorCount, Is.EqualTo(25), "3-17a: 5구역 · 25층 (결정 2026-11-04)");
+            Assert.That(c.FloorCount, Is.EqualTo(26), "3-17a: 5구역 · 25층 (결정 2026-11-04) + 3-23a 26층 제단");
         }
     }
 }
