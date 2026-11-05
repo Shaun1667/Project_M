@@ -82,6 +82,22 @@ namespace ProjectM.Editor
             ("boss_pharaoh", new ModelSpec("Boss_Pharaoh", "Unit_Pharaoh", 1.7f, 0f), true,
                 new ModelSpec("Prop_Staff_Pharaoh", "", 1.8f, 0f)),                                                   // 1.85 m (보스 2칸 키, 슬라임 소녀 1.8)
             ("shopkeeper", new ModelSpec("NPC_Shopkeeper", "Unit_Shopkeeper", 0.9f, 0f), true, null),          // 0.95 m
+            // 2026-11-05 사용자: 3 ~ 5구역 (11 ~ 25층) 적 · 보스 — 사람형은 Mixamo 리깅(없으면 원본), 손에 든 것 없음
+            ("enemy_frost_bat", new ModelSpec("Enemy_FrostBat", "Unit_FrostBat", 0.6f, 0f), false, null),        // 날개 폭 0.6 m
+            ("enemy_snow_wolf", new ModelSpec("Enemy_SnowWolf", "Unit_SnowWolf", 0.85f, 0f), false, null),       // 길이 0.85 m
+            ("enemy_ice_golem", new ModelSpec("Enemy_IceGolem", "Unit_IceGolem", 1.2f, 0f), true, null),         // 1.2 m (느리고 큼)
+            ("enemy_frost_shaman", new ModelSpec("Enemy_FrostShaman", "Unit_FrostShaman", 0.9f, 0f), true, null),
+            ("boss_ice_witch", new ModelSpec("Boss_IceWitch", "Unit_IceWitch", 1.8f, 0f), true, null),          // 1.8 m
+            ("enemy_fire_salamander", new ModelSpec("Enemy_FireSalamander", "Unit_FireSalamander", 0.9f, 0f), false, null),
+            ("enemy_flame_imp", new ModelSpec("Enemy_FlameImp", "Unit_FlameImp", 0.65f, 0f), true, null),        // 0.7 m (작은 임프)
+            ("enemy_magma_golem", new ModelSpec("Enemy_MagmaGolem", "Unit_MagmaGolem", 1.25f, 0f), true, null),
+            ("enemy_fire_shaman", new ModelSpec("Enemy_FireShaman", "Unit_FireShaman", 0.9f, 0f), true, null),
+            ("boss_lava_lord", new ModelSpec("Boss_LavaLord", "Unit_LavaLord", 1.9f, 0f), true, null),          // 1.9 m
+            ("enemy_clockwork_soldier", new ModelSpec("Enemy_ClockworkSoldier", "Unit_ClockworkSoldier", 0.95f, 0f), true, null),
+            ("enemy_time_afterimage", new ModelSpec("Enemy_TimeAfterimage", "Unit_TimeAfterimage", 1f, 0f), true, null),
+            ("enemy_temple_guardian", new ModelSpec("Enemy_TempleGuardian", "Unit_TempleGuardian", 1.3f, 0f), true, null), // 1.3 m (돌 수호상)
+            ("enemy_time_priest", new ModelSpec("Enemy_TimePriest", "Unit_TimePriest", 1f, 0f), true, null),
+            ("boss_time_guardian", new ModelSpec("Boss_TimeGuardian", "Unit_TimeGuardian", 1.9f, 0f), true, null), // 1.9 m
         };
         private static readonly ModelSpec Staff = new ModelSpec("Prop_MageStaff", "", 0.85f, 0f);
         private static readonly ModelSpec Floor = new ModelSpec("Tile_Floor", "Tile_Floor", 1f, 0f);
@@ -176,8 +192,10 @@ namespace ProjectM.Editor
                 : BuildPrefab(Boss, null);
             catalog.SetPrefab("boss", bossPrefab);
             catalog.SetPrefab("boss_slime_girl", bossPrefab); // 3-17d 5층 보스 = 슬라임 소녀 모델
-            foreach (var (id, spec, rigged, staff) in ZoneUnits) // 3-17 구역 적 · 보스 · 상인 — 모델이 없으면 그레이박스 그대로
+            foreach (var (id, spec, riggedSpec, staff) in ZoneUnits) // 3-17 구역 적 · 보스 · 상인 — 모델이 없으면 그레이박스 그대로
             {
+                // 사람형인데 Mixamo 리깅 파일이 아직 없으면 원본(코드 움직임)으로 (2026-11-05 — 리깅 전에도 모델이 보이게)
+                bool rigged = riggedSpec && AssetImporter.GetAtPath(ModelDir + spec.Model + "_Rigged.fbx") != null;
                 var source = rigged ? new ModelSpec(spec.Model + "_Rigged", spec.Prefab, spec.Scale, spec.Yaw) : spec;
                 if (!EnsureVarcoMaterial(spec.Model, ModelDir + source.Model + ".fbx")) continue;
                 if (rigged) EnsureHumanoid(ModelDir + source.Model + ".fbx", null);

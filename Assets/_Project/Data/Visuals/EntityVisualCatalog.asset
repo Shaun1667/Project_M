@@ -211,7 +211,7 @@ MonoBehaviour:
   - Id: enemy_frost_bat
     Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
     Tint: {r: 0.55, g: 0.7, b: 0.95, a: 1}
-    Prefab: {fileID: 0}
+    Prefab: {fileID: 8424867520957993848, guid: 77729af2cf03a5a4ba470311bf08a7e0, type: 3}
     Height: 0.6
     Variants: []
     PixelIdle: {fileID: 0}
@@ -222,7 +222,7 @@ MonoBehaviour:
   - Id: enemy_snow_wolf
     Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
     Tint: {r: 0.9, g: 0.93, b: 0.97, a: 1}
-    Prefab: {fileID: 0}
+    Prefab: {fileID: 6399818684670115412, guid: 39c0b47d305b2ae469c22744ea9d1367, type: 3}
     Height: 0.7
     Variants: []
     PixelIdle: {fileID: 0}
@@ -233,7 +233,7 @@ MonoBehaviour:
   - Id: enemy_ice_golem
     Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
     Tint: {r: 0.6, g: 0.85, b: 0.95, a: 1}
-    Prefab: {fileID: 0}
+    Prefab: {fileID: 9202609109534697234, guid: 19069c58b85b96548a11ffb61f98be27, type: 3}
     Height: 1.2
     Variants: []
     PixelIdle: {fileID: 0}
@@ -244,7 +244,7 @@ MonoBehaviour:
   - Id: enemy_frost_shaman
     Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
     Tint: {r: 0.3, g: 0.45, b: 0.85, a: 1}
-    Prefab: {fileID: 0}
+    Prefab: {fileID: 7425500080343338906, guid: 6a5428b92c15d1d458aa88ea889ac815, type: 3}
     Height: 1
     Variants: []
     PixelIdle: {fileID: 0}
@@ -255,7 +255,7 @@ MonoBehaviour:
   - Id: boss_ice_witch
     Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
     Tint: {r: 0.8, g: 0.92, b: 1, a: 1}
-    Prefab: {fileID: 0}
+    Prefab: {fileID: 616974960690076157, guid: 50d1fc9d979e90240baa668e648fceb1, type: 3}
     Height: 1.8
     Variants: []
     PixelIdle: {fileID: 0}
@@ -266,7 +266,7 @@ MonoBehaviour:
   - Id: enemy_fire_salamander
     Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
     Tint: {r: 0.9, g: 0.35, b: 0.1, a: 1}
-    Prefab: {fileID: 0}
+    Prefab: {fileID: 7535489708952239932, guid: 53866513f38421740b519165796bf11a, type: 3}
     Height: 0.5
     Variants: []
     PixelIdle: {fileID: 0}
@@ -277,7 +277,7 @@ MonoBehaviour:
   - Id: enemy_flame_imp
     Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
     Tint: {r: 1, g: 0.55, b: 0.15, a: 1}
-    Prefab: {fileID: 0}
+    Prefab: {fileID: 6680168154840263377, guid: 0355f42323ec4f643b829c2fc5436b43, type: 3}
     Height: 0.6
     Variants: []
     PixelIdle: {fileID: 0}
@@ -288,7 +288,7 @@ MonoBehaviour:
   - Id: enemy_magma_golem
     Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
     Tint: {r: 0.35, g: 0.2, b: 0.15, a: 1}
-    Prefab: {fileID: 0}
+    Prefab: {fileID: 5274809048095082588, guid: e7a38949684fd5744bd056bf161ab179, type: 3}
     Height: 1.2
     Variants: []
     PixelIdle: {fileID: 0}
@@ -299,7 +299,7 @@ MonoBehaviour:
   - Id: enemy_fire_shaman
     Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
     Tint: {r: 0.75, g: 0.15, b: 0.1, a: 1}
-    Prefab: {fileID: 0}
+    Prefab: {fileID: 4080876886145633976, guid: 717236dd43f82d44096593e7591d0e43, type: 3}
     Height: 1
     Variants: []
     PixelIdle: {fileID: 0}
@@ -310,7 +310,7 @@ MonoBehaviour:
   - Id: boss_lava_lord
     Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
     Tint: {r: 0.6, g: 0.15, b: 0.05, a: 1}
-    Prefab: {fileID: 0}
+    Prefab: {fileID: 5570216050924330591, guid: 9b01ae377011de347a1245c5e452bf72, type: 3}
     Height: 1.8
     Variants: []
     PixelIdle: {fileID: 0}
@@ -321,7 +321,7 @@ MonoBehaviour:
   - Id: enemy_clockwork_soldier
     Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
     Tint: {r: 0.6, g: 0.45, b: 0.3, a: 1}
-    Prefab: {fileID: 0}
+    Prefab: {fileID: 2399957421361631519, guid: 47f4d16de7fbe7c4f936b5277ea6854c, type: 3}
     Height: 0.9
     Variants: []
     PixelIdle: {fileID: 0}
@@ -332,7 +332,7 @@ MonoBehaviour:
   - Id: enemy_time_afterimage
     Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
     Tint: {r: 0.7, g: 0.6, b: 1, a: 1}
-    Prefab: {fileID: 0}
+    Prefab: {fileID: 4815200409689902897, guid: 706412898d69e6d409c414757d686f52, type: 3}
     Height: 0.9
     Variants: []
     PixelIdle: {fileID: 0}
@@ -343,7 +343,7 @@ MonoBehaviour:
   - Id: enemy_temple_guardian
     Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
     Tint: {r: 0.65, g: 0.65, b: 0.6, a: 1}
-    Prefab: {fileID: 0}
+    Prefab: {fileID: 4594335958716761135, guid: 600d321910654eb4087432fadaf2855e, type: 3}
     Height: 1.2
     Variants: []
     PixelIdle: {fileID: 0}
@@ -354,7 +354,7 @@ MonoBehaviour:
   - Id: enemy_time_priest
     Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
     Tint: {r: 0.55, g: 0.3, b: 0.85, a: 1}
-    Prefab: {fileID: 0}
+    Prefab: {fileID: 5186655247041697041, guid: 2d601286a946f4845acfc011990dd46a, type: 3}
     Height: 1
     Variants: []
     PixelIdle: {fileID: 0}
@@ -365,7 +365,7 @@ MonoBehaviour:
   - Id: boss_time_guardian
     Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
     Tint: {r: 0.85, g: 0.75, b: 0.35, a: 1}
-    Prefab: {fileID: 0}
+    Prefab: {fileID: 7461029520713812713, guid: 952b406155664d843953c60edd210a35, type: 3}
     Height: 1.8
     Variants: []
     PixelIdle: {fileID: 0}
