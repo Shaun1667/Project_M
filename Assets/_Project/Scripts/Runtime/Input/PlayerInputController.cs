@@ -88,6 +88,13 @@ namespace ProjectM.Input
         }
         /// <summary>찾기 키 (3-12b) — S는 이동(WASD)이라 Z.</summary>
         private const Key SearchKey = Key.Z;
+        private const Key AttackKey = Key.Q; // 3-25 공격 대상 (SPD)
+        // 3-25: 마지막에 공격한 적 / 지금 표시 중인 적 / 표시 칸 그림 — 화면 편의라 저장하지 않음
+        private EntityId _lastAttacked;
+        private EntityId _shownTarget;
+        private string _shownText;
+        private bool _marking;
+        private GridPos _markedPos;
         private const Key ExamineKey = Key.E; // 3-24 정보 모드 (SPD)
         private static readonly Key[] ExamineCursorKeys = { Key.UpArrow, Key.DownArrow, Key.RightArrow, Key.LeftArrow };
         private bool _examining;
@@ -178,6 +185,9 @@ namespace ProjectM.Input
             _world.Events.Subscribe<InventoryChangedEvent>(OnInventoryChanged);
             _world.Events.Subscribe<QuickSlotsChangedEvent>(OnQuickSlotsChanged);
             _world.Events.Subscribe<ProjectM.Dungeon.FloorChangedEvent>(OnFloorChanged);
+            _world.Events.Subscribe<UnitDamagedEvent>(OnUnitDamaged);
+            _world.Events.Subscribe<AttackMissedEvent>(OnAttackMissed);
+            _lastAttacked = default;
             _world.Events.Subscribe<EntityMovedEvent>(OnEntityMoved);
         }
 
@@ -225,6 +235,7 @@ namespace ProjectM.Input
             CancelPath();
             CancelAim();
             EndExamine();
+            ClearAttackTarget();
             _inventory.Close();
             if (_world != null)
             {
@@ -232,6 +243,8 @@ namespace ProjectM.Input
                 _world.Events.Unsubscribe<QuickSlotsChangedEvent>(OnQuickSlotsChanged);
                 _world.Events.Unsubscribe<ProjectM.Dungeon.FloorChangedEvent>(OnFloorChanged);
                 _world.Events.Unsubscribe<EntityMovedEvent>(OnEntityMoved);
+                _world.Events.Unsubscribe<UnitDamagedEvent>(OnUnitDamaged);
+                _world.Events.Unsubscribe<AttackMissedEvent>(OnAttackMissed);
             }
             _world = null;
             _clock = null;
@@ -245,6 +258,7 @@ namespace ProjectM.Input
                 EndExamine();
                 CancelPath();
                 CancelAim();
+                ClearAttackTarget();
                 _inventory.Close();
                 return;
             }
@@ -262,6 +276,7 @@ namespace ProjectM.Input
                 HandleInventory(player, keyboard, mouse);
                 return;
             }
+            RefreshAttackTarget(player);
             HandleWheel(mouse);
             if (keyboard != null && (keyboard[Key.I].wasPressedThisFrame || keyboard[Key.F].wasPressedThisFrame)) // 3-10b: F로도 (SPD 배낭)
             {
@@ -288,6 +303,18 @@ namespace ProjectM.Input
                     UseQuickSlot(player, slot);
                     return;
                 }
+                if (keyboard[AttackKey].wasPressedThisFrame) // 3-25 공격 대상 (SPD)
+                {
+                    AttackShownTarget(player);
+                    return;
+                }
+                if (keyboard[Key.Tab].wasPressedThisFrame)
+                {
+                    var next = AttackTargets.Next(_world, _sight, player, _shownTarget);
+                    if (next != null) _lastAttacked = next.Id; // 고른 적을 우선으로
+                    RefreshAttackTarget(player);
+                    return;
+                }
                 if (HandleKeyboard(keyboard)) return;
             }
 
@@ -296,6 +323,7 @@ namespace ProjectM.Input
                 var screen = mouse.position.ReadValue();
                 int slot = _hud != null ? _hud.QuickSlotAt(screen) : -1;
                 if (slot >= 0) UseQuickSlot(player, slot);
+                else if (_hud != null && _hud.AttackIndicatorAt(screen)) AttackShownTarget(player); // 3-25 상자 클릭 = 공격
                 else BeginPress(screen); // 칸 클릭은 놓을 때 — 그 전에 끌면 둘러보기
                 return;
             }
@@ -742,6 +770,63 @@ namespace ProjectM.Input
                     if (clicked) TryCast(player);
                 }
             }
+        }
+
+        // ── 공격 대상 표시 (3-25, SPD — 결정 2026-11-05): 근접으로 닿는 보이는 적 → 오른쪽 아래 상자 · 적 칸 붉게, Q · 클릭 = 공격 ──
+
+        private void OnUnitDamaged(UnitDamagedEvent e) => RememberAttack(e.Attacker, e.Target);
+        private void OnAttackMissed(AttackMissedEvent e) => RememberAttack(e.Attacker, e.Target);
+
+        private void RememberAttack(EntityId attacker, EntityId target)
+        {
+            if (_world != null && attacker.IsValid && attacker == _world.Scheduler.PlayerId && target != attacker) _lastAttacked = target;
+        }
+
+        /// <summary>대상을 다시 고르고 바뀐 것만 HUD · 칸 표시에 알린다 (프레임마다 — 보이는 적 몇 명만 훑음).</summary>
+        private void RefreshAttackTarget(Unit player)
+        {
+            var target = AttackTargets.Pick(_world, _sight, player, _lastAttacked);
+            _shownTarget = target != null ? target.Id : default;
+            string text = target != null ? HudText.AttackTargetName(target) : null;
+            if (_hud != null && text != _shownText) _hud.SetAttackTarget(text, target != null ? target.Hp : 0, target != null ? target.MaxHp : 0);
+            _shownText = text;
+
+            if (_aimPreview == null) return;
+            bool canMark = !IsAiming && !_examining && !_inventory.IsOpen; // 그 밖에는 조준 · 정보 커서가 쓴다
+            if (!canMark)
+            {
+                _marking = false;
+                return;
+            }
+            if (target != null)
+            {
+                if (!_marking || !_aimPreview.IsShowing || _markedPos != target.Pos) _aimPreview.Show(target.Pos, null, castable: false); // 붉은 칸
+                _marking = true;
+                _markedPos = target.Pos;
+            }
+            else if (_marking)
+            {
+                _aimPreview.Hide();
+                _marking = false;
+            }
+        }
+
+        private void AttackShownTarget(Unit player)
+        {
+            if (!_shownTarget.IsValid || !_world.Units.TryGet(_shownTarget, out var target)) return;
+            if (!PlayerActions.TryAttackAt(_world, _config, player, target.Pos, out var command)) return;
+            CancelPath();
+            _lastAttacked = target.Id;
+            _clock.SubmitPlayerCommand(command);
+        }
+
+        private void ClearAttackTarget()
+        {
+            _shownTarget = default;
+            _shownText = null;
+            if (_hud != null) _hud.SetAttackTarget(null, 0, 0);
+            if (_marking && _aimPreview != null) _aimPreview.Hide();
+            _marking = false;
         }
 
         // ── 정보 모드 (3-24, SPD — 결정 2026-11-05): E = 칸 정보 (차례 안 씀), E 한 번 더 = 주변 빠른 찾기 ──

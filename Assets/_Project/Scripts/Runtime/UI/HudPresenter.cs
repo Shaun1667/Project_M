@@ -137,6 +137,84 @@ namespace ProjectM.UI
         }
 
         /// <summary>화면 좌표가 가리키는 빠른 칸 번호, 없으면 -1 (클릭 판정 — EventSystem 없이).</summary>
+        private RectTransform _attackPanel;
+        private TMP_Text _attackName;
+        private RectTransform _attackHpFill;
+        private static readonly Color AttackPanelColor = new Color(0.25f, 0.06f, 0.06f, 0.9f);
+        private static readonly Color AttackHpColor = new Color(0.85f, 0.2f, 0.2f, 1f);
+        private const float AttackPanelWidth = 220f;
+
+        /// <summary>
+        /// 공격 대상 표시 (3-25, SPD): 오른쪽 아래 상자 — 이름 · HP 막대 · 키 안내. name이 null이면 숨김.
+        /// 상자는 처음 부를 때 안내 줄과 같은 캔버스 · 폰트로 만든다 (Setup 변경 없음).
+        /// </summary>
+        public void SetAttackTarget(string name, int hp, int maxHp)
+        {
+            if (name == null)
+            {
+                if (_attackPanel != null) _attackPanel.gameObject.SetActive(false);
+                return;
+            }
+            if (_attackPanel == null && !CreateAttackPanel()) return;
+            _attackName.text = $"{name}\n<size=70%><color=#FFD54F>{HudText.AttackIndicatorHint}</color></size>";
+            float t = maxHp > 0 ? Mathf.Clamp01((float)hp / maxHp) : 0f;
+            _attackHpFill.anchorMax = new Vector2(t, 1f);
+            _attackPanel.gameObject.SetActive(true);
+        }
+
+        /// <summary>화면 좌표가 공격 대상 상자 위인지 (클릭 = 공격).</summary>
+        public bool AttackIndicatorAt(Vector2 screenPos) =>
+            _attackPanel != null && _attackPanel.gameObject.activeSelf && RectTransformUtility.RectangleContainsScreenPoint(_attackPanel, screenPos, null);
+
+        private bool CreateAttackPanel()
+        {
+            if (_hintText == null || _hintText.canvas == null) return false;
+            var go = new GameObject("AttackIndicator", typeof(RectTransform), typeof(Image));
+            _attackPanel = (RectTransform)go.transform;
+            _attackPanel.SetParent(_hintText.canvas.transform, false);
+            _attackPanel.anchorMin = _attackPanel.anchorMax = _attackPanel.pivot = new Vector2(1f, 0f);
+            _attackPanel.anchoredPosition = new Vector2(-24f, 24f);
+            _attackPanel.sizeDelta = new Vector2(AttackPanelWidth, 84f);
+            go.GetComponent<Image>().color = AttackPanelColor;
+
+            var textGo = new GameObject("Name", typeof(RectTransform), typeof(TextMeshProUGUI));
+            var textRect = (RectTransform)textGo.transform;
+            textRect.SetParent(_attackPanel, false);
+            textRect.anchorMin = new Vector2(0f, 0f);
+            textRect.anchorMax = new Vector2(1f, 1f);
+            textRect.offsetMin = new Vector2(12f, 22f);
+            textRect.offsetMax = new Vector2(-12f, -6f);
+            var text = textGo.GetComponent<TextMeshProUGUI>();
+            text.font = _hintText.font;
+            text.fontSize = _hintText.fontSize;
+            text.color = Color.white;
+            text.alignment = TextAlignmentOptions.Left;
+            text.textWrappingMode = TextWrappingModes.NoWrap;
+            text.raycastTarget = false;
+            _attackName = text;
+
+            var barGo = new GameObject("HpBar", typeof(RectTransform), typeof(Image));
+            var bar = (RectTransform)barGo.transform;
+            bar.SetParent(_attackPanel, false);
+            bar.anchorMin = new Vector2(0f, 0f);
+            bar.anchorMax = new Vector2(1f, 0f);
+            bar.pivot = new Vector2(0.5f, 0f);
+            bar.offsetMin = new Vector2(12f, 10f);
+            bar.offsetMax = new Vector2(-12f, 20f);
+            barGo.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.6f);
+            barGo.GetComponent<Image>().raycastTarget = false;
+
+            var fillGo = new GameObject("Fill", typeof(RectTransform), typeof(Image));
+            _attackHpFill = (RectTransform)fillGo.transform;
+            _attackHpFill.SetParent(bar, false);
+            _attackHpFill.anchorMin = Vector2.zero;
+            _attackHpFill.anchorMax = Vector2.one;
+            _attackHpFill.offsetMin = _attackHpFill.offsetMax = Vector2.zero;
+            fillGo.GetComponent<Image>().color = AttackHpColor;
+            fillGo.GetComponent<Image>().raycastTarget = false;
+            return true;
+        }
+
         public int QuickSlotAt(Vector2 screenPos)
         {
             for (int i = 0; i < _slotBoxes.Count; i++)

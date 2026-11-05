@@ -227,6 +227,10 @@ namespace ProjectM.UI
         public const string ExamineHint = "정보: 방향키 · 마우스로 칸 고르기 · E 한 번 더 = 주변 8칸 찾기 (1턴) · Esc/우클릭 닫기";
         public const string CellUnknown = "알 수 없는 곳";
 
+        // ── 공격 대상 표시 (3-25, SPD) ──
+        public const string AttackIndicatorHint = "Q 공격 · Tab 다음 적";
+        public static string AttackTargetName(Unit target) => $"{Enemy(target.Id)}  HP {target.Hp}/{target.MaxHp}";
+
         public static string Tile(TileType type)
         {
             switch (type)
