@@ -569,6 +569,7 @@ namespace ProjectM.UI
 
         // 3-7b 힘 · 강화
         public static string StrengthGained(int strength) => $"힘이 올랐다 (힘 {strength})";
+        public static string StrengthLost(int strength) => $"힘이 내려갔다 (힘 {strength})"; // 디버그 창 힘 − (2026-11-05)
         public string Upgraded(EquippedWeapon weapon) => $"강화: {WeaponName(weapon)} ({weapon.MinDamage}~{weapon.MaxDamage}, 요구 힘 {weapon.StrengthRequirement})";
         public const string NoWeaponToUpgrade = "강화할 장비가 없다 — 무기를 들거나 갑옷을 입어야 한다";
 

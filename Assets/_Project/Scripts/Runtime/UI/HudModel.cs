@@ -300,7 +300,7 @@ namespace ProjectM.UI
         {
             if (e.Unit != _playerId) return;
             Strength = e.Strength;
-            AddLog(HudText.StrengthGained(e.Strength));
+            AddLog(e.Gained < 0 ? HudText.StrengthLost(e.Strength) : HudText.StrengthGained(e.Strength));
             Changed?.Invoke();
         }
 

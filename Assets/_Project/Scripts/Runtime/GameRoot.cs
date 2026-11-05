@@ -124,6 +124,29 @@ namespace ProjectM
             return player.Level - start;
         }
 
+        private FloorTransition _stairs;
+
+        /// <summary>[상태 변경] 디버그 다음 층 (2026-11-05): 계단 위가 아니어도 한 층 아래로 (계단과 같은 길 — 보스 층 · 작업실 · 저장 그대로). 갔으면 true.</summary>
+        public bool DebugNextFloor()
+        {
+            if (World == null || _stairs == null || !_stairs.TryDescendAnywhere()) return false;
+            _input.ResetAfterFloorChange();
+            World.Events.Flush(); // 틱 밖 변경 → 화면에 바로
+            return true;
+        }
+
+        /// <summary>디버그: 다음 층이 있는지 (마지막 층이면 false).</summary>
+        public bool DebugHasNextFloor => World != null && _stairs != null && World.Floor < _stairs.FloorCount;
+
+        /// <summary>[상태 변경] 디버그 힘 ± (2026-11-05): 힘 물약과 같은 길(Consumables.AddStrength — 1 아래로는 안 내려감). 바뀐 양.</summary>
+        public int DebugAddStrength(int amount)
+        {
+            if (World == null || !World.Units.TryGet(_playerId, out var player)) return 0;
+            int changed = Consumables.AddStrength(World, player, amount);
+            World.Events.Flush();
+            return changed;
+        }
+
         /// <summary>디버그 레벨 최대치 (없으면 0).</summary>
         public int DebugMaxLevel => _progression != null ? _progression.MaxLevel : 0;
 
@@ -560,6 +583,7 @@ namespace ProjectM
                 _ghost, _ghost != null && _zoneCatalog != null
                     ? GhostBoss.ToUnitDef(_ghost, _zoneCatalog.GhostHpPercent, _zoneCatalog.GhostExpReward, _zoneCatalog.GhostExpMaxLevel) : null, // 3-23b 그림자 보스
                 _workbench); // 3-28b 작업실
+            _stairs = stairs; // 디버그 다음 층
 
             if (_pixelMap != null) _pixelMap.Bind(World.Events); // P-3a 2D 맵 — 3D 맵은 묶지 않음
             else _tilemapPresenter.Bind(World.Events);

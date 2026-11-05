@@ -151,6 +151,15 @@ namespace ProjectM.Input
             return true;
         }
 
+        /// <summary>입력 밖에서 층이 바뀌었을 때 (디버그 다음 층): 걷던 길 · 조준 · 정보 모드 · 칸 고르기를 끝낸다.</summary>
+        public void ResetAfterFloorChange()
+        {
+            CancelPath();
+            CancelAim();
+            EndExamine();
+            if (_cellPick != null) EndCellPick();
+        }
+
         private void EndCellPick()
         {
             _cellPick = null;

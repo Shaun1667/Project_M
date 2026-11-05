@@ -82,6 +82,9 @@ namespace ProjectM.Dungeon
 
         public int StairsDirection() => StairsDirection(_world, _floorCount);
 
+        /// <summary>판의 층 수 (마지막 층 번호).</summary>
+        public int FloorCount => _floorCount;
+
         /// <summary>서 있는 계단을 쓴다. 계단 위가 아니면 false. 플레이어 입력이 처리되지 않고 남아 있으면 쓰지 않는다.</summary>
         public bool TryUse()
         {
@@ -89,6 +92,15 @@ namespace ProjectM.Dungeon
             if (delta == 0 || _world.PlayerInput.HasCommand) return false;
             PlayerActions.TryGetPlayer(_world, out var player);
             Change(player, _world.Floor + delta, delta);
+            return true;
+        }
+
+        /// <summary>디버그 창 "다음 층" (2026-11-05): 계단 위가 아니어도 한 층 아래로 (계단을 쓴 것과 같은 길 — 도착은 그 층의 올라가는 계단). 마지막 층이면 false.</summary>
+        public bool TryDescendAnywhere()
+        {
+            if (_world.Floor >= _floorCount || _world.PlayerInput.HasCommand) return false;
+            if (!PlayerActions.TryGetPlayer(_world, out var player) || !player.IsAlive) return false;
+            Change(player, _world.Floor + 1, 1);
             return true;
         }
 

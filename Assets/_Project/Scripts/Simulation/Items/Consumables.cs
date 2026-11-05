@@ -345,8 +345,7 @@ namespace ProjectM.Items
             switch (def.Effect)
             {
                 case ConsumableEffect.Strength:
-                    unit.Strength += def.Amount;
-                    world.Events.Publish(new StrengthChangedEvent(unit.Id, unit.Strength, def.Amount));
+                    AddStrength(world, unit, def.Amount);
                     break;
                 case ConsumableEffect.Upgrade:
                 {
@@ -587,6 +586,18 @@ namespace ProjectM.Items
         private static void ApplySelf(World world, ConsumableRules rules, Unit unit, StatusType type)
         {
             if (rules.Statuses != null && rules.Statuses.TryGet(type, out var status)) StatusEffects.Apply(world, unit, status);
+        }
+
+        /// <summary>힘을 바꾸는 곳 하나 (힘 물약 · 디버그 창 힘 ±, 2026-11-05). 힘은 1 아래로 내려가지 않는다. 실제로 바뀐 양.</summary>
+        public static int AddStrength(World world, Unit unit, int amount)
+        {
+            if (world == null) throw new ArgumentNullException(nameof(world));
+            if (unit == null) throw new ArgumentNullException(nameof(unit));
+            int before = unit.Strength;
+            unit.Strength = Math.Max(1, unit.Strength + amount);
+            int changed = unit.Strength - before;
+            if (changed != 0) world.Events.Publish(new StrengthChangedEvent(unit.Id, unit.Strength, changed));
+            return changed;
         }
 
         /// <summary>순간이동 주문서 · 순간이동 함정(3-12a): 비어 있는 바닥 칸(계단 제외) 중 무작위로 (RngStream.Combat).</summary>

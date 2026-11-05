@@ -913,6 +913,7 @@
   - 확인: 컴파일 오류 0
   - 테스트 작성, 실행 안 함: `ProgressionTests.DebugInvulnerable_PlayerTakesNoDamage_EnemiesStillDo`
   - 확인 방법: `Main.unity` 플레이 → 메뉴 ProjectM/Debug/Debug Window → "무적" 켜고 적에게 맞아도 체력 그대로 · 레벨 "+1"로 레벨 · 최대 체력이 오름 · "칸 고르기" 누른 뒤 게임 화면의 바닥 칸 클릭 → 그 칸으로 이동하고 시야가 바뀜
+  - 추가 (2026-11-05 사용자 "디버그 창에 다음층으로 이동버튼하고 힘 조절 버튼(+ 랑 -) 넣어줘"): "다음 층으로" = `GameRoot.DebugNextFloor` → `FloorTransition.TryDescendAnywhere`(계단 위가 아니어도 계단을 쓴 것과 같은 길 — 보스 층 · 작업실 · 층 저장 그대로, 마지막 층이면 꺼짐). 힘 − / + = `GameRoot.DebugAddStrength` → `Consumables.AddStrength`(힘 물약도 이 길로 바꿈 — 힘은 1 아래로 안 내려감, 로그 "힘이 내려갔다"). 테스트 작성, 실행 안 함: `StrengthUpgradeTests.AddStrength_DebugMinus_StopsAtOne` · `HudModelTests.StrengthChanged_LogsUpOrDown`
 - [~] **G-5. 3D로 되돌리기** (2026-10-28) — 플레이 확인 대기
   - 결정 (2026-10-28, 사용자): 그래픽 기준 = **실시간 3D**(Phase G)로 되돌림, Phase P 중단. 2D 코드 · 그림은 지우지 않고 남겨 둠(추천안) — `Pixel2D = true` + Setup이면 다시 2D. 맨 위 진행 요약 "최신 (2026-10-28)" 참고
   - 같은 날 두 갈래로 진행됨: 다른 PC · 세션이 main에 `e61e60d 10.28/P-X/BackTo3D`(Pixel2D 스위치 · PixelMap · FogSoft 정리 · 카메라 스카이박스)를 먼저 푸시했고, 이 PC는 `phaseP-fx16` 위에서 같은 되돌리기를 따로 함 → 사용자 결정(추천안, 2026-10-28): main 위에 다시 쌓음 — 코드 · 씬은 main 쪽을 쓰고 `PixelWallCaps` 삭제만 더함, 16프레임 시험 커밋은 그대로 올림

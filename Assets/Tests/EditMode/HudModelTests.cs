@@ -108,6 +108,18 @@ namespace ProjectM.Tests
         }
 
         [Test]
+        public void StrengthChanged_LogsUpOrDown()
+        {
+            var s = Start();
+            var bus = s.World.Events;
+            var id = s.World.Scheduler.PlayerId;
+            bus.Publish(new ProjectM.Items.StrengthChangedEvent(id, 11, 1));
+            bus.Publish(new ProjectM.Items.StrengthChangedEvent(id, 10, -1)); // 디버그 창 힘 −
+            bus.Flush();
+            Assert.That(s.Hud.Log, Is.EqualTo(new[] { "힘이 올랐다 (힘 11)", "힘이 내려갔다 (힘 10)" }));
+        }
+
+        [Test]
         public void CombatMessages_AreKoreanWithSpellDisplayName()
         {
             var s = Start();

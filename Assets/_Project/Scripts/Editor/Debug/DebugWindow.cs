@@ -83,7 +83,7 @@ namespace ProjectM.Editor.Debugging
         /// </summary>
         private static void DrawCheats(GameRoot root)
         {
-            EditorGUILayout.LabelField("[상태 변경] 무적 · 레벨 · 순간이동", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("[상태 변경] 무적 · 레벨 · 힘 · 층 · 순간이동", EditorStyles.boldLabel);
             if (!root.World.Units.TryGet(root.PlayerId, out var player))
             {
                 EditorGUILayout.HelpBox("플레이어가 없다.", MessageType.None);
@@ -107,6 +107,22 @@ namespace ProjectM.Editor.Debugging
                         if (GUILayout.Button("+5", GUILayout.Width(40))) root.DebugAddLevels(5);
                         if (GUILayout.Button("최대", GUILayout.Width(48))) root.DebugAddLevels(max);
                     }
+                }
+
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    EditorGUILayout.LabelField("힘", player.Strength.ToString());
+                    using (new EditorGUI.DisabledScope(player.Strength <= 1))
+                        if (GUILayout.Button("−", GUILayout.Width(40))) root.DebugAddStrength(-1);
+                    if (GUILayout.Button("+", GUILayout.Width(40))) root.DebugAddStrength(1);
+                }
+
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    EditorGUILayout.LabelField("층", root.World.Floor.ToString());
+                    using (new EditorGUI.DisabledScope(!root.DebugHasNextFloor))
+                        if (GUILayout.Button("다음 층으로", GUILayout.Width(100)) && !root.DebugNextFloor())
+                            Debug.LogWarning("[DebugWindow] 다음 층으로 가지 못함 — 입력 처리 중이거나 마지막 층");
                 }
 
                 using (new EditorGUILayout.HorizontalScope())
