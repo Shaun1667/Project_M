@@ -186,13 +186,21 @@ namespace ProjectM.Editor
             var floorPrefab = BuildPrefab(Floor, SinkToGround);
             tiles.SetModule(TileType.Floor, floorPrefab, randomRotation: true);
             // 3-11a 풀 (그레이박스): 바닥 모듈 + 초록 풀잎 — 높은 풀은 0.15 m보다 높아 시야를 직접 따른다 (TilemapPresenter)
-            tiles.SetModule(TileType.Grass, BuildGrassPrefab(floorPrefab, "Tile_Grass", GrassBladeHeight), randomRotation: true);
-            tiles.SetModule(TileType.TallGrass, BuildGrassPrefab(floorPrefab, "Tile_TallGrass", TallGrassBladeHeight), randomRotation: true);
-            // 3-11c 문 (그레이박스): 바닥 + 문틀 + 문짝 — 방향은 TilemapPresenter가 옆 벽을 보고 돌린다 (문짝이 벽 사이를 막게)
-            tiles.SetModule(TileType.Door, BuildDoorPrefab(floorPrefab, "Tile_Door", open: false));
-            tiles.SetModule(TileType.OpenDoor, BuildDoorPrefab(floorPrefab, "Tile_OpenDoor", open: true));
-            tiles.SetModule(TileType.LockedDoor, AssetDatabase.LoadAssetAtPath<GameObject>($"{PrefabDir}/Tile_Door.prefab")); // 3-15b: 닫힌 문 모양 (색은 타일)
-            tiles.SetModule(TileType.AlchemyPot, BuildPotPrefab(floorPrefab)); // 3-16c 연금 솥 (그레이박스)
+            // G-10 (2026-11-05): Varco 모델이 있으면 그것, 없으면 그레이박스 (풀잎 상자 · 상자 문 · 원기둥 솥)
+            bool varcoTiles = HasModels(GrassShortModel, GrassTallModel, DoorLeafModel, DoorLeafLockedModel, CauldronModel);
+            tiles.SetModule(TileType.Grass, varcoTiles ? BuildModelGrassPrefab(floorPrefab, "Tile_Grass", GrassShortModel, GrassShortHeight)
+                : BuildGrassPrefab(floorPrefab, "Tile_Grass", GrassBladeHeight), randomRotation: true);
+            tiles.SetModule(TileType.TallGrass, varcoTiles ? BuildModelGrassPrefab(floorPrefab, "Tile_TallGrass", GrassTallModel, GrassTallHeight)
+                : BuildGrassPrefab(floorPrefab, "Tile_TallGrass", TallGrassBladeHeight), randomRotation: true);
+            // 3-11c 문: 바닥 + 문틀 + 문짝 — 방향은 TilemapPresenter가 옆 벽을 보고 돌린다 (문짝이 벽 사이를 막게)
+            // G-10 (결정 2026-11-05, 사용자): SPD처럼 양쪽으로 여는 여닫이 양문 — 닫힘 = 가운데서 만남, 열림 = 양옆 경첩을 축으로 90°
+            tiles.SetModule(TileType.Door, varcoTiles ? BuildDoubleDoorPrefab(floorPrefab, "Tile_Door", DoorLeafModel, open: false)
+                : BuildDoorPrefab(floorPrefab, "Tile_Door", open: false));
+            tiles.SetModule(TileType.OpenDoor, varcoTiles ? BuildDoubleDoorPrefab(floorPrefab, "Tile_OpenDoor", DoorLeafModel, open: true)
+                : BuildDoorPrefab(floorPrefab, "Tile_OpenDoor", open: true));
+            tiles.SetModule(TileType.LockedDoor, varcoTiles ? BuildDoubleDoorPrefab(floorPrefab, "Tile_LockedDoor", DoorLeafLockedModel, open: false)
+                : AssetDatabase.LoadAssetAtPath<GameObject>($"{PrefabDir}/Tile_Door.prefab")); // 3-15b 잠긴 문 = 자물쇠 문짝
+            tiles.SetModule(TileType.AlchemyPot, varcoTiles ? BuildModelPotPrefab(floorPrefab) : BuildPotPrefab(floorPrefab)); // 3-16c 연금 솥
             tiles.SetModule(TileType.Wall, BuildPrefab(Wall, null));
             tiles.SetModule(TileType.StairsDown, BuildPrefab(StairsDown, null));
             tiles.SetModule(TileType.StairsUp, BuildPrefab(StairsUp, null));
@@ -206,6 +214,111 @@ namespace ProjectM.Editor
             AssetDatabase.SaveAssets();
             Debug.Log("[VarcoModelSetup] 완료: " + PrefabDir);
         }
+
+        // ── G-10 풀 · 문 · 솥 Varco 모델 (2026-11-05, ART_ASSETS 12-7) ──
+        private const string GrassShortModel = "Prop_GrassShort";
+        private const string GrassTallModel = "Prop_GrassTall";
+        /// <summary>문틀 (벽 모델로 짬): 높이 · 두께 · 상인방 높이 (m). 벽 높이 1 m와 같게.</summary>
+        private const float DoorFrameHeight = 1f;
+        private const float DoorFrameDepth = 0.3f;
+        private const float DoorLintelHeight = 0.14f;
+        private const string DoorLeafModel = "Prop_DoorLeaf";
+        private const string DoorLeafLockedModel = "Prop_DoorLeafLocked";
+        private const string CauldronModel = "Prop_Cauldron";
+        /// <summary>풀 덤불 키(m) — 높은 풀은 0.15 m보다 높아야 시야를 가린다(TilemapPresenter).</summary>
+        private const float GrassShortHeight = 0.12f;
+        private const float GrassTallHeight = 0.55f;
+        /// <summary>문: 문짝이 들어갈 구멍 너비(m) · 문틀 높이에 대한 문짝 높이 비율 (상인방 아래까지).</summary>
+        private const float DoorOpeningWidth = 0.64f;
+        private const float DoorLeafHeightRatio = 0.86f;
+        private const float CauldronWidth = 0.7f;
+
+        private static bool HasModels(params string[] models)
+        {
+            foreach (var m in models)
+                if (AssetDatabase.LoadAssetAtPath<GameObject>(ModelDir + m + ".fbx") == null) return false;
+            foreach (var m in models) EnsureVarcoMaterial(m, ModelDir + m + ".fbx");
+            return true;
+        }
+
+        /// <summary>
+        /// Varco 모델을 parent 아래에 크기를 맞춰 놓는다: 축에 맞춘 상자(Fit) 안에 모델 — size의 0인 축은 다른 축 배율을 따라감, 원점 = 모델 바닥 가운데.
+        /// </summary>
+        private static Transform AddFitted(Transform parent, string model, string name, Vector3 size)
+        {
+            var source = LoadModel(model);
+            var fit = new GameObject(name).transform;
+            fit.SetParent(parent, false);
+            var instance = (GameObject)PrefabUtility.InstantiatePrefab(source);
+            instance.transform.SetParent(fit, false);
+            instance.transform.localRotation = source.transform.localRotation;
+            instance.transform.localScale = source.transform.localScale;
+            StripColliders(instance);
+            var b = RendererBounds(instance);
+            float sx = size.x > 0f ? size.x / b.size.x : 0f, sy = size.y > 0f ? size.y / b.size.y : 0f, sz = size.z > 0f ? size.z / b.size.z : 0f;
+            float uniform = Mathf.Max(sx, Mathf.Max(sy, sz));
+            fit.localScale = new Vector3(sx > 0f ? sx : uniform, sy > 0f ? sy : uniform, sz > 0f ? sz : uniform);
+            b = RendererBounds(instance);
+            instance.transform.position += fit.position - new Vector3(b.center.x, b.min.y, b.center.z);
+            return fit;
+        }
+
+        private static Bounds RendererBounds(GameObject go)
+        {
+            var renderers = go.GetComponentsInChildren<Renderer>(true);
+            var b = renderers[0].bounds;
+            foreach (var r in renderers) b.Encapsulate(r.bounds);
+            return b;
+        }
+
+        private static GameObject SaveTilePrefab(GameObject floor, string name, System.Action<Transform> build)
+        {
+            var root = new GameObject(name);
+            try
+            {
+                if (floor != null) ((GameObject)PrefabUtility.InstantiatePrefab(floor)).transform.SetParent(root.transform, false);
+                build(root.transform);
+                return PrefabUtility.SaveAsPrefabAsset(root, $"{PrefabDir}/{name}.prefab");
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        /// <summary>풀: 바닥 + 칸을 채우는 풀 덤불(가로 · 세로 0.98 m, 키 height).</summary>
+        private static GameObject BuildModelGrassPrefab(GameObject floor, string name, string model, float height) =>
+            SaveTilePrefab(floor, name, root => AddFitted(root, model, "Grass", new Vector3(0.98f, height, 0.98f)));
+
+        /// <summary>
+        /// 여닫이 양문 (SPD식): 바닥 + 문틀(너비 1 칸) + 경첩 축 둘(구멍 양끝) 아래 문짝 하나씩 — 오른쪽은 좌우 반전.
+        /// 닫힘 = 두 문짝이 X축(벽 사이)을 막고 가운데서 만남, 열림 = 각 축이 90° 돌아 문짝이 +Z쪽으로 양옆 기둥에 붙음.
+        /// </summary>
+        private static GameObject BuildDoubleDoorPrefab(GameObject floor, string name, string leafModel, bool open) =>
+            SaveTilePrefab(floor, name, root =>
+            {
+                // 문틀 = 벽 모델(Tile_Wall)로 짠 기둥 둘 + 상인방 — Varco 문틀 모델은 깊이를 잘못 추정해 십자 아치로 나와 쓰지 않음 (2026-11-05). 옆 벽과 돌 질감이 이어진다
+                float postWidth = (1f - DoorOpeningWidth) * 0.5f;
+                AddFitted(root, Wall.Model, "PostL", new Vector3(postWidth, DoorFrameHeight, DoorFrameDepth)).localPosition = new Vector3(-0.5f + postWidth * 0.5f, 0f, 0f);
+                AddFitted(root, Wall.Model, "PostR", new Vector3(postWidth, DoorFrameHeight, DoorFrameDepth)).localPosition = new Vector3(0.5f - postWidth * 0.5f, 0f, 0f);
+                AddFitted(root, Wall.Model, "Lintel", new Vector3(DoorOpeningWidth, DoorLintelHeight, DoorFrameDepth)).localPosition = new Vector3(0f, DoorFrameHeight - DoorLintelHeight, 0f);
+                float frameHeight = DoorFrameHeight;
+                float leafWidth = DoorOpeningWidth * 0.5f;
+                for (int side = -1; side <= 1; side += 2)
+                {
+                    var hinge = new GameObject(side < 0 ? "HingeL" : "HingeR").transform;
+                    hinge.SetParent(root, false);
+                    hinge.localPosition = new Vector3(side * leafWidth, 0f, 0f);
+                    var leaf = AddFitted(hinge, leafModel, "Leaf", new Vector3(leafWidth, frameHeight * DoorLeafHeightRatio, 0f));
+                    leaf.localPosition = new Vector3(-side * leafWidth * 0.5f, 0f, 0f); // 경첩에서 가운데 쪽으로
+                    if (side > 0) leaf.localScale = Vector3.Scale(leaf.localScale, new Vector3(-1f, 1f, 1f)); // 오른쪽 = 좌우 반전 (경첩 · 손잡이 위치)
+                    if (open) hinge.localRotation = Quaternion.Euler(0f, side < 0 ? -90f : 90f, 0f);
+                }
+            });
+
+        /// <summary>연금 솥: 바닥 + 솥(너비 CauldronWidth).</summary>
+        private static GameObject BuildModelPotPrefab(GameObject floor) =>
+            SaveTilePrefab(floor, "Tile_AlchemyPot", root => AddFitted(root, CauldronModel, "Pot", new Vector3(CauldronWidth, 0f, 0f)));
 
         /// <summary>
         /// 3-11a 풀 모듈 (그레이박스 — 모델이 생기면 ModelSpec으로 바꾼다): 바닥 모듈 + 4 × 4 풀잎(가는 상자). 잎 위치 · 높이는 고정 무늬 (난수 안 씀).
