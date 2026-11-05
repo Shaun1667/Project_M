@@ -52,7 +52,10 @@ namespace ProjectM.UI
         /// <summary>3-33 명예의 전당 순위 줄 (클리어일 때 GameRoot가 넣음). 비면 안 보임.</summary>
         public string Ranking { get; set; } = string.Empty;
 
-        public string Title => HudText.ResultTitle(Outcome);
+        /// <summary>시간의 모래시계를 주워 이긴 판 (26층 제단) — 제목이 다름. GameRoot가 넣음.</summary>
+        public bool ByArtifact { get; set; }
+
+        public string Title => HudText.ResultTitle(Outcome, ByArtifact);
 
         /// <summary>본문 여러 줄.</summary>
         public string Body()

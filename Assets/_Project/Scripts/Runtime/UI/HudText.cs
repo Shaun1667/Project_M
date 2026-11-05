@@ -671,7 +671,10 @@ namespace ProjectM.UI
         /// <summary>G-18 층 표시판 글자.</summary>
         public static string FloorPlaque(int floor) => $"{floor}층";
         // ── 결과 화면 (3-4b) ──
-        public static string ResultTitle(RunOutcome outcome) => outcome == RunOutcome.Victory ? "승리 — 보스를 쓰러뜨렸다" : "패배 — 쓰러졌다";
+        public static string ResultTitle(RunOutcome outcome, bool byArtifact = false) =>
+            outcome != RunOutcome.Victory ? "패배 — 쓰러졌다"
+            : byArtifact ? "승리 — 시간의 모래시계를 손에 넣었다" // 2026-11-05 테스트 플레이: 26층 제단 승리인데 "보스를 쓰러뜨렸다"로 나옴
+            : "승리 — 보스를 쓰러뜨렸다";
         public const string ResultRestart = "R 키로 타이틀"; // 3-27: 판이 끝나면 타이틀 (모드 · 시드를 다시 고름)
         public const string NoEquipment = "없음";
 

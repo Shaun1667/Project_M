@@ -171,6 +171,8 @@ namespace ProjectM.Tests
             s.Wait(1);
             var model = ResultModel.From(s.World, 1234, s.Player, Text);
             Assert.That(model.Title, Is.EqualTo("승리 — 보스를 쓰러뜨렸다"));
+            model.ByArtifact = true; // 2026-11-05: 26층 제단 승리
+            Assert.That(model.Title, Is.EqualTo("승리 — 시간의 모래시계를 손에 넣었다"));
             var body = model.Body();
             StringAssert.Contains("도달 층: 2층", body);
             StringAssert.Contains("처치: 1", body);

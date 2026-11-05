@@ -443,8 +443,9 @@ namespace ProjectM
             // 3-27 실시간: 1초마다 1틱 — 일시정지 · 창(캐릭터 · 형태 · 특성 · 배낭 · 타이틀)이 열려 있으면 멈춤
             if (_realTime != null && !_runEnded && !_paused && !titleOpen && (_characterSelect == null || !_characterSelect.IsOpen) && !_input.Inventory.IsOpen)
             {
-                if (_timeClock != null) _timeClock.Update(Time.deltaTime); else _realTime.Update(Time.deltaTime); // 3-28c: 스톱워치 = 멈춤 · 가속기 = 느려짐
-                if (_realTime.LastTicks > 0) World.Events.Flush();
+                var realTime = _realTime; // 그 틱에 판이 끝나면(사망 · 승리) OnRunEnded가 _realTime을 비움 (2026-11-05 테스트 플레이 — 그 뒤 줄에서 NullReference)
+                if (_timeClock != null) _timeClock.Update(Time.deltaTime); else realTime.Update(Time.deltaTime); // 3-28c: 스톱워치 = 멈춤 · 가속기 = 느려짐
+                if (realTime.LastTicks > 0 && World != null) World.Events.Flush();
             }
         }
 
@@ -782,9 +783,12 @@ namespace ProjectM
         private string _characterName; // 3-23b 기록 이름 ("루멘의 그림자")
 
         /// <summary>3-23b: 시간의 모래시계를 얻으면 지금 플레이어를 기록으로 남긴다 (기록 하나 — 덮어씀).</summary>
+        private bool _wonByArtifact; // 이 판을 시간의 모래시계로 이김 (결과 화면 제목)
+
         private void OnArtifactObtained(ArtifactObtainedEvent e)
         {
             if (_player == null || e.Unit != _playerId) return;
+            _wonByArtifact = true; // 결과 화면 제목 (2026-11-05)
             try
             {
                 var record = GhostBoss.Capture(World, _player, Spells, HudText.GhostName(_characterName ?? _player.VisualId));
@@ -1127,6 +1131,8 @@ namespace ProjectM
             _input.Unbind();
             var result = ResultModel.From(World, Seed, _player, _hudText);
             if (e.Outcome == RunOutcome.Victory) result.Ranking = RecordHallOfFame(); // 3-33 클리어만
+            result.ByArtifact = _wonByArtifact;
+            _wonByArtifact = false;
             _result.Show(result);
             Debug.Log($"[GameRoot] 판 끝: {e.Outcome} — R로 새 판");
         }
