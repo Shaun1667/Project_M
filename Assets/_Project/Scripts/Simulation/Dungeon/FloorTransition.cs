@@ -119,7 +119,7 @@ namespace ProjectM.Dungeon
                 bool last = target == _floorCount;
                 var floor = _generator.Generate(_world.Rng.Get(RngStream.MapGen), stairsUp: target > 1, stairsDown: !last);
                 _world.EnterNewFloor(target, floor.Map);
-                if (_decor != null) FloorDecor.Apply(_world, floor, _decor, PuddleOf(target), _traps); // 3-11a · 3-12a: 이벤트는 아래 Announce가 맵 · 지형 · 함정을 다시 보낸다
+                if (_decor != null) FloorDecor.Apply(_world, floor, _decor, PuddleOf(target), _traps, _zones == null || _zones.ZoneOf(target).Grass); // 3-11a · 3-12a: 이벤트는 아래 Announce가 맵 · 지형 · 함정을 다시 보낸다
                 Shop.Build(_world, floor, _shop, _items, _world.Rng.Get(RngStream.Decor), new IdleNeutralAi()); // 3-15c: 상점 층이면
                 _world.Units.Teleport(player.Id, floor.Start);
                 if (_zones != null)

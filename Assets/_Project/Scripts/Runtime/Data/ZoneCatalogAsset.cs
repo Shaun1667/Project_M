@@ -71,6 +71,21 @@ namespace ProjectM.Data
             [Tooltip("보스 적 ID — 구역 마지막 층이 보스 층. 비면 보스 없음")] public string BossId;
             [Tooltip("구역 분위기 (3-17c): 해 색. 알파 0 = 기본 색 그대로")] public Color LightColor;
             [Tooltip("층 꾸미기 웅덩이의 지형 (3-18): None = 물. 얼음 동굴 = 빙판")] public TerrainEffectType PuddleTerrain;
+            [Tooltip("층 꾸미기에 풀을 깔지 않음 (3-19 용암 동굴 — 용암이 풀로 번지지 않게)")] public bool NoGrass;
+        }
+
+        /// <summary>에디터 Setup용 (3-19): 풀 없음을 켠다 (이미 켜져 있으면 false).</summary>
+        public bool SetNoGrass(int firstFloor)
+        {
+            for (int i = 0; i < _zones.Count; i++)
+            {
+                var z = _zones[i];
+                if (z.FirstFloor != firstFloor || z.NoGrass) continue;
+                z.NoGrass = true;
+                _zones[i] = z;
+                return true;
+            }
+            return false;
         }
 
         /// <summary>에디터 Setup용 (3-18): 웅덩이 지형이 비어 있으면(None) 채운다.</summary>
@@ -255,7 +270,7 @@ namespace ProjectM.Data
                     boss = ToDef(b);
                 }
                 var puddle = z.PuddleTerrain == TerrainEffectType.None ? TerrainEffectType.Water : z.PuddleTerrain;
-                zones.Add(new ZoneDef(z.Name, z.FirstFloor, z.LastFloor, enemies, z.StatPercent, boss, puddle));
+                zones.Add(new ZoneDef(z.Name, z.FirstFloor, z.LastFloor, enemies, z.StatPercent, boss, puddle, grass: !z.NoGrass));
             }
             return new ZoneBook(zones);
         }

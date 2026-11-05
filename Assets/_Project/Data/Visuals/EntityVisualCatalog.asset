@@ -263,3 +263,58 @@ MonoBehaviour:
     WalkBack: []
     WalkSide: []
     PixelVariants: []
+  - Id: enemy_fire_salamander
+    Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
+    Tint: {r: 0.9, g: 0.35, b: 0.1, a: 1}
+    Prefab: {fileID: 0}
+    Height: 0.5
+    Variants: []
+    PixelIdle: {fileID: 0}
+    WalkFront: []
+    WalkBack: []
+    WalkSide: []
+    PixelVariants: []
+  - Id: enemy_flame_imp
+    Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
+    Tint: {r: 1, g: 0.55, b: 0.15, a: 1}
+    Prefab: {fileID: 0}
+    Height: 0.6
+    Variants: []
+    PixelIdle: {fileID: 0}
+    WalkFront: []
+    WalkBack: []
+    WalkSide: []
+    PixelVariants: []
+  - Id: enemy_magma_golem
+    Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
+    Tint: {r: 0.35, g: 0.2, b: 0.15, a: 1}
+    Prefab: {fileID: 0}
+    Height: 1.2
+    Variants: []
+    PixelIdle: {fileID: 0}
+    WalkFront: []
+    WalkBack: []
+    WalkSide: []
+    PixelVariants: []
+  - Id: enemy_fire_shaman
+    Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
+    Tint: {r: 0.75, g: 0.15, b: 0.1, a: 1}
+    Prefab: {fileID: 0}
+    Height: 1
+    Variants: []
+    PixelIdle: {fileID: 0}
+    WalkFront: []
+    WalkBack: []
+    WalkSide: []
+    PixelVariants: []
+  - Id: boss_lava_lord
+    Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
+    Tint: {r: 0.6, g: 0.15, b: 0.05, a: 1}
+    Prefab: {fileID: 0}
+    Height: 1.8
+    Variants: []
+    PixelIdle: {fileID: 0}
+    WalkFront: []
+    WalkBack: []
+    WalkSide: []
+    PixelVariants: []

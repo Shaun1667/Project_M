@@ -36,9 +36,11 @@ namespace ProjectM.Dungeon
         public UnitDef Boss { get; }
         /// <summary>층 꾸미기 웅덩이의 지형 (3-18 — 얼음 동굴 = 빙판). 기본 물.</summary>
         public TerrainEffectType PuddleTerrain { get; }
+        /// <summary>층 꾸미기에 풀을 까는지 (3-19 — 용암 동굴은 안 깖: 용암 웅덩이가 풀로 번져 층이 타지 않게).</summary>
+        public bool Grass { get; }
 
         public ZoneDef(string name, int firstFloor, int lastFloor, IReadOnlyList<ZoneEnemy> enemies, int statPercent = 100, UnitDef boss = null,
-            TerrainEffectType puddleTerrain = TerrainEffectType.Water)
+            TerrainEffectType puddleTerrain = TerrainEffectType.Water, bool grass = true)
         {
             if (puddleTerrain == TerrainEffectType.None) throw new ArgumentException("웅덩이 지형이 없다.", nameof(puddleTerrain));
             if (firstFloor < 1 || lastFloor < firstFloor) throw new ArgumentOutOfRangeException(nameof(lastFloor), "층 범위가 잘못됐다.");
@@ -59,6 +61,7 @@ namespace ProjectM.Dungeon
             Enemies = scaled;
             Boss = boss?.Scaled(statPercent);
             PuddleTerrain = puddleTerrain;
+            Grass = grass;
         }
     }
 

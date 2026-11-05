@@ -457,6 +457,11 @@ namespace ProjectM.Editor
                 ("enemy_ice_golem", new Color(0.6f, 0.85f, 0.95f), 1.2f),
                 ("enemy_frost_shaman", new Color(0.3f, 0.45f, 0.85f), 1f),
                 ("boss_ice_witch", new Color(0.8f, 0.92f, 1f), 1.8f),
+                ("enemy_fire_salamander", new Color(0.9f, 0.35f, 0.1f), 0.5f), // 3-19 용암 동굴
+                ("enemy_flame_imp", new Color(1f, 0.55f, 0.15f), 0.6f),
+                ("enemy_magma_golem", new Color(0.35f, 0.2f, 0.15f), 1.2f),
+                ("enemy_fire_shaman", new Color(0.75f, 0.15f, 0.1f), 1f),
+                ("boss_lava_lord", new Color(0.6f, 0.15f, 0.05f), 1.8f),
             })
                 catalog.Set(id, AssetDatabase.LoadAssetAtPath<Sprite>(UnitCircleSpritePath), color, height);
             // 3-4b 임시 보스: 짙은 자주색, 두 배 키 (판정은 1칸)
@@ -539,6 +544,16 @@ namespace ProjectM.Editor
                 { Id = "boss_blizzard", Element = Element.Ice, Shape = SpellShape.Burst, Range = 6, Damage = 8, ManaCost = 0, Radius = 1 });
             changed |= catalog.SetStatusIfNone("boss_blizzard", StatusType.Slow, 70);
             changed |= catalog.SetDisplayNameIfEmpty("boss_blizzard", "눈보라");
+            // 3-19 용암 동굴 (BALANCE 20-1 · 20-2): 화염 주술사 불덩이 · 용암 군주 용암 분출 — 중독된 대상에 맞으면 독화
+            changed |= catalog.AddIfMissing(new SpellCatalogAsset.Entry
+                { Id = "enemy_fireball", Element = Element.Fire, Shape = SpellShape.Bolt, Range = 6, Damage = 5, ManaCost = 3 });
+            changed |= catalog.SetStatusIfNone("enemy_fireball", StatusType.Burn, 40);
+            changed |= catalog.SetDisplayNameIfEmpty("enemy_fireball", "불덩이");
+            changed |= catalog.AddIfMissing(new SpellCatalogAsset.Entry
+                { Id = "boss_lava_eruption", Element = Element.Fire, Shape = SpellShape.Burst, Range = 6, Damage = 9, ManaCost = 0, Radius = 1 });
+            changed |= catalog.SetStatusIfNone("boss_lava_eruption", StatusType.Burn, 70);
+            changed |= catalog.SetTerrainIfNone("boss_lava_eruption", TerrainEffectType.FireZone);
+            changed |= catalog.SetDisplayNameIfEmpty("boss_lava_eruption", "용암 분출");
             // 3-12a 함정 효과 주문 (BALANCE 17번): 함정 칸 중심 3×3, 시전자 없음 · 마나 0 · 배우지 않음. 마비 가스는 바람 속성(반응 없음)
             foreach (var (id, name, element, damage, status, chance, terrain) in new[]
             {
@@ -675,6 +690,23 @@ namespace ProjectM.Editor
             iceWitch.SummonId = "enemy_frost_bat"; iceWitch.SummonCount = 3; iceWitch.SummonAtHpPercent = 50;
             iceWitch.DamagePercents = new System.Collections.Generic.List<ZoneCatalogAsset.ElementPercent> { new ZoneCatalogAsset.ElementPercent { Element = Element.Ice, Percent = 50 } };
             foreach (var row in new[] { frostBat, snowWolf, iceGolem, frostShaman, iceWitch }) changed |= catalog.AddIfMissing(row);
+            // 3-19 4구역 용암 동굴 (결정 2026-11-05, BALANCE 20-1 · 20-2 — 수치 Claude 임시)
+            System.Collections.Generic.List<ZoneCatalogAsset.ElementPercent> Lava() => new System.Collections.Generic.List<ZoneCatalogAsset.ElementPercent>
+            {
+                new ZoneCatalogAsset.ElementPercent { Element = Element.Fire, Percent = 0 },
+                new ZoneCatalogAsset.ElementPercent { Element = Element.Water, Percent = 150 },
+                new ZoneCatalogAsset.ElementPercent { Element = Element.Ice, Percent = 150 },
+            };
+            var salamander = E("enemy_fire_salamander", "화염 도롱뇽", 18, 5, 7, 18, 7, 7, 20); salamander.HitStatus = StatusType.Burn; salamander.HitStatusPercent = 40;
+            var imp = E("enemy_flame_imp", "불꽃 임프", 12, 4, 8, 18, 11, 7, 20); imp.MoveSteps = 2;
+            var magmaGolem = E("enemy_magma_golem", "마그마 골렘", 40, 6, 5, 14, 2, 9, 21); magmaGolem.MoveCostTicks = 2; magmaGolem.HurtTerrain = TerrainEffectType.FireZone;
+            magmaGolem.DamagePercents = Lava();
+            var fireShaman = E("enemy_fire_shaman", "화염 주술사", 18, 4, 8, 16, 8, 9, 21); fireShaman.SpellId = "enemy_fireball"; fireShaman.MaxMana = 9; fireShaman.KeepDistance = 3;
+            var lavaLord = E("boss_lava_lord", "용암 군주", 140, 6, 10, 18, 12, 40, 30);
+            lavaLord.HurtTerrain = TerrainEffectType.FireZone; lavaLord.ChargeSpellId = "boss_lava_eruption"; lavaLord.ChargePercent = 35;
+            lavaLord.SummonId = "enemy_magma_golem"; lavaLord.SummonCount = 2; lavaLord.SummonAtHpPercent = 50;
+            lavaLord.DamagePercents = Lava();
+            foreach (var row in new[] { salamander, imp, magmaGolem, fireShaman, lavaLord }) changed |= catalog.AddIfMissing(row);
             ZoneCatalogAsset.Zone Z(string name, int first, int last, int percent, string boss, params (string id, int weight)[] enemies)
             {
                 var rows = new System.Collections.Generic.List<ZoneCatalogAsset.ZoneEnemyRow>();
@@ -706,6 +738,15 @@ namespace ProjectM.Editor
             changed |= catalog.ReplaceBoss(11, null, "boss_ice_witch");
             changed |= catalog.SetPuddleTerrainIfNone(11, TerrainEffectType.IcePatch);
             changed |= catalog.SetLightColorIfEmpty(11, new Color(0.75f, 0.88f, 1f)); // 얼음 동굴: 옅은 하늘색
+            // 3-19: 4구역(16~20층) = 용암 동굴 — 임시 사막 4종 · 160% → 용암 적 4종 · 100%, 20층 보스, 용암(영구 화염 지대) 웅덩이 · 풀 없음, 붉은 해
+            changed |= catalog.ReplaceName(16, "4구역 (임시)", "용암 동굴");
+            changed |= catalog.ReplaceEnemies(16, new[] { "enemy_scorpion", "enemy_jackal", "enemy_mummy", "enemy_desert_shaman" },
+                ("enemy_fire_salamander", 3), ("enemy_flame_imp", 2), ("enemy_magma_golem", 2), ("enemy_fire_shaman", 1));
+            changed |= catalog.ReplaceStatPercent(16, 160, 100);
+            changed |= catalog.ReplaceBoss(16, null, "boss_lava_lord");
+            changed |= catalog.SetPuddleTerrainIfNone(16, TerrainEffectType.FireZone);
+            changed |= catalog.SetNoGrass(16);
+            changed |= catalog.SetLightColorIfEmpty(16, new Color(1f, 0.68f, 0.5f)); // 용암 동굴: 붉은 주황
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }

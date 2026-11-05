@@ -222,3 +222,25 @@ MonoBehaviour:
     StatusChancePercent: 70
     LeavesTerrain: 0
     DisplayName: "\uB208\uBCF4\uB77C"
+  - Id: enemy_fireball
+    Element: 0
+    Shape: 0
+    Range: 6
+    Damage: 5
+    ManaCost: 3
+    Radius: 0
+    AppliesStatus: 1
+    StatusChancePercent: 40
+    LeavesTerrain: 0
+    DisplayName: "\uBD88\uB369\uC774"
+  - Id: boss_lava_eruption
+    Element: 0
+    Shape: 2
+    Range: 6
+    Damage: 9
+    ManaCost: 0
+    Radius: 1
+    AppliesStatus: 1
+    StatusChancePercent: 70
+    LeavesTerrain: 1
+    DisplayName: "\uC6A9\uC554 \uBD84\uCD9C"

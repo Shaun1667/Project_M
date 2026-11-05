@@ -148,12 +148,12 @@ namespace ProjectM.Tests
             Assert.That(dungeon.FloorCount, Is.EqualTo(book.FloorCount));
             var bossFloors = new List<int>();
             for (int f = 1; f <= 25; f++) if (book.IsBossFloor(f)) bossFloors.Add(f);
-            Assert.That(bossFloors, Is.EqualTo(new[] { 5, 10, 15, 25 }), "3-18: 15층 얼음 마녀");
+            Assert.That(bossFloors, Is.EqualTo(new[] { 5, 10, 15, 20, 25 }), "3-18: 15층 얼음 마녀 · 3-19: 20층 용암 군주");
             var percents = new List<int>();
             foreach (var z in book.Zones) percents.Add(z.StatPercent);
-            Assert.That(percents, Is.EqualTo(new[] { 100, 100, 100, 160, 200 }), "3-17c · 3-18: 1~3구역은 적 줄이 세기를 가짐, 4~5구역(임시)은 사막 적 × %");
-            // 3-17c: 2 · 4 · 5구역 = 사막 4종 (전갈 3 · 자칼 2 · 미라 2 · 사막 주술사 1)
-            foreach (int floor in new[] { 6, 16, 21 })
+            Assert.That(percents, Is.EqualTo(new[] { 100, 100, 100, 100, 200 }), "3-17c · 3-18 · 3-19: 1~4구역은 적 줄이 세기를 가짐, 5구역(임시)은 사막 적 × %");
+            // 3-17c: 2 · 5구역 = 사막 4종 (전갈 3 · 자칼 2 · 미라 2 · 사막 주술사 1)
+            foreach (int floor in new[] { 6, 21 })
             {
                 var ids = new List<string>();
                 foreach (var e in book.ZoneOf(floor).Enemies) ids.Add(e.Def.VisualId + ":" + e.Weight);
@@ -168,7 +168,97 @@ namespace ProjectM.Tests
             Assert.That(catalog.TryGetEnemy("enemy_mummy", out var m) && (m.MaxHp, m.AttackDamage, m.Accuracy, m.Evasion) == (22, 4, 10, 1), Is.True);
             Assert.That(catalog.TryGetLightColor(7, out var sand) && sand.b < sand.r, Is.True, "사막 = 모래빛 해");
             Assert.That(catalog.LootPlanFloors, Is.EqualTo(10));
-            foreach (var z in new[] { 1, 6, 16, 21 }) Assert.That(book.ZoneOf(z).PuddleTerrain, Is.EqualTo(ProjectM.Status.TerrainEffectType.Water), $"{z}층 웅덩이 = 물");
+            foreach (var z in new[] { 1, 6, 21 }) Assert.That(book.ZoneOf(z).PuddleTerrain, Is.EqualTo(ProjectM.Status.TerrainEffectType.Water), $"{z}층 웅덩이 = 물");
+            foreach (var z in new[] { 1, 6, 11, 21 }) Assert.That(book.ZoneOf(z).Grass, Is.True, $"{z}층 풀 있음");
+        }
+
+        // 검산 (3-19): 4구역 용암 동굴 = BALANCE 20-1 · 20-2 — 적 4종 · 행동 · 용암 군주 · 용암 웅덩이 · 풀 없음 · 붉은 해
+        [Test]
+        public void ProjectAsset_LavaCave_MatchesBalanceTable()
+        {
+            var catalog = AssetDatabase.LoadAssetAtPath<ZoneCatalogAsset>("Assets/_Project/Data/Units/ZoneCatalog.asset");
+            var book = catalog.ToBook();
+            var zone = book.ZoneOf(16);
+            Assert.That((zone.Name, zone.FirstFloor, zone.LastFloor, zone.StatPercent), Is.EqualTo(("용암 동굴", 16, 20, 100)));
+            var ids = new List<string>();
+            foreach (var e in zone.Enemies) ids.Add(e.Def.VisualId + ":" + e.Weight);
+            Assert.That(ids, Is.EqualTo(new[] { "enemy_fire_salamander:3", "enemy_flame_imp:2", "enemy_magma_golem:2", "enemy_fire_shaman:1" }));
+            Assert.That(zone.PuddleTerrain, Is.EqualTo(ProjectM.Status.TerrainEffectType.FireZone));
+            Assert.That(zone.Grass, Is.False);
+            Assert.That(book.BossOf(20)?.VisualId, Is.EqualTo("boss_lava_lord"));
+            Assert.That(catalog.TryGetLightColor(18, out var lava) && lava.r > lava.b, Is.True, "용암 동굴 = 붉은 해");
+
+            (int, int, int, int, int, int, int, int) Stats(string id)
+            {
+                Assert.That(catalog.TryGetEnemy(id, out var e), Is.True, id);
+                return (e.MaxHp, e.AttackDamage, e.SightRange, e.Accuracy, e.Evasion, e.ExpReward, e.ExpMaxLevel, e.MaxMana);
+            }
+            Assert.That(Stats("enemy_fire_salamander"), Is.EqualTo((18, 5, 7, 18, 7, 7, 20, 0)));
+            Assert.That(Stats("enemy_flame_imp"), Is.EqualTo((12, 4, 8, 18, 11, 7, 20, 0)));
+            Assert.That(Stats("enemy_magma_golem"), Is.EqualTo((40, 6, 5, 14, 2, 9, 21, 0)));
+            Assert.That(Stats("enemy_fire_shaman"), Is.EqualTo((18, 4, 8, 16, 8, 9, 21, 9)));
+            Assert.That(Stats("boss_lava_lord"), Is.EqualTo((140, 6, 10, 18, 12, 40, 30, 0)));
+
+            var traits = catalog.ToEnemyBook();
+            Assert.That(traits.TryGet("enemy_fire_salamander", out var sal) && sal.HitStatus == ProjectM.Status.StatusType.Burn && sal.HitStatusPercent == 40, Is.True);
+            Assert.That(traits.TryGet("enemy_flame_imp", out var imp) && imp.MoveSteps == 2, Is.True);
+            Assert.That(traits.TryGet("enemy_magma_golem", out var golem) && golem.MoveCostTicks == 2 && golem.HurtTerrain == ProjectM.Status.TerrainEffectType.FireZone
+                && golem.DamagePercent(Element.Fire) == 0 && golem.DamagePercent(Element.Water) == 150 && golem.DamagePercent(Element.Ice) == 150, Is.True);
+            Assert.That(traits.TryGet("enemy_fire_shaman", out var shaman) && shaman.SpellId == "enemy_fireball" && shaman.KeepDistance == 3, Is.True);
+            Assert.That(traits.TryGet("boss_lava_lord", out var lord) && string.IsNullOrEmpty(lord.SpellId) && lord.HurtTerrain == ProjectM.Status.TerrainEffectType.FireZone
+                && lord.ChargeSpellId == "boss_lava_eruption" && lord.ChargePercent == 35 && lord.TeleportPercent == 0
+                && lord.SummonDef?.VisualId == "enemy_magma_golem" && lord.SummonCount == 2 && lord.SummonAtHpPercent == 50
+                && lord.DamagePercent(Element.Fire) == 0 && lord.DamagePercent(Element.Ice) == 150, Is.True);
+
+            var statuses = AssetDatabase.LoadAssetAtPath<StatusCatalogAsset>("Assets/_Project/Data/Statuses/StatusCatalog.asset").ToBook();
+            var terrains = AssetDatabase.LoadAssetAtPath<TerrainCatalogAsset>("Assets/_Project/Data/Terrains/TerrainCatalog.asset").ToBook(statuses);
+            var spells = AssetDatabase.LoadAssetAtPath<SpellCatalogAsset>("Assets/_Project/Data/Spells/SpellCatalog.asset").ToBook(statuses, terrains);
+            Assert.That(spells.TryGet("enemy_fireball", out var ball), Is.True);
+            Assert.That((ball.Element, ball.Shape, ball.Range, ball.Damage, ball.ManaCost, ball.AppliesStatus, ball.StatusChancePercent),
+                Is.EqualTo((Element.Fire, SpellShape.Bolt, 6, 5, 3, ProjectM.Status.StatusType.Burn, 40)));
+            Assert.That(spells.TryGet("boss_lava_eruption", out var erupt), Is.True);
+            Assert.That((erupt.Element, erupt.Shape, erupt.Range, erupt.Damage, erupt.ManaCost, erupt.Radius, erupt.AppliesStatus, erupt.StatusChancePercent, erupt.LeavesTerrain),
+                Is.EqualTo((Element.Fire, SpellShape.Burst, 6, 9, 0, 1, ProjectM.Status.StatusType.Burn, 70, ProjectM.Status.TerrainEffectType.FireZone)));
+        }
+
+        // 3-19: 용암 구역 새 층 = 영구 화염 지대 웅덩이, 풀 칸 없음 (풀 덩어리 6개를 깔도록 한 꾸미기여도)
+        [Test]
+        public void LavaCaveZone_LavaPuddles_NoGrass()
+        {
+            var dungeon = new DungeonGenConfig(50, 50, 10, 20, 7, 20, 10, 3, 5, 1000, 10, floorCount: 3);
+            var generator = new DungeonGenerator(dungeon);
+            DungeonFloor floor = null;
+            var world = World.Create(21UL, rng => (floor = generator.Generate(rng, stairsUp: false, stairsDown: true)).Map);
+            var terrains = SpellTests.BalanceTerrains();
+            var vision = world.InstallCoreSystems(Sight, Magic, SpellTests.BalanceStatuses(), terrains);
+            var zones = new ZoneBook(new[]
+            {
+                new ZoneDef("숲", 1, 1, new[] { new ZoneEnemy(Rat, 1) }),
+                new ZoneDef("용암", 2, 3, new[] { new ZoneEnemy(Rat, 1) }, puddleTerrain: ProjectM.Status.TerrainEffectType.FireZone, grass: false),
+            });
+            terrains.TryGet(ProjectM.Status.TerrainEffectType.Water, out var water);
+            var decor = new FloorDecorConfig(6, 4, 14, 50, 6, 3, 9);
+            var idle = new IdleAi();
+            var stairs = new FloorTransition(world, generator, 3, Rat, new SpawnConfig(0, 8), (w, id) => idle, vision,
+                decor: decor, water: water, zones: zones, terrains: terrains);
+            var player = UnitSpawner.SpawnPlayer(world, PlayerDef, floor.Start, Magic.QuickSlotCount);
+            vision.Refresh();
+            world.Events.Flush();
+            world.Units.Teleport(player.Id, floor.Exit);
+            Assert.That(stairs.TryUse(), Is.True, "1 → 2층 (용암 구역)");
+            world.Events.Flush();
+
+            int lava = 0;
+            foreach (var pair in world.Terrain.ToSortedList())
+                foreach (var t in pair.Value)
+                    if (t.Type == ProjectM.Status.TerrainEffectType.FireZone && t.Remaining == ProjectM.Status.TerrainLayer.Permanent) lava++;
+            Assert.That(lava, Is.GreaterThan(0), "영구 용암 웅덩이");
+            for (int y = 0; y < world.Map.Height; y++)
+                for (int x = 0; x < world.Map.Width; x++)
+                {
+                    var tile = world.Map.Get(new GridPos(x, y));
+                    Assert.That(tile == TileType.Grass || tile == TileType.TallGrass, Is.False, $"({x}, {y}) 풀 없음");
+                }
         }
 
         // 검산 (3-18): 3구역 얼음 동굴 = BALANCE 20-1 · 20-2 — 적 4종 · 행동 · 얼음 마녀 · 빙판 웅덩이 · 하늘색 해

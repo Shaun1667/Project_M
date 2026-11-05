@@ -433,6 +433,138 @@ MonoBehaviour:
     SummonId: enemy_frost_bat
     SummonCount: 3
     SummonAtHpPercent: 50
+  - Id: enemy_fire_salamander
+    DisplayName: "\uD654\uC5FC \uB3C4\uB871\uB1FD"
+    MaxHp: 18
+    AttackDamage: 5
+    SightRange: 7
+    Accuracy: 18
+    Evasion: 7
+    ExpReward: 7
+    ExpMaxLevel: 20
+    MoveSteps: 0
+    MoveCostTicks: 0
+    HitStatus: 1
+    HitStatusPercent: 40
+    HurtTerrain: 0
+    SpellId: 
+    MaxMana: 0
+    KeepDistance: 0
+    DamagePercents: []
+    ChargeSpellId: 
+    ChargePercent: 0
+    TeleportPercent: 0
+    SummonId: 
+    SummonCount: 0
+    SummonAtHpPercent: 0
+  - Id: enemy_flame_imp
+    DisplayName: "\uBD88\uAF43 \uC784\uD504"
+    MaxHp: 12
+    AttackDamage: 4
+    SightRange: 8
+    Accuracy: 18
+    Evasion: 11
+    ExpReward: 7
+    ExpMaxLevel: 20
+    MoveSteps: 2
+    MoveCostTicks: 0
+    HitStatus: 0
+    HitStatusPercent: 0
+    HurtTerrain: 0
+    SpellId: 
+    MaxMana: 0
+    KeepDistance: 0
+    DamagePercents: []
+    ChargeSpellId: 
+    ChargePercent: 0
+    TeleportPercent: 0
+    SummonId: 
+    SummonCount: 0
+    SummonAtHpPercent: 0
+  - Id: enemy_magma_golem
+    DisplayName: "\uB9C8\uADF8\uB9C8 \uACE8\uB818"
+    MaxHp: 40
+    AttackDamage: 6
+    SightRange: 5
+    Accuracy: 14
+    Evasion: 2
+    ExpReward: 9
+    ExpMaxLevel: 21
+    MoveSteps: 0
+    MoveCostTicks: 2
+    HitStatus: 0
+    HitStatusPercent: 0
+    HurtTerrain: 1
+    SpellId: 
+    MaxMana: 0
+    KeepDistance: 0
+    DamagePercents:
+    - Element: 0
+      Percent: 0
+    - Element: 6
+      Percent: 150
+    - Element: 1
+      Percent: 150
+    ChargeSpellId: 
+    ChargePercent: 0
+    TeleportPercent: 0
+    SummonId: 
+    SummonCount: 0
+    SummonAtHpPercent: 0
+  - Id: enemy_fire_shaman
+    DisplayName: "\uD654\uC5FC \uC8FC\uC220\uC0AC"
+    MaxHp: 18
+    AttackDamage: 4
+    SightRange: 8
+    Accuracy: 16
+    Evasion: 8
+    ExpReward: 9
+    ExpMaxLevel: 21
+    MoveSteps: 0
+    MoveCostTicks: 0
+    HitStatus: 0
+    HitStatusPercent: 0
+    HurtTerrain: 0
+    SpellId: enemy_fireball
+    MaxMana: 9
+    KeepDistance: 3
+    DamagePercents: []
+    ChargeSpellId: 
+    ChargePercent: 0
+    TeleportPercent: 0
+    SummonId: 
+    SummonCount: 0
+    SummonAtHpPercent: 0
+  - Id: boss_lava_lord
+    DisplayName: "\uC6A9\uC554 \uAD70\uC8FC"
+    MaxHp: 140
+    AttackDamage: 6
+    SightRange: 10
+    Accuracy: 18
+    Evasion: 12
+    ExpReward: 40
+    ExpMaxLevel: 30
+    MoveSteps: 0
+    MoveCostTicks: 0
+    HitStatus: 0
+    HitStatusPercent: 0
+    HurtTerrain: 1
+    SpellId: 
+    MaxMana: 0
+    KeepDistance: 0
+    DamagePercents:
+    - Element: 0
+      Percent: 0
+    - Element: 6
+      Percent: 150
+    - Element: 1
+      Percent: 150
+    ChargeSpellId: boss_lava_eruption
+    ChargePercent: 35
+    TeleportPercent: 0
+    SummonId: enemy_magma_golem
+    SummonCount: 2
+    SummonAtHpPercent: 50
   _zones:
   - Name: "\uC232 \uC18D \uB3D9\uAD74"
     FirstFloor: 1
@@ -450,6 +582,7 @@ MonoBehaviour:
     BossId: boss_slime_girl
     LightColor: {r: 0.85, g: 1, b: 0.88, a: 1}
     PuddleTerrain: 0
+    NoGrass: 0
   - Name: "\uC0AC\uB9C9 \uD53C\uB77C\uBBF8\uB4DC"
     FirstFloor: 6
     LastFloor: 10
@@ -466,6 +599,7 @@ MonoBehaviour:
     BossId: boss_pharaoh
     LightColor: {r: 1, g: 0.84, b: 0.58, a: 1}
     PuddleTerrain: 0
+    NoGrass: 0
   - Name: "\uC5BC\uC74C \uB3D9\uAD74"
     FirstFloor: 11
     LastFloor: 15
@@ -482,22 +616,24 @@ MonoBehaviour:
     BossId: boss_ice_witch
     LightColor: {r: 0.75, g: 0.88, b: 1, a: 1}
     PuddleTerrain: 5
-  - Name: "4\uAD6C\uC5ED (\uC784\uC2DC)"
+    NoGrass: 0
+  - Name: "\uC6A9\uC554 \uB3D9\uAD74"
     FirstFloor: 16
     LastFloor: 20
-    StatPercent: 160
+    StatPercent: 100
     Enemies:
-    - EnemyId: enemy_scorpion
+    - EnemyId: enemy_fire_salamander
       Weight: 3
-    - EnemyId: enemy_jackal
+    - EnemyId: enemy_flame_imp
       Weight: 2
-    - EnemyId: enemy_mummy
+    - EnemyId: enemy_magma_golem
       Weight: 2
-    - EnemyId: enemy_desert_shaman
+    - EnemyId: enemy_fire_shaman
       Weight: 1
-    BossId: 
-    LightColor: {r: 0, g: 0, b: 0, a: 0}
-    PuddleTerrain: 0
+    BossId: boss_lava_lord
+    LightColor: {r: 1, g: 0.68, b: 0.5, a: 1}
+    PuddleTerrain: 1
+    NoGrass: 1
   - Name: "5\uAD6C\uC5ED (\uC784\uC2DC)"
     FirstFloor: 21
     LastFloor: 25
@@ -514,4 +650,5 @@ MonoBehaviour:
     BossId: boss
     LightColor: {r: 0, g: 0, b: 0, a: 0}
     PuddleTerrain: 0
+    NoGrass: 0
   _lootPlanFloors: 10

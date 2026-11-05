@@ -63,7 +63,8 @@ namespace ProjectM.Dungeon
 
         /// <param name="water">물 지형 규칙 (TerrainBook의 Water). null이면 웅덩이를 놓지 않는다.</param>
         /// <param name="traps">함정 표 (3-12a). null이면 함정을 놓지 않는다. 꾸미기 맨 끝 (같은 Decor 난수).</param>
-        public static void Apply(World world, DungeonFloor floor, FloorDecorConfig config, TerrainDef water, TrapBook traps = null)
+        /// <param name="grass">false면 풀 덩어리를 깔지 않는다 (3-19 용암 동굴 — 구역 표 ZoneDef.Grass). 특수 방(정원)은 그대로.</param>
+        public static void Apply(World world, DungeonFloor floor, FloorDecorConfig config, TerrainDef water, TrapBook traps = null, bool grass = true)
         {
             if (world == null) throw new ArgumentNullException(nameof(world));
             if (floor == null) throw new ArgumentNullException(nameof(floor));
@@ -92,7 +93,7 @@ namespace ProjectM.Dungeon
                         TerrainEffects.Place(world, pos, water, TerrainLayer.Permanent);
                 }
             }
-            for (int i = 0; i < config.GrassPatchCount; i++)
+            for (int i = 0; grass && i < config.GrassPatchCount; i++)
             {
                 foreach (var pos in GrowPatch(map, floor, rng, used, config.GrassPatchMinSize, config.GrassPatchMaxSize))
                     world.SetTile(pos, rng.Range(0, 100) < config.TallGrassPercent ? TileType.TallGrass : TileType.Grass);
