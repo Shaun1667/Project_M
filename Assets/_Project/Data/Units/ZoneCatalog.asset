@@ -565,6 +565,130 @@ MonoBehaviour:
     SummonId: enemy_magma_golem
     SummonCount: 2
     SummonAtHpPercent: 50
+  - Id: enemy_clockwork_soldier
+    DisplayName: "\uB179\uC2A8 \uC2DC\uACC4\uBCD1"
+    MaxHp: 24
+    AttackDamage: 6
+    SightRange: 7
+    Accuracy: 21
+    Evasion: 8
+    ExpReward: 9
+    ExpMaxLevel: 25
+    MoveSteps: 0
+    MoveCostTicks: 0
+    HitStatus: 2
+    HitStatusPercent: 50
+    HurtTerrain: 0
+    SpellId: 
+    MaxMana: 0
+    KeepDistance: 0
+    DamagePercents: []
+    ChargeSpellId: 
+    ChargePercent: 0
+    TeleportPercent: 0
+    SummonId: 
+    SummonCount: 0
+    SummonAtHpPercent: 0
+  - Id: enemy_time_afterimage
+    DisplayName: "\uC2DC\uAC04 \uC794\uC0C1"
+    MaxHp: 15
+    AttackDamage: 5
+    SightRange: 8
+    Accuracy: 21
+    Evasion: 14
+    ExpReward: 9
+    ExpMaxLevel: 25
+    MoveSteps: 2
+    MoveCostTicks: 0
+    HitStatus: 0
+    HitStatusPercent: 0
+    HurtTerrain: 0
+    SpellId: 
+    MaxMana: 0
+    KeepDistance: 0
+    DamagePercents: []
+    ChargeSpellId: 
+    ChargePercent: 0
+    TeleportPercent: 0
+    SummonId: 
+    SummonCount: 0
+    SummonAtHpPercent: 0
+  - Id: enemy_temple_guardian
+    DisplayName: "\uC2E0\uC804 \uC218\uD638\uC0C1"
+    MaxHp: 50
+    AttackDamage: 7
+    SightRange: 5
+    Accuracy: 16
+    Evasion: 2
+    ExpReward: 11
+    ExpMaxLevel: 26
+    MoveSteps: 0
+    MoveCostTicks: 2
+    HitStatus: 4
+    HitStatusPercent: 25
+    HurtTerrain: 0
+    SpellId: 
+    MaxMana: 0
+    KeepDistance: 0
+    DamagePercents:
+    - Element: 3
+      Percent: 0
+    - Element: 2
+      Percent: 150
+    ChargeSpellId: 
+    ChargePercent: 0
+    TeleportPercent: 0
+    SummonId: 
+    SummonCount: 0
+    SummonAtHpPercent: 0
+  - Id: enemy_time_priest
+    DisplayName: "\uC2DC\uAC04 \uC0AC\uC81C"
+    MaxHp: 22
+    AttackDamage: 5
+    SightRange: 8
+    Accuracy: 19
+    Evasion: 10
+    ExpReward: 11
+    ExpMaxLevel: 26
+    MoveSteps: 0
+    MoveCostTicks: 0
+    HitStatus: 0
+    HitStatusPercent: 0
+    HurtTerrain: 0
+    SpellId: enemy_time_bolt
+    MaxMana: 10
+    KeepDistance: 3
+    DamagePercents: []
+    ChargeSpellId: 
+    ChargePercent: 0
+    TeleportPercent: 40
+    SummonId: 
+    SummonCount: 0
+    SummonAtHpPercent: 0
+  - Id: boss_time_guardian
+    DisplayName: "\uC2DC\uAC04\uC758 \uC218\uD638\uC790"
+    MaxHp: 200
+    AttackDamage: 7
+    SightRange: 10
+    Accuracy: 22
+    Evasion: 15
+    ExpReward: 50
+    ExpMaxLevel: 30
+    MoveSteps: 0
+    MoveCostTicks: 0
+    HitStatus: 0
+    HitStatusPercent: 0
+    HurtTerrain: 0
+    SpellId: enemy_time_bolt
+    MaxMana: 12
+    KeepDistance: 2
+    DamagePercents: []
+    ChargeSpellId: boss_time_collapse
+    ChargePercent: 35
+    TeleportPercent: 40
+    SummonId: enemy_time_afterimage
+    SummonCount: 3
+    SummonAtHpPercent: 50
   _zones:
   - Name: "\uC232 \uC18D \uB3D9\uAD74"
     FirstFloor: 1
@@ -634,21 +758,21 @@ MonoBehaviour:
     LightColor: {r: 1, g: 0.68, b: 0.5, a: 1}
     PuddleTerrain: 1
     NoGrass: 1
-  - Name: "5\uAD6C\uC5ED (\uC784\uC2DC)"
+  - Name: "\uC2DC\uAC04 \uC2E0\uC804 \uD3D0\uD5C8"
     FirstFloor: 21
     LastFloor: 25
-    StatPercent: 200
+    StatPercent: 100
     Enemies:
-    - EnemyId: enemy_scorpion
+    - EnemyId: enemy_clockwork_soldier
       Weight: 3
-    - EnemyId: enemy_jackal
+    - EnemyId: enemy_time_afterimage
       Weight: 2
-    - EnemyId: enemy_mummy
+    - EnemyId: enemy_temple_guardian
       Weight: 2
-    - EnemyId: enemy_desert_shaman
+    - EnemyId: enemy_time_priest
       Weight: 1
-    BossId: boss
-    LightColor: {r: 0, g: 0, b: 0, a: 0}
+    BossId: boss_time_guardian
+    LightColor: {r: 0.82, g: 0.72, b: 1, a: 1}
     PuddleTerrain: 0
-    NoGrass: 0
+    NoGrass: 1
   _lootPlanFloors: 10

@@ -462,6 +462,11 @@ namespace ProjectM.Editor
                 ("enemy_magma_golem", new Color(0.35f, 0.2f, 0.15f), 1.2f),
                 ("enemy_fire_shaman", new Color(0.75f, 0.15f, 0.1f), 1f),
                 ("boss_lava_lord", new Color(0.6f, 0.15f, 0.05f), 1.8f),
+                ("enemy_clockwork_soldier", new Color(0.6f, 0.45f, 0.3f), 0.9f), // 3-20 시간 신전 폐허
+                ("enemy_time_afterimage", new Color(0.7f, 0.6f, 1f), 0.9f),
+                ("enemy_temple_guardian", new Color(0.65f, 0.65f, 0.6f), 1.2f),
+                ("enemy_time_priest", new Color(0.55f, 0.3f, 0.85f), 1f),
+                ("boss_time_guardian", new Color(0.85f, 0.75f, 0.35f), 1.8f),
             })
                 catalog.Set(id, AssetDatabase.LoadAssetAtPath<Sprite>(UnitCircleSpritePath), color, height);
             // 3-4b 임시 보스: 짙은 자주색, 두 배 키 (판정은 1칸)
@@ -554,6 +559,15 @@ namespace ProjectM.Editor
             changed |= catalog.SetStatusIfNone("boss_lava_eruption", StatusType.Burn, 70);
             changed |= catalog.SetTerrainIfNone("boss_lava_eruption", TerrainEffectType.FireZone);
             changed |= catalog.SetDisplayNameIfEmpty("boss_lava_eruption", "용암 분출");
+            // 3-20 시간 신전 폐허 (BALANCE 20-1 · 20-2): 진짜 시간 마법(Phase 8)이 아니라 번개 속성 + 마비(멈춘 시간) — 젖은 대상이면 감전
+            changed |= catalog.AddIfMissing(new SpellCatalogAsset.Entry
+                { Id = "enemy_time_bolt", Element = Element.Lightning, Shape = SpellShape.Bolt, Range = 6, Damage = 5, ManaCost = 3 });
+            changed |= catalog.SetStatusIfNone("enemy_time_bolt", StatusType.Paralyze, 30);
+            changed |= catalog.SetDisplayNameIfEmpty("enemy_time_bolt", "시간 번개");
+            changed |= catalog.AddIfMissing(new SpellCatalogAsset.Entry
+                { Id = "boss_time_collapse", Element = Element.Lightning, Shape = SpellShape.Burst, Range = 6, Damage = 12, ManaCost = 0, Radius = 1 });
+            changed |= catalog.SetStatusIfNone("boss_time_collapse", StatusType.Paralyze, 50);
+            changed |= catalog.SetDisplayNameIfEmpty("boss_time_collapse", "시간 붕괴");
             // 3-12a 함정 효과 주문 (BALANCE 17번): 함정 칸 중심 3×3, 시전자 없음 · 마나 0 · 배우지 않음. 마비 가스는 바람 속성(반응 없음)
             foreach (var (id, name, element, damage, status, chance, terrain) in new[]
             {
@@ -707,6 +721,23 @@ namespace ProjectM.Editor
             lavaLord.SummonId = "enemy_magma_golem"; lavaLord.SummonCount = 2; lavaLord.SummonAtHpPercent = 50;
             lavaLord.DamagePercents = Lava();
             foreach (var row in new[] { salamander, imp, magmaGolem, fireShaman, lavaLord }) changed |= catalog.AddIfMissing(row);
+            // 3-20 5구역 시간 신전 폐허 (결정 2026-11-05, BALANCE 20-1 · 20-2 — 수치 Claude 임시). '시간' = 둔화 · 마비 · 빠름 · 순간이동 (시간 마법 시스템은 Phase 8)
+            var clockwork = E("enemy_clockwork_soldier", "녹슨 시계병", 24, 6, 7, 21, 8, 9, 25); clockwork.HitStatus = StatusType.Slow; clockwork.HitStatusPercent = 50;
+            var afterimage = E("enemy_time_afterimage", "시간 잔상", 15, 5, 8, 21, 14, 9, 25); afterimage.MoveSteps = 2;
+            var guardian = E("enemy_temple_guardian", "신전 수호상", 50, 7, 5, 16, 2, 11, 26); guardian.MoveCostTicks = 2;
+            guardian.HitStatus = StatusType.Paralyze; guardian.HitStatusPercent = 25;
+            guardian.DamagePercents = new System.Collections.Generic.List<ZoneCatalogAsset.ElementPercent>
+            {
+                new ZoneCatalogAsset.ElementPercent { Element = Element.Poison, Percent = 0 },
+                new ZoneCatalogAsset.ElementPercent { Element = Element.Lightning, Percent = 150 },
+            };
+            var timePriest = E("enemy_time_priest", "시간 사제", 22, 5, 8, 19, 10, 11, 26); timePriest.SpellId = "enemy_time_bolt"; timePriest.MaxMana = 10;
+            timePriest.KeepDistance = 3; timePriest.TeleportPercent = 40;
+            var timeGuardian = E("boss_time_guardian", "시간의 수호자", 200, 7, 10, 22, 15, 50, 30);
+            timeGuardian.SpellId = "enemy_time_bolt"; timeGuardian.MaxMana = 12; timeGuardian.KeepDistance = 2;
+            timeGuardian.ChargeSpellId = "boss_time_collapse"; timeGuardian.ChargePercent = 35; timeGuardian.TeleportPercent = 40;
+            timeGuardian.SummonId = "enemy_time_afterimage"; timeGuardian.SummonCount = 3; timeGuardian.SummonAtHpPercent = 50;
+            foreach (var row in new[] { clockwork, afterimage, guardian, timePriest, timeGuardian }) changed |= catalog.AddIfMissing(row);
             ZoneCatalogAsset.Zone Z(string name, int first, int last, int percent, string boss, params (string id, int weight)[] enemies)
             {
                 var rows = new System.Collections.Generic.List<ZoneCatalogAsset.ZoneEnemyRow>();
@@ -747,6 +778,14 @@ namespace ProjectM.Editor
             changed |= catalog.SetPuddleTerrainIfNone(16, TerrainEffectType.FireZone);
             changed |= catalog.SetNoGrass(16);
             changed |= catalog.SetLightColorIfEmpty(16, new Color(1f, 0.68f, 0.5f)); // 용암 동굴: 붉은 주황
+            // 3-20: 5구역(21~25층) = 시간 신전 폐허 — 임시 사막 4종 · 200% → 시간 적 4종 · 100%, 25층 임시 보스 → 시간의 수호자(처치 = 승리), 풀 없음(물 웅덩이 그대로), 보랏빛 해
+            changed |= catalog.ReplaceName(21, "5구역 (임시)", "시간 신전 폐허");
+            changed |= catalog.ReplaceEnemies(21, new[] { "enemy_scorpion", "enemy_jackal", "enemy_mummy", "enemy_desert_shaman" },
+                ("enemy_clockwork_soldier", 3), ("enemy_time_afterimage", 2), ("enemy_temple_guardian", 2), ("enemy_time_priest", 1));
+            changed |= catalog.ReplaceStatPercent(21, 200, 100);
+            changed |= catalog.ReplaceBoss(21, BossVisualId, "boss_time_guardian");
+            changed |= catalog.SetNoGrass(21);
+            changed |= catalog.SetLightColorIfEmpty(21, new Color(0.82f, 0.72f, 1f)); // 시간 신전 폐허: 보랏빛
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }

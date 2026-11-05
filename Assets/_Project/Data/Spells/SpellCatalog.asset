@@ -244,3 +244,25 @@ MonoBehaviour:
     StatusChancePercent: 70
     LeavesTerrain: 1
     DisplayName: "\uC6A9\uC554 \uBD84\uCD9C"
+  - Id: enemy_time_bolt
+    Element: 2
+    Shape: 0
+    Range: 6
+    Damage: 5
+    ManaCost: 3
+    Radius: 0
+    AppliesStatus: 4
+    StatusChancePercent: 30
+    LeavesTerrain: 0
+    DisplayName: "\uC2DC\uAC04 \uBC88\uAC1C"
+  - Id: boss_time_collapse
+    Element: 2
+    Shape: 2
+    Range: 6
+    Damage: 12
+    ManaCost: 0
+    Radius: 1
+    AppliesStatus: 4
+    StatusChancePercent: 50
+    LeavesTerrain: 0
+    DisplayName: "\uC2DC\uAC04 \uBD95\uAD34"

@@ -151,9 +151,9 @@ namespace ProjectM.Tests
             Assert.That(bossFloors, Is.EqualTo(new[] { 5, 10, 15, 20, 25 }), "3-18: 15층 얼음 마녀 · 3-19: 20층 용암 군주");
             var percents = new List<int>();
             foreach (var z in book.Zones) percents.Add(z.StatPercent);
-            Assert.That(percents, Is.EqualTo(new[] { 100, 100, 100, 100, 200 }), "3-17c · 3-18 · 3-19: 1~4구역은 적 줄이 세기를 가짐, 5구역(임시)은 사막 적 × %");
-            // 3-17c: 2 · 5구역 = 사막 4종 (전갈 3 · 자칼 2 · 미라 2 · 사막 주술사 1)
-            foreach (int floor in new[] { 6, 21 })
+            Assert.That(percents, Is.EqualTo(new[] { 100, 100, 100, 100, 100 }), "3-17c ~ 3-20: 모든 구역이 적 줄에 세기를 가짐");
+            // 3-17c: 2구역 = 사막 4종 (전갈 3 · 자칼 2 · 미라 2 · 사막 주술사 1)
+            foreach (int floor in new[] { 6 })
             {
                 var ids = new List<string>();
                 foreach (var e in book.ZoneOf(floor).Enemies) ids.Add(e.Def.VisualId + ":" + e.Weight);
@@ -169,7 +169,57 @@ namespace ProjectM.Tests
             Assert.That(catalog.TryGetLightColor(7, out var sand) && sand.b < sand.r, Is.True, "사막 = 모래빛 해");
             Assert.That(catalog.LootPlanFloors, Is.EqualTo(10));
             foreach (var z in new[] { 1, 6, 21 }) Assert.That(book.ZoneOf(z).PuddleTerrain, Is.EqualTo(ProjectM.Status.TerrainEffectType.Water), $"{z}층 웅덩이 = 물");
-            foreach (var z in new[] { 1, 6, 11, 21 }) Assert.That(book.ZoneOf(z).Grass, Is.True, $"{z}층 풀 있음");
+            foreach (var z in new[] { 1, 6, 11 }) Assert.That(book.ZoneOf(z).Grass, Is.True, $"{z}층 풀 있음");
+        }
+
+        // 검산 (3-20): 5구역 시간 신전 폐허 = BALANCE 20-1 · 20-2 — 적 4종 · 행동 · 시간의 수호자(25층, 처치 = 승리) · 물 웅덩이 · 풀 없음 · 보랏빛 해
+        [Test]
+        public void ProjectAsset_TimeTemple_MatchesBalanceTable()
+        {
+            var catalog = AssetDatabase.LoadAssetAtPath<ZoneCatalogAsset>("Assets/_Project/Data/Units/ZoneCatalog.asset");
+            var book = catalog.ToBook();
+            var zone = book.ZoneOf(21);
+            Assert.That((zone.Name, zone.FirstFloor, zone.LastFloor, zone.StatPercent), Is.EqualTo(("시간 신전 폐허", 21, 25, 100)));
+            var ids = new List<string>();
+            foreach (var e in zone.Enemies) ids.Add(e.Def.VisualId + ":" + e.Weight);
+            Assert.That(ids, Is.EqualTo(new[] { "enemy_clockwork_soldier:3", "enemy_time_afterimage:2", "enemy_temple_guardian:2", "enemy_time_priest:1" }));
+            Assert.That(zone.PuddleTerrain, Is.EqualTo(ProjectM.Status.TerrainEffectType.Water));
+            Assert.That(zone.Grass, Is.False);
+            Assert.That(book.BossOf(25)?.VisualId, Is.EqualTo("boss_time_guardian"));
+            Assert.That(book.FloorCount, Is.EqualTo(25), "25층 = 마지막 층 → 봉인 계단 없음, 처치 = 승리");
+            Assert.That(catalog.TryGetLightColor(23, out var light) && light.b > light.g, Is.True, "보랏빛 해");
+
+            (int, int, int, int, int, int, int, int) Stats(string id)
+            {
+                Assert.That(catalog.TryGetEnemy(id, out var e), Is.True, id);
+                return (e.MaxHp, e.AttackDamage, e.SightRange, e.Accuracy, e.Evasion, e.ExpReward, e.ExpMaxLevel, e.MaxMana);
+            }
+            Assert.That(Stats("enemy_clockwork_soldier"), Is.EqualTo((24, 6, 7, 21, 8, 9, 25, 0)));
+            Assert.That(Stats("enemy_time_afterimage"), Is.EqualTo((15, 5, 8, 21, 14, 9, 25, 0)));
+            Assert.That(Stats("enemy_temple_guardian"), Is.EqualTo((50, 7, 5, 16, 2, 11, 26, 0)));
+            Assert.That(Stats("enemy_time_priest"), Is.EqualTo((22, 5, 8, 19, 10, 11, 26, 10)));
+            Assert.That(Stats("boss_time_guardian"), Is.EqualTo((200, 7, 10, 22, 15, 50, 30, 12)));
+
+            var traits = catalog.ToEnemyBook();
+            Assert.That(traits.TryGet("enemy_clockwork_soldier", out var clock) && clock.HitStatus == ProjectM.Status.StatusType.Slow && clock.HitStatusPercent == 50, Is.True);
+            Assert.That(traits.TryGet("enemy_time_afterimage", out var after) && after.MoveSteps == 2, Is.True);
+            Assert.That(traits.TryGet("enemy_temple_guardian", out var guard) && guard.MoveCostTicks == 2
+                && guard.HitStatus == ProjectM.Status.StatusType.Paralyze && guard.HitStatusPercent == 25
+                && guard.DamagePercent(Element.Poison) == 0 && guard.DamagePercent(Element.Lightning) == 150, Is.True);
+            Assert.That(traits.TryGet("enemy_time_priest", out var priest) && priest.SpellId == "enemy_time_bolt" && priest.KeepDistance == 3 && priest.TeleportPercent == 40, Is.True);
+            Assert.That(traits.TryGet("boss_time_guardian", out var boss) && boss.SpellId == "enemy_time_bolt" && boss.KeepDistance == 2
+                && boss.ChargeSpellId == "boss_time_collapse" && boss.ChargePercent == 35 && boss.TeleportPercent == 40
+                && boss.SummonDef?.VisualId == "enemy_time_afterimage" && boss.SummonCount == 3 && boss.SummonAtHpPercent == 50, Is.True);
+
+            var statuses = AssetDatabase.LoadAssetAtPath<StatusCatalogAsset>("Assets/_Project/Data/Statuses/StatusCatalog.asset").ToBook();
+            var terrains = AssetDatabase.LoadAssetAtPath<TerrainCatalogAsset>("Assets/_Project/Data/Terrains/TerrainCatalog.asset").ToBook(statuses);
+            var spells = AssetDatabase.LoadAssetAtPath<SpellCatalogAsset>("Assets/_Project/Data/Spells/SpellCatalog.asset").ToBook(statuses, terrains);
+            Assert.That(spells.TryGet("enemy_time_bolt", out var bolt), Is.True);
+            Assert.That((bolt.Element, bolt.Shape, bolt.Range, bolt.Damage, bolt.ManaCost, bolt.AppliesStatus, bolt.StatusChancePercent),
+                Is.EqualTo((Element.Lightning, SpellShape.Bolt, 6, 5, 3, ProjectM.Status.StatusType.Paralyze, 30)));
+            Assert.That(spells.TryGet("boss_time_collapse", out var collapse), Is.True);
+            Assert.That((collapse.Element, collapse.Shape, collapse.Range, collapse.Damage, collapse.ManaCost, collapse.Radius, collapse.AppliesStatus, collapse.StatusChancePercent),
+                Is.EqualTo((Element.Lightning, SpellShape.Burst, 6, 12, 0, 1, ProjectM.Status.StatusType.Paralyze, 50)));
         }
 
         // 검산 (3-19): 4구역 용암 동굴 = BALANCE 20-1 · 20-2 — 적 4종 · 행동 · 용암 군주 · 용암 웅덩이 · 풀 없음 · 붉은 해

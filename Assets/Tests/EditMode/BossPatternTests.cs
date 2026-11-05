@@ -130,7 +130,7 @@ namespace ProjectM.Tests
             var zones = catalog.ToBook();
             Assert.That(zones.BossOf(5).VisualId, Is.EqualTo("boss_slime_girl"));
             Assert.That(zones.BossOf(10).VisualId, Is.EqualTo("boss_pharaoh"));
-            Assert.That(zones.BossOf(25).VisualId, Is.EqualTo("boss"), "25층은 임시 보스");
+            Assert.That(zones.BossOf(25).VisualId, Is.EqualTo("boss_time_guardian"), "3-20: 25층 = 시간의 수호자 (임시 보스 대체)");
             var book = catalog.ToEnemyBook();
             Assert.That(book.TryGet("boss_slime_girl", out var slime) && slime.ChargeSpellId == "boss_slime_slam" && slime.ChargePercent == 35
                 && slime.HurtTerrain == TerrainEffectType.Water, Is.True);
