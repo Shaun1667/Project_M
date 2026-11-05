@@ -208,7 +208,7 @@ namespace ProjectM.Editor
             tiles.SetPillarModule(BuildPrefab(Pillar, null));
             // G-2b: 올라가는 계단(0.57 m) 위에 선 유닛은 가운데 단 높이에 — 이미 값이 있으면(사용자가 고친 값) 두고 비었을 때만
             if (tiles.StandHeight(TileType.StairsUp) == 0f) tiles.SetStandHeight(TileType.StairsUp, StairsUpStandHeight);
-            BuildDesertTiles(tiles, varcoTiles);
+            foreach (var zone in ZoneTiles) BuildZoneTiles(tiles, varcoTiles, zone.Name, zone.FirstFloor, zone.LastFloor); // G-15 · G-19 구역 타일
             EditorUtility.SetDirty(tiles);
 
             BuildWeaponPrefabs();
@@ -217,52 +217,72 @@ namespace ProjectM.Editor
             Debug.Log("[VarcoModelSetup] 완료: " + PrefabDir);
         }
 
-        // ── G-15 2구역 사막 피라미드 타일 (2026-11-05, ART_ASSETS ★ 3차 25 = 12-9번) ──
-        private const string DesertTileSetPath = "Assets/_Project/Data/Visuals/TileVisualSet_Desert.asset";
-        /// <summary>2구역 층 범위 = ZoneCatalog "사막 피라미드" (BALANCE 20번). 구역 층이 바뀌면 같이 고친다.</summary>
-        private const int DesertFirstFloor = 6;
-        private const int DesertLastFloor = 10;
-        private static readonly ModelSpec DesertFloor = new ModelSpec("Tile_Desert_Floor", "Tile_Desert_Floor", 1f, 0f);
-        private static readonly ModelSpec DesertWall = new ModelSpec("Tile_Desert_Wall", "Tile_Desert_Wall", 1f, 0f);
-        private static readonly ModelSpec DesertPillar = new ModelSpec("Tile_Desert_Pillar", "Tile_Desert_Pillar", 1f, 0f);
-        private static readonly ModelSpec DesertStairsDown = new ModelSpec("Tile_Desert_StairsDown", "Tile_Desert_StairsDown", 1f, 0f);
-        private static readonly ModelSpec DesertStairsUp = new ModelSpec("Tile_Desert_StairsUp", "Tile_Desert_StairsUp", 1f, 0f);
+        // ── G-15 · G-19 구역 타일 (2026-11-05, ART_ASSETS ★ 3차 25 = 12-9번 · 12-12번) ──
+        /// <summary>
+        /// 구역마다 Varco 타일 5종 `Tile_&lt;이름&gt;_Floor/Wall/Pillar/StairsDown/StairsUp` → `TileVisualSet_&lt;이름&gt;.asset`.
+        /// 층 범위 = ZoneCatalog 구역 줄 (BALANCE 20번) — 구역 층이 바뀌면 같이 고친다. 1구역(숲 속 동굴)은 기본 세트.
+        /// </summary>
+        private static readonly (string Name, int FirstFloor, int LastFloor)[] ZoneTiles =
+        {
+            ("Desert", 6, 10), // 2구역 사막 피라미드 (G-15)
+            ("Ice", 11, 15),   // 3구역 얼음 동굴 (G-19)
+            ("Lava", 16, 20),  // 4구역 용암 동굴
+            ("Time", 21, 25),  // 5구역 시간 신전 폐허
+        };
 
         /// <summary>
-        /// 2구역 세트: 기본 세트를 그대로 복사하고 바닥 · 벽 · 기둥 · 계단을 사막 모델로, 바닥을 깐 칸(풀 · 문 · 솥)은 사막 바닥으로 다시 짠다 (문틀 = 사막 벽).
-        /// 기본 세트의 구역 목록에 2구역 층 범위로 건다 — TilemapPresenter가 층마다 고른다. 모델이 하나라도 없으면 건너뜀 (구역 목록에서도 뺌).
+        /// 구역 세트: 기본 세트를 그대로 복사하고 바닥 · 벽 · 기둥 · 계단을 그 구역 모델로, 바닥을 깐 칸(풀 · 문 · 솥)은 구역 바닥으로 다시 짠다 (문틀 = 구역 벽).
+        /// 기본 세트의 구역 목록에 층 범위로 건다 — TilemapPresenter가 층마다 고른다. 모델이 하나라도 없으면 건너뜀 (구역 목록에서도 뺌).
         /// </summary>
-        private static void BuildDesertTiles(TileVisualSet tiles, bool varcoTiles)
+        /// <summary>G-19: 벽 모델의 가로 · 세로(바닥 면)를 칸 1 × 1 m에 맞춘다 — 통(Fit)에 비균일 배율 (FBX 축 변환과 섞이지 않게), 높이는 그대로, 가운데 · 바닥 맞춤.</summary>
+        private static void FillCellFootprint(GameObject model)
         {
-            if (!HasModels(DesertFloor.Model, DesertWall.Model, DesertPillar.Model, DesertStairsDown.Model, DesertStairsUp.Model))
+            var root = model.transform.parent;
+            var fit = new GameObject("Fit").transform;
+            fit.SetParent(root, false);
+            model.transform.SetParent(fit, true);
+            var b = RendererBounds(model);
+            fit.localScale = new Vector3(1f / Mathf.Max(0.01f, b.size.x), 1f, 1f / Mathf.Max(0.01f, b.size.z));
+            b = RendererBounds(model);
+            fit.position += new Vector3(root.position.x - b.center.x, root.position.y - b.min.y, root.position.z - b.center.z);
+        }
+
+        private static void BuildZoneTiles(TileVisualSet tiles, bool varcoTiles, string zone, int firstFloor, int lastFloor)
+        {
+            string prefix = "Tile_" + zone + "_";
+            ModelSpec Spec(string part) => new ModelSpec(prefix + part, prefix + part, 1f, 0f);
+            var floorSpec = Spec("Floor");
+            var wallSpec = Spec("Wall");
+            if (!HasModels(floorSpec.Model, wallSpec.Model, prefix + "Pillar", prefix + "StairsDown", prefix + "StairsUp"))
             {
-                tiles.SetZoneSet(DesertFirstFloor, DesertLastFloor, null);
+                tiles.SetZoneSet(firstFloor, lastFloor, null);
                 return;
             }
-            var set = AssetDatabase.LoadAssetAtPath<TileVisualSet>(DesertTileSetPath);
+            string path = $"Assets/_Project/Data/Visuals/TileVisualSet_{zone}.asset";
+            var set = AssetDatabase.LoadAssetAtPath<TileVisualSet>(path);
             if (set == null)
             {
                 set = ScriptableObject.CreateInstance<TileVisualSet>();
-                AssetDatabase.CreateAsset(set, DesertTileSetPath);
+                AssetDatabase.CreateAsset(set, path);
             }
             set.CopyEntriesFrom(tiles);
-            var floor = BuildPrefab(DesertFloor, SinkToGround);
+            var floor = BuildPrefab(floorSpec, SinkToGround);
             set.SetModule(TileType.Floor, floor, randomRotation: true);
-            set.SetModule(TileType.Wall, BuildPrefab(DesertWall, null));
-            set.SetModule(TileType.StairsDown, BuildPrefab(DesertStairsDown, null));
-            set.SetModule(TileType.StairsUp, BuildPrefab(DesertStairsUp, null));
-            set.SetPillarModule(BuildPrefab(DesertPillar, null));
+            set.SetModule(TileType.Wall, BuildPrefab(wallSpec, FillCellFootprint)); // 바닥 면을 칸에 꽉 채움 (용암 벽처럼 가장자리가 들쭉날쭉하면 틈이 남)
+            set.SetModule(TileType.StairsDown, BuildPrefab(Spec("StairsDown"), null));
+            set.SetModule(TileType.StairsUp, BuildPrefab(Spec("StairsUp"), null));
+            set.SetPillarModule(BuildPrefab(Spec("Pillar"), null));
             if (varcoTiles)
             {
-                set.SetModule(TileType.Grass, BuildModelGrassPrefab(floor, "Tile_Desert_Grass", GrassShortModel, GrassShortHeight), randomRotation: true);
-                set.SetModule(TileType.TallGrass, BuildModelGrassPrefab(floor, "Tile_Desert_TallGrass", GrassTallModel, GrassTallHeight), randomRotation: true);
-                set.SetModule(TileType.Door, BuildDoubleDoorPrefab(floor, "Tile_Desert_Door", DoorLeafModel, open: false, DesertWall.Model));
-                set.SetModule(TileType.OpenDoor, BuildDoubleDoorPrefab(floor, "Tile_Desert_OpenDoor", DoorLeafModel, open: true, DesertWall.Model));
-                set.SetModule(TileType.LockedDoor, BuildDoubleDoorPrefab(floor, "Tile_Desert_LockedDoor", DoorLeafLockedModel, open: false, DesertWall.Model));
-                set.SetModule(TileType.AlchemyPot, BuildModelPotPrefab(floor, "Tile_Desert_AlchemyPot"));
+                set.SetModule(TileType.Grass, BuildModelGrassPrefab(floor, prefix + "Grass", GrassShortModel, GrassShortHeight), randomRotation: true);
+                set.SetModule(TileType.TallGrass, BuildModelGrassPrefab(floor, prefix + "TallGrass", GrassTallModel, GrassTallHeight), randomRotation: true);
+                set.SetModule(TileType.Door, BuildDoubleDoorPrefab(floor, prefix + "Door", DoorLeafModel, open: false, wallSpec.Model));
+                set.SetModule(TileType.OpenDoor, BuildDoubleDoorPrefab(floor, prefix + "OpenDoor", DoorLeafModel, open: true, wallSpec.Model));
+                set.SetModule(TileType.LockedDoor, BuildDoubleDoorPrefab(floor, prefix + "LockedDoor", DoorLeafLockedModel, open: false, wallSpec.Model));
+                set.SetModule(TileType.AlchemyPot, BuildModelPotPrefab(floor, prefix + "AlchemyPot"));
             }
             EditorUtility.SetDirty(set);
-            tiles.SetZoneSet(DesertFirstFloor, DesertLastFloor, set);
+            tiles.SetZoneSet(firstFloor, lastFloor, set);
         }
 
         // ── G-10 풀 · 문 · 솥 Varco 모델 (2026-11-05, ART_ASSETS 12-7) ──

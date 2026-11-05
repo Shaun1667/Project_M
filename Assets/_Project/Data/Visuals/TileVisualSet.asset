@@ -68,3 +68,12 @@ MonoBehaviour:
   - FirstFloor: 6
     LastFloor: 10
     Set: {fileID: 11400000, guid: 9d7ccd852ae7e484c9d003126f75875e, type: 2}
+  - FirstFloor: 11
+    LastFloor: 15
+    Set: {fileID: 11400000, guid: 775f0b62e1080c8449198c53c072f9c4, type: 2}
+  - FirstFloor: 16
+    LastFloor: 20
+    Set: {fileID: 11400000, guid: 0c8da96e97ae7a143a060372ddebc81f, type: 2}
+  - FirstFloor: 21
+    LastFloor: 25
+    Set: {fileID: 11400000, guid: 406c6cc437b8c9e479070513c091264f, type: 2}

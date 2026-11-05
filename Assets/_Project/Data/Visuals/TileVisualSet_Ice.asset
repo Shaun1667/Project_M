@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aeac82e078ef3dd45ba9f37ee2f33ec1, type: 3}
+  m_Name: TileVisualSet_Ice
+  m_EditorClassIdentifier: ProjectM.Runtime::ProjectM.Presentation.TileVisualSet
+  _entries:
+  - Type: 1
+    Tile: {fileID: 11400000, guid: bad5fd109aa4e1e43a594982ca22ff6c, type: 2}
+    Module: {fileID: 5217848992142367564, guid: 56cb85f5b747216468f62e5c57b0bf02, type: 3}
+    RandomRotation: 1
+    StandHeight: 0
+  - Type: 2
+    Tile: {fileID: 11400000, guid: 161d4987bb7184f458f1197afd483fd4, type: 2}
+    Module: {fileID: 5709818396555613484, guid: 3378832b5465fd140ba0f5c91d1cd3b3, type: 3}
+    RandomRotation: 0
+    StandHeight: 0
+  - Type: 3
+    Tile: {fileID: 11400000, guid: de1fde42d35d9204db1d8f4401f81781, type: 2}
+    Module: {fileID: 4954442890474598391, guid: 3d6f1ca708a3ebd4d812eda4e7ddf23a, type: 3}
+    RandomRotation: 0
+    StandHeight: 0
+  - Type: 4
+    Tile: {fileID: 11400000, guid: cd3947ab928dca04d99930baa82eb9c0, type: 2}
+    Module: {fileID: 7014331202292789721, guid: 551e3a20c199b4440a509106a7009997, type: 3}
+    RandomRotation: 0
+    StandHeight: 0.3
+  - Type: 5
+    Tile: {fileID: 11400000, guid: 45bd5c59b3cc8254e92497fb8d92774a, type: 2}
+    Module: {fileID: 5750149786222715560, guid: c2f7199a63d1111409bb6d8a32903b43, type: 3}
+    RandomRotation: 1
+    StandHeight: 0
+  - Type: 6
+    Tile: {fileID: 11400000, guid: 0eec26965c841c449a77c3283a0cc6da, type: 2}
+    Module: {fileID: 4026694343117236204, guid: 428eb89a7e81da54baa43c769cc8f241, type: 3}
+    RandomRotation: 1
+    StandHeight: 0
+  - Type: 7
+    Tile: {fileID: 11400000, guid: 84629b1728e6b9840b2f4557ea07ad55, type: 2}
+    Module: {fileID: 1669913285876462642, guid: ed53445dedae0c949a8790c1808f0a46, type: 3}
+    RandomRotation: 0
+    StandHeight: 0
+  - Type: 8
+    Tile: {fileID: 11400000, guid: e31c440a40825c448b3e25009d0a157e, type: 2}
+    Module: {fileID: 8759008440507558691, guid: 2e780f5411034284a9a23b9cf529f9f1, type: 3}
+    RandomRotation: 0
+    StandHeight: 0
+  - Type: 10
+    Tile: {fileID: 11400000, guid: 4ed18042b0447bb4ba08f831c7a403a3, type: 2}
+    Module: {fileID: 600629824355585055, guid: e127784687eec954987954853259480d, type: 3}
+    RandomRotation: 0
+    StandHeight: 0
+  - Type: 11
+    Tile: {fileID: 11400000, guid: 1605a5e9e72791a409a6265452351864, type: 2}
+    Module: {fileID: 7990926869084733444, guid: 54fa9abaa6513cf4ab1f8afc29823bf6, type: 3}
+    RandomRotation: 0
+    StandHeight: 0
+  _pillarModule: {fileID: 3073117504115346485, guid: 7e062f3669083874fa44f7f14bffb7f9, type: 3}
+  _zoneSets: []
