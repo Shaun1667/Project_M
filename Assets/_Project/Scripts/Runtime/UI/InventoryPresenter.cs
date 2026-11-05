@@ -21,6 +21,7 @@ namespace ProjectM.UI
         [SerializeField] private float _spacing = 8;
         [SerializeField] private Vector2 _menuItemSize = new Vector2(150, 40);
         [Tooltip("아이템 픽셀 그림 (P-3 ⓒ) — 칸 왼쪽에. 비면 글자만")] [SerializeField] private ProjectM.Presentation.ItemVisualCatalog _itemIcons;
+        [Tooltip("G-18 UI 그림 (창 · 칸 틀) — 비면 예전 색 칸")] [SerializeField] private UiSkin _skin;
 
         private static readonly Color PanelColor = new Color(0.06f, 0.06f, 0.08f, 0.94f);
         private static readonly Color CellColor = new Color(0.18f, 0.18f, 0.2f, 1f);
@@ -29,6 +30,7 @@ namespace ProjectM.UI
         private static readonly Color MenuColor = new Color(0.22f, 0.22f, 0.26f, 1f);
         private static readonly Color MenuSelectedColor = new Color(0.65f, 0.52f, 0.14f, 1f);
         private static readonly Color FusionFirstColor = new Color(0.2f, 0.38f, 0.72f, 1f);
+        private static readonly Color FusionFirstTint = new Color(0.55f, 0.75f, 1f, 1f); // G-18: 고른 칸 틀을 파랗게
 
         private const float Padding = 20, TitleHeight = 44, InfoHeight = 40;
 
@@ -85,7 +87,7 @@ namespace ProjectM.UI
             for (int i = 0; i < _equipCells.Count; i++)
             {
                 var (box, label) = _equipCells[i];
-                box.color = EquipColor;
+                Paint(box, EquipColor, _skin != null ? _skin.SlotEmpty : null);
                 string item = i == 0 ? (player.Weapon.IsEmpty ? null : text.WeaponName(player.Weapon))
                     : i == 1 ? (player.Armor.IsEmpty ? null : text.ArmorName(player.Armor)) : null;
                 label.text = $"<color=#9FB4CC>{HudText.EquipSlotNames[i]}</color> " + (item ?? "<color=#666666>—</color>");
@@ -98,9 +100,10 @@ namespace ProjectM.UI
                 var (box, label) = _cells[i];
                 var entry = slots[i];
                 // 융합 고르기: 첫 주문 칸은 파랑으로 남기고, 주문이 아닌 칸은 빈 칸처럼 어둡게
-                if (i == menu.Selected) box.color = SelectedColor;
-                else if (fusion && i == menu.FusionFirst) box.color = FusionFirstColor;
-                else box.color = entry.IsEmpty || (fusion && entry.Kind != InventoryKind.Spell) || (picking && !menu.PickFilter(entry)) ? CellEmptyColor : CellColor;
+                bool dim = entry.IsEmpty || (fusion && entry.Kind != InventoryKind.Spell) || (picking && !menu.PickFilter(entry));
+                if (i == menu.Selected) Paint(box, SelectedColor, _skin != null ? _skin.SlotSelected : null);
+                else if (fusion && i == menu.FusionFirst) { Paint(box, FusionFirstColor, _skin != null ? _skin.SlotSelected : null); if (_skin != null && _skin.SlotSelected != null) box.color = FusionFirstTint; }
+                else Paint(box, dim ? CellEmptyColor : CellColor, _skin == null ? null : entry.IsEmpty ? _skin.SlotEmpty : dim ? _skin.SlotDisabled : _skin.SlotNormal);
                 SetIcon(i < _cellIcons.Count ? _cellIcons[i] : null, label, entry, text);
                 if (entry.IsEmpty)
                 {
@@ -154,7 +157,7 @@ namespace ProjectM.UI
                 box.gameObject.SetActive(true);
                 var rect = (RectTransform)box.transform;
                 rect.anchoredPosition = new Vector2(0, -i * (_menuItemSize.y + 4));
-                box.color = i == menu.MenuIndex ? MenuSelectedColor : MenuColor;
+                Paint(box, i == menu.MenuIndex ? MenuSelectedColor : MenuColor, _skin == null ? null : i == menu.MenuIndex ? _skin.SlotSelected : _skin.SlotNormal);
                 label.text = OptionText(options[i]);
             }
             for (int i = options.Count; i < _menuItems.Count; i++) _menuItems[i].box.gameObject.SetActive(false);
@@ -163,6 +166,15 @@ namespace ProjectM.UI
             var cell = (RectTransform)_cells[menu.Selected].box.transform;
             _menu.anchoredPosition = cell.anchoredPosition + new Vector2(_cellSize.x + 6, 0);
             _menu.SetAsLastSibling();
+        }
+
+        /// <summary>G-18: 그림 틀이 있으면 9-slice 틀, 없으면 예전 색.</summary>
+        private void Paint(Image box, Color fallback, Sprite frame)
+        {
+            if (_skin != null && UiSkin.ApplyFrame(box, frame, _skin.SlotBorder)) return;
+            box.sprite = null;
+            box.type = Image.Type.Simple;
+            box.color = fallback;
         }
 
         private static string OptionText(InventoryMenuOption option)
@@ -190,7 +202,7 @@ namespace ProjectM.UI
             _panel.sizeDelta = new Vector2(width, height);
             var bg = _panel.GetComponent<Image>();
             if (bg == null) bg = _panel.gameObject.AddComponent<Image>();
-            bg.color = PanelColor;
+            if (_skin == null || !UiSkin.ApplyFrame(bg, _skin.Panel, _skin.PanelBorder)) bg.color = PanelColor; // G-18 창 틀
             bg.raycastTarget = false;
 
             if (_title == null)

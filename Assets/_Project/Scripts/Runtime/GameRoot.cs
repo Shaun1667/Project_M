@@ -348,7 +348,7 @@ namespace ProjectM
             vision.Refresh(); // 첫 시야 — 이후는 매 틱 ⑥ 단계에서
 
             _hudText.Run = World.Run; // 3-9: 모르는 물약 · 주문서는 겉모습 이름으로
-            _hud.Bind(World.Events, player, Spells, _hudText, progression);
+            _hud.Bind(World.Events, player, Spells, _hudText, progression, World.Floor); // G-18: 층 표시판 (이어하기 = 저장된 층)
             _input.Bind(World, Config, new TurnClock(World.Scheduler, World.PlayerInput), sight, Spells, new BresenhamTargetingRule(), Items, Fusions, stairs, consumables, search, hunger, _floorDecorConfig != null ? _floorDecorConfig.ToShop() : null);
             World.Events.Flush();
 

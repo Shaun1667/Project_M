@@ -3,6 +3,7 @@ using System.Text;
 using ProjectM.Core;
 using ProjectM.Magic;
 using ProjectM.Presentation;
+using ProjectM.Status;
 using ProjectM.Units;
 using ProjectM.Items;
 using TMPro;
@@ -34,6 +35,10 @@ namespace ProjectM.UI
         [Tooltip("상태 아이콘 한 개 크기")] [SerializeField] private Vector2 _iconSize = new Vector2(110, 30);
         [Tooltip("빠른 칸 상자 한 개 크기")] [SerializeField] private Vector2 _quickSlotSize = new Vector2(230, 40);
         [Tooltip("아이템 픽셀 그림 (P-3 ⓒ) — 빠른 칸 오른쪽에. 비면 글자만")] [SerializeField] private ProjectM.Presentation.ItemVisualCatalog _itemIcons;
+        [Tooltip("G-18 UI 그림 (틀 · 아이콘) — 비면 예전 색 칸")] [SerializeField] private UiSkin _skin;
+        [Tooltip("G-18: 그림 아이콘을 쓸 때 상태 아이콘 한 변 (px)")] [SerializeField] private float _statusIconSide = 46f;
+        [Tooltip("G-18: 막대 채움을 틀 안쪽으로 들이는 정도 (px)")] [SerializeField] private Vector2 _barInset = new Vector2(7f, 6f);
+        [Tooltip("G-18: 층 표시판 크기 (화면 위 가운데)")] [SerializeField] private Vector2 _plaqueSize = new Vector2(230f, 64f);
 
         private static readonly Color HintColor = new Color(1f, 0.84f, 0.31f);
         private static readonly Color DeadColor = new Color(1f, 0.4f, 0.35f);
@@ -44,6 +49,8 @@ namespace ProjectM.UI
         private readonly List<(Image box, TMP_Text label)> _slotBoxes = new List<(Image, TMP_Text)>();
         private readonly List<Image> _slotIcons = new List<Image>();
         private int _highlightSlot = -1;
+        private bool _skinApplied;
+        private TMP_Text _floorLabel;
 
         private static readonly Color SlotColor = new Color(0.12f, 0.12f, 0.12f, 0.85f);
         private static readonly Color SlotHighlightColor = new Color(0.55f, 0.45f, 0.12f, 0.95f);
@@ -51,13 +58,71 @@ namespace ProjectM.UI
         public HudModel Model => _model;
         public string LogText => _logText != null ? _logText.text : null;
 
-        public void Bind(SimEventBus bus, Unit player, SpellBook spellBook = null, HudText text = null, ProgressionConfig progression = null)
+        /// <param name="floor">G-18 층 표시판의 첫 층 (이어하기 = 저장된 층)</param>
+        public void Bind(SimEventBus bus, Unit player, SpellBook spellBook = null, HudText text = null, ProgressionConfig progression = null, int floor = 1)
         {
             Unbind();
             _hint = string.Empty;
+            ApplySkin();
             _model = new HudModel(_logLines, text);
             _model.Changed += Redraw;
-            _model.Bind(bus, player, spellBook, progression);
+            _model.Bind(bus, player, spellBook, progression, floor);
+            Redraw();
+        }
+
+        /// <summary>
+        /// G-18: UI 그림이 있으면 한 번만 — 막대 3개 바탕에 막대 틀, 로그 뒤에 반투명 창 판, 화면 위 가운데 층 표시판을 만든다 (씬 오브젝트는 그대로, 그림만 얹음).
+        /// </summary>
+        private void ApplySkin()
+        {
+            if (_skinApplied || _skin == null) return;
+            _skinApplied = true;
+            foreach (var fill in new[] { _hpFill, _mpFill, _xpFill })
+                if (fill != null && fill.parent != null) UiSkin.ApplyFrame(fill.parent.GetComponent<Image>(), _skin.BarFrame, _skin.BarBorder);
+
+            if (_logText != null && _skin.Panel != null)
+            {
+                var logRect = _logText.rectTransform;
+                var bg = new GameObject("LogBackground", typeof(RectTransform), typeof(Image));
+                var rect = (RectTransform)bg.transform;
+                rect.SetParent(logRect.parent, false);
+                rect.SetSiblingIndex(logRect.GetSiblingIndex());
+                rect.anchorMin = logRect.anchorMin;
+                rect.anchorMax = logRect.anchorMax;
+                rect.pivot = logRect.pivot;
+                rect.anchoredPosition = logRect.anchoredPosition;
+                rect.sizeDelta = logRect.sizeDelta + new Vector2(28f, 20f);
+                var image = bg.GetComponent<Image>();
+                UiSkin.ApplyFrame(image, _skin.Panel, _skin.PanelBorder);
+                image.color = new Color(1f, 1f, 1f, 0.82f);
+                image.raycastTarget = false;
+            }
+
+            var canvas = _hpLabel != null ? _hpLabel.canvas : GetComponentInParent<Canvas>();
+            if (canvas != null && _skin.Plaque != null)
+            {
+                var plaque = new GameObject("FloorPlaque", typeof(RectTransform), typeof(Image));
+                var rect = (RectTransform)plaque.transform;
+                rect.SetParent(canvas.transform, false);
+                rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 1f);
+                rect.anchoredPosition = new Vector2(0f, -10f);
+                rect.sizeDelta = _plaqueSize;
+                var image = plaque.GetComponent<Image>();
+                UiSkin.ApplyFrame(image, _skin.Plaque, _skin.PlaqueBorder);
+                image.raycastTarget = false;
+                var labelGo = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
+                var labelRect = (RectTransform)labelGo.transform;
+                labelRect.SetParent(rect, false);
+                labelRect.anchorMin = Vector2.zero;
+                labelRect.anchorMax = Vector2.one;
+                labelRect.offsetMin = labelRect.offsetMax = Vector2.zero;
+                _floorLabel = labelGo.GetComponent<TextMeshProUGUI>();
+                if (_hpLabel != null) _floorLabel.font = _hpLabel.font;
+                _floorLabel.fontSize = _plaqueSize.y * 0.45f;
+                _floorLabel.alignment = TextAlignmentOptions.Center;
+                _floorLabel.color = HintColor;
+                _floorLabel.raycastTarget = false;
+            }
         }
 
         public void Unbind()
@@ -110,6 +175,7 @@ namespace ProjectM.UI
                 + (_model.Hunger != HungerState.None ? "  " + HudText.HungerLabel(_model.Hunger) : string.Empty); // 3-14
             DrawStatusIcons();
             DrawQuickSlots();
+            if (_floorLabel != null) _floorLabel.text = HudText.FloorPlaque(_model.Floor);
 
             if (_hintText != null)
             {
@@ -133,14 +199,16 @@ namespace ProjectM.UI
             }
         }
 
-        private static void SetBar(RectTransform fill, TMP_Text label, string name, int value, int max)
+        private void SetBar(RectTransform fill, TMP_Text label, string name, int value, int max)
         {
             float ratio = max > 0 ? Mathf.Clamp01((float)value / max) : 0f;
             if (fill != null)
             {
                 fill.anchorMin = Vector2.zero;
                 fill.anchorMax = new Vector2(ratio, 1f);
-                fill.offsetMin = fill.offsetMax = Vector2.zero;
+                var inset = _skin != null && _skin.BarFrame != null ? _barInset : Vector2.zero; // G-18: 틀 안쪽만 채움
+                fill.offsetMin = inset;
+                fill.offsetMax = ratio > 0f ? -inset : new Vector2(inset.x, -inset.y);
             }
             if (label != null) label.text = $"{name} {value}/{max}";
         }
@@ -154,8 +222,21 @@ namespace ProjectM.UI
                 if (index >= _icons.Count) _icons.Add(CreateIcon());
                 var (box, label) = _icons[index];
                 box.gameObject.SetActive(true);
-                box.color = EntityPresenter.StatusTint(pair.Key);
-                label.text = $"{HudText.Status(pair.Key)} {pair.Value}";
+                var icon = _skin != null ? _skin.StatusIconOf(pair.Key) : null;
+                if (icon != null) // G-18: 그림 아이콘 + 오른쪽 아래 남은 틱
+                {
+                    box.sprite = icon;
+                    box.type = Image.Type.Simple;
+                    box.preserveAspect = true;
+                    box.color = Color.white;
+                    label.text = pair.Value.ToString();
+                }
+                else
+                {
+                    box.sprite = null;
+                    box.color = EntityPresenter.StatusTint(pair.Key);
+                    label.text = $"{HudText.Status(pair.Key)} {pair.Value}";
+                }
                 index++;
             }
             for (int i = index; i < _icons.Count; i++) _icons[i].box.gameObject.SetActive(false);
@@ -176,11 +257,19 @@ namespace ProjectM.UI
                 var (box, label) = _slotBoxes[i];
                 SetSlotIcon(_slotIcons[i], label, slots[i]);
                 box.gameObject.SetActive(true);
-                box.color = i == _highlightSlot ? SlotHighlightColor : SlotColor;
+                int cost = _model.SlotCosts[i];
+                if (_skin != null && _skin.SlotNormal != null) // G-18: 칸 틀 4상태
+                {
+                    var frame = i == _highlightSlot ? _skin.SlotSelected
+                        : slots[i].IsEmpty ? _skin.SlotEmpty
+                        : cost >= 0 && _model.Mana < cost ? _skin.SlotDisabled
+                        : _skin.SlotNormal;
+                    UiSkin.ApplyFrame(box, frame != null ? frame : _skin.SlotNormal, _skin.SlotBorder);
+                }
+                else box.color = i == _highlightSlot ? SlotHighlightColor : SlotColor;
                 var sb = new StringBuilder($" {i + 1} ");
                 if (slots[i].IsEmpty) sb.Append("<alpha=#80>-");
                 else sb.Append(_model.Text.Entry(slots[i]));
-                int cost = _model.SlotCosts[i];
                 if (cost >= 0) sb.Append(_model.Mana >= cost ? $" <alpha=#B0>{cost}MP" : $" <color=#FF6659>{cost}MP</color>");
                 label.text = sb.ToString();
             }
@@ -208,13 +297,25 @@ namespace ProjectM.UI
             Sprite sprite = null;
             if (_itemIcons != null && !entry.IsEmpty && entry.Kind == InventoryKind.Item && !_itemIcons.TryGetIcon(_model.Text.VisualOf(entry.Id), out sprite))
                 _itemIcons.TryGetIcon(entry.Id, out sprite);
+            if (sprite == null && _skin != null && !entry.IsEmpty && entry.Kind == InventoryKind.Spell) // G-18 주문 = 속성 아이콘 (융합 주문은 융합 아이콘)
+                sprite = entry.Id != null && entry.Id.StartsWith("fusion") && _skin.FusionIcon != null ? _skin.FusionIcon
+                    : _model.TryGetSpellElement(entry.Id, out var element) ? _skin.ElementIconOf(element) : null;
             icon.sprite = sprite;
             icon.enabled = sprite != null;
             label.rectTransform.offsetMax = new Vector2(sprite != null ? -_quickSlotSize.y : 0f, 0f);
         }
 
-        private (Image, TMP_Text) CreateIcon() =>
-            CreateBox(_statusIcons, "StatusIcon", _iconSize, TextAlignmentOptions.Center, new Color(0.08f, 0.08f, 0.08f));
+        private (Image, TMP_Text) CreateIcon()
+        {
+            if (_skin == null || _skin.StatusIconOf(StatusType.Burn) == null)
+                return CreateBox(_statusIcons, "StatusIcon", _iconSize, TextAlignmentOptions.Center, new Color(0.08f, 0.08f, 0.08f));
+            // G-18: 정사각 그림 아이콘 — 남은 틱은 오른쪽 아래 작은 흰 글자 (검은 테두리)
+            var (box, label) = CreateBox(_statusIcons, "StatusIcon", new Vector2(_statusIconSide, _statusIconSide), TextAlignmentOptions.BottomRight, Color.white);
+            label.fontSize = _statusIconSide * 0.38f;
+            label.outlineWidth = 0.25f;
+            label.outlineColor = Color.black;
+            return (box, label);
+        }
 
         private (Image, TMP_Text) CreateBox(RectTransform parent, string name, Vector2 size, TextAlignmentOptions alignment, Color textColor)
         {

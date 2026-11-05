@@ -3,6 +3,7 @@ using ProjectM.Core;
 using ProjectM.Magic;
 using ProjectM.Status;
 using ProjectM.Units;
+using TMPro;
 using UnityEngine;
 using EntityId = ProjectM.Core.EntityId; // Unity 6의 UnityEngine.EntityId와 구분
 
@@ -92,6 +93,12 @@ namespace ProjectM.Presentation
 
         [Header("2D 픽셀 (P-3 ⓑ)")]
         [SerializeField] private bool _pixel2D;
+        [Header("피해 숫자 (G-18)")]
+        [Tooltip("머리 위로 떠오르는 피해 / 회복 숫자 글꼴 (Galmuri11 SDF). 비면 숫자를 띄우지 않음")] [SerializeField] private TMP_FontAsset _damageFont;
+        [SerializeField] private float _numberDuration = 0.8f;
+        [SerializeField] private float _numberRise = 0.55f;
+        [SerializeField] private float _numberHeight = 1.15f;
+        [SerializeField] private float _numberSize = 3.2f;
         [Tooltip("스프라이트 재질 (조명 없음 — MainSceneSetup의 SpriteUnlit)")] [SerializeField] private Material _spriteMaterial;
         [SerializeField] private int _pixelsPerUnit = 64;
         [Tooltip("발이 칸 아래 끝에서 올라온 픽셀 — 발을 칸 가운데쯤에 두어 몸이 칸 가운데 서고 머리는 위 칸으로 넘는다 (결정 2026-10-22 · 23, SPD식)")] [SerializeField] [Range(0, 48)] private int _footPixels = 26;
@@ -222,6 +229,7 @@ namespace ProjectM.Presentation
             _bus.Subscribe<VisibilityChangedEvent>(OnVisibilityChanged);
             _bus.Subscribe<StatusChangedEvent>(OnStatusChanged);
             _bus.Subscribe<UnitDamagedEvent>(OnDamaged);
+            _bus.Subscribe<UnitHealedEvent>(OnHealed);
             _bus.Subscribe<AttackMissedEvent>(OnMissed);
             _bus.Subscribe<UnitDiedEvent>(OnDied);
             _bus.Subscribe<SpellCastEvent>(OnSpellCast);
@@ -238,6 +246,7 @@ namespace ProjectM.Presentation
             _bus.Unsubscribe<VisibilityChangedEvent>(OnVisibilityChanged);
             _bus.Unsubscribe<StatusChangedEvent>(OnStatusChanged);
             _bus.Unsubscribe<UnitDamagedEvent>(OnDamaged);
+            _bus.Unsubscribe<UnitHealedEvent>(OnHealed);
             _bus.Unsubscribe<AttackMissedEvent>(OnMissed);
             _bus.Unsubscribe<UnitDiedEvent>(OnDied);
             _bus.Unsubscribe<SpellCastEvent>(OnSpellCast);
@@ -246,7 +255,12 @@ namespace ProjectM.Presentation
             _bus = null;
         }
 
-        private void OnDestroy() => Unbind();
+        private void OnDestroy()
+        {
+            Unbind();
+            foreach (var n in _numbers) if (n.Text != null) DestroyNumber(n.Text.gameObject);
+            _numbers.Clear();
+        }
 
         private void Update() => Advance(Time.deltaTime);
 
@@ -497,6 +511,7 @@ namespace ProjectM.Presentation
 
         private void OnDamaged(UnitDamagedEvent e)
         {
+            SpawnNumber(e.Target, e.Amount.ToString(), DamageColor); // G-18 피해 숫자
             if (_views.TryGetValue(e.Target, out var target))
             {
                 target.HitT = 0f;
@@ -508,6 +523,81 @@ namespace ProjectM.Presentation
 
         /// <summary>3-7: 빗나간 공격도 찌르기는 한다 (피격 번쩍은 없음).</summary>
         private void OnMissed(AttackMissedEvent e) => Lunge(e.Attacker, e.Target);
+
+        // ── G-18 피해 · 회복 숫자 (2026-11-05, ART_ASSETS 9번 2차) — 표시만, 입력을 기다리게 하지 않는다 ──
+
+        private static readonly Color DamageColor = new Color(1f, 0.86f, 0.45f);
+        private static readonly Color HealColor = new Color(0.45f, 1f, 0.5f);
+
+        private sealed class FloatingNumber
+        {
+            public TextMeshPro Text;
+            public Vector3 Start;
+            public float T;
+            public Color Color;
+        }
+
+        private readonly List<FloatingNumber> _numbers = new List<FloatingNumber>();
+        private Camera _numberCamera;
+
+        public int FloatingNumberCount => _numbers.Count;
+
+        private void OnHealed(UnitHealedEvent e)
+        {
+            if (e.Amount > 0) SpawnNumber(e.Target, "+" + e.Amount, HealColor);
+        }
+
+        /// <summary>보이는 유닛 머리 위에 숫자 하나 (글꼴이 없거나 2D 모드 · 안 보이면 건너뜀). 위로 떠오르며 흐려지고 _numberDuration초 뒤 지운다.</summary>
+        private void SpawnNumber(EntityId target, string text, Color color)
+        {
+            if (_damageFont == null || _pixel2D || !_views.TryGetValue(target, out var view) || view.Root == null || !view.Visible) return;
+            var go = new GameObject("Number " + text);
+            go.transform.SetParent(transform, false);
+            var tmp = go.AddComponent<TextMeshPro>();
+            tmp.font = _damageFont;
+            tmp.text = text;
+            tmp.fontSize = _numberSize;
+            tmp.alignment = TextAlignmentOptions.Center;
+            tmp.color = color;
+            tmp.outlineWidth = 0.25f;
+            tmp.outlineColor = Color.black;
+            tmp.rectTransform.sizeDelta = new Vector2(2f, 1f);
+            var start = view.Root.position + Vector3.up * _numberHeight + new Vector3(((_numbers.Count % 3) - 1) * 0.12f, 0f, 0f); // 한꺼번에 여럿이면 조금씩 옆으로
+            go.transform.position = start;
+            _numbers.Add(new FloatingNumber { Text = tmp, Start = start, Color = color });
+        }
+
+        private void AdvanceNumbers(float dt)
+        {
+            if (_numbers.Count == 0) return;
+            if (_numberCamera == null) _numberCamera = Camera.main;
+            for (int i = _numbers.Count - 1; i >= 0; i--)
+            {
+                var n = _numbers[i];
+                n.T += dt;
+                float k = Mathf.Clamp01(n.T / Mathf.Max(0.01f, _numberDuration));
+                if (n.Text == null || k >= 1f)
+                {
+                    if (n.Text != null) DestroyNumber(n.Text.gameObject);
+                    _numbers.RemoveAt(i);
+                    continue;
+                }
+                n.Text.transform.position = n.Start + Vector3.up * (_numberRise * (1f - (1f - k) * (1f - k)));
+                if (_numberCamera != null) n.Text.transform.rotation = _numberCamera.transform.rotation; // 카메라를 봄
+                var c = n.Color;
+                c.a = 1f - k * k;
+                n.Text.color = c;
+            }
+        }
+
+        private static void DestroyNumber(GameObject go)
+        {
+            if (Application.isPlaying) Destroy(go);
+            else DestroyImmediate(go);
+        }
+
+        /// <summary>에디터 Setup용 (G-18).</summary>
+        public void ConfigureDamageNumbers(TMP_FontAsset font) => _damageFont = font;
 
         private void Lunge(EntityId attackerId, EntityId targetId)
         {
@@ -535,6 +625,7 @@ namespace ProjectM.Presentation
         {
             if (dt < 0f) dt = 0f;
             _time += dt;
+            AdvanceNumbers(dt);
             foreach (var pair in _views)
             {
                 var view = pair.Value;

@@ -429,6 +429,8 @@ namespace ProjectM.UI
 
         // ── 층 (3-4a) ──
         public static string FloorChanged(int from, int to) => to > from ? $"{to}층으로 내려왔다" : $"{to}층으로 올라왔다";
+        /// <summary>G-18 층 표시판 글자.</summary>
+        public static string FloorPlaque(int floor) => $"{floor}층";
         // ── 결과 화면 (3-4b) ──
         public static string ResultTitle(RunOutcome outcome) => outcome == RunOutcome.Victory ? "승리 — 보스를 쓰러뜨렸다" : "패배 — 쓰러졌다";
         public const string ResultRestart = "R 키로 새 판";

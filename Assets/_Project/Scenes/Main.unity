@@ -3660,6 +3660,7 @@ MonoBehaviour:
   _iconSize: {x: 110, y: 30}
   _quickSlotSize: {x: 230, y: 40}
   _itemIcons: {fileID: 11400000, guid: 481eb5d51281c1848a2a10324a470689, type: 2}
+  _skin: {fileID: 11400000, guid: 252751c2d9975f148addac834dca91ac, type: 2}
 --- !u!114 &2085256666
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3756,6 +3757,7 @@ MonoBehaviour:
   _spacing: 8
   _menuItemSize: {x: 150, y: 40}
   _itemIcons: {fileID: 11400000, guid: 481eb5d51281c1848a2a10324a470689, type: 2}
+  _skin: {fileID: 11400000, guid: 252751c2d9975f148addac834dca91ac, type: 2}
 --- !u!114 &2085256670
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3771,6 +3773,7 @@ MonoBehaviour:
   _panel: {fileID: 1153024588}
   _title: {fileID: 1841486321}
   _body: {fileID: 546779308}
+  _skin: {fileID: 11400000, guid: 252751c2d9975f148addac834dca91ac, type: 2}
 --- !u!114 &2085256671
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3837,6 +3840,7 @@ MonoBehaviour:
   _teleportCells: 1.6
   _walkHold: 0.2
   _pixel2D: 0
+  _damageFont: {fileID: 11400000, guid: 338c26c4c2562ae4faab95c889e4d7f7, type: 2}
   _spriteMaterial: {fileID: 2100000, guid: 86f15b1ede84ed747a44e692fd5e5ea7, type: 2}
   _pixelsPerUnit: 64
   _footPixels: 26
