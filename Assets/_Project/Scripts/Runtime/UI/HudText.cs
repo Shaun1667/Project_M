@@ -373,6 +373,13 @@ namespace ProjectM.UI
             + "<b>H</b>   이 안내 다시 보기\n\n"
             + "<color=#FFD54F><b>요령</b></color>\n"
             + "젖은 적에게 번개, 독구름에 불 —\n<b>상태 × 속성</b>이 만나면 반응이 일어납니다";
+        // 3-37 지스타 시연 완료 (정한 층 보스 처치)
+        public static string DemoClearTitle(int floor) => $"시연 완료! — {floor}층 보스를 쓰러뜨렸습니다";
+        public const string DemoClearHint = "← → 고르기 · Enter/클릭 확정 · 플레이해 주셔서 감사합니다";
+        public const string DemoContinue = "이어서 하기";
+        public const string DemoContinueDetail = "아래층으로\n계속 내려갑니다\n\n더 강한 적과\n새 구역이\n기다립니다";
+        public const string DemoToTitle = "타이틀로";
+        public const string DemoToTitleDetail = "여기서\n시연을 마치고\n타이틀 화면으로\n돌아갑니다";
         /// <summary>HUD 구석 고정 안내.</summary>
         public const string ControlsCorner = "H 조작 안내";
         public const string ModeRealLockedName = "실시간  <size=70%>(잠김)</size>";

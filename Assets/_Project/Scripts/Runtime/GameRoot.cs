@@ -62,6 +62,11 @@ namespace ProjectM
         [Header("시드 — 0이면 매번 새로 정한다. 같은 맵을 다시 보려면 콘솔에 찍힌 시드를 넣는다")]
         [SerializeField] private long _fixedSeed;
 
+        [Header("지스타 시연 (3-37, 2026-11-05) — 시연이 끝나면 끈다")]
+        [Tooltip("이 층의 보스를 잡으면 '시연 완료' 창 (이어서 하기 · 타이틀로). 0 = 끔")] [SerializeField] private int _demoClearFloor = 5;
+        [Tooltip("켜면 자동 저장 · 명예의 전당 기록을 하지 않는다 (여러 관람객이 이어서 하는 시연용)")] [SerializeField] private bool _demoNoRecords = true;
+        private bool _demoCleared; // 이 판에서 시연 완료 창을 이미 띄움 (판 밖 데이터 — 저장하지 않음)
+
         public GameConfig Config { get; private set; }
         public MagicConfig Magic { get; private set; }
         public SpellBook Spells { get; private set; }
@@ -469,6 +474,7 @@ namespace ProjectM
         private void AutoSave()
         {
             if (World == null || _runEnded || _playerDead || !_playerId.IsValid || World.Events.FlushCount == _savedFlush) return;
+            if (_demoNoRecords) return; // 3-37 시연: 저장하지 않음
             try
             {
                 if (_slot > 0) RunSaveStore.Save(World, _slot); // 3-30 이 판의 슬롯
@@ -502,6 +508,7 @@ namespace ProjectM
             RunMode mode, ulong seed, System.Action<World> afterRestore = null)
         {
             _history.Clear(); // 3-28c: 새 판 · 이어하기 · 되돌리기 — 기록은 이 World 기준으로 다시
+            if (afterRestore == null) _demoCleared = false; // 3-37: 새 판 · 이어하기마다 시연 완료 창 다시 (타임머신 되돌리기는 그대로)
             bool restoring = snapshot != null;
             _paused = false;
             Seed = seed;
@@ -847,7 +854,30 @@ namespace ProjectM
         /// 3-21b: 선택 층 보스를 쓰러뜨려 봉인 계단이 열리면, 아직 형태를 안 고른 직업이면 형태 선택 창을 연다 (캐릭터 선택 창을 같이 씀).
         /// 고르면 틱 밖 변경(ClassForms.Choose) 뒤 이벤트를 비운다. 창이 열린 동안 입력은 PresentationBusy로 막힌다.
         /// </summary>
-        private void OnStairsUnsealed(StairsUnsealedEvent e) => OpenFormSelectIfReady(bossDefeated: true);
+        private void OnStairsUnsealed(StairsUnsealedEvent e)
+        {
+            if (_demoClearFloor > 0 && !_demoCleared && World.Floor == _demoClearFloor)
+            {
+                OpenDemoClear(); // 3-37: 시연 완료 → 이어서 하면 그다음 형태 선택
+                return;
+            }
+            OpenFormSelectIfReady(bossDefeated: true);
+        }
+
+        /// <summary>3-37 지스타 시연: 정한 층 보스 처치 = "시연 완료" 창 — 이어서 하기(그대로 계속 · 형태 선택) / 타이틀로. Esc로 닫을 수 없음.</summary>
+        private void OpenDemoClear()
+        {
+            _demoCleared = true;
+            if (_characterSelect == null) return;
+            var world = World;
+            _characterSelect.Open(null, new[] { HudText.DemoContinue, HudText.DemoToTitle }, 0, index =>
+            {
+                if (World != world) return; // 그새 새 판
+                if (index == 0) Defer(() => OpenFormSelectIfReady(bossDefeated: true)); // 확정한 키가 형태 창에 또 읽히지 않게 다음 프레임
+                else Defer(OpenTitle);
+            }, title: HudText.DemoClearTitle(_demoClearFloor), hint: HudText.DemoClearHint,
+               details: new[] { HudText.DemoContinueDetail, HudText.DemoToTitleDetail });
+        }
 
         /// <summary>형태를 고를 때면 형태 선택 창 (봉인 계단 열림 · 3-27 이어하기 — 고르기 전에 껐을 때).</summary>
         private void OpenFormSelectIfReady(bool bossDefeated)
@@ -1134,7 +1164,7 @@ namespace ProjectM
             if (_slot > 0) RunSaveStore.Delete(_slot); // 3-27 · 3-30: 패배 · 승리 = 그 슬롯을 비움 (되돌리기 없음)
             _input.Unbind();
             var result = ResultModel.From(World, Seed, _player, _hudText);
-            if (e.Outcome == RunOutcome.Victory) result.Ranking = RecordHallOfFame(); // 3-33 클리어만
+            if (e.Outcome == RunOutcome.Victory && !_demoNoRecords) result.Ranking = RecordHallOfFame(); // 3-33 클리어만 · 3-37 시연 중엔 안 남김
             result.ByArtifact = _wonByArtifact;
             _wonByArtifact = false;
             _result.Show(result);

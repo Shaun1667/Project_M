@@ -213,6 +213,8 @@ namespace ProjectM.Tests
             Assert.That(chosen, Is.EqualTo(RunMode.TurnBased));
             Assert.That(HudText.TitleItemName(TitleItem.Controls), Is.EqualTo("조작 안내"));
             StringAssert.Contains("잠김", HudText.ModeRealLockedName);
+            Assert.That(HudText.DemoClearTitle(5), Does.Contain("시연 완료").And.Contain("5층")); // 3-37
+            Assert.That((HudText.DemoContinue, HudText.DemoToTitle), Is.EqualTo(("이어서 하기", "타이틀로")));
         }
 
         // 판 글자: 모드 이름 · 결과 화면 안내
