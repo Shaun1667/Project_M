@@ -261,4 +261,165 @@ MonoBehaviour:
       LastLevel: 6
     - FirstLevel: 7
       LastLevel: 12
-    Talents: []
+    Talents:
+    - Id: sia_tough_body
+      DisplayName: "\uB2E8\uB828\uB41C \uBAB8"
+      Description: "\uCD5C\uB300 \uCCB4\uB825 +3 / +6"
+      Tier: 1
+      FormId: 
+      MaxPoints: 2
+      Effects:
+      - Effect: 10
+        Values: 0300000006000000i
+        SpellIds: []
+        WeaponId: 
+        Status: 0
+    - Id: sia_light_feet
+      DisplayName: "\uAC00\uBCBC\uC6B4 \uBC1C"
+      Description: "\uB3C4\uC57D \uC0AC\uAC70\uB9AC +1 / +2"
+      Tier: 1
+      FormId: 
+      MaxPoints: 2
+      Effects:
+      - Effect: 2
+        Values: 0100000002000000i
+        SpellIds:
+        - sia_leap
+        WeaponId: 
+        Status: 0
+    - Id: sia_ki_cycle
+      DisplayName: "\uAE30 \uC21C\uD658"
+      Description: "\uC2DC\uC544 \uAE30\uC220\uB85C \uC801\uC744 \uC4F0\uB7EC\uB728\uB9AC\uBA74\n\uB9C8\uB098 +1 / +2"
+      Tier: 1
+      FormId: 
+      MaxPoints: 2
+      Effects:
+      - Effect: 7
+        Values: 0100000002000000i
+        SpellIds:
+        - sia_leap
+        - sia_combo
+        - sia_rush
+        - sia_crush
+        - sia_quake
+        - sia_fist
+        WeaponId: 
+        Status: 0
+    - Id: sia_knuckle_mastery
+      DisplayName: "\uB108\uD074 \uC219\uB828"
+      Description: "\uB108\uD074\uC744 \uB4E4\uBA74 \uBA85\uC911 +2 / +4"
+      Tier: 1
+      FormId: 
+      MaxPoints: 2
+      Effects:
+      - Effect: 9
+        Values: 0200000004000000i
+        SpellIds: []
+        WeaponId: knuckle
+        Status: 0
+    - Id: sia_quick_hands
+      DisplayName: "\uBE60\uB978 \uC190"
+      Description: "\uAE30\uBCF8 \uACF5\uACA9\uC774 \uB9DE\uC73C\uBA74 \uD55C \uBC88 \uB354 \uCE60 \uD655\uB960\n15 / 30 / 45%"
+      Tier: 2
+      FormId: combo
+      MaxPoints: 3
+      Effects:
+      - Effect: 13
+        Values: 0f0000001e0000002d000000i
+        SpellIds: []
+        WeaponId: 
+        Status: 0
+    - Id: sia_endless_combo
+      DisplayName: "\uB05D\uC5C6\uB294 \uC5F0\uD0C0"
+      Description: "\uC5F0\uD0C0 \uD69F\uC218\n+1 / +2 / +3"
+      Tier: 2
+      FormId: combo
+      MaxPoints: 3
+      Effects:
+      - Effect: 3
+        Values: 010000000200000003000000i
+        SpellIds:
+        - sia_combo
+        WeaponId: 
+        Status: 0
+    - Id: sia_gale
+      DisplayName: "\uC9C8\uD48D"
+      Description: "\uC9C8\uD48D \uC5F0\uACA9 \uAC70\uB9AC\n+1 / +2 / +3"
+      Tier: 2
+      FormId: combo
+      MaxPoints: 3
+      Effects:
+      - Effect: 2
+        Values: 010000000200000003000000i
+        SpellIds:
+        - sia_rush
+        WeaponId: 
+        Status: 0
+    - Id: sia_momentum
+      DisplayName: "\uAE30\uC138"
+      Description: "\uADFC\uC811 \uACF5\uACA9 \xB7 \uC5F0\uD0C0 \uAE30\uC220\uC774 \uB9DE\uC73C\uBA74\n\uB9C8\uB098 +1 \uD655\uB960 20 / 40 / 60%"
+      Tier: 2
+      FormId: combo
+      MaxPoints: 3
+      Effects:
+      - Effect: 8
+        Values: 14000000280000003c000000i
+        SpellIds:
+        - sia_combo
+        - sia_rush
+        WeaponId: 
+        Status: 0
+    - Id: sia_long_crush
+      DisplayName: "\uAE34 \uBD95\uAD8C"
+      Description: "\uBD95\uAD8C \uAE38\uC774\n+1 / +2 / +3"
+      Tier: 2
+      FormId: smash
+      MaxPoints: 3
+      Effects:
+      - Effect: 2
+        Values: 010000000200000003000000i
+        SpellIds:
+        - sia_crush
+        WeaponId: 
+        Status: 0
+    - Id: sia_earth_ring
+      DisplayName: "\uB545\uC6B8\uB9BC"
+      Description: "\uC9C4\uAC01 \uD53C\uD574\n+1 / +2 / +3"
+      Tier: 2
+      FormId: smash
+      MaxPoints: 3
+      Effects:
+      - Effect: 1
+        Values: 010000000200000003000000i
+        SpellIds:
+        - sia_quake
+        WeaponId: 
+        Status: 0
+    - Id: sia_one_strike
+      DisplayName: "\uC77C\uACA9\uD544\uC0B4"
+      Description: "\uC815\uAD8C \uD53C\uD574\n+2 / +4 / +6"
+      Tier: 2
+      FormId: smash
+      MaxPoints: 3
+      Effects:
+      - Effect: 1
+        Values: 020000000400000006000000i
+        SpellIds:
+        - sia_fist
+        WeaponId: 
+        Status: 0
+    - Id: sia_shock
+      DisplayName: "\uCDA9\uACA9"
+      Description: "\uAC15\uD0C0 \uAE30\uC220\uC774 \uB9DE\uC73C\uBA74 \uB9C8\uBE44\n10 / 20 / 30%"
+      Tier: 2
+      FormId: smash
+      MaxPoints: 3
+      Effects:
+      - Effect: 6
+        Values: 0a000000140000001e000000i
+        SpellIds:
+        - sia_crush
+        - sia_quake
+        - sia_fist
+        WeaponId: 
+        Status: 4

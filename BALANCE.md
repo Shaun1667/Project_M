@@ -813,6 +813,27 @@ SPD 규칙 그대로: 방어 굴림 = 강화 ~ 티어 × (2 + 강화) (SPD Armor
 
 검산 (`SiaFormTests.ProjectAssets_MatchBalanceTable`).
 
+**3-22c 특성** (`ClassCatalog.asset` 시아 줄 — 루멘과 같은 단계: 1단계 레벨 2~6 · 각 최대 2, 2단계 7~12 · 각 최대 3). ID는 `sia_` 접두어.
+
+| 단계 | ID | 이름 | 효과 (`TalentEffect`) | 1 / 2 / 3점 |
+|---|---|---|---|---|
+| 1 | `sia_tough_body` | 단련된 몸 | MaxHp | +3 / +6 |
+| 1 | `sia_light_feet` | 가벼운 발 | SpellRange (도약) | +1 / +2 |
+| 1 | `sia_ki_cycle` | 기 순환 | SpellKillMana (시아 기술 6개) | +1 / +2 |
+| 1 | `sia_knuckle_mastery` | 너클 숙련 | WeaponAccuracy (`knuckle`) | +2 / +4 |
+| 2 연타 | `sia_quick_hands` | 빠른 손 | MeleeExtraHitChance — 기본 공격이 맞으면 한 번 더 (공격 속도) | 15 / 30 / 45% |
+| 2 연타 | `sia_endless_combo` | 끝없는 연타 | SpellHitCount (연타) | +1 / +2 / +3 |
+| 2 연타 | `sia_gale` | 질풍 | SpellRange (질풍 연격) | +1 / +2 / +3 |
+| 2 연타 | `sia_momentum` | 기세 | HitManaChance (근접 공격 · 연타 · 질풍 연격) | 20 / 40 / 60% |
+| 2 강타 | `sia_long_crush` | 긴 붕권 | SpellRange (붕권) | +1 / +2 / +3 |
+| 2 강타 | `sia_earth_ring` | 땅울림 | SpellDamage (진각) | +1 / +2 / +3 |
+| 2 강타 | `sia_one_strike` | 일격필살 | SpellDamage (정권) | +2 / +4 / +6 |
+| 2 강타 | `sia_shock` | 충격 | SpellStatusChance 마비 (붕권 · 진각 · 정권) | 10 / 20 / 30% |
+
+- 결과: 빠른 손 3점 + 너클 = 한 번 공격에 2타 + 45%로 1타 더 → 기대 타격 2.45 (연타 자세 +1이면 한 대 2~3). 일격필살 3점 + 너클 = (9 + 6) × 1.5 = **22** 한 방. 충격 마비는 반응이 아닌 상태 확률(전투 난수).
+
+검산 (`SiaTalentTests.ProjectAsset_MatchesBalanceTable`).
+
 ---
 
 ## 19. 연금술 — `ItemCatalog.asset`의 씨앗 줄 `BrewsInto` + `FloorDecorConfig.asset` 연구실 (3-16c)

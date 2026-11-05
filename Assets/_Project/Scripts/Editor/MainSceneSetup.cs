@@ -1515,6 +1515,27 @@ namespace ProjectM.Editor
                 Tiers = new List<ClassCatalogAsset.Tier> { new ClassCatalogAsset.Tier { FirstLevel = 2, LastLevel = 6 }, new ClassCatalogAsset.Tier { FirstLevel = 7, LastLevel = 12 } },
                 Talents = new List<ClassCatalogAsset.Talent>(),
             });
+            // 3-22c 시아 특성 (Docs/직업_시아.md 5번, BALANCE 22번) — ID는 sia_ 접두어 (루멘 특성과 겹치지 않게)
+            var siaAll = L("sia_leap", "sia_combo", "sia_rush", "sia_crush", "sia_quake", "sia_fist");
+            changed |= catalog.SetTalentsIfEmpty("sia",
+                new List<ClassCatalogAsset.Tier> { new ClassCatalogAsset.Tier { FirstLevel = 2, LastLevel = 6 }, new ClassCatalogAsset.Tier { FirstLevel = 7, LastLevel = 12 } },
+                new List<ClassCatalogAsset.Talent>
+                {
+                    T("sia_tough_body", "단련된 몸", "최대 체력 +3 / +6", 1, null, 2, Fx(ProjectM.Units.TalentEffect.MaxHp, new[] { 3, 6 })),
+                    T("sia_light_feet", "가벼운 발", "도약 사거리 +1 / +2", 1, null, 2, Fx(ProjectM.Units.TalentEffect.SpellRange, new[] { 1, 2 }, L("sia_leap"))),
+                    T("sia_ki_cycle", "기 순환", "시아 기술로 적을 쓰러뜨리면\n마나 +1 / +2", 1, null, 2, Fx(ProjectM.Units.TalentEffect.SpellKillMana, new[] { 1, 2 }, siaAll)),
+                    T("sia_knuckle_mastery", "너클 숙련", "너클을 들면 명중 +2 / +4", 1, null, 2, Fx(ProjectM.Units.TalentEffect.WeaponAccuracy, new[] { 2, 4 }, weapon: "knuckle")),
+                    T("sia_quick_hands", "빠른 손", "기본 공격이 맞으면 한 번 더 칠 확률\n15 / 30 / 45%", 2, "combo", 3, Fx(ProjectM.Units.TalentEffect.MeleeExtraHitChance, new[] { 15, 30, 45 })),
+                    T("sia_endless_combo", "끝없는 연타", "연타 횟수\n+1 / +2 / +3", 2, "combo", 3, Fx(ProjectM.Units.TalentEffect.SpellHitCount, new[] { 1, 2, 3 }, L("sia_combo"))),
+                    T("sia_gale", "질풍", "질풍 연격 거리\n+1 / +2 / +3", 2, "combo", 3, Fx(ProjectM.Units.TalentEffect.SpellRange, new[] { 1, 2, 3 }, L("sia_rush"))),
+                    T("sia_momentum", "기세", "근접 공격 · 연타 기술이 맞으면\n마나 +1 확률 20 / 40 / 60%", 2, "combo", 3,
+                        Fx(ProjectM.Units.TalentEffect.HitManaChance, new[] { 20, 40, 60 }, L("sia_combo", "sia_rush"))),
+                    T("sia_long_crush", "긴 붕권", "붕권 길이\n+1 / +2 / +3", 2, "smash", 3, Fx(ProjectM.Units.TalentEffect.SpellRange, new[] { 1, 2, 3 }, L("sia_crush"))),
+                    T("sia_earth_ring", "땅울림", "진각 피해\n+1 / +2 / +3", 2, "smash", 3, Fx(ProjectM.Units.TalentEffect.SpellDamage, new[] { 1, 2, 3 }, L("sia_quake"))),
+                    T("sia_one_strike", "일격필살", "정권 피해\n+2 / +4 / +6", 2, "smash", 3, Fx(ProjectM.Units.TalentEffect.SpellDamage, new[] { 2, 4, 6 }, L("sia_fist"))),
+                    T("sia_shock", "충격", "강타 기술이 맞으면 마비\n10 / 20 / 30%", 2, "smash", 3,
+                        Fx(ProjectM.Units.TalentEffect.SpellStatusChance, new[] { 10, 20, 30 }, L("sia_crush", "sia_quake", "sia_fist"), status: StatusType.Paralyze)),
+                });
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }
