@@ -149,7 +149,9 @@ namespace ProjectM.Tests
             string seed = null;
             m.StartChosen += (mode, text) => { chosen = mode; seed = text; };
             m.Confirm();
-            Assert.That((chosen, seed?.Length, m.IsOpen), Is.EqualTo((RunMode.RealTime, SeedInput.MaxLength, false)), "모드 · 시드 글이 남아 있다");
+            Assert.That(chosen, Is.EqualTo(RunMode.RealTime), "모드가 남아 있다");
+            Assert.That(seed, Has.Length.EqualTo(SeedInput.MaxLength), "시드 글이 남아 있다");
+            Assert.That(m.IsOpen, Is.False);
         }
 
         // 판 글자: 모드 이름 · 결과 화면 안내

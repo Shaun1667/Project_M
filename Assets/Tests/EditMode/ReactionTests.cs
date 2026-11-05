@@ -201,11 +201,12 @@ namespace ProjectM.Tests
                 for (int y = 1; y <= 3; y++)
                     s.Place(new GridPos(x, y), TerrainEffectType.PoisonCloud);
 
-            s.Cast(Lightning, new GridPos(4, 2)); // 광선 (2,2)~(6,2) — 구름 칸 (5,2) · (6,2)
-            Assert.That(s.Reactions, Is.EqualTo(new[] { "gas_explosion", "gas_explosion" }));
+            s.Cast(Lightning, new GridPos(4, 2)); // 광선 (2,2)~벽 (3-25b 플레이어 사거리 무한) — 구름 칸 (5,2) · (6,2) · (7,2)
+            Assert.That(s.Reactions, Is.EqualTo(new[] { "gas_explosion", "gas_explosion", "gas_explosion" }));
             Assert.That(s.World.Terrain.Has(new GridPos(5, 2), TerrainEffectType.PoisonCloud), Is.False);
             Assert.That(s.World.Terrain.Has(new GridPos(6, 2), TerrainEffectType.PoisonCloud), Is.False);
-            Assert.That(s.World.Terrain.Has(new GridPos(7, 2), TerrainEffectType.PoisonCloud), Is.True, "광선이 안 닿은 칸은 남음");
+            Assert.That(s.World.Terrain.Has(new GridPos(7, 2), TerrainEffectType.PoisonCloud), Is.False);
+            Assert.That(s.World.Terrain.Has(new GridPos(7, 1), TerrainEffectType.PoisonCloud), Is.True, "광선이 안 닿은 칸은 남음");
             Assert.That(s.HitsOn(s.Enemies[0]), Is.EqualTo(new[] { 2 }), "두 폭발 범위에 다 있어도 1회");
         }
 
