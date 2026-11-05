@@ -147,6 +147,18 @@ namespace ProjectM.Editor
             new Row("reaction.shock", Hovl + "Hits and explosions/Electro hit", 0.5f, Lightning, 1.3f, 0.8f),
             new Row("reaction.shock_water", Hovl + "Hits and explosions/Electro hit", 0.5f, Lightning, 1.3f, 0.8f),
             new Row("reaction.shock_contaminated", Hovl + "Hits and explosions/Electro hit", 0.5f, Lightning, 1.3f, 0.8f),
+            // G-14 (2026-11-05) 칸 점화 (3-11b 풀 · 3-11c 문) — ART_ASSETS ★ 3차 26. 불이 붙는 순간 칸 바닥에서 불길이 확 (불 3×3 폭발을 1칸 크기로) (뒤로는 terrain.FireZone 루프)
+            new Row("reaction.grass_ignite", Hovl + "AoE effects/Ground AOE explosion", 0.13f, Keep, 1.5f, 0.8f, 0.02f),
+            new Row("reaction.tallgrass_ignite", Hovl + "AoE effects/Ground AOE explosion", 0.17f, Keep, 1.5f, 0.8f, 0.02f),
+            new Row("reaction.door_ignite", Hovl + "AoE effects/Ground AOE explosion", 0.17f, Keep, 1.5f, 0.8f, 0.02f),
+            // G-14 아이템 사용 · 함정 · 보스 행동 — ART_ASSETS ★ 3차 27 (FxPresenter가 이벤트에서 띄움)
+            new Row("use.drink", Hovl + "Character auras/Healing", 0.3f, new Color(0.6f, 1f, 0.75f), 1.6f, 1f, 0.05f),      // 물약 마심: 발밑에서 솟는 빛
+            new Row("use.read", Hovl + "Magic circles/Magic circle", 0.1f, ScrollGold, 2f, 1f, 0.03f),                     // 주문서 읽음: 발밑 금빛 마법진
+            new Row("use.shatter", Hovl + "Sparks/Sparks explode white", 0.4f, new Color(0.8f, 0.9f, 1f), 1.3f, 0.9f, 0.1f), // 던진 물약 깨짐: 유리 조각 튐
+            new Row("trap.triggered", Hovl + "Sparks/Sparks explode yellow", 0.45f, new Color(1f, 0.6f, 0.25f), 1.3f, 0.8f, 0.05f), // 함정 · 식물 발동: 바닥 섬광
+            new Row("boss.charge", Hovl + "Character auras/Debuff", 0.32f, new Color(1f, 0.2f, 0.1f), 1.5f, 1f, 0.05f),      // 힘 모으기: 붉은 오라
+            new Row("boss.teleport", Hovl + "Environment/Teleport", 1.2f, Keep, 1.5f, 1f, 0.02f),                            // 순간이동: 떠난 칸 · 도착한 칸
+            new Row("boss.summon", Hovl + "Portals/Portal red", 0.4f, Keep, 1.5f, 1.2f, 0.02f),                             // 소환: 보스 발밑 붉은 문
             // 바닥 마법서 (3-5): 틴트 = 책 색, 프리팹 = 책 주위 반짝임 루프 (FloorItemPresenter)
             new Row("item.spellbook_fire", Hovl + "Sparks/Sparks flashing yellow", 0.35f, Fire, 1f, 0f, 0.25f),
             new Row("item.spellbook_ice", Hovl + "Sparks/Sparks flashing yellow", 0.35f, Ice, 1f, 0f, 0.25f),

@@ -60,6 +60,8 @@
 
 ### 3차 — 연출 · 구역 분위기 · UI
 
+→ **2026-11-05 이펙트 연결됨: 26 · 27번** (G-14, Setup/FX + `FxPresenter` 이벤트 연결) — 26 점화 순간 `reaction.grass_ignite` · `tallgrass_ignite` · `door_ignite`(팩 Ground AOE explosion을 1칸 크기로) / 27 `use.drink`(발밑에서 솟는 빛) · `use.read`(발밑 금빛 마법진) · `use.shatter`(던진 물약이 떨어진 칸에서 깨짐) · `trap.triggered`(함정 · 식물 발동 칸 불꽃 튐) · `boss.charge`(붉은 오라) · `boss.teleport`(떠난 칸 · 도착한 칸) · `boss.summon`(보스 발밑 붉은 문). 남은 3차: 25(2구역 타일) · 28(갑옷 입은 모습) · 29(UI).
+
 | # | ID | 무엇 | 지금 | 만들 것 |
 |---|---|---|---|---|
 | 25 | 2구역 타일 세트 | 사막 피라미드 바닥 · 사암 벽 · 기둥 · 계단 | 1구역 타일 + 모래빛 해 색 | 타일 모듈 5 + 구역별 `TileVisualSet` 고르기 (코드 필요) |

@@ -1234,3 +1234,113 @@ MonoBehaviour:
     Fps: 0
     PixelCells: 0
     PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: reaction.grass_ignite
+    Prefab: {fileID: 4994997792314849709, guid: 3dd50886582244645be87adb42aa8528, type: 3}
+    Scale: 0.13
+    Tint: {r: 0, g: 0, b: 0, a: 0}
+    Speed: 1.5
+    Lifetime: 0.8
+    Height: 0.02
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: reaction.tallgrass_ignite
+    Prefab: {fileID: 4994997792314849709, guid: 3dd50886582244645be87adb42aa8528, type: 3}
+    Scale: 0.17
+    Tint: {r: 0, g: 0, b: 0, a: 0}
+    Speed: 1.5
+    Lifetime: 0.8
+    Height: 0.02
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: reaction.door_ignite
+    Prefab: {fileID: 4994997792314849709, guid: 3dd50886582244645be87adb42aa8528, type: 3}
+    Scale: 0.17
+    Tint: {r: 0, g: 0, b: 0, a: 0}
+    Speed: 1.5
+    Lifetime: 0.8
+    Height: 0.02
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: use.drink
+    Prefab: {fileID: 9017484664307500583, guid: 1245b8d2997d5b34fb1637be70a7eb05, type: 3}
+    Scale: 0.3
+    Tint: {r: 0.6, g: 1, b: 0.75, a: 1}
+    Speed: 1.6
+    Lifetime: 1
+    Height: 0.05
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: use.read
+    Prefab: {fileID: 3744133877081091469, guid: a2a060732547fe64581bb0cb3c2bdf1d, type: 3}
+    Scale: 0.1
+    Tint: {r: 1, g: 0.82, b: 0.35, a: 1}
+    Speed: 2
+    Lifetime: 1
+    Height: 0.03
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: use.shatter
+    Prefab: {fileID: 8500920156052182585, guid: 830e92a3f95c4b04caf8edd648aed9bd, type: 3}
+    Scale: 0.4
+    Tint: {r: 0.8, g: 0.9, b: 1, a: 1}
+    Speed: 1.3
+    Lifetime: 0.9
+    Height: 0.1
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: trap.triggered
+    Prefab: {fileID: 496913248247719083, guid: c483142edbf33dc4d9014c13724a0175, type: 3}
+    Scale: 0.45
+    Tint: {r: 1, g: 0.6, b: 0.25, a: 1}
+    Speed: 1.3
+    Lifetime: 0.8
+    Height: 0.05
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: boss.charge
+    Prefab: {fileID: 6126188424833946103, guid: a58aa9a78f2b45b45bb0f3e2e1e3ad3c, type: 3}
+    Scale: 0.32
+    Tint: {r: 1, g: 0.2, b: 0.1, a: 1}
+    Speed: 1.5
+    Lifetime: 1
+    Height: 0.05
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: boss.teleport
+    Prefab: {fileID: 7761031033666763820, guid: 1eb833340b41fb444b576c4dced8d4dc, type: 3}
+    Scale: 1.2
+    Tint: {r: 0, g: 0, b: 0, a: 0}
+    Speed: 1.5
+    Lifetime: 1
+    Height: 0.02
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: boss.summon
+    Prefab: {fileID: 4617036660772024948, guid: 52c7d057cba585641bb68312c10d7791, type: 3}
+    Scale: 0.4
+    Tint: {r: 0, g: 0, b: 0, a: 0}
+    Speed: 1.5
+    Lifetime: 1.2
+    Height: 0.02
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
