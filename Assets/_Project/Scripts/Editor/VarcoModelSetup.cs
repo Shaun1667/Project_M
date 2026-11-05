@@ -61,9 +61,9 @@ namespace ProjectM.Editor
             new ModelSpec("Enemy_Mouse", "Unit_Mouse", 0.8f, 0f),
             new ModelSpec("Enemy_Slime", "Unit_Slime", 0.8f, 0f),
         };
-        private static readonly ModelSpec Boss = new ModelSpec("Boss_SlimeGirl", "Unit_Boss", 1.8f, 0f);
+        private static readonly ModelSpec Boss = new ModelSpec("Boss_SlimeGirl", "Unit_Boss", 0.6f, 0f); // 2026-11-05 사용자: 1/3로 (1.8 → 0.6)
         /// <summary>리깅한 슬라임 소녀 배율 — Mixamo 결과는 키가 원본과 달라 다시 잰 값 (게임 안 키 1.8 m, ART_ASSETS 12-5).</summary>
-        private const float BossRiggedScale = 1.8f;
+        private const float BossRiggedScale = 0.6f; // 2026-11-05 사용자: 지금의 1/3 (1.8 → 0.6, 키 약 0.6 m)
         /// <summary>
         /// 3-17 구역 적 · 보스 · 상인 (2026-11-05, ART_ASSETS ★ 1차 = 12-5번 표): Varco 원본 `<Model>.fbx` + 텍스처 `Textures/<Model>_base_color · _normal`.
         /// Rigged = 사람형 — Mixamo 자동 리깅한 `<Model>_Rigged.fbx`를 Humanoid로, 플레이어와 같은 Idle · Walk 컨트롤러. 아니면 원본(코드 움직임).

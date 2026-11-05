@@ -368,7 +368,7 @@ Varco는 모든 모델을 **가장 긴 쪽 1 m**로 보내므로 크기는 프�
 | `enemy_melee` 변형 1 | Enemy_Rabbit | Unit_Rabbit | 0.8 | 0.40 × 0.62 × 0.80 | 5,000 | 28개 (Generic) |
 | `enemy_melee` 변형 2 | Enemy_Mouse | Unit_Mouse | 0.8 | 0.54 × 0.56 × 0.80 | 5,000 | 없음 |
 | `enemy_melee` 변형 3 | Enemy_Slime | Unit_Slime | 0.8 | 0.80 × 0.54 × 0.80 | 3,000 | 없음 |
-| `boss` | Boss_SlimeGirl | Unit_Boss | 1.8 | 1.80 × 1.80 × 0.72 | 12,000 | **Mixamo 자동 리깅 `Boss_SlimeGirl_Rigged.fbx`** (2026-11-05 — T자세 고정 해결, Humanoid · 플레이어와 같은 Idle · Walk, 배율 1.8 — 어깨는 Blender로 고침: 위팔 시작 0.094 m · 팔꿈치 0.233 m, 옆 머리카락의 팔 무게는 가슴으로 (`Tools/blender_slime_shoulder.py`)) |
+| `boss` | Boss_SlimeGirl | Unit_Boss | 0.6 (2026-11-05 사용자 — 1/3) | 약 0.64 m | 12,000 | **Mixamo 자동 리깅 `Boss_SlimeGirl_Rigged.fbx`** (2026-11-05 — T자세 고정 해결, Humanoid · 플레이어와 같은 Idle · Walk, 배율 1.8 — 어깨는 Blender로 고침: 위팔 시작 0.094 m · 팔꿈치 0.233 m, 옆 머리카락의 팔 무게는 가슴으로 (`Tools/blender_slime_shoulder.py`)) |
 | `Floor` (90° 단위로 위치에 따라 돌림) | Tile_Floor | Tile_Floor | 1 (윗면 = y 0으로 내림) | 1 × 0.06 × 0.98 | 1,000 | — |
 | `Wall` (이어진 벽) | Tile_Wall | Tile_Wall | 1 | 1 × 1 × 1 | 1,132 | — |
 | 외톨이 벽 (상하좌우에 벽 없음) | Tile_Pillar + 바닥 | Tile_Pillar | 1 | 0.58 × 1 × 0.58 | 1,716 | — |
