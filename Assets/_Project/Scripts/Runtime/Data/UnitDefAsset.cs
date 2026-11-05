@@ -34,8 +34,17 @@ namespace ProjectM.Data
         [Tooltip("힘 (3-7b, SPD — 플레이어 10). 무기 요구 힘과 비교. 적은 0")]
         [Min(0)] [SerializeField] private int _strength;
         [Tooltip("처음 입는 갑옷 아이템 ID (3-10a, 플레이어 armor_cloth). 비면 맨몸")] [SerializeField] private string _startingArmor;
+        [Tooltip("판 시작 배낭 아이템 ID (2026-11-05 지스타 시연 — 플레이어 fusion_device). 비면 없음")] [SerializeField] private System.Collections.Generic.List<string> _startingItems = new System.Collections.Generic.List<string>();
 
         public UnitDef ToDef() => new UnitDef(_visualId, _maxHp, _attackDamage, _sightRange, _maxMana, _startingSpells,
-            _accuracy, _evasion, _expReward, _expMaxLevel, _strength, _startingArmor);
+            _accuracy, _evasion, _expReward, _expMaxLevel, _strength, _startingArmor, _startingItems);
+
+        /// <summary>에디터 Setup용: 시작 아이템 목록에 없으면 더한다 (멱등).</summary>
+        public bool AddStartingItemIfMissing(string itemId)
+        {
+            if (string.IsNullOrEmpty(itemId) || _startingItems.Contains(itemId)) return false;
+            _startingItems.Add(itemId);
+            return true;
+        }
     }
 }

@@ -740,6 +740,11 @@ namespace ProjectM
                 Debug.LogWarning($"[GameRoot] 시작 갑옷 '{startingArmor}'가 ItemCatalog에 없다.", this);
             if (hunger?.StartingFood != null && Items.TryGet(hunger.StartingFood, out _))
                 Inventory.TryAdd(World, Spells, Items, player, InventoryRef.Item(hunger.StartingFood)); // 3-14: 식량 1개로 시작 (SPD)
+            foreach (var itemId in playerDef.StartingItems) // 2026-11-05 지스타 시연: 시작 배낭 (Player.asset — 마법 융합기)
+            {
+                if (!Items.TryGet(itemId, out _)) { Debug.LogWarning($"[GameRoot] 시작 아이템 '{itemId}'가 ItemCatalog에 없다.", this); continue; }
+                Inventory.TryAdd(World, Spells, Items, player, InventoryRef.Item(itemId));
+            }
             _player = player;
             _playerDead = false;
             _runEnded = false;

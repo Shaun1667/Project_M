@@ -922,6 +922,11 @@
   - 확인: 컴파일 오류 0, 플레이 모드에서 첫 화면 3단추 · 명예의 전당 화면(예시 줄 — 파일에는 안 씀) 캡처
   - 테스트 작성, 실행 안 함: `HallOfFameTests` 5개(점수 · 순위 · 파일 왕복 · 타이틀 화면 · 에셋 = BALANCE), `RunModeTests.TitleMenu_Flow` 첫 화면 항목 고침
   - 확인 방법: `Main.unity` 플레이 → 타이틀에 "명예의 전당" → 처음엔 "아직 클리어 기록이 없습니다" → 디버그 창 "다음 층으로"로 26층 → 모래시계 줍기 → 결과 화면에 순위 줄 → R 또는 다시 시작 후 타이틀 명예의 전당에 기록 한 줄
+- [x] **3-34. 시작 배낭 아이템 · 마법 융합기** (2026-11-05 사용자 "지스타 시연용 빌드를 만들거야 그러기 위해서 마법 융합기를 시작 아이템에 넣어줘") — 플레이 확인 대기
+  - 구현: `UnitDef.StartingItems`(복사 메서드 모두 유지) ← `UnitDefAsset._startingItems`(+ `AddStartingItemIfMissing`), 판 시작에 `GameRoot.SpawnNewRun`이 배낭에 넣음(식량 다음, 없는 ID는 경고). `Player.asset` 시작 아이템 = `fusion_device` (루멘 · 시아 공통)
+  - 확인: 컴파일 오류 0, 에셋 `ToDef().StartingItems` = fusion_device (모습 바꾼 사본도)
+  - 테스트 작성, 실행 안 함: `StartingItemsTests` 2개
+  - 확인 방법: `Main.unity` 플레이 → 새 게임 → I(배낭)에 마법 융합기 · 식량. 주문 두 개를 배운 뒤 융합기 사용 → 융합 조준
 - [~] **G-5. 3D로 되돌리기** (2026-10-28) — 플레이 확인 대기
   - 결정 (2026-10-28, 사용자): 그래픽 기준 = **실시간 3D**(Phase G)로 되돌림, Phase P 중단. 2D 코드 · 그림은 지우지 않고 남겨 둠(추천안) — `Pixel2D = true` + Setup이면 다시 2D. 맨 위 진행 요약 "최신 (2026-10-28)" 참고
   - 같은 날 두 갈래로 진행됨: 다른 PC · 세션이 main에 `e61e60d 10.28/P-X/BackTo3D`(Pixel2D 스위치 · PixelMap · FogSoft 정리 · 카메라 스카이박스)를 먼저 푸시했고, 이 PC는 `phaseP-fx16` 위에서 같은 되돌리기를 따로 함 → 사용자 결정(추천안, 2026-10-28): main 위에 다시 쌓음 — 코드 · 씬은 main 쪽을 쓰고 `PixelWallCaps` 삭제만 더함, 16프레임 시험 커밋은 그대로 올림

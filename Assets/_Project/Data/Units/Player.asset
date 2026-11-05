@@ -24,3 +24,5 @@ MonoBehaviour:
   _expMaxLevel: 0
   _strength: 10
   _startingArmor: armor_cloth
+  _startingItems:
+  - fusion_device
