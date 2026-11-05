@@ -62,6 +62,25 @@ namespace ProjectM.Editor
             new ModelSpec("Enemy_Slime", "Unit_Slime", 0.8f, 0f),
         };
         private static readonly ModelSpec Boss = new ModelSpec("Boss_SlimeGirl", "Unit_Boss", 1.8f, 0f);
+        /// <summary>
+        /// 3-17 구역 적 · 보스 · 상인 (2026-11-05, ART_ASSETS ★ 1차 = 12-5번 표): Varco 원본 `<Model>.fbx` + 텍스처 `Textures/<Model>_base_color · _normal`.
+        /// Rigged = 사람형 — Mixamo 자동 리깅한 `<Model>_Rigged.fbx`를 Humanoid로, 플레이어와 같은 Idle · Walk 컨트롤러. 아니면 원본(코드 움직임).
+        /// Staff = 오른손에 붙일 지팡이 소품(`Prop_Staff_*`, Scale = 게임 안 길이 m) — 몸 모델에는 든 물건을 넣지 않는다 (결정 2026-11-05, 사용자).
+        /// </summary>
+        private static readonly (string VisualId, ModelSpec Spec, bool Rigged, ModelSpec? Staff)[] ZoneUnits =
+        {
+            // 배율 = 게임 안 키(m) ÷ 모델 키 — Mixamo 결과 키(T자세) 약 1.05 ~ 1.2, Varco 원본은 가장 긴 쪽 1 m (다시 재서 맞춤 — ART_ASSETS 12-5)
+            ("enemy_goblin_shaman", new ModelSpec("Enemy_GoblinShaman", "Unit_GoblinShaman", 0.8f, 0f), true,
+                new ModelSpec("Prop_Staff_Goblin", "", 0.85f, 0f)),                                                 // 0.85 m (작은 고블린)
+            ("enemy_scorpion", new ModelSpec("Enemy_Scorpion", "Unit_Scorpion", 0.8f, 0f), false, null),         // 길이 0.8 m (쥐 · 토끼와 같은 배율)
+            ("enemy_jackal", new ModelSpec("Enemy_Jackal", "Unit_Jackal", 0.8f, 0f), false, null),
+            ("enemy_mummy", new ModelSpec("Enemy_Mummy", "Unit_Mummy", 1f, 0f), true, null),                    // 1.1 m (플레이어보다 조금 큼)
+            ("enemy_desert_shaman", new ModelSpec("Enemy_DesertShaman", "Unit_DesertShaman", 0.88f, 0f), true,
+                new ModelSpec("Prop_Staff_Sand", "", 1.15f, 0f)),                                                   // 1.05 m
+            ("boss_pharaoh", new ModelSpec("Boss_Pharaoh", "Unit_Pharaoh", 1.7f, 0f), true,
+                new ModelSpec("Prop_Staff_Pharaoh", "", 1.8f, 0f)),                                                   // 1.85 m (보스 2칸 키, 슬라임 소녀 1.8)
+            ("shopkeeper", new ModelSpec("NPC_Shopkeeper", "Unit_Shopkeeper", 0.9f, 0f), true, null),          // 0.95 m
+        };
         private static readonly ModelSpec Staff = new ModelSpec("Prop_MageStaff", "", 0.85f, 0f);
         private static readonly ModelSpec Floor = new ModelSpec("Tile_Floor", "Tile_Floor", 1f, 0f);
         private static readonly ModelSpec Wall = new ModelSpec("Tile_Wall", "Tile_Wall", 1f, 0f);
@@ -149,6 +168,19 @@ namespace ProjectM.Editor
             var bossPrefab = BuildPrefab(Boss, null);
             catalog.SetPrefab("boss", bossPrefab);
             catalog.SetPrefab("boss_slime_girl", bossPrefab); // 3-17d 5층 보스 = 슬라임 소녀 모델
+            foreach (var (id, spec, rigged, staff) in ZoneUnits) // 3-17 구역 적 · 보스 · 상인 — 모델이 없으면 그레이박스 그대로
+            {
+                var source = rigged ? new ModelSpec(spec.Model + "_Rigged", spec.Prefab, spec.Scale, spec.Yaw) : spec;
+                if (!EnsureVarcoMaterial(spec.Model, ModelDir + source.Model + ".fbx")) continue;
+                if (rigged) EnsureHumanoid(ModelDir + source.Model + ".fbx", null);
+                bool hasStaff = staff.HasValue && EnsureVarcoMaterial(staff.Value.Model, ModelDir + staff.Value.Model + ".fbx");
+                var prefab = BuildPrefab(source, rigged ? (System.Action<GameObject>)(model =>
+                {
+                    SetupAnimator(model, controller, idle);
+                    if (hasStaff) AttachStaff(model, staff.Value);
+                }) : null);
+                if (prefab != null) catalog.SetPrefab(id, prefab);
+            }
             EditorUtility.SetDirty(catalog);
 
             var floorPrefab = BuildPrefab(Floor, SinkToGround);
@@ -381,6 +413,47 @@ namespace ProjectM.Editor
             importer.SaveAndReimport();
         }
 
+        /// <summary>
+        /// Varco 모델 재질 (2026-11-05): `Materials/<model>_Mat`(URP Lit, 색 · 노멀 = Textures/<model>_base_color · _normal — FBX에 묻힌 그림을 꺼내 둔 것)을
+        /// 만들고 FBX의 묻힌 재질을 모두 그것으로 바꾼다. Varco FBX는 묻힌 이름이 모두 같아(material_0) 이름으로 찾게 두면 섞인다. 이미 같으면 아무것도 안 함.
+        /// FBX나 텍스처가 없으면 false.
+        /// </summary>
+        private static bool EnsureVarcoMaterial(string model, string fbxPath)
+        {
+            if (!(AssetImporter.GetAtPath(fbxPath) is ModelImporter importer)) { Debug.LogWarning("[VarcoModelSetup] 없음: " + fbxPath); return false; }
+            string colorPath = $"{ModelDir}Textures/{model}_base_color.png", normalPath = $"{ModelDir}Textures/{model}_normal.png";
+            EnsureCharacterTexture(colorPath, normal: false);
+            EnsureCharacterTexture(normalPath, normal: true);
+            var color = AssetDatabase.LoadAssetAtPath<Texture2D>(colorPath);
+            if (color == null) { Debug.LogWarning("[VarcoModelSetup] 텍스처 없음: " + colorPath); return false; }
+            var normalMap = AssetDatabase.LoadAssetAtPath<Texture2D>(normalPath);
+
+            string materialPath = $"{ModelDir}Materials/{model}_Mat.mat";
+            var material = AssetDatabase.LoadAssetAtPath<Material>(materialPath);
+            if (material == null)
+            {
+                material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { enableInstancing = true };
+                AssetDatabase.CreateAsset(material, materialPath);
+            }
+            if (material.GetTexture("_BaseMap") != color || material.GetTexture("_BumpMap") != normalMap)
+            {
+                material.SetTexture("_BaseMap", color);
+                material.SetTexture("_BumpMap", normalMap);
+                if (normalMap != null) material.EnableKeyword("_NORMALMAP");
+                EditorUtility.SetDirty(material);
+            }
+
+            bool dirty = false;
+            foreach (var o in AssetDatabase.LoadAllAssetsAtPath(fbxPath))
+            {
+                if (!(o is Material embedded) || embedded == material) continue;
+                importer.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material), embedded.name), material);
+                dirty = true;
+            }
+            if (dirty) importer.SaveAndReimport();
+            return true;
+        }
+
         /// <summary>Idle(기본) ↔ Walk 컨트롤러 (bool Moving). 있으면 상태 · 전이만 다시 맞춘다 (GUID 유지).</summary>
         private static AnimatorController EnsurePlayerController(AnimationClip idle, AnimationClip walk)
         {
@@ -464,23 +537,29 @@ namespace ProjectM.Editor
         }
 
         /// <summary>지팡이를 오른손 뼈에 붙인다: 세워 든 채, 손이 지팡이 길이의 StaffGripRatio 지점에 오게.</summary>
-        private static void AttachStaff(GameObject sheep)
+        private static void AttachStaff(GameObject sheep) => AttachStaff(sheep, Staff);
+
+        /// <summary>
+        /// 지팡이(Varco 소품, 높이 1 m · 위 = +Y)를 오른손 뼈에 세워 붙인다 — spec.Scale = 게임 안 길이(m), 손이 길이의 StaffGripRatio 지점.
+        /// 2026-11-05: 구역 적 · 보스의 지팡이도 몸과 따로 만들어 여기서 붙인다 (사용자 결정 — 몸 모델에 들고 있는 물건을 넣지 않음).
+        /// </summary>
+        private static void AttachStaff(GameObject sheep, ModelSpec spec)
         {
-            var model = LoadModel(Staff.Model);
+            var model = LoadModel(spec.Model);
             var hand = FindHand(sheep);
             if (model == null || hand == null)
             {
-                Debug.LogWarning("[VarcoModelSetup] 지팡이 또는 손 뼈(" + StaffHandBone + ") 없음 — 지팡이 생략");
+                Debug.LogWarning("[VarcoModelSetup] 지팡이(" + spec.Model + ") 또는 손 뼈(" + StaffHandBone + ") 없음 — 지팡이 생략");
                 return;
             }
             var staff = (GameObject)PrefabUtility.InstantiatePrefab(model);
             staff.name = "Staff";
             StripColliders(staff);
-            float length = Staff.Scale; // 원본 1 m
+            float length = spec.Scale; // 원본 1 m
             staff.transform.SetParent(hand, true);
-            staff.transform.localScale = model.transform.localScale * (Staff.Scale / Mathf.Max(1e-4f, hand.lossyScale.y));
+            staff.transform.localScale = model.transform.localScale * (spec.Scale / Mathf.Max(1e-4f, hand.lossyScale.y));
             var upright = sheep.transform.parent; // 프리팹 루트 (Y-up)
-            staff.transform.rotation = upright.rotation * Quaternion.Euler(0f, Staff.Yaw, 0f) * model.transform.localRotation; // 세워서
+            staff.transform.rotation = upright.rotation * Quaternion.Euler(0f, spec.Yaw, 0f) * model.transform.localRotation; // 세워서
             staff.transform.position = hand.position - upright.up * (length * StaffGripRatio);
         }
 

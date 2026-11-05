@@ -17,6 +17,8 @@
 
 ### 1차 — 적 · 보스 · 위험 표시
 
+→ **2026-11-05 모델 연결됨: 1 · 3 ~ 8번** (Varco 3D + 사람형은 Mixamo 리깅, 상인은 강아지 수인으로 다시 디자인) — 12-5번 표. 남은 1차: 2(25층 보스, 보류) · 9 ~ 11.
+
 | # | ID | 무엇 | 지금 | 만들 것 | 연결 위치 |
 |---|---|---|---|---|---|
 | 1 | `boss_pharaoh` | 파라오 술사 (10층 보스) — 황금 가면 · 지팡이, 2칸 키 | 금색 큰 캡슐 | Varco 모델 (보스 1.8배) | `VarcoModelSetup` 모델 표 + `catalog.SetPrefab` |
@@ -386,6 +388,27 @@ Varco는 모든 모델을 **가장 긴 쪽 1 m**로 보내므로 크기는 프�
 - 원점 = 발밑 가운데, 앞 = +Z. 블렌더 작업 파일은 저장소 밖 scratchpad의 `Hero_Blond_v2.blend` (481 MB라 `Source~/`에 넣지 않음).
 - 연결 (2026-11-03): `hero_blond` → `Unit_Lumen`(Hero_Blond_Rigged), `hero_black` → `Unit_Sia`(Sia_Rigged), 배율 둘 다 0.57 (루멘 약 1.0 m · 시아 약 0.94 m, 양 마법사 0.99 m). 양 마법사와 같은 Idle · Walk 컨트롤러 · 무기 6종을 Humanoid 오른손 뼈(`mixamorig:RightHand`)에 붙인다. `player`(캐릭터를 고르지 않은 경우)는 그대로 양 마법사. → 변경 (2026-11-05, 사용자): 루멘 · 시아는 **맨손으로 시작** — 지팡이를 붙이지 않음(무기를 들면 그 무기만 손에). 양 마법사(`player`)는 지팡이 그대로.
 - 캐릭터 선택 카드 그림 = 7등신 일러스트 `Art/Pixel/Characters/<ID>_illust.png` (시아 = Varco 일러스트 후보 3번).
+
+### 12-5. 구역 적 · 보스 · 상인 (2026-11-05 — ★ 1차)
+
+`VarcoModelSetup.ZoneUnits` 표와 같은 값. 원본 `Art/Varco3D/<모델>.fbx`, 사람형은 Mixamo 자동 리깅 `<모델>_Rigged.fbx`(Humanoid, 플레이어와 같은 Idle · Walk 컨트롤러), 텍스처 `Textures/<모델>_base_color · _normal`(FBX에 묻힌 그림을 꺼냄), 재질 `Materials/<모델>_Mat`(Setup이 만들고 FBX 묻힌 재질 `material_0`을 바꿔 연결).
+
+| VisualId | 모델 | 프리팹 | 배율 | 게임 안 키 | 폴리곤 | 리깅 | 손에 든 것 |
+|---|---|---|---|---|---|---|---|
+| `enemy_goblin_shaman` | Enemy_GoblinShaman | Unit_GoblinShaman | 0.8 | 약 0.85 m | 6,000 | Mixamo (손가락 없음 25뼈) | `Prop_Staff_Goblin` 0.85 m |
+| `enemy_scorpion` | Enemy_Scorpion | Unit_Scorpion | 0.8 | 길이 0.8 m | 5,000 | 없음 (코드 움직임) | — |
+| `enemy_jackal` | Enemy_Jackal | Unit_Jackal | 0.8 | 길이 0.8 m | 5,000 | 없음 | — |
+| `enemy_mummy` | Enemy_Mummy | Unit_Mummy | 1.0 | 약 1.1 m | 6,000 | Mixamo | — |
+| `enemy_desert_shaman` | Enemy_DesertShaman | Unit_DesertShaman | 0.88 | 약 1.05 m | 6,000 | Mixamo | `Prop_Staff_Sand` 1.15 m |
+| `boss_pharaoh` | Boss_Pharaoh | Unit_Pharaoh | 1.7 | 약 1.85 m | 12,000 | Mixamo | `Prop_Staff_Pharaoh` 1.8 m |
+| `shopkeeper` | NPC_Shopkeeper | Unit_Shopkeeper | 0.9 | 약 0.95 m | 6,000 | Mixamo | — |
+
+- **결정 (2026-11-05, 사용자)**: 사람형 리깅은 **Mixamo**(사람형만 — 네발 · 전갈은 리깅 없이 코드 움직임). 무기 · 지팡이 등 **든 물건은 몸과 따로 만들어 Unity에서 손 뼈에 붙인다**(`AttachStaff` — 높이 1 m 소품, 원점 = 아래 끝, 손이 길이 40% 지점). 그래서 고블린 · 사막 주술사 · 파라오는 지팡이 없는 몸으로 다시 생성.
+- **상점 주인 다시 디자인 (2026-11-05, 사용자)**: 통통한 안경 쓴 여성 강아지 수인(체형은 처음 안의 절반 정도로 · 더 귀엽게). 원본 2D 일러스트 `Art/Pixel/Characters/shopkeeper_illust.png`(루멘 · 시아 화풍, 빛 효과 없음) → 3D용 A자세 그림 → 3D.
+- 전갈 · 자칼 FBX는 원점을 발밑으로(`pivotToBottom`) 받는다 — 처음 받은 것은 원점이 가운데라 바닥에 반쯤 묻혔다.
+- Mixamo 자동 리깅 실패 (`Unknown error while generating motion`)는 턱 마커가 가슴에 놓였을 때 — 턱을 입 바로 아래에 두고, 몸이 대칭선 밖으로 치우치면 Use Symmetry를 끄고 양쪽을 따로 놓으면 됐다.
+- Varco 플로우 `MoaDungeon`(f679a6c8) y 105600 ~ 117000에 프롬프트 → 이미지 → 3D 노드. 포인트 약 5,900.
+- 확인 못 한 것: 게임 화면(고각도 카메라)에서의 크기 · 걷기 모습, 고블린 Idle이 비틀어져 보이는지.
 
 ### 12-2. 무기 (3-7a, 2026-10-19)
 

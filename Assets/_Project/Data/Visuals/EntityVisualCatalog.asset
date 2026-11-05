@@ -90,7 +90,7 @@ MonoBehaviour:
   - Id: shopkeeper
     Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
     Tint: {r: 0.95, g: 0.8, b: 0.3, a: 1}
-    Prefab: {fileID: 0}
+    Prefab: {fileID: 2478230744159967416, guid: ebd89761120c8e84a80bbca2be585caf, type: 3}
     Height: 0.9
     Variants: []
     PixelIdle: {fileID: 0}
@@ -134,7 +134,7 @@ MonoBehaviour:
   - Id: enemy_goblin_shaman
     Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
     Tint: {r: 0.35, g: 0.65, b: 0.2, a: 1}
-    Prefab: {fileID: 0}
+    Prefab: {fileID: 5341153348243505675, guid: c1a91f49b6204ad4ba79e2561da0780d, type: 3}
     Height: 0.9
     Variants: []
     PixelIdle: {fileID: 0}
@@ -145,7 +145,7 @@ MonoBehaviour:
   - Id: enemy_scorpion
     Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
     Tint: {r: 0.75, g: 0.3, b: 0.15, a: 1}
-    Prefab: {fileID: 0}
+    Prefab: {fileID: 1430813280574532434, guid: 699c24ca104c4eb4e9ffcee28473e698, type: 3}
     Height: 0.5
     Variants: []
     PixelIdle: {fileID: 0}
@@ -156,7 +156,7 @@ MonoBehaviour:
   - Id: enemy_jackal
     Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
     Tint: {r: 0.7, g: 0.55, b: 0.3, a: 1}
-    Prefab: {fileID: 0}
+    Prefab: {fileID: 6646495751208160475, guid: b7d0f4b475a72b24483f4e3af5092c2a, type: 3}
     Height: 0.7
     Variants: []
     PixelIdle: {fileID: 0}
@@ -167,7 +167,7 @@ MonoBehaviour:
   - Id: enemy_mummy
     Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
     Tint: {r: 0.88, g: 0.85, b: 0.72, a: 1}
-    Prefab: {fileID: 0}
+    Prefab: {fileID: 6723378446041137967, guid: f6c420d8115719540834a3f9627f1984, type: 3}
     Height: 1.1
     Variants: []
     PixelIdle: {fileID: 0}
@@ -178,7 +178,7 @@ MonoBehaviour:
   - Id: enemy_desert_shaman
     Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
     Tint: {r: 0.95, g: 0.7, b: 0.2, a: 1}
-    Prefab: {fileID: 0}
+    Prefab: {fileID: 7438510097548242694, guid: 5971685f3302aa340acef32d60c1a41b, type: 3}
     Height: 1
     Variants: []
     PixelIdle: {fileID: 0}
@@ -200,7 +200,7 @@ MonoBehaviour:
   - Id: boss_pharaoh
     Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
     Tint: {r: 1, g: 0.82, b: 0.2, a: 1}
-    Prefab: {fileID: 0}
+    Prefab: {fileID: 6354834834152445958, guid: cc6dd69ce2977634d9c662d61452a999, type: 3}
     Height: 1.8
     Variants: []
     PixelIdle: {fileID: 0}
