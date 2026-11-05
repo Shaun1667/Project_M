@@ -328,7 +328,7 @@ namespace ProjectM.UI
         public const string CellUnknown = "알 수 없는 곳";
 
         // ── 타이틀 · 모드 · 시드 · 저장 · 실시간 (3-27) ──
-        public const string GameTitle = "Project M";
+        public const string GameTitle = "MoaDungeon"; // 2026-11-05 사용자: 타이틀 이름 (~~Project M~~)
         public const string GameSubtitle = "원소와 시간의 던전";
         public static string TitleItemName(TitleItem item) =>
             item == TitleItem.Continue ? "이어하기" : item == TitleItem.NewGame ? "게임 시작" : "종료";

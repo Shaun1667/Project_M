@@ -212,7 +212,12 @@ namespace ProjectM.Tests
 
             Assert.That(Check(Fire, new GridPos(1, 1)), Is.EqualTo(CastBlock.TargetIsSelf));
             Assert.That(Check(Fire, new GridPos(8, 3)), Is.Not.EqualTo(CastBlock.OutOfRange), "거리 7 > 사거리 6이어도 플레이어는 무한 (3-25b)");
-            Assert.That(Check(Fire, new GridPos(6, 1)), Is.EqualTo(CastBlock.NotVisible), "기둥 (5,1) 뒤");
+            // 2026-11-05 사용자: 보이지 않는 칸(기둥 (5,1) 뒤)에도 쏠 수 있다 — 단 주문은 벽(기둥) 앞에서 멈춤
+            Assert.That(SpellCasting.Check(s.World, s.Book, Targeting, Sight, s.Player, Fire, new GridPos(6, 1), out _, out var behind), Is.EqualTo(CastBlock.None), "기둥 뒤도 시전 가능");
+            Assert.That(behind.Path[behind.Path.Count - 1], Is.EqualTo(new GridPos(4, 1)), "기둥 앞에서 멈춤");
+            var enemy = s.Enemies[0];
+            Assert.That(SpellCasting.CheckDef(s.World, Targeting, Sight, enemy, s.Book.TryGet("fire_basic", out var fire) ? fire : null, new GridPos(3, 1), out _),
+                Is.EqualTo(CastBlock.NotVisible), "적 주문은 여전히 보이는 칸만 ((7,1) → (3,1)은 기둥 (5,1) 너머)");
             Assert.That(Check(Fire, new GridPos(3, 2)), Is.EqualTo(CastBlock.None));
 
             Mana.TrySpend(s.World, s.Player, 9);

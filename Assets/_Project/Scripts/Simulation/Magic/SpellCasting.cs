@@ -221,7 +221,11 @@ namespace ProjectM.Magic
             preview = null;
             if (target == caster.Pos) return CastBlock.TargetIsSelf;
             if (!targeting.InRange(caster.Pos, target, spell.Range)) return CastBlock.OutOfRange;
-            if (!world.Map.InBounds(target) || !sight.CanSee(world.Map, caster.Pos, target, caster.SightRange)) return CastBlock.NotVisible;
+            if (!world.Map.InBounds(target)) return CastBlock.NotVisible;
+            // 2026-11-05 사용자: 플레이어 주문은 보이지 않는 칸에도 쏠 수 있다 — 벽에 부딪히면 막히는 건 그대로(경로가 벽 앞에서 멈춤, 아래 Preview).
+            // 적 주문은 여전히 보이는 칸만 (AI가 안 보이는 플레이어를 쏘지 않게)
+            bool playerCaster = caster.Id == world.Scheduler.PlayerId;
+            if (!playerCaster && !sight.CanSee(world.Map, caster.Pos, target, caster.SightRange)) return CastBlock.NotVisible;
             if (caster.Mana < spell.ManaCost) return CastBlock.NotEnoughMana;
 
             preview = Preview(world, targeting, caster.Pos, spell, target);
