@@ -62,6 +62,8 @@ namespace ProjectM.Editor
             new ModelSpec("Enemy_Slime", "Unit_Slime", 0.8f, 0f),
         };
         private static readonly ModelSpec Boss = new ModelSpec("Boss_SlimeGirl", "Unit_Boss", 1.8f, 0f);
+        /// <summary>리깅한 슬라임 소녀 배율 — Mixamo 결과는 키가 원본과 달라 다시 잰 값 (게임 안 키 1.8 m, ART_ASSETS 12-5).</summary>
+        private const float BossRiggedScale = 1.8f;
         /// <summary>
         /// 3-17 구역 적 · 보스 · 상인 (2026-11-05, ART_ASSETS ★ 1차 = 12-5번 표): Varco 원본 `<Model>.fbx` + 텍스처 `Textures/<Model>_base_color · _normal`.
         /// Rigged = 사람형 — Mixamo 자동 리깅한 `<Model>_Rigged.fbx`를 Humanoid로, 플레이어와 같은 Idle · Walk 컨트롤러. 아니면 원본(코드 움직임).
@@ -165,7 +167,13 @@ namespace ProjectM.Editor
             catalog.SetPrefab("enemy_bunny", variants[0]); // 3-17b 적 종류마다 한 모델
             catalog.SetPrefab("enemy_rat", variants[1]);
             catalog.SetPrefab("enemy_slime", variants[2]);
-            var bossPrefab = BuildPrefab(Boss, null);
+            // 2026-11-05 사용자: 슬라임 소녀가 T자세로 굳어 있음 → Mixamo 자동 리깅 `Boss_SlimeGirl_Rigged.fbx`(Humanoid)에 플레이어와 같은 Idle · Walk. 없으면 원본(코드 움직임)
+            string bossRiggedPath = ModelDir + Boss.Model + "_Rigged.fbx";
+            bool bossRigged = EnsureVarcoMaterial(Boss.Model, bossRiggedPath);
+            if (bossRigged) EnsureHumanoid(bossRiggedPath, null);
+            var bossPrefab = bossRigged
+                ? BuildPrefab(new ModelSpec(Boss.Model + "_Rigged", Boss.Prefab, BossRiggedScale, Boss.Yaw), model => SetupAnimator(model, controller, idle))
+                : BuildPrefab(Boss, null);
             catalog.SetPrefab("boss", bossPrefab);
             catalog.SetPrefab("boss_slime_girl", bossPrefab); // 3-17d 5층 보스 = 슬라임 소녀 모델
             foreach (var (id, spec, rigged, staff) in ZoneUnits) // 3-17 구역 적 · 보스 · 상인 — 모델이 없으면 그레이박스 그대로
