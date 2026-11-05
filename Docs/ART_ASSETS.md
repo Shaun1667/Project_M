@@ -35,6 +35,8 @@
 
 ### 2차 — 바닥 아이템 · 맵 칸 · 새 상태
 
+→ **2026-11-05 바닥 아이템 연결됨: 12 ~ 18번** (25종 = 모델 15 + 마법서 1 × 5색 + 씨앗 1 × 5색) — 12-6번 표. 남은 2차: 19 ~ 24.
+
 | # | ID | 무엇 | 지금 | 만들 것 |
 |---|---|---|---|---|
 | 12 | `armor_cloth` · `armor_leather` · `armor_mail` · `armor_scale` · `armor_plate` | 갑옷 5 (바닥) | 그레이박스 상자 | 소품 모델 5 (티어별 재질 차이). 입은 모습은 3차 |
@@ -409,6 +411,25 @@ Varco는 모든 모델을 **가장 긴 쪽 1 m**로 보내므로 크기는 프�
 - Mixamo 자동 리깅 실패 (`Unknown error while generating motion`)는 턱 마커가 가슴에 놓였을 때 — 턱을 입 바로 아래에 두고, 몸이 대칭선 밖으로 치우치면 Use Symmetry를 끄고 양쪽을 따로 놓으면 됐다.
 - Varco 플로우 `MoaDungeon`(f679a6c8) y 105600 ~ 117000에 프롬프트 → 이미지 → 3D 노드. 포인트 약 5,900.
 - 확인 못 한 것: 게임 화면(고각도 카메라)에서의 크기 · 걷기 모습, 고블린 Idle이 비틀어져 보이는지.
+
+### 12-6. 바닥 아이템 (2026-11-05 — ★ 2차 12 ~ 18)
+
+메뉴 **ProjectM/Setup/Consumables**(`ConsumableArtSetup.BuildFloorItems`, 물약 · 주문서 다음)가 `Prefabs/Varco/Item_*`을 만들고 `ItemVisualCatalog`에 넣는다(Upright — 원점 = 바닥 중앙). 모델 `Art/Varco3D/Item_*.fbx`(Varco, 폴리곤 2,000 · 텍스처 1024, 원점 = 발밑으로 받음), 텍스처 · 재질 `Item_*_base_color · _normal · _Mat`.
+
+| 아이템 ID | 모델 | 바닥 크기 (긴 쪽) | 눕힘 |
+|---|---|---|---|
+| `armor_cloth` · `armor_leather` · `armor_mail` · `armor_scale` · `armor_plate` | Item_ArmorCloth · Leather · Mail · Scale · Plate | 0.5 m (판금 0.55) | X −90° + Y 180° (Varco가 세워 만듦 — 목이 화면 위로) |
+| `food_ration` · `food_bread` | Item_FoodRation · Item_FoodBread | 0.3 · 0.25 m | — |
+| `food_mystery_meat` · `food_cooked_meat` · `food_frozen_meat` | Item_MeatMystery · Cooked · Frozen | 0.32 m | 같음 |
+| `gold` · `key_iron` · `dart` · `javelin` · `fusion_device` | Item_Gold · KeyIron · Dart · Javelin · FusionDevice | 0.3 · 0.3 · 0.3 · 0.7 · 0.4 m | — |
+| `spellbook_fire/ice/lightning/poison/water` | Item_Spellbook (흰 표지) × 5색 | 0.35 m | — |
+| `seed_firebloom/icecap/sorrowmoss/sungrass/fadeleaf` | Item_Seed (흰 씨앗) × 5색 | 0.22 m | — |
+
+- **결정 (2026-11-05, 사용자)**: 마법서 · 씨앗은 **모델 하나 + 색만 바꿈**(물약처럼, `TintWhite` — 밝고 채도 낮은 픽셀만 칠함). 색: 마법서 불 빨강 · 얼음 하늘 · 번개 노랑 · 독 보라 · 물 파랑, 씨앗 화염꽃 주황 · 얼음버섯 하늘 · 독이끼 초록 · 햇볕풀 노랑 · 사라짐잎 연보라 ✎ Claude.
+- **얼린 고기 (2026-11-05, 사용자)**: 얼음덩이로 감싸지 말고 **고기 자체가 아주 연한 파란색** — 정체불명 고기 그림을 색만 바꿔(EditImage) 같은 모양.
+- 천 갑옷은 다시 생성 (2026-11-05, 사용자): 처음 것은 눕히면 천 뭉치처럼 보여서, 가죽 갑옷 그림을 구도 참고로 넣어 펼친 누빔 조끼(끈 · 밧줄 띠)로 — 다른 갑옷과 같이 눕혀 읽힘.
+- 확인 못 한 것: 게임 화면(고각도 카메라 · 떠서 도는 연출)에서의 크기.
+- Varco 플로우 `MoaDungeon` y 118000 ~ 128000. 포인트 이미지 1,800 + 3D 3,400.
 
 ### 12-2. 무기 (3-7a, 2026-10-19)
 

@@ -113,9 +113,113 @@ namespace ProjectM.Editor
                 var prefab = BuildPrefab(scrollMesh, "Scroll_" + Capitalize(id), ScrollLength, scrollMat, root => AddRune(root, runeMat));
                 catalog.Set(ScrollVisualId(id), prefab, upright: true);
             }
+            int floorItems = BuildFloorItems(catalog);
             EditorUtility.SetDirty(catalog);
             AssetDatabase.SaveAssets();
-            Debug.Log("[ConsumableArtSetup] 완료: 물약 12 · 주문서 12");
+            Debug.Log($"[ConsumableArtSetup] 완료: 물약 12 · 주문서 12 · 바닥 아이템 {floorItems}");
+        }
+
+        // ── 바닥 아이템 (G-9, 2026-11-05 — ART_ASSETS ★ 2차 12 ~ 18번 · 12-6번 표) ──
+
+        /// <summary>
+        /// 아이템 하나 = Varco 모델 하나: 아이템 ID · 모델(Art/Varco3D/&lt;모델&gt;.fbx) · 바닥에서 가장 긴 쪽(m) · 눕히기(X축 도 — Varco가 세워 만든 갑옷 · 고기를 앞면이 위로).
+        /// </summary>
+        private static readonly (string ItemId, string Model, float Size, float Lie)[] FloorItemModels =
+        {
+            ("armor_cloth", "Item_ArmorCloth", 0.5f, -90f),
+            ("armor_leather", "Item_ArmorLeather", 0.5f, -90f),
+            ("armor_mail", "Item_ArmorMail", 0.5f, -90f),
+            ("armor_scale", "Item_ArmorScale", 0.5f, -90f),
+            ("armor_plate", "Item_ArmorPlate", 0.55f, -90f),
+            ("food_ration", "Item_FoodRation", 0.3f, 0f),
+            ("food_bread", "Item_FoodBread", 0.25f, 0f),
+            ("food_mystery_meat", "Item_MeatMystery", 0.32f, -90f),
+            ("food_cooked_meat", "Item_MeatCooked", 0.32f, -90f),
+            ("food_frozen_meat", "Item_MeatFrozen", 0.32f, -90f),
+            ("gold", "Item_Gold", 0.3f, 0f),
+            ("key_iron", "Item_KeyIron", 0.3f, 0f),
+            ("dart", "Item_Dart", 0.3f, 0f),
+            ("javelin", "Item_Javelin", 0.7f, 0f),
+            ("fusion_device", "Item_FusionDevice", 0.4f, 0f),
+        };
+
+        /// <summary>
+        /// 모델 하나 + 색 (결정 2026-11-05, 사용자 — 물약처럼): 흰 표지 마법서 · 흰 씨앗의 흰 부분만 속성 · 식물 색으로 칠한다.
+        /// </summary>
+        private const string SpellbookModel = "Item_Spellbook";
+        private const float SpellbookSize = 0.35f;
+        private static readonly (string ItemId, Color Color)[] SpellbookColors =
+        {
+            ("spellbook_fire", new Color(0.85f, 0.18f, 0.10f)),
+            ("spellbook_ice", new Color(0.55f, 0.85f, 1.00f)),
+            ("spellbook_lightning", new Color(1.00f, 0.85f, 0.15f)),
+            ("spellbook_poison", new Color(0.55f, 0.20f, 0.75f)),
+            ("spellbook_water", new Color(0.12f, 0.40f, 0.95f)),
+        };
+        private const string SeedModel = "Item_Seed";
+        private const float SeedSize = 0.22f;
+        private static readonly (string ItemId, Color Color)[] SeedColors =
+        {
+            ("seed_firebloom", new Color(0.95f, 0.40f, 0.10f)),
+            ("seed_icecap", new Color(0.60f, 0.90f, 1.00f)),
+            ("seed_sorrowmoss", new Color(0.35f, 0.55f, 0.20f)),
+            ("seed_sungrass", new Color(0.95f, 0.85f, 0.25f)),
+            ("seed_fadeleaf", new Color(0.70f, 0.55f, 0.90f)),
+        };
+
+        /// <summary>바닥 아이템 프리팹(Prefabs/Varco/Item_*)을 만들고 카탈로그에 넣는다 (원점 = 바닥 중앙, 눕히지 않음). 모델이 없는 줄은 건너뜀 — 그레이박스 그대로.</summary>
+        private static int BuildFloorItems(ItemVisualCatalog catalog)
+        {
+            int count = 0;
+            foreach (var (itemId, model, size, lie) in FloorItemModels)
+            {
+                var mesh = PrepareModel(model);
+                if (mesh == null) { Debug.LogWarning("[ConsumableArtSetup] 바닥 아이템 모델 없음: " + model); continue; }
+                var mat = AssetDatabase.LoadAssetAtPath<Material>(MaterialDir + model + "_Mat.mat");
+                catalog.Set(itemId, BuildPrefab(mesh, model, size, mat, null, lie), upright: true);
+                count++;
+            }
+            count += BuildTinted(catalog, SpellbookModel, SpellbookSize, SpellbookColors);
+            count += BuildTinted(catalog, SeedModel, SeedSize, SeedColors);
+            return count;
+        }
+
+        private static int BuildTinted(ItemVisualCatalog catalog, string model, float size, (string ItemId, Color Color)[] colors)
+        {
+            var mesh = PrepareModel(model);
+            if (mesh == null) { Debug.LogWarning("[ConsumableArtSetup] 바닥 아이템 모델 없음: " + model); return 0; }
+            var source = ReadTexture(TextureDir + model + "_base_color.png");
+            var normal = AssetDatabase.LoadAssetAtPath<Texture2D>(TextureDir + model + "_normal.png");
+            int count = 0;
+            foreach (var (itemId, color) in colors)
+            {
+                string key = Capitalize(itemId.Substring(itemId.IndexOf('_') + 1));
+                string texPath = TextureDir + $"{model}_{key}_base_color.png";
+                WritePng(texPath, TintWhite(source, color));
+                var mat = EnsureLitMaterial(MaterialDir + $"{model}_{key}_Mat.mat", texPath, normal);
+                catalog.Set(itemId, BuildPrefab(mesh, $"{model}_{key}", size, mat, null), upright: true);
+                count++;
+            }
+            return count;
+        }
+
+        /// <summary>흰 부분(밝고 채도 낮은 픽셀)만 target 색으로 — 밝기는 유지해 그늘 · 무늬가 남는다. 금속 · 종이 결 같은 회색은 덜 칠한다.</summary>
+        public static Texture2D TintWhite(Texture2D source, Color target)
+        {
+            var px = source.GetPixels();
+            var output = new Color[px.Length];
+            for (int i = 0; i < px.Length; i++)
+            {
+                var p = px[i];
+                Color.RGBToHSV(p, out _, out float s, out float v);
+                float w = Mathf.Clamp01((v - 0.55f) / 0.25f) * Mathf.Clamp01((0.25f - s) / 0.15f);
+                var tinted = new Color(target.r * v, target.g * v, target.b * v, p.a);
+                output[i] = Color.Lerp(p, tinted, w);
+            }
+            var tex = new Texture2D(source.width, source.height, TextureFormat.RGBA32, false);
+            tex.SetPixels(output);
+            tex.Apply();
+            return tex;
         }
 
         // ── 모델 ──
@@ -148,7 +252,7 @@ namespace ProjectM.Editor
         /// <summary>
         /// 프리팹: 루트(원점 = 바닥 중앙) → 모델(FBX 루트 회전 유지, 가장 긴 쪽 = size m). decorate는 저장 전에 덧붙이기.
         /// </summary>
-        private static GameObject BuildPrefab(GameObject model, string prefabName, float size, Material material, System.Action<GameObject> decorate)
+        private static GameObject BuildPrefab(GameObject model, string prefabName, float size, Material material, System.Action<GameObject> decorate, float lieDegrees = 0f)
         {
             var root = new GameObject(prefabName);
             try
@@ -156,7 +260,10 @@ namespace ProjectM.Editor
                 var instance = (GameObject)PrefabUtility.InstantiatePrefab(model);
                 instance.name = "Model";
                 instance.transform.SetParent(root.transform, false);
-                instance.transform.localRotation = model.transform.localRotation;
+                // lieDegrees: 세워서 만들어진 모델(갑옷 · 고기)을 X축으로 눕혀 앞면이 위(고각도 카메라)를 보게
+                // 눕힌 뒤 수직축 180° — 위쪽(갑옷 목 · 고기 뼈 끝)이 화면 위(먼 쪽)로
+                var lie = lieDegrees != 0f ? Quaternion.Euler(0f, 180f, 0f) * Quaternion.Euler(lieDegrees, 0f, 0f) : Quaternion.identity;
+                instance.transform.localRotation = lie * model.transform.localRotation;
                 foreach (var c in instance.GetComponentsInChildren<Collider>(true)) Object.DestroyImmediate(c);
                 var renderers = instance.GetComponentsInChildren<Renderer>(true);
                 if (material != null) foreach (var r in renderers) r.sharedMaterial = material;
