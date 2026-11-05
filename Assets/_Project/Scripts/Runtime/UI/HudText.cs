@@ -134,6 +134,42 @@ namespace ProjectM.UI
         public string RelicSameKind(string id) => $"{Item(id)}: 같은 유물은 하나만 낄 수 있다";
         public string RelicEquipped(string id, string previous) => previous == null ? $"{Item(id)}을(를) 꼈다" : $"{Item(id)}을(를) 꼈다 ({Item(previous)} → 배낭)";
 
+        // ── 시간 유물 (3-28c) ──
+        public string TimeRelicNotWorn(string id) => $"{Item(id)}: 유물 칸에 껴야 쓸 수 있다";
+        public string TimeRelicEmpty(string id, int chargeTicks) => $"{Item(id)}: 게이지가 비었다 ({chargeTicks}턴마다 1칸)";
+        public const string TimeRelicBusy = "이미 시간 유물 효과가 이어지고 있다";
+        public static string TimeKindDesc(ProjectM.Items.TimeRelicKind kind, int gauge, int power)
+        {
+            switch (kind)
+            {
+                case ProjectM.Items.TimeRelicKind.PocketWatch: return $"내 시간을 멈춘다 — 최대 {gauge}턴 (그동안 행동 못 함 · 무적, 세계는 흐름)";
+                case ProjectM.Items.TimeRelicKind.TimeMachine: return $"세계를 되돌린다 — 최대 {gauge}턴 전 (배낭 · 바닥 아이템은 지금 그대로)";
+                case ProjectM.Items.TimeRelicKind.Accelerator: return $"시간을 가속 — {gauge}턴 동안 한 턴에 {power}번 행동";
+                case ProjectM.Items.TimeRelicKind.Stopwatch: return $"나를 뺀 모든 것의 시간을 멈춘다 — 최대 {gauge}번 행동";
+                default: return string.Empty;
+            }
+        }
+        public string TimeRelicUsed(string id, ProjectM.Items.TimeRelicKind kind, int amount, int power)
+        {
+            switch (kind)
+            {
+                case ProjectM.Items.TimeRelicKind.PocketWatch: return $"{Item(id)}: 내 시간이 멈췄다 ({amount}턴)";
+                case ProjectM.Items.TimeRelicKind.Accelerator: return $"{Item(id)}: 시간이 빨라졌다 ({amount}턴 동안 한 턴에 {power}번)";
+                case ProjectM.Items.TimeRelicKind.Stopwatch: return $"{Item(id)}: 세계가 멈췄다 (행동 {amount}번)";
+                default: return $"{Item(id)}을(를) 썼다";
+            }
+        }
+        public static string TimeRelicEnded(ProjectM.Items.TimeRelicKind kind) =>
+            kind == ProjectM.Items.TimeRelicKind.PocketWatch ? "멈춘 시간이 다시 흐른다"
+            : kind == ProjectM.Items.TimeRelicKind.Accelerator ? "가속이 끝났다"
+            : kind == ProjectM.Items.TimeRelicKind.Stopwatch ? "세계가 다시 움직인다" : string.Empty;
+        public static string TimeMachineTitle(int charge) => $"타임머신 — 몇 턴 전으로? (게이지 {charge})";
+        public static string TimeMachineTurns(int turns) => $"{turns}턴 전";
+        public const string TimeMachineDetail = "위치 · 체력 · 상태 · 적이 그때로\n배낭 · 바닥 아이템은 지금 그대로";
+        public const string TimeMachineNoHistory = "되돌아갈 기록이 없다 (층에 들어온 뒤의 턴만)";
+        public static string TimeMachineRewound(int turns) => $"시간을 {turns}턴 되돌렸다";
+        public static string TimeRelicGauge(int charge, int max) => $"게이지 {charge}/{max}";
+
         // ── 마법 제작대 · 에테르 (3-28b) ──
         public static string EtherLabel(int ether) => ether > 0 ? $"<color=#B39DDB>에테르 {ether}</color>" : string.Empty;
         public static string WorkbenchTitle(int ether) => $"마법 제작대 — 에테르 {ether}";
@@ -202,6 +238,9 @@ namespace ProjectM.UI
                 case ItemUse.Food: return $"{text.Entry(entry)}{count} — 음식. 먹으면 허기 −{def.Food}" + (def.Risky ? " · 탈이 날 수 있음 (불에 구우면 안전)" : string.Empty);
                 case ItemUse.Relic:
                 {
+                    if (def.TimeKind != ProjectM.Items.TimeRelicKind.None) // 3-28c 시간 유물
+                        return $"{text.Entry(entry)} — 시간 유물. 유물 칸에 끼고 빠른 칸으로 쓴다\n"
+                            + TimeKindDesc(def.TimeKind, ProjectM.Items.TimeRelics.MaxCharge(items, entry), ProjectM.Items.TimeRelics.Power(items, entry));
                     var lines = new System.Collections.Generic.List<string>();
                     foreach (var e in def.RelicEffects) lines.Add(RelicEffect(e, ProjectM.Items.Relics.PointsOf(entry)));
                     return $"{text.Entry(entry)} — 유물. 사용 = 끼기 (유물 칸 2 · 같은 종류는 하나)\n" + string.Join(" · ", lines);

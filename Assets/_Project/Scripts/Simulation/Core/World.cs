@@ -150,7 +150,7 @@ namespace ProjectM.Core
             if (statuses == null) throw new ArgumentNullException(nameof(statuses));
             if (terrains == null) throw new ArgumentNullException(nameof(terrains));
             var vision = new PlayerVisionSystem(this, sight, statuses); // 3-13a 정신 시야
-            Scheduler.SetActionRules(id => StatusEffects.CanAct(this, statuses, id),
+            Scheduler.SetActionRules(id => !ProjectM.Items.TimeRelics.IsFrozen(this, id) && StatusEffects.CanAct(this, statuses, id), // 3-28c 회중시계 = 행동 불가
                 (id, cost) => StatusEffects.AdjustCost(this, statuses, id, cost));
             OnUnitDamaged = unit => StatusEffects.RemoveWhere(this, statuses, unit, d => d.WakesOnDamage); // 3-13b: 맞으면 깸
             Scheduler.AddSystem(TickPhase.Terrain, new TerrainSystem(this, terrains, statuses));
@@ -280,6 +280,7 @@ namespace ProjectM.Core
                 Gold = Run.Gold,
                 Mode = Run.Mode, // 27 (3-27)
                 Ether = Run.Ether, // 29 (3-28b)
+                RelicCharges = new List<TalentPoint>(Run.RelicCharges).ToArray(), // 30 (3-28c)
                 ClassId = Run.ClassId, // 24 (3-21b)
                 FormId = Run.FormId,
                 Talents = new List<TalentPoint>(Run.Talents).ToArray(), // 25 (3-21c)
@@ -319,7 +320,7 @@ namespace ProjectM.Core
                 seen.HasValue, seen?.X ?? 0, seen?.Y ?? 0, u.MaxMana, u.Mana, (InventoryRef[])u.InventorySlots.Clone(), (InventoryRef[])u.QuickSlots.Clone(),
                 u.PreviousPos, u.WanderTarget, u.Statuses.ConvertAll(s => new UnitStatusState(s.Type, s.Remaining)).ToArray(),
                 u.Accuracy, u.Evasion, u.ExpReward, u.ExpMaxLevel, u.Level, u.Exp, u.Weapon, u.Strength, u.Armor, u.Hunger,
-                u.ChargeTarget, u.Summoned, (InventoryRef[])u.Relics.Clone());
+                u.ChargeTarget, u.Summoned, (InventoryRef[])u.Relics.Clone(), u.TimeFrozenTicks, u.AccelTicks, u.AccelActions, u.AccelUsed, u.StopActions);
         }
 
         private static Unit ToUnit(UnitState u)
@@ -333,6 +334,11 @@ namespace ProjectM.Core
             unit.ChargeTarget = u.ChargeTarget; // 3-17d
             unit.Summoned = u.Summoned;
             for (int i = 0; i < unit.Relics.Length && i < u.Relics.Length; i++) unit.Relics[i] = u.Relics[i]; // 28 (3-28a)
+            unit.TimeFrozenTicks = u.TimeFrozenTicks; // 30 (3-28c)
+            unit.AccelTicks = u.AccelTicks;
+            unit.AccelActions = u.AccelActions;
+            unit.AccelUsed = u.AccelUsed;
+            unit.StopActions = u.StopActions;
             return unit;
         }
 
@@ -385,6 +391,7 @@ namespace ProjectM.Core
             world.Run.Gold = snapshot.Gold;
             world.Run.Mode = snapshot.Mode; // 27 (3-27)
             world.Run.Ether = snapshot.Ether; // 29 (3-28b)
+            world.Run.SetRelicCharges(snapshot.RelicCharges ?? System.Array.Empty<TalentPoint>()); // 30 (3-28c)
             world.Run.ClassId = snapshot.ClassId; // 24 (3-21b)
             world.Run.FormId = snapshot.FormId;
             world.Run.SetTalents(snapshot.Talents ?? System.Array.Empty<TalentPoint>()); // 25 (3-21c)

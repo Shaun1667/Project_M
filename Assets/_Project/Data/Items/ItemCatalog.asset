@@ -41,6 +41,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: spellbook_fire
     DisplayName: "\uBD88\uAF43 \uD654\uC0B4 \uB9C8\uBC95\uC11C"
     Use: 2
@@ -69,6 +72,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: spellbook_ice
     DisplayName: "\uC5BC\uC74C \uD654\uC0B4 \uB9C8\uBC95\uC11C"
     Use: 2
@@ -97,6 +103,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: spellbook_lightning
     DisplayName: "\uBC88\uAC1C \uC904\uAE30 \uB9C8\uBC95\uC11C"
     Use: 2
@@ -125,6 +134,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: spellbook_poison
     DisplayName: "\uB3C5 \uD3ED\uBC1C \uB9C8\uBC95\uC11C"
     Use: 2
@@ -153,6 +165,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: spellbook_water
     DisplayName: "\uBB3C\uBCF4\uB77C \uB9C8\uBC95\uC11C"
     Use: 2
@@ -181,6 +196,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: shortsword
     DisplayName: "\uC18C\uAC80"
     Use: 3
@@ -209,6 +227,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: hand_axe
     DisplayName: "\uC190\uB3C4\uB07C"
     Use: 3
@@ -237,6 +258,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: spear
     DisplayName: "\uCC3D"
     Use: 3
@@ -265,6 +289,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: quarterstaff
     DisplayName: "\uC721\uCC99\uBD09"
     Use: 3
@@ -293,6 +320,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: dirk
     DisplayName: "\uB354\uD06C"
     Use: 3
@@ -321,6 +351,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: sickle
     DisplayName: "\uC190\uB0AB"
     Use: 3
@@ -349,6 +382,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: potion_strength
     DisplayName: "\uD798 \uBB3C\uC57D"
     Use: 4
@@ -377,6 +413,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: scroll_upgrade
     DisplayName: "\uAC15\uD654 \uC8FC\uBB38\uC11C"
     Use: 5
@@ -405,6 +444,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: potion_healing
     DisplayName: "\uCE58\uC720 \uBB3C\uC57D"
     Use: 4
@@ -433,6 +475,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: potion_experience
     DisplayName: "\uACBD\uD5D8 \uBB3C\uC57D"
     Use: 4
@@ -461,6 +506,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: potion_purity
     DisplayName: "\uC815\uD654 \uBB3C\uC57D"
     Use: 4
@@ -489,6 +537,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: potion_toxic_gas
     DisplayName: "\uB3C5\uAC00\uC2A4 \uBB3C\uC57D"
     Use: 4
@@ -517,6 +568,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: potion_liquid_flame
     DisplayName: "\uC561\uCCB4 \uD654\uC5FC \uBB3C\uC57D"
     Use: 4
@@ -545,6 +599,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: potion_frost
     DisplayName: "\uB0C9\uAE30 \uBB3C\uC57D"
     Use: 4
@@ -573,6 +630,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: potion_paralytic_gas
     DisplayName: "\uB9C8\uBE44 \uAC00\uC2A4 \uBB3C\uC57D"
     Use: 4
@@ -601,6 +661,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: scroll_identify
     DisplayName: "\uC2DD\uBCC4 \uC8FC\uBB38\uC11C"
     Use: 5
@@ -629,6 +692,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: scroll_magic_mapping
     DisplayName: "\uC9C0\uB3C4 \uC8FC\uBB38\uC11C"
     Use: 5
@@ -657,6 +723,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: scroll_teleportation
     DisplayName: "\uC21C\uAC04\uC774\uB3D9 \uC8FC\uBB38\uC11C"
     Use: 5
@@ -685,6 +754,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: scroll_recharging
     DisplayName: "\uCDA9\uC804 \uC8FC\uBB38\uC11C"
     Use: 5
@@ -713,6 +785,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: scroll_rage
     DisplayName: "\uACA9\uB178 \uC8FC\uBB38\uC11C"
     Use: 5
@@ -741,6 +816,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: scroll_retribution
     DisplayName: "\uC751\uC9D5 \uC8FC\uBB38\uC11C"
     Use: 5
@@ -769,6 +847,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: armor_cloth
     DisplayName: "\uCC9C \uAC11\uC637"
     Use: 6
@@ -797,6 +878,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: armor_leather
     DisplayName: "\uAC00\uC8FD \uAC11\uC637"
     Use: 6
@@ -825,6 +909,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: armor_mail
     DisplayName: "\uC0AC\uC2AC \uAC11\uC637"
     Use: 6
@@ -853,6 +940,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: armor_scale
     DisplayName: "\uBE44\uB298 \uAC11\uC637"
     Use: 6
@@ -881,6 +971,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: armor_plate
     DisplayName: "\uD310\uAE08 \uAC11\uC637"
     Use: 6
@@ -909,6 +1002,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: potion_haste
     DisplayName: "\uC2E0\uC18D \uBB3C\uC57D"
     Use: 4
@@ -937,6 +1033,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: potion_invisibility
     DisplayName: "\uD22C\uBA85 \uBB3C\uC57D"
     Use: 4
@@ -965,6 +1064,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: potion_levitation
     DisplayName: "\uBD80\uC591 \uBB3C\uC57D"
     Use: 4
@@ -993,6 +1095,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: potion_mind_vision
     DisplayName: "\uC815\uC2E0 \uC2DC\uC57C \uBB3C\uC57D"
     Use: 4
@@ -1021,6 +1126,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: scroll_mirror_image
     DisplayName: "\uBD84\uC2E0 \uC8FC\uBB38\uC11C"
     Use: 5
@@ -1049,6 +1157,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: scroll_terror
     DisplayName: "\uACF5\uD3EC \uC8FC\uBB38\uC11C"
     Use: 5
@@ -1077,6 +1188,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: scroll_lullaby
     DisplayName: "\uC790\uC7A5\uAC00 \uC8FC\uBB38\uC11C"
     Use: 5
@@ -1105,6 +1219,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: scroll_transmutation
     DisplayName: "\uBCC0\uD658 \uC8FC\uBB38\uC11C"
     Use: 5
@@ -1133,6 +1250,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: food_ration
     DisplayName: "\uC2DD\uB7C9"
     Use: 7
@@ -1161,6 +1281,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: food_bread
     DisplayName: "\uC791\uC740 \uBE75"
     Use: 7
@@ -1189,6 +1312,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: food_mystery_meat
     DisplayName: "\uC815\uCCB4\uBD88\uBA85 \uACE0\uAE30"
     Use: 7
@@ -1217,6 +1343,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: food_cooked_meat
     DisplayName: "\uAD6C\uC6B4 \uACE0\uAE30"
     Use: 7
@@ -1245,6 +1374,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: food_frozen_meat
     DisplayName: "\uC5BC\uB9B0 \uACE0\uAE30"
     Use: 7
@@ -1273,6 +1405,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: gold
     DisplayName: "\uAE08\uD654"
     Use: 8
@@ -1301,6 +1436,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: key_iron
     DisplayName: "\uC1E0 \uC5F4\uC1E0"
     Use: 9
@@ -1329,6 +1467,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: dart
     DisplayName: "\uB2E4\uD2B8"
     Use: 10
@@ -1357,6 +1498,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: javelin
     DisplayName: "\uD22C\uCC3D"
     Use: 10
@@ -1385,6 +1529,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: seed_firebloom
     DisplayName: "\uD654\uC5FC\uAF43 \uC528\uC557"
     Use: 11
@@ -1413,6 +1560,9 @@ MonoBehaviour:
     PlantTrap: 8
     BrewsInto: potion_liquid_flame
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: seed_icecap
     DisplayName: "\uC5BC\uC74C\uBC84\uC12F \uD3EC\uC790"
     Use: 11
@@ -1441,6 +1591,9 @@ MonoBehaviour:
     PlantTrap: 9
     BrewsInto: potion_frost
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: seed_sorrowmoss
     DisplayName: "\uB3C5\uC774\uB07C \uC528\uC557"
     Use: 11
@@ -1469,6 +1622,9 @@ MonoBehaviour:
     PlantTrap: 10
     BrewsInto: potion_toxic_gas
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: seed_sungrass
     DisplayName: "\uD587\uBCD5\uD480 \uC528\uC557"
     Use: 11
@@ -1497,6 +1653,9 @@ MonoBehaviour:
     PlantTrap: 11
     BrewsInto: potion_healing
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: seed_fadeleaf
     DisplayName: "\uC0AC\uB77C\uC9D0\uC78E \uC528\uC557"
     Use: 11
@@ -1525,6 +1684,9 @@ MonoBehaviour:
     PlantTrap: 12
     BrewsInto: potion_invisibility
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: knuckle
     DisplayName: "\uB108\uD074"
     Use: 3
@@ -1553,6 +1715,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: time_hourglass
     DisplayName: "\uC2DC\uAC04\uC758 \uBAA8\uB798\uC2DC\uACC4"
     Use: 12
@@ -1581,6 +1746,9 @@ MonoBehaviour:
     PlantTrap: 0
     BrewsInto: 
     RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: relic_elemental_crystal
     DisplayName: "\uC6D0\uC18C \uC99D\uD3ED \uC218\uC815"
     Use: 13
@@ -1615,6 +1783,9 @@ MonoBehaviour:
       - '*elemental'
       WeaponId: 
       Status: 0
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: relic_life_stone
     DisplayName: "\uC0DD\uBA85\uC11D \uBD80\uC801"
     Use: 13
@@ -1648,6 +1819,9 @@ MonoBehaviour:
       SpellIds: []
       WeaponId: 
       Status: 0
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: relic_mana_spring
     DisplayName: "\uB9C8\uB098 \uC0D8 \uD39C\uB358\uD2B8"
     Use: 13
@@ -1681,6 +1855,9 @@ MonoBehaviour:
       SpellIds: []
       WeaponId: 
       Status: 0
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: relic_predator_fang
     DisplayName: "\uD3EC\uC2DD\uC790\uC758 \uC774\uBE68"
     Use: 13
@@ -1715,6 +1892,9 @@ MonoBehaviour:
       - '*'
       WeaponId: 
       Status: 0
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: relic_shadow_cloak
     DisplayName: "\uADF8\uB9BC\uC790 \uB9DD\uD1A0"
     Use: 13
@@ -1749,7 +1929,135 @@ MonoBehaviour:
       - '*'
       WeaponId: 
       Status: 0
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
+  - Id: relic_pocket_watch
+    DisplayName: "\uB9C8\uB3C4\uAD6C \uD68C\uC911\uC2DC\uACC4"
+    Use: 13
+    SpellId: 
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
+    HitsPerAttack: 0
+    Tier: 0
+    Amount: 0
+    Effect: 0
+    Weight: 0
+    Food: 0
+    Risky: 0
+    FireTransformsTo: 
+    IceTransformsTo: 
+    Value: 0
+    ThrowMinDamage: 0
+    ThrowMaxDamage: 0
+    BreakPercent: 0
+    PlantTrap: 0
+    BrewsInto: 
+    RelicEffects: []
+    TimeKind: 1
+    TimeGauge: 05000000060000000700000008000000i
+    TimePower: 
+  - Id: relic_time_machine
+    DisplayName: "\uD0C0\uC784\uBA38\uC2E0"
+    Use: 13
+    SpellId: 
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
+    HitsPerAttack: 0
+    Tier: 0
+    Amount: 0
+    Effect: 0
+    Weight: 0
+    Food: 0
+    Risky: 0
+    FireTransformsTo: 
+    IceTransformsTo: 
+    Value: 0
+    ThrowMinDamage: 0
+    ThrowMaxDamage: 0
+    BreakPercent: 0
+    PlantTrap: 0
+    BrewsInto: 
+    RelicEffects: []
+    TimeKind: 2
+    TimeGauge: 05000000080000000b0000000f000000i
+    TimePower: 
+  - Id: relic_accelerator
+    DisplayName: "\uAC00\uC18D\uAE30"
+    Use: 13
+    SpellId: 
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
+    HitsPerAttack: 0
+    Tier: 0
+    Amount: 0
+    Effect: 0
+    Weight: 0
+    Food: 0
+    Risky: 0
+    FireTransformsTo: 
+    IceTransformsTo: 
+    Value: 0
+    ThrowMinDamage: 0
+    ThrowMaxDamage: 0
+    BreakPercent: 0
+    PlantTrap: 0
+    BrewsInto: 
+    RelicEffects: []
+    TimeKind: 3
+    TimeGauge: 03000000030000000400000005000000i
+    TimePower: 02000000020000000300000004000000i
+  - Id: relic_stopwatch
+    DisplayName: "\uC2A4\uD1B1\uC6CC\uCE58"
+    Use: 13
+    SpellId: 
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
+    HitsPerAttack: 0
+    Tier: 0
+    Amount: 0
+    Effect: 0
+    Weight: 0
+    Food: 0
+    Risky: 0
+    FireTransformsTo: 
+    IceTransformsTo: 
+    Value: 0
+    ThrowMinDamage: 0
+    ThrowMaxDamage: 0
+    BreakPercent: 0
+    PlantTrap: 0
+    BrewsInto: 
+    RelicEffects: []
+    TimeKind: 4
+    TimeGauge: 03000000040000000500000006000000i
+    TimePower: 
   _weaponDamageDivisor: 3
   _weaponMinDamage: 2
   _armorDefenseDivisor: 3
   _armorDeficitPenalty: 2
+  _relicChargeTicks: 10

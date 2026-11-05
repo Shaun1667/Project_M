@@ -142,7 +142,7 @@ namespace ProjectM.Units
 
         public void Run(in TickContext context)
         {
-            if (!PlayerActions.TryGetPlayer(_world, out var player) || !player.IsAlive) return;
+            if (!PlayerActions.TryGetPlayer(_world, out var player) || !player.IsAlive || player.TimeFrozenTicks > 0) return; // 3-28c 회중시계: 허기 멈춤
             var before = Hunger.StateOf(_config, player.Hunger);
             if (player.Hunger < _config.StarvingAt) player.Hunger++;
             Hunger.Publish(_world, _config, player, before);

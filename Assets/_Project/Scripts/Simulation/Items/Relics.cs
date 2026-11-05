@@ -58,6 +58,7 @@ namespace ProjectM.Items
             int slot = Array.FindIndex(unit.Relics, r => r.IsEmpty);
             if (slot < 0) slot = 0;
             var previous = unit.Relics[slot];
+            int quick = Array.IndexOf(unit.QuickSlots, entry); // 3-28c: 빠른 칸에 있던 유물은 낀 뒤에도 그 칸에
             Inventory.RemoveAt(world, unit, inventoryIndex);
             if (!previous.IsEmpty)
             {
@@ -68,9 +69,12 @@ namespace ProjectM.Items
             var worn = InventoryRef.Item(entry.Id, entry.Upgrade);
             unit.Relics[slot] = worn;
             ApplyMaxHp(items, unit, worn, +1);
+            if (quick < 0 && TimeRelics.IsTimeRelic(items, worn.Id, out _)) quick = Array.FindIndex(unit.QuickSlots, q => q.IsEmpty); // 시간 유물은 빈 빠른 칸에 자동 등록
+            if (quick >= 0) Inventory.AssignQuickSlot(world, unit, quick, worn);
             world.Events.Publish(new RelicEquippedEvent(unit.Id, slot, entry.Id, previous.IsEmpty ? null : previous.Id, unit.Hp, unit.MaxHp));
             return RelicEquipResult.Equipped;
         }
+
 
         /// <summary>낀 칸의 유물을 바꾼다 (3-28b 강화 — 같은 유물의 다른 단계). 최대 체력 효과는 차이만큼.</summary>
         public static void ReplaceWorn(ItemBook items, Unit unit, int slot, InventoryRef relic)

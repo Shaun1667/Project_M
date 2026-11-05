@@ -280,13 +280,17 @@ namespace ProjectM
             // 3-27 실시간: 1초마다 1틱 — 일시정지 · 창(캐릭터 · 형태 · 특성 · 배낭 · 타이틀)이 열려 있으면 멈춤
             if (_realTime != null && !_runEnded && !_paused && !titleOpen && (_characterSelect == null || !_characterSelect.IsOpen) && !_input.Inventory.IsOpen)
             {
-                _realTime.Update(Time.deltaTime);
+                if (_timeClock != null) _timeClock.Update(Time.deltaTime); else _realTime.Update(Time.deltaTime); // 3-28c: 스톱워치 = 멈춤 · 가속기 = 느려짐
                 if (_realTime.LastTicks > 0) World.Events.Flush();
             }
         }
 
         /// <summary>3-27 자동 저장 (결정 2026-11-05 — 매 행동 · 매 틱): 이번 프레임에 화면에 보낸 이벤트가 있었으면(= 무언가 바뀜) 저장. 판이 끝났으면 안 함.</summary>
-        private void LateUpdate() => AutoSave();
+        private void LateUpdate()
+        {
+            RecordHistory(); // 3-28c 타임머신 기록 (저장보다 먼저 — 같은 프레임 상태)
+            AutoSave();
+        }
 
         private void OnApplicationQuit() => AutoSave();
 
@@ -326,8 +330,9 @@ namespace ProjectM
         /// 규칙 연결(시스템 · 적 · 아이템 · 직업 규칙 · 계단 · 입력)은 두 경우 같은 코드.
         /// </summary>
         private void BeginRun(WorldSnapshot snapshot, string visualId, System.Collections.Generic.IReadOnlyList<string> characterSpells, string classId,
-            RunMode mode, ulong seed)
+            RunMode mode, ulong seed, System.Action<World> afterRestore = null)
         {
+            _history.Clear(); // 3-28c: 새 판 · 이어하기 · 되돌리기 — 기록은 이 World 기준으로 다시
             bool restoring = snapshot != null;
             _paused = false;
             Seed = seed;
@@ -379,6 +384,7 @@ namespace ProjectM
             if (restoring)
             {
                 World = World.Restore(snapshot, aiFactory);
+                afterRestore?.Invoke(World); // 3-28c 타임머신: 지금의 배낭 · 유물 · 바닥 아이템을 옮김 (화면 알림 전)
                 Floor = null;
             }
             else
@@ -423,6 +429,7 @@ namespace ProjectM
             if (_ghost != null) _enemyNames[_ghost.VisualId] = _ghost.DisplayName; // 3-23b "루멘의 그림자 #12"
             HudText.EnemyName = id => _unitVisuals.TryGetValue(id, out var v) && _enemyNames.TryGetValue(v, out var n) ? n : null;
             World.Scheduler.AddSystem(TickPhase.ManaRegen, new EnemyRespawnSystem(World, spawn, enemyDef, enemyAi, sight, dungeonConfig.FloorCount, zones));
+            World.Scheduler.AddSystem(TickPhase.ManaRegen, new TimeRelicSystem(World, Items)); // 3-28c 시간 유물 정지 · 가속 · 게이지
             var loot = _lootConfig != null ? _lootConfig.ToConfig() : null;
             if (loot != null) World.Scheduler.AddSystem(TickPhase.ManaRegen, new ItemPickupSystem(World, Items)); // 3-5: 걸어 들어가면 줍기
             var decor = _floorDecorConfig != null ? _floorDecorConfig.ToConfig() : null;
@@ -456,6 +463,7 @@ namespace ProjectM
             World.SetClassRules(Classes); // 3-21c: 특성 효과 조회 (규칙 연결 — 저장 안 함)
             World.SetRelicRules(Items); // 3-28a: 유물 효과 조회 (규칙 연결 — 저장 안 함)
             _input.WorkbenchRequested = OpenWorkbench; // 3-28b 제작대에 부딪힘 → 창
+            _input.TimeMachineRequested = OpenTimeMachine; // 3-28c 타임머신 → 몇 턴 전 창
             var consumableConfigForRun = consumableConfig;
 
             Unit player;
@@ -490,7 +498,8 @@ namespace ProjectM
                 _realTime = null;
                 clock = new TurnClock(World.Scheduler, World.PlayerInput);
             }
-            _input.Bind(World, Config, clock, sight, Spells, new BresenhamTargetingRule(), Items, Fusions, stairs, consumables, search, hunger, _floorDecorConfig != null ? _floorDecorConfig.ToShop() : null);
+            _timeClock = new TimeRelicClock(World, clock, World.Run.Mode == RunMode.RealTime); // 3-28c 시간 유물이 시계를 감쌈
+            _input.Bind(World, Config, _timeClock, sight, Spells, new BresenhamTargetingRule(), Items, Fusions, stairs, consumables, search, hunger, _floorDecorConfig != null ? _floorDecorConfig.ToShop() : null);
             World.Events.Flush();
             _savedFlush = -1; // 새 판 · 이어하기 바로 저장
             if (restoring) _hud.SetHint(HudText.RunContinued);
@@ -719,6 +728,83 @@ namespace ProjectM
                 if (UnspentTalents() > 0) OpenTalents();
             }, title: HudText.TalentSelectTitle(tier, Talents.Unspent(World, Classes, _player, tier)), hint: HudText.TalentSelectHint,
                details: details, onCancel: () => { });
+        }
+
+        // ── 시간 유물 (3-28c, 결정 2026-11-05): 시계 감싸기 · 타임머신 기록(게임 중 메모리만 — 층이 바뀌거나 이어하면 비움) · 되돌리기 ──
+
+        private TimeRelicClock _timeClock;
+        /// <summary>틱마다의 스냅샷 (오래된 것부터). 최대 MaxHistory — 타임머신 +3 게이지(15)보다 하나 더.</summary>
+        private readonly System.Collections.Generic.List<(long tick, int floor, byte[] bytes)> _history = new System.Collections.Generic.List<(long, int, byte[])>();
+        private const int MaxHistory = 16;
+
+        private void RecordHistory()
+        {
+            if (World == null || _runEnded || _playerDead || !_playerId.IsValid) return;
+            long tick = World.Scheduler.CurrentTick;
+            if (_history.Count > 0 && _history[_history.Count - 1].floor != World.Floor) _history.Clear(); // 층이 바뀜
+            if (_history.Count > 0 && _history[_history.Count - 1].tick == tick) return;
+            try
+            {
+                _history.Add((tick, World.Floor, WorldSnapshotCodec.Encode(World.Capture())));
+                if (_history.Count > MaxHistory) _history.RemoveAt(0);
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogWarning($"[GameRoot] 타임머신 기록 실패: {ex.Message}");
+            }
+        }
+
+        /// <summary>타임머신: "n턴 전" 카드 (n ≤ 게이지 · 기록). 고르면 그 턴의 세계로 — 배낭 · 유물 · 게이지 · 바닥 아이템 · 에테르 · 금화는 지금 그대로.</summary>
+        private void OpenTimeMachine(string relicId)
+        {
+            if (_characterSelect == null || _player == null || _runEnded) return;
+            int slot = TimeRelics.WornSlot(_player, relicId);
+            if (slot < 0) return;
+            int charge = TimeRelics.Charge(World, Items, _player.Relics[slot]);
+            long now = World.Scheduler.CurrentTick;
+            var choices = new System.Collections.Generic.List<int>();
+            foreach (var h in _history)
+            {
+                int turns = (int)(now - h.tick);
+                if (turns >= 1 && turns <= charge && h.floor == World.Floor) choices.Add(turns);
+            }
+            choices.Sort();
+            if (choices.Count == 0)
+            {
+                _hud.SetHint(HudText.TimeMachineNoHistory);
+                return;
+            }
+            var names = new System.Collections.Generic.List<string>();
+            var details = new System.Collections.Generic.List<string>();
+            foreach (var n in choices)
+            {
+                names.Add(HudText.TimeMachineTurns(n));
+                details.Add(HudText.TimeMachineDetail + "\n\n" + HudText.TimeRelicGauge(charge - n, TimeRelics.MaxCharge(Items, _player.Relics[slot])));
+            }
+            var world = World;
+            _characterSelect.Open(null, names, 0, index =>
+            {
+                if (World != world || _player == null) return;
+                Rewind(relicId, choices[index]);
+            }, title: HudText.TimeMachineTitle(charge), hint: HudText.WorkbenchHint, details: details, onCancel: () => { });
+        }
+
+        private void Rewind(string relicId, int turns)
+        {
+            long target = World.Scheduler.CurrentTick - turns;
+            int at = _history.FindLastIndex(h => h.tick == target && h.floor == World.Floor);
+            if (at < 0) return;
+            if (TimeRelics.SpendRewind(World, Items, _player, relicId, turns) != TimeRelicResult.Done) return;
+            var oldWorld = World;
+            var oldPlayer = _player;
+            var past = WorldSnapshotCodec.Decode(_history[at].bytes);
+            var kept = _history.GetRange(0, at); // 그 앞 기록은 계속 쓸 수 있다
+            BeginRun(past, null, null, null, past.Mode, past.RngSeed, w =>
+            {
+                if (PlayerActions.TryGetPlayer(w, out var p)) TimeRelics.CarryOver(oldWorld, oldPlayer, w, p);
+            });
+            _history.AddRange(kept);
+            _hud.SetHint(HudText.TimeMachineRewound(turns));
         }
 
         // ── 마법 제작대 (3-28b, 결정 2026-11-05): 만들기 · 강화 · 분해 — 카드 창(형태 · 특성 창과 같음), 모두 틱 밖 ──

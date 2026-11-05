@@ -398,7 +398,45 @@ namespace ProjectM.Input
                 return;
             }
             if (entry.Kind == InventoryKind.Spell) TryStartAim(player, entry.Id, slot);
+            else if (TimeRelics.IsTimeRelic(_items, entry.Id, out _)) UseTimeRelic(player, entry);
             else UseItem(entry);
+        }
+
+        /// <summary>타임머신 (3-28c): 몇 턴 전으로 되돌릴지 고르는 창은 GameRoot (기록 · 다시 연결이 Runtime에 있음).</summary>
+        public System.Action<string> TimeMachineRequested { get; set; }
+
+        /// <summary>
+        /// 시간 유물 발동 (3-28c, 결정 2026-11-05 — 껴야 쓸 수 있음 · 빠른 칸): 틱 밖 — 이벤트를 바로 비운다.
+        /// 회중시계는 발동 뒤 멈춘 턴만큼 시계가 흐른다 (턴제). 끼지 않았거나 게이지가 비면 이유만.
+        /// </summary>
+        private void UseTimeRelic(Unit player, InventoryRef entry)
+        {
+            TimeRelics.IsTimeRelic(_items, entry.Id, out var def);
+            int slot = TimeRelics.WornSlot(player, entry.Id);
+            if (slot < 0)
+            {
+                Hint(Text.TimeRelicNotWorn(entry.Id));
+                return;
+            }
+            if (def.TimeKind == TimeRelicKind.TimeMachine)
+            {
+                if (TimeRelics.Charge(_world, _items, player.Relics[slot]) <= 0) Hint(Text.TimeRelicEmpty(entry.Id, _items.RelicChargeTicks));
+                else TimeMachineRequested?.Invoke(entry.Id);
+                return;
+            }
+            var result = TimeRelics.Activate(_world, _items, player, entry.Id);
+            _world.Events.Flush();
+            if (result == TimeRelicResult.Empty) Hint(Text.TimeRelicEmpty(entry.Id, _items.RelicChargeTicks));
+            else if (result == TimeRelicResult.AlreadyActive) Hint(HudText.TimeRelicBusy);
+            else if (result == TimeRelicResult.Done)
+            {
+                Hint(string.Empty);
+                if (def.TimeKind == TimeRelicKind.PocketWatch && _clock is TimeRelicClock timeClock)
+                {
+                    timeClock.AdvanceWhileFrozen(); // 턴제: 멈춘 턴만큼 세계가 흐른다
+                    _world.Events.Flush();
+                }
+            }
         }
 
         /// <summary>

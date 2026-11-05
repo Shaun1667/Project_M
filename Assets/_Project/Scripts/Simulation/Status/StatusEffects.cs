@@ -15,6 +15,7 @@ namespace ProjectM.Status
             if (world == null) throw new ArgumentNullException(nameof(world));
             if (unit == null) throw new ArgumentNullException(nameof(unit));
             if (def == null) throw new ArgumentNullException(nameof(def));
+            if (unit.TimeFrozenTicks > 0) return; // 3-28c 회중시계: 멈춘 동안 새 상태를 받지 않음
             if (!unit.IsAlive) return;
 
             var existing = unit.Statuses.Find(s => s.Type == def.Type);
@@ -125,6 +126,7 @@ namespace ProjectM.Status
         {
             foreach (var unit in _world.Units.ToSortedList())
             {
+                if (unit.TimeFrozenTicks > 0) continue; // 3-28c 회중시계: 내 상태도 멈춤
                 for (int i = 0; i < unit.Statuses.Count; i++)
                 {
                     var status = unit.Statuses[i];

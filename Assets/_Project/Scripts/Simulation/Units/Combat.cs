@@ -13,6 +13,7 @@ namespace ProjectM.Units
             if (target == null) throw new ArgumentNullException(nameof(target));
             if (amount < 0) throw new ArgumentOutOfRangeException(nameof(amount), amount, "피해는 0 이상이어야 한다.");
             if (!target.IsAlive) return;
+            if (target.TimeFrozenTicks > 0) return; // 3-28c 회중시계: 멈춘 동안 무적
             if (world.EnemyRules != null) amount = world.EnemyRules.ModifyDamage(target, cause, amount); // 3-17b 약점 · 저항
 
             target.Hp = Math.Max(0, target.Hp - amount);

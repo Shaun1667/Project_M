@@ -81,6 +81,32 @@ namespace ProjectM.Core
         public RunMode Mode { get; set; }
         /// <summary>가진 에테르 (3-28b — 유물 분해로 얻고 만들기 · 강화에 씀, 스냅샷 v29). Workbench로만 바꾼다.</summary>
         public int Ether { get; internal set; }
+
+        // ── 시간 유물 게이지 (3-28c): 유물 종류 ID → 칸 수. 없으면 아직 안 씀 = 가득 (TimeRelics.Charge). 넣은 순서 — 스냅샷 v30 ──
+        private readonly System.Collections.Generic.List<TalentPoint> _relicCharges = new System.Collections.Generic.List<TalentPoint>();
+
+        public System.Collections.Generic.IReadOnlyList<TalentPoint> RelicCharges => _relicCharges;
+
+        public bool TryGetRelicCharge(string relicId, out int charge)
+        {
+            foreach (var c in _relicCharges)
+                if (c.TalentId == relicId) { charge = c.Points; return true; }
+            charge = 0;
+            return false;
+        }
+
+        internal void SetRelicCharge(string relicId, int charge)
+        {
+            for (int i = 0; i < _relicCharges.Count; i++)
+                if (_relicCharges[i].TalentId == relicId) { _relicCharges[i] = new TalentPoint(relicId, charge); return; }
+            _relicCharges.Add(new TalentPoint(relicId, charge));
+        }
+
+        internal void SetRelicCharges(System.Collections.Generic.IEnumerable<TalentPoint> charges)
+        {
+            _relicCharges.Clear();
+            if (charges != null) _relicCharges.AddRange(charges);
+        }
         public RunOutcome Outcome { get; internal set; }
         /// <summary>보스 층에 놓인 보스 (없으면 None). 이 유닛이 죽으면 승리.</summary>
         public EntityId BossId { get; internal set; }

@@ -111,12 +111,14 @@ namespace ProjectM.Items
 
             ChangeEther(world, -cost);
             var upgraded = InventoryRef.Item(entry.Id, entry.Upgrade + 1);
+            int quick = Array.IndexOf(player.QuickSlots, entry); // 3-28c: 빠른 칸 등록은 강화 뒤에도 그대로
             if (worn) Relics.ReplaceWorn(items, player, relicSlot, upgraded);
             else
             {
                 Inventory.RemoveAt(world, player, inventoryIndex);
                 Inventory.TryAdd(world, null, items, player, upgraded); // 방금 빈 칸이 있으니 들어간다
             }
+            if (quick >= 0) Inventory.AssignQuickSlot(world, player, quick, upgraded);
             world.Events.Publish(new WorkbenchUsedEvent(WorkbenchAction.Upgrade, entry.Id, upgraded.Upgrade, world.Run.Ether));
             if (worn) world.Events.Publish(new RelicEquippedEvent(player.Id, relicSlot, entry.Id, null, player.Hp, player.MaxHp, silent: true));
             return WorkbenchResult.Done;

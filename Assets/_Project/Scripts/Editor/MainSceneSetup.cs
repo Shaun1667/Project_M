@@ -1165,6 +1165,11 @@ namespace ProjectM.Editor
             changed |= catalog.FillRelicValues("relic_mana_spring", -1, -1, -2, -2);
             changed |= catalog.FillRelicValues("relic_predator_fang", 25, 35, 45, 55);
             changed |= catalog.FillRelicValues("relic_shadow_cloak", 30, 45, 60, 75);
+            // 3-28c 시간 유물 4종 (결정 2026-11-05 — 껴야 쓰고 빠른 칸으로 발동, 게이지 = 강화 0 / +1 / +2 / +3, BALANCE 24번)
+            changed |= catalog.AddIfMissing(TimeRelic("relic_pocket_watch", "마도구 회중시계", TimeRelicKind.PocketWatch, new[] { 5, 6, 7, 8 }, null));
+            changed |= catalog.AddIfMissing(TimeRelic("relic_time_machine", "타임머신", TimeRelicKind.TimeMachine, new[] { 5, 8, 11, 15 }, null));
+            changed |= catalog.AddIfMissing(TimeRelic("relic_accelerator", "가속기", TimeRelicKind.Accelerator, new[] { 3, 3, 4, 5 }, new[] { 2, 2, 3, 4 }));
+            changed |= catalog.AddIfMissing(TimeRelic("relic_stopwatch", "스톱워치", TimeRelicKind.Stopwatch, new[] { 3, 4, 5, 6 }, null));
             changed |= catalog.FillWeaponStrength(12); // 3-7b: 요구 힘 (SPD 2티어) — 3-7a 줄에도
             changed |= catalog.FillWeaponSpecials("dirk", 67, 0); // 3-7c: 더크 기습 최소 피해 67%
             changed |= catalog.FillWeaponSpecials("quarterstaff", 0, 2); // 3-7c: 육척봉 방어 0~2
@@ -1832,6 +1837,19 @@ namespace ProjectM.Editor
                         SpellIds = spells != null ? new List<string> { spells } : new List<string>(),
                     },
                 },
+            };
+
+        /// <summary>3-28c 시간 유물 한 줄 (지속 효과 없음 — 빠른 칸으로 발동).</summary>
+        private static ItemCatalogAsset.Entry TimeRelic(string id, string name, TimeRelicKind kind, int[] gauge, int[] power) =>
+            new ItemCatalogAsset.Entry
+            {
+                Id = id,
+                DisplayName = name,
+                Use = ItemUse.Relic,
+                RelicEffects = new List<ClassCatalogAsset.TalentEffectEntry>(),
+                TimeKind = kind,
+                TimeGauge = new List<int>(gauge),
+                TimePower = power != null ? new List<int>(power) : new List<int>(),
             };
 
         private static ItemCatalogAsset.Entry Weapon(string id, string name, int maxDamage, int efficiency, float accuracy, int cost, int reach) =>

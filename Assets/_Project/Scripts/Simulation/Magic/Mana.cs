@@ -55,7 +55,7 @@ namespace ProjectM.Magic
         {
             foreach (var unit in _world.Units.ToSortedList())
             {
-                if (!unit.IsAlive || unit.MaxMana <= 0) continue;
+                if (!unit.IsAlive || unit.MaxMana <= 0 || unit.TimeFrozenTicks > 0) continue; // 3-28c
                 // 3-28a 마나 샘 펜던트: 유닛마다 간격 (기본 + 유물 · 특성 보너스, 최소 1틱) — 틱 번호로만 판단 (상태 없음)
                 int interval = Math.Max(1, _config.ManaRegenIntervalTicks + ProjectM.Units.Talents.ManaRegenIntervalBonus(_world, unit));
                 if ((context.Tick + 1) % interval == 0) Mana.Restore(_world, unit, _config.ManaRegenAmount);
@@ -87,7 +87,7 @@ namespace ProjectM.Magic
             if ((context.Tick + 1) % _config.HpRegenIntervalTicks != 0) return;
             foreach (var unit in _world.Units.ToSortedList())
             {
-                if (unit.Faction != Faction.Player || !unit.IsAlive || unit.Hp >= unit.MaxHp) continue;
+                if (unit.Faction != Faction.Player || !unit.IsAlive || unit.Hp >= unit.MaxHp || unit.TimeFrozenTicks > 0) continue; // 3-28c 회중시계: 회복도 멈춤
                 if (_hunger != null && Hunger.StateOf(_hunger, unit.Hunger) == HungerState.Starving) continue;
                 int healed = Math.Min(_config.HpRegenAmount(unit.MaxHp), unit.MaxHp - unit.Hp);
                 if (healed <= 0) continue;

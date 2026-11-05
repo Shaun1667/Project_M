@@ -42,6 +42,12 @@ namespace ProjectM.Units
         public EquippedArmor Armor { get; internal set; }
         /// <summary>낀 유물 (3-28a — 2칸, 빈 칸 = Empty, 강화 단계 = Upgrade). Items.Relics로만 바꾼다. 스냅샷 v28.</summary>
         public InventoryRef[] Relics { get; } = new InventoryRef[ProjectM.Items.Relics.SlotCount];
+        /// <summary>시간 유물 (3-28c, 스냅샷 v30): 회중시계로 멈춘 남은 틱(행동 불가 · 무적 · 내 상태 · 허기 · 회복 멈춤) · 가속 남은 틱 · 가속 중 한 턴 행동 수 · 이번 턴에 쓴 즉시 행동 · 스톱워치 남은 행동. TimeRelics로만 바꾼다.</summary>
+        public int TimeFrozenTicks { get; internal set; }
+        public int AccelTicks { get; internal set; }
+        public int AccelActions { get; internal set; }
+        public int AccelUsed { get; internal set; }
+        public int StopActions { get; internal set; }
         /// <summary>허기 (3-14 — 플레이어만 오름, HungerSystem). 0 = 배부름.</summary>
         public int Hunger { get; internal set; }
 

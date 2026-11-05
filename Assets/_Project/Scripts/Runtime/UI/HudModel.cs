@@ -117,6 +117,8 @@ namespace ProjectM.UI
             _bus.Subscribe<ArmorEquippedEvent>(OnArmorEquipped);
             _bus.Subscribe<RelicEquippedEvent>(OnRelicEquipped); // 3-28a
             _bus.Subscribe<RelicRejectedEvent>(OnRelicRejected);
+            _bus.Subscribe<TimeRelicUsedEvent>(OnTimeRelicUsed); // 3-28c
+            _bus.Subscribe<TimeRelicEndedEvent>(OnTimeRelicEnded);
             _bus.Subscribe<ArmorUpgradedEvent>(OnArmorUpgraded);
             _bus.Subscribe<ItemIdentifiedEvent>(OnIdentified);
             _bus.Subscribe<ProjectM.Dungeon.TrapTriggeredEvent>(OnTrapTriggered);
@@ -246,6 +248,20 @@ namespace ProjectM.UI
             Hp = e.Hp;
             MaxHp = e.MaxHp;
             if (!e.Silent) AddLog(Text.RelicEquipped(e.ItemId, e.Previous));
+            Changed?.Invoke();
+        }
+
+        private void OnTimeRelicUsed(TimeRelicUsedEvent e)
+        {
+            if (e.Unit != _playerId) return;
+            AddLog(Text.TimeRelicUsed(e.RelicId, e.Kind, e.Amount, e.Power));
+            Changed?.Invoke();
+        }
+
+        private void OnTimeRelicEnded(TimeRelicEndedEvent e)
+        {
+            if (e.Unit != _playerId) return;
+            AddLog(HudText.TimeRelicEnded(e.Kind));
             Changed?.Invoke();
         }
 
@@ -515,6 +531,8 @@ namespace ProjectM.UI
             _bus.Unsubscribe<ArmorEquippedEvent>(OnArmorEquipped);
             _bus.Unsubscribe<RelicEquippedEvent>(OnRelicEquipped);
             _bus.Unsubscribe<RelicRejectedEvent>(OnRelicRejected);
+            _bus.Unsubscribe<TimeRelicUsedEvent>(OnTimeRelicUsed);
+            _bus.Unsubscribe<TimeRelicEndedEvent>(OnTimeRelicEnded);
             _bus.Unsubscribe<ArmorUpgradedEvent>(OnArmorUpgraded);
             _bus.Unsubscribe<ItemIdentifiedEvent>(OnIdentified);
             _bus.Unsubscribe<ProjectM.Dungeon.TrapTriggeredEvent>(OnTrapTriggered);

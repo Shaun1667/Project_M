@@ -146,7 +146,7 @@ namespace ProjectM.Tests
         [Test]
         public void Snapshot_RoundTripsEther()
         {
-            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.EqualTo(29));
+            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.GreaterThanOrEqualTo(29)); // 정확한 값은 TimeRelicTests (30)
             var (world, player) = Start();
             Give(world, player, "relic_life_stone");
             Workbench.Disassemble(world, Items, Config, player, IndexOf(player, "relic_life_stone"));
