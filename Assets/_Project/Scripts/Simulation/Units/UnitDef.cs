@@ -82,5 +82,16 @@ namespace ProjectM.Units
         /// <summary>모습만 바꾼 사본 (캐릭터 선택 — 결정 2026-10-21: 지금은 외형만 다름). 수치 · 시작 주문 · 갑옷은 그대로.</summary>
         public UnitDef WithVisualId(string visualId) => new UnitDef(visualId, MaxHp, AttackDamage, SightRange, MaxMana, StartingSpells,
             Accuracy, Evasion, ExpReward, ExpMaxLevel, Strength, StartingArmor);
+
+        /// <summary>캐릭터(직업)의 시작 주문을 앞에 더한 사본 (3-21a — 루멘의 빛의 창 기술). 이미 있는 주문은 다시 넣지 않는다.</summary>
+        public UnitDef WithExtraStartingSpells(IReadOnlyList<string> extra)
+        {
+            if (extra == null || extra.Count == 0) return this;
+            var spells = new List<string>();
+            foreach (var id in extra) if (!string.IsNullOrEmpty(id) && !spells.Contains(id)) spells.Add(id);
+            foreach (var id in StartingSpells) if (!spells.Contains(id)) spells.Add(id);
+            return new UnitDef(VisualId, MaxHp, AttackDamage, SightRange, MaxMana, spells,
+                Accuracy, Evasion, ExpReward, ExpMaxLevel, Strength, StartingArmor);
+        }
     }
 }

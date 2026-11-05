@@ -24,6 +24,9 @@ MonoBehaviour:
     StatusChancePercent: 70
     LeavesTerrain: 0
     DisplayName: "\uBD88\uAF43 \uD654\uC0B4"
+    BoostWeaponId: 
+    BoostDamagePercent: 0
+    BoostRange: 0
   - Id: ice_basic
     Element: 1
     Shape: 0
@@ -35,6 +38,9 @@ MonoBehaviour:
     StatusChancePercent: 70
     LeavesTerrain: 0
     DisplayName: "\uC5BC\uC74C \uD654\uC0B4"
+    BoostWeaponId: 
+    BoostDamagePercent: 0
+    BoostRange: 0
   - Id: lightning_basic
     Element: 2
     Shape: 1
@@ -46,6 +52,9 @@ MonoBehaviour:
     StatusChancePercent: 30
     LeavesTerrain: 0
     DisplayName: "\uBC88\uAC1C \uC904\uAE30"
+    BoostWeaponId: 
+    BoostDamagePercent: 0
+    BoostRange: 0
   - Id: poison_basic
     Element: 3
     Shape: 2
@@ -57,6 +66,9 @@ MonoBehaviour:
     StatusChancePercent: 70
     LeavesTerrain: 2
     DisplayName: "\uB3C5 \uD3ED\uBC1C"
+    BoostWeaponId: 
+    BoostDamagePercent: 0
+    BoostRange: 0
   - Id: water_basic
     Element: 6
     Shape: 2
@@ -68,6 +80,9 @@ MonoBehaviour:
     StatusChancePercent: 100
     LeavesTerrain: 3
     DisplayName: "\uBB3C\uBCF4\uB77C"
+    BoostWeaponId: 
+    BoostDamagePercent: 0
+    BoostRange: 0
   - Id: trap_fire
     Element: 0
     Shape: 2
@@ -79,6 +94,9 @@ MonoBehaviour:
     StatusChancePercent: 100
     LeavesTerrain: 1
     DisplayName: "\uD654\uC5FC \uD568\uC815"
+    BoostWeaponId: 
+    BoostDamagePercent: 0
+    BoostRange: 0
   - Id: trap_toxic
     Element: 3
     Shape: 2
@@ -90,6 +108,9 @@ MonoBehaviour:
     StatusChancePercent: 100
     LeavesTerrain: 2
     DisplayName: "\uB3C5\uAC00\uC2A4 \uD568\uC815"
+    BoostWeaponId: 
+    BoostDamagePercent: 0
+    BoostRange: 0
   - Id: trap_paralytic
     Element: 5
     Shape: 2
@@ -101,6 +122,9 @@ MonoBehaviour:
     StatusChancePercent: 0
     LeavesTerrain: 6
     DisplayName: "\uB9C8\uBE44 \uAC00\uC2A4 \uD568\uC815"
+    BoostWeaponId: 
+    BoostDamagePercent: 0
+    BoostRange: 0
   - Id: trap_flood
     Element: 6
     Shape: 2
@@ -112,6 +136,9 @@ MonoBehaviour:
     StatusChancePercent: 100
     LeavesTerrain: 3
     DisplayName: "\uBB3C \uD568\uC815"
+    BoostWeaponId: 
+    BoostDamagePercent: 0
+    BoostRange: 0
   - Id: trap_shock
     Element: 2
     Shape: 2
@@ -123,6 +150,9 @@ MonoBehaviour:
     StatusChancePercent: 30
     LeavesTerrain: 0
     DisplayName: "\uBC88\uAC1C \uD568\uC815"
+    BoostWeaponId: 
+    BoostDamagePercent: 0
+    BoostRange: 0
   - Id: plant_firebloom
     Element: 0
     Shape: 2
@@ -134,6 +164,9 @@ MonoBehaviour:
     StatusChancePercent: 100
     LeavesTerrain: 1
     DisplayName: "\uD654\uC5FC\uAF43"
+    BoostWeaponId: 
+    BoostDamagePercent: 0
+    BoostRange: 0
   - Id: plant_icecap
     Element: 1
     Shape: 2
@@ -145,6 +178,9 @@ MonoBehaviour:
     StatusChancePercent: 100
     LeavesTerrain: 0
     DisplayName: "\uC5BC\uC74C\uBC84\uC12F"
+    BoostWeaponId: 
+    BoostDamagePercent: 0
+    BoostRange: 0
   - Id: plant_sorrowmoss
     Element: 3
     Shape: 2
@@ -156,6 +192,9 @@ MonoBehaviour:
     StatusChancePercent: 100
     LeavesTerrain: 2
     DisplayName: "\uB3C5\uC774\uB07C"
+    BoostWeaponId: 
+    BoostDamagePercent: 0
+    BoostRange: 0
   - Id: enemy_fire_bolt
     Element: 0
     Shape: 0
@@ -167,6 +206,9 @@ MonoBehaviour:
     StatusChancePercent: 30
     LeavesTerrain: 0
     DisplayName: "\uACE0\uBE14\uB9B0 \uBD88\uC528"
+    BoostWeaponId: 
+    BoostDamagePercent: 0
+    BoostRange: 0
   - Id: enemy_sand_bolt
     Element: 4
     Shape: 0
@@ -178,6 +220,9 @@ MonoBehaviour:
     StatusChancePercent: 30
     LeavesTerrain: 0
     DisplayName: "\uBAA8\uB798 \uD654\uC0B4"
+    BoostWeaponId: 
+    BoostDamagePercent: 0
+    BoostRange: 0
   - Id: boss_slime_slam
     Element: 6
     Shape: 2
@@ -189,6 +234,9 @@ MonoBehaviour:
     StatusChancePercent: 100
     LeavesTerrain: 3
     DisplayName: "\uC2AC\uB77C\uC784 \uAC15\uD0C0"
+    BoostWeaponId: 
+    BoostDamagePercent: 0
+    BoostRange: 0
   - Id: boss_sand_storm
     Element: 4
     Shape: 2
@@ -200,6 +248,9 @@ MonoBehaviour:
     StatusChancePercent: 50
     LeavesTerrain: 0
     DisplayName: "\uBAA8\uB798 \uD3ED\uD48D"
+    BoostWeaponId: 
+    BoostDamagePercent: 0
+    BoostRange: 0
   - Id: enemy_frost_bolt
     Element: 1
     Shape: 0
@@ -211,6 +262,9 @@ MonoBehaviour:
     StatusChancePercent: 40
     LeavesTerrain: 0
     DisplayName: "\uC11C\uB9AC \uD654\uC0B4"
+    BoostWeaponId: 
+    BoostDamagePercent: 0
+    BoostRange: 0
   - Id: boss_blizzard
     Element: 1
     Shape: 2
@@ -222,6 +276,9 @@ MonoBehaviour:
     StatusChancePercent: 70
     LeavesTerrain: 0
     DisplayName: "\uB208\uBCF4\uB77C"
+    BoostWeaponId: 
+    BoostDamagePercent: 0
+    BoostRange: 0
   - Id: enemy_fireball
     Element: 0
     Shape: 0
@@ -233,6 +290,9 @@ MonoBehaviour:
     StatusChancePercent: 40
     LeavesTerrain: 0
     DisplayName: "\uBD88\uB369\uC774"
+    BoostWeaponId: 
+    BoostDamagePercent: 0
+    BoostRange: 0
   - Id: boss_lava_eruption
     Element: 0
     Shape: 2
@@ -244,6 +304,9 @@ MonoBehaviour:
     StatusChancePercent: 70
     LeavesTerrain: 1
     DisplayName: "\uC6A9\uC554 \uBD84\uCD9C"
+    BoostWeaponId: 
+    BoostDamagePercent: 0
+    BoostRange: 0
   - Id: enemy_time_bolt
     Element: 2
     Shape: 0
@@ -255,6 +318,9 @@ MonoBehaviour:
     StatusChancePercent: 30
     LeavesTerrain: 0
     DisplayName: "\uC2DC\uAC04 \uBC88\uAC1C"
+    BoostWeaponId: 
+    BoostDamagePercent: 0
+    BoostRange: 0
   - Id: boss_time_collapse
     Element: 2
     Shape: 2
@@ -266,3 +332,34 @@ MonoBehaviour:
     StatusChancePercent: 50
     LeavesTerrain: 0
     DisplayName: "\uC2DC\uAC04 \uBD95\uAD34"
+    BoostWeaponId: 
+    BoostDamagePercent: 0
+    BoostRange: 0
+  - Id: light_spear_thrust
+    Element: 7
+    Shape: 1
+    Range: 2
+    Damage: 4
+    ManaCost: 2
+    Radius: 0
+    AppliesStatus: 0
+    StatusChancePercent: 0
+    LeavesTerrain: 0
+    DisplayName: "\uBE5B\uC758 \uCC3D \uCC0C\uB974\uAE30"
+    BoostWeaponId: spear
+    BoostDamagePercent: 150
+    BoostRange: 1
+  - Id: light_spear_throw
+    Element: 7
+    Shape: 0
+    Range: 5
+    Damage: 4
+    ManaCost: 3
+    Radius: 0
+    AppliesStatus: 0
+    StatusChancePercent: 0
+    LeavesTerrain: 0
+    DisplayName: "\uBE5B\uC758 \uCC3D \uB358\uC9C0\uAE30"
+    BoostWeaponId: spear
+    BoostDamagePercent: 150
+    BoostRange: 1

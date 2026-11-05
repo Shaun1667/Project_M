@@ -143,6 +143,7 @@ namespace ProjectM.Magic
             if (caster == null || spellId == null) return CastBlock.EmptySlot;
             if (!caster.HasSpell(spellId)) return CastBlock.NotOwned;
             if (!book.TryGet(spellId, out spell)) return CastBlock.UnknownSpell;
+            spell = SpellModifiers.For(caster, spell); // 3-21a: 무기 강화 — 시전과 같은 값
             return CheckDef(world, targeting, sight, caster, spell, target, out preview);
         }
 
@@ -264,6 +265,7 @@ namespace ProjectM.Magic
             if (!_world.Units.TryGet(context.Actor, out var caster) || !caster.IsAlive) return;
             var spell = _spell;
             if (spell == null && !_book.TryGet(SpellId, out spell)) return;
+            spell = SpellModifiers.For(caster, spell); // 3-21a: 무기 강화 (미리보기와 같은 값)
             if (!Mana.TrySpend(_world, caster, spell.ManaCost)) return;
 
             var preview = SpellCasting.Preview(_world, _targeting, caster.Pos, spell, Target);

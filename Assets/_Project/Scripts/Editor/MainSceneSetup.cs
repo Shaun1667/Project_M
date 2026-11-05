@@ -568,6 +568,15 @@ namespace ProjectM.Editor
                 { Id = "boss_time_collapse", Element = Element.Lightning, Shape = SpellShape.Burst, Range = 6, Damage = 12, ManaCost = 0, Radius = 1 });
             changed |= catalog.SetStatusIfNone("boss_time_collapse", StatusType.Paralyze, 50);
             changed |= catalog.SetDisplayNameIfEmpty("boss_time_collapse", "시간 붕괴");
+            // 3-21a 루멘 빛의 창 공통 기술 (BALANCE 21번, Docs/직업_루멘.md 2번): 무속성 — 반응 없음. 창(spear)을 들면 피해 ×1.5 · 사거리 +1
+            changed |= catalog.AddIfMissing(new SpellCatalogAsset.Entry
+                { Id = "light_spear_thrust", Element = Element.Neutral, Shape = SpellShape.Beam, Range = 2, Damage = 4, ManaCost = 2 });
+            changed |= catalog.SetDisplayNameIfEmpty("light_spear_thrust", "빛의 창 찌르기");
+            changed |= catalog.AddIfMissing(new SpellCatalogAsset.Entry
+                { Id = "light_spear_throw", Element = Element.Neutral, Shape = SpellShape.Bolt, Range = 5, Damage = 4, ManaCost = 3 });
+            changed |= catalog.SetDisplayNameIfEmpty("light_spear_throw", "빛의 창 던지기");
+            foreach (var id in new[] { "light_spear_thrust", "light_spear_throw" })
+                changed |= catalog.SetBoostIfNone(id, "spear", 150, 1);
             // 3-12a 함정 효과 주문 (BALANCE 17번): 함정 칸 중심 3×3, 시전자 없음 · 마나 0 · 배우지 않음. 마비 가스는 바람 속성(반응 없음)
             foreach (var (id, name, element, damage, status, chance, terrain) in new[]
             {
@@ -1395,6 +1404,8 @@ namespace ProjectM.Editor
                 changed |= catalog.AddOrFill(new CharacterCatalogAsset.Entry
                     { Id = id, DisplayName = name, VisualId = id, Portrait = AssetDatabase.LoadAssetAtPath<Sprite>(path), Illustration = illust });
             }
+            // 3-21a: 루멘 = 직업 lumen, 빛의 창 공통 기술 2개로 시작 (Docs/직업_루멘.md). 시아는 직업 없음 (따로 정함)
+            changed |= catalog.SetClassIfEmpty("hero_blond", "lumen", "light_spear_thrust", "light_spear_throw");
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }

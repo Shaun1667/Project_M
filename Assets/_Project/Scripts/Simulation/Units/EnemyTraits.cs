@@ -27,7 +27,7 @@ namespace ProjectM.Units
         public string SpellId { get; }
         /// <summary>플레이어와 이 거리보다 가까우면 물러난다 (0 = 안 물러남, 주술사).</summary>
         public int KeepDistance { get; }
-        private readonly int[] _damagePercent = new int[7];
+        private readonly int[] _damagePercent = new int[Enum.GetValues(typeof(Element)).Length];
         /// <summary>3-17d 패턴 보스: 힘 모으기 주문 · 차례마다 시작 확률 % (예고 칸 → 다음 차례에 터짐).</summary>
         public string ChargeSpellId { get; }
         public int ChargePercent { get; }
@@ -70,6 +70,7 @@ namespace ProjectM.Units
                 foreach (var pair in damagePercent)
                 {
                     if (pair.Value < 0) throw new ArgumentOutOfRangeException(nameof(damagePercent));
+                    if (pair.Key == Element.Neutral) throw new ArgumentException("무속성은 약점 · 저항을 받지 않는다 (3-21a).", nameof(damagePercent));
                     _damagePercent[(int)pair.Key] = pair.Value;
                 }
         }

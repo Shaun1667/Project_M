@@ -165,7 +165,7 @@ namespace ProjectM
             _characterSelect.Open(portraits, names, _characterIndex, index =>
             {
                 _characterIndex = index;
-                StartNewRun(list[index].VisualId);
+                StartNewRun(list[index].VisualId, list[index].StartingSpells); // 3-21a: 루멘 = 빛의 창 기술 2개
             }, illustrations);
         }
 
@@ -178,7 +178,8 @@ namespace ProjectM
         }
 
         /// <param name="visualId">고른 캐릭터의 모습 ID (null이면 Player.asset 그대로).</param>
-        private void StartNewRun(string visualId)
+        /// <param name="characterSpells">고른 캐릭터(직업)의 시작 주문 (3-21a). null이면 없음.</param>
+        private void StartNewRun(string visualId, System.Collections.Generic.IReadOnlyList<string> characterSpells = null)
         {
             ulong seed = _fixedSeed != 0 ? (ulong)_fixedSeed : (ulong)System.DateTime.UtcNow.Ticks;
             Seed = seed;
@@ -264,7 +265,13 @@ namespace ProjectM
             World.Events.Publish(new MapLoadedEvent(World.Map));
             if (decor != null) FloorDecor.Apply(World, Floor, decor, water, traps); // 3-11a · 3-12a: MapLoaded 뒤에 (화면이 지우지 않게), 적 배치 전
             var playerDef = _playerDef.ToDef();
-            if (!string.IsNullOrEmpty(visualId)) playerDef = playerDef.WithVisualId(visualId); // 2026-10-21 캐릭터 선택 — 지금은 외형만
+            if (!string.IsNullOrEmpty(visualId)) playerDef = playerDef.WithVisualId(visualId); // 2026-10-21 캐릭터 선택 — 외형
+            if (characterSpells != null)
+            {
+                foreach (var id in characterSpells)
+                    if (!Spells.TryGet(id, out _)) Debug.LogWarning($"[GameRoot] 캐릭터 시작 주문 '{id}'가 SpellCatalog에 없다.", this);
+                playerDef = playerDef.WithExtraStartingSpells(characterSpells); // 3-21a 직업 시작 기술 (빠른 칸 앞쪽)
+            }
             Unit player;
             if (zones != null) // 3-17a: 1층 적 종류도 구역 표에서
             {

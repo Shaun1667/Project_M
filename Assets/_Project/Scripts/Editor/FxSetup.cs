@@ -46,6 +46,7 @@ namespace ProjectM.Editor
         private static readonly Color Keep = Color.clear; // 원래 색
         private static readonly Color Sand = new Color(0.85f, 0.68f, 0.38f); // 3-17c 대지 (사막 주술사)
         private static readonly Color Gust = new Color(0.8f, 0.95f, 0.85f); // 3-17c 바람
+        private static readonly Color LightGold = new Color(1f, 0.95f, 0.7f); // 3-21a 빛의 창 (무속성) — 흰 금빛
 
         private struct Row
         {
@@ -82,6 +83,7 @@ namespace ProjectM.Editor
             new Row("cast.Water", Hovl + "Hits and explosions/Holy hit", 0.14f, Water, 1.5f, 0.6f),
             new Row("cast.Earth", Hovl + "Hits and explosions/Holy hit", 0.14f, Sand, 1.5f, 0.6f), // 3-17c
             new Row("cast.Wind", Hovl + "Hits and explosions/Holy hit", 0.14f, Gust, 1.5f, 0.6f),
+            new Row("cast.Neutral", Hovl + "Hits and explosions/Holy hit", 0.16f, LightGold, 1.5f, 0.6f), // 3-21a 빛의 창
             // 투사체 (날아가는 동안 루프)
             new Row("projectile.Fire", Eric + "FX_Fireball", 0.09f, Keep),
             new Row("projectile.Ice", Hovl + "Sparks/Sparks white", 1.2f, Ice),
@@ -89,6 +91,7 @@ namespace ProjectM.Editor
             new Row("projectile.Water", Hovl + "Sparks/Sparks blue", 1.2f, Water),
             new Row("projectile.Earth", Hovl + "Sparks/Sparks white", 1.2f, Sand), // 3-17c
             new Row("projectile.Wind", Hovl + "Sparks/Sparks white", 1.2f, Gust),
+            new Row("projectile.Neutral", Hovl + "Sparks/Sparks white", 1.2f, LightGold), // 3-21a 빛의 창 던지기
             // 맞는 칸 (단일 · 광선 끝)
             new Row("impact.Fire", Hovl + "Hits and explosions/Explosion", 0.16f, Keep, 1.5f, 1f),
             new Row("impact.Ice", Hovl + "Hits and explosions/Snow hit", 0.35f, Keep, 1.3f, 0.9f),
@@ -97,6 +100,7 @@ namespace ProjectM.Editor
             new Row("impact.Water", Hovl + "Sparks/Sparks explode blue", 0.25f, Water, 1.3f, 0.9f),
             new Row("impact.Earth", Hovl + "Smoke effects/Smoke puff", 0.12f, Sand, 1.5f, 1f), // 3-17c
             new Row("impact.Wind", Hovl + "Smoke effects/Smoke puff", 0.12f, Gust, 1.5f, 1f),
+            new Row("impact.Neutral", Hovl + "Hits and explosions/Holy hit", 0.3f, LightGold, 1.5f, 0.7f), // 3-21a
             // 3×3 폭발 (중심 칸 바닥)
             new Row("burst.Fire", Hovl + "AoE effects/Ground AOE explosion", 0.33f, Keep, 1.6f, 1f, 0.02f),
             new Row("burst.Ice", Hovl + "AoE effects/Snow AOE", 0.33f, Keep, 2f, 1f, 0.02f),
@@ -235,6 +239,7 @@ namespace ProjectM.Editor
 
             new PixelRow("line.Lightning", "line_lightning", 1f, 16f),
             new PixelRow("line.Fire", "line_lightning", 1f, 16f, new Color(1f, 0.6f, 0.3f)),
+            new PixelRow("line.Neutral", "line_lightning", 1f, 16f, new Color(1f, 0.95f, 0.7f)), // 3-21a 빛의 창 찌르기 (광선)
         };
 
         /// <summary>그림 4장을 픽셀 스프라이트로 가져와 순서대로 (없으면 빈 배열 + 경고).</summary>
@@ -525,7 +530,7 @@ namespace ProjectM.Editor
                 entry.Speed = row.Speed; entry.Lifetime = row.Lifetime; entry.Height = row.Height;
                 catalog.Set(entry);
             }
-            var lineTints = new Dictionary<string, Color> { { "line.Lightning", new Color(1f, 0.92f, 0.35f, 1f) }, { "line.Fire", new Color(1f, 0.55f, 0.2f, 1f) } };
+            var lineTints = new Dictionary<string, Color> { { "line.Lightning", new Color(1f, 0.92f, 0.35f, 1f) }, { "line.Fire", new Color(1f, 0.55f, 0.2f, 1f) }, { "line.Neutral", new Color(1f, 0.95f, 0.7f, 1f) } };
             foreach (var pair in pixel) // 3D 표에 없는 키: 그림만 (번개 선은 3D 선 색도)
             {
                 var entry = pair.Value;

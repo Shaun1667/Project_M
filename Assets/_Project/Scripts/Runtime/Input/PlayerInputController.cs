@@ -603,7 +603,7 @@ namespace ProjectM.Input
                 return;
             }
 
-            BeginAim(player, spellId, null, slot, spell.Range);
+            BeginAim(player, spellId, null, slot, SpellModifiers.For(player, spell).Range); // 3-21a 무기 강화 사거리
         }
 
         /// <summary>
@@ -783,7 +783,7 @@ namespace ProjectM.Input
         private SpellDef AimSpell()
         {
             if (_aimSpellId == null || !_spells.TryGet(_aimSpellId, out var first)) return null;
-            if (_aimFusionSecond == null) return first;
+            if (_aimFusionSecond == null) return PlayerActions.TryGetPlayer(_world, out var player) ? SpellModifiers.For(player, first) : first; // 3-21a
             return _spells.TryGet(_aimFusionSecond, out var second) ? _fusions.Build(first, second) : null;
         }
 

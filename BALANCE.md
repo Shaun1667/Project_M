@@ -27,6 +27,7 @@
 | 18 | 허기 · 음식 (3-14) | `Assets/_Project/Data/Units/HungerConfig.asset` (`HungerConfigAsset`) + `ItemCatalog.asset`의 음식 5줄 | `ProjectM.Units.HungerConfig` · `Hunger` · `HungerSystem` · `EatCommand` | 사용 중 (3-14) |
 | 17 | 함정 (3-12a) | `Assets/_Project/Data/Dungeon/TrapCatalog.asset` (`TrapCatalogAsset`) + `SpellCatalog.asset`의 `trap_*` 5줄 | `ProjectM.Dungeon.TrapBook` · `Traps` · `TrapSystem` | 사용 중 (3-12a) |
 | 16 | 층 꾸미기 (풀 · 물 웅덩이) | `Assets/_Project/Data/Dungeon/FloorDecorConfig.asset` (`FloorDecorConfigAsset`) | `ProjectM.Dungeon.FloorDecorConfig` · `FloorDecor` · `GrassTrampleSystem` | 사용 중 (3-11a) |
+| 21 | 직업 — 루멘 빛의 창 (3-21) | `SpellCatalog.asset`의 `light_spear_*` 줄(무기 강화 필드) + `Data/Units/CharacterCatalog.asset`(`ClassId` · `StartingSpells`) | `ProjectM.Magic.SpellDef` · `SpellModifiers` · `UnitDef.WithExtraStartingSpells` | 사용 중 (3-21a) |
 | 14 | 물약 · 주문서 (효과 · 식별 · 무작위 배치 · 던지기) | `Assets/_Project/Data/Items/ConsumableConfig.asset` (`ConsumableConfigAsset`) + `ItemCatalog.asset`의 `Effect` · `Weight` (9번) | `ProjectM.Items.ConsumableConfig` · `Consumables` · `Identification` · `Throwing` | 사용 중 (3-9) |
 
 **데이터 구조 규칙 (0-4 결정)**
@@ -720,6 +721,24 @@ SPD 규칙 그대로: 방어 굴림 = 강화 ~ 티어 × (2 + 강화) (SPD Armor
 검산 (`ZoneTests.ProjectAsset_MatchesBalanceTable` · `ProjectAsset_IceCave_MatchesBalanceTable`(3-18) · `ProjectAsset_LavaCave_MatchesBalanceTable`(3-19) · `ProjectAsset_TimeTemple_MatchesBalanceTable`(3-20), `EnemyTraitTests.ProjectAsset_MatchesBalanceTable`, `DungeonGeneratorTests` 층 수 25).
 결과 (3-18, 손 계산): 시작 근접(소검 평균 3)으로 박쥐 약 3대 · 골렘 약 11대 — 골렘은 불 주문(5 × 150% = 7)이 2배 이득, 얼음 주문은 절반. 물보라로 적신 뒤 서리 주술사 · 눈보라에 맞으면 빙결 2턴 — 얼음 동굴에서는 젖은 상태가 위험.
 결과 (3-19, 손 계산): 마그마 골렘 · 용암 군주는 불 주문이 0 — 물보라(젖음) → 얼음(빙결 · 150%) · 번개(감전)가 답. 얼음 화살 3 × 150% = 4, 골렘 40은 근접과 섞어 약 8번. 용암 웅덩이 위에 서면 매 턴 화상 1(3턴 갱신) — 지나가기만 해도 약 3.
+
+---
+
+## 21. 직업 — 루멘 빛의 창 (3-21, `Docs/직업_루멘.md`)
+
+결정 (2026-11-05, 사용자 — 문서 1번 C1~C9, 수치는 [제안] 그대로 확정 "그대로 괜찮아"). 데이터 = `SpellCatalog.asset` 줄 + `CharacterCatalog.asset` 루멘 줄(`ClassId` = `lumen`, `StartingSpells`).
+
+**3-21a 공통 기술 (시작부터, 빠른 칸 1 · 2)** — 무속성(`Element.Neutral`: 반응 · 약점 · 저항 없음), 항상 명중 · 행동 1틱
+
+| ID | 이름 | 모양 | 사거리 | 피해 | 마나 | 창 강화 `BoostWeaponId` · `BoostDamagePercent` · `BoostRange` |
+|---|---|---|---|---|---|---|
+| `light_spear_thrust` | 빛의 창 찌르기 | Beam (직선 관통) | **2** | **4** | **2** | `spear` · **150**% · **+1** → 사거리 3 · 피해 6 |
+| `light_spear_throw` | 빛의 창 던지기 | Bolt | **5** | **4** | **3** | `spear` · **150**% · **+1** → 사거리 6 · 피해 6 |
+
+- 창 강화 피해 = 피해 × % (내림). 마나 · 모양은 그대로. 적용 = `SpellModifiers.For` 한 곳(미리보기 · 사거리 표시 · 시전 공용).
+- 결과: 마나당 피해 찌르기 2(1명) ~ 4(2명 일렬) · 던지기 1.33 — 불꽃 화살(5/3 = 1.67)보다 약하지만 반응이 없어 젖음 · 빙결 같은 상태를 깨지 않는다. 창을 들면 6/2 = 3 · 6/3 = 2. 창(2틱 공격 · 2칸)과 같이 쓰는 근접형 빌드의 바탕.
+
+검산 (`LightSpearTests.ProjectAssets_MatchBalanceTable`).
 
 ---
 

@@ -27,6 +27,26 @@ namespace ProjectM.Data
             [Tooltip("상태가 걸릴 확률 % (맞은 유닛마다 따로)")] [Range(0, 100)] public int StatusChancePercent;
             [Tooltip("남기는 지형 효과 (TerrainCatalog). Bolt = 멈춘 칸, Beam = 지나간 칸, Burst = 폭발 범위")] public TerrainEffectType LeavesTerrain;
             [Tooltip("HUD · 로그에 보이는 이름 (표시 전용, 규칙에 쓰지 않음). 비면 ID")] public string DisplayName;
+            [Header("무기 강화 (3-21a 빛의 창)")]
+            [Tooltip("이 무기(아이템 ID)를 들면 강화. 비면 없음")] public string BoostWeaponId;
+            [Tooltip("강화 피해 % (내림). 무기가 비면 쓰지 않음")] [Min(0)] public int BoostDamagePercent;
+            [Tooltip("강화 사거리 +")] [Min(0)] public int BoostRange;
+        }
+
+        /// <summary>에디터 Setup용 (3-21a): 무기 강화가 비어 있을 때만 채운다.</summary>
+        public bool SetBoostIfNone(string id, string weaponId, int damagePercent, int range)
+        {
+            for (int i = 0; i < _spells.Count; i++)
+            {
+                if (_spells[i].Id != id || !string.IsNullOrEmpty(_spells[i].BoostWeaponId)) continue;
+                var e = _spells[i];
+                e.BoostWeaponId = weaponId;
+                e.BoostDamagePercent = damagePercent;
+                e.BoostRange = range;
+                _spells[i] = e;
+                return true;
+            }
+            return false;
         }
 
         [SerializeField] private List<Entry> _spells = new List<Entry>();
@@ -37,7 +57,8 @@ namespace ProjectM.Data
             var defs = new List<SpellDef>(_spells.Count);
             foreach (var e in _spells)
                 defs.Add(new SpellDef(e.Id, e.Element, e.Shape, e.Range, e.Damage, e.ManaCost, e.Radius, e.AppliesStatus, e.StatusChancePercent,
-                    e.LeavesTerrain));
+                    e.LeavesTerrain, boostWeaponId: e.BoostWeaponId,
+                    boostDamagePercent: string.IsNullOrEmpty(e.BoostWeaponId) ? 100 : e.BoostDamagePercent, boostRange: e.BoostRange));
             return new SpellBook(defs, statuses, terrains, reactions);
         }
 
