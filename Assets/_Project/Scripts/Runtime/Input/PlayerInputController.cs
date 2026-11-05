@@ -1350,6 +1350,7 @@ namespace ProjectM.Input
             }
 
             _clock.SubmitPlayerCommand(command);
+            if (_path == null) return; // 그 걸음으로 판이 끝남 (26층 유물 줍기 = 승리 · 사망) — 결과 처리가 이미 길을 비움
             _pathIndex += command is MoveCommand move && move.Then.HasValue && player.Pos == move.Then.Value ? 2 : 1;
             isLast = _pathIndex >= _path.Count;
             if (isLast || command is AttackCommand) CancelPath();
