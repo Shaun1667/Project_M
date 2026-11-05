@@ -33,14 +33,19 @@ namespace ProjectM.Units
         public string StartingArmor { get; }
         /// <summary>판 시작 배낭에 넣는 아이템 ID (2026-11-05 지스타 시연 — 마법 융합기). 비면 없음.</summary>
         public IReadOnlyList<string> StartingItems { get; }
+        /// <summary>이 중 하나를 판마다 무작위로 더 넣는다 (2026-11-05 — 물 마법서 + 무작위 마법서 한 권, StartingKit). 비면 없음.</summary>
+        public IReadOnlyList<string> StartingRandomItems { get; }
 
         public UnitDef(string visualId, int maxHp, int attackDamage, int sightRange, int maxMana = 0, IReadOnlyList<string> startingSpells = null,
             int accuracy = 0, int evasion = 0, int expReward = 0, int expMaxLevel = 0, int strength = 0, string startingArmor = null,
-            IReadOnlyList<string> startingItems = null)
+            IReadOnlyList<string> startingItems = null, IReadOnlyList<string> startingRandomItems = null)
         {
             var items = new List<string>();
             if (startingItems != null) foreach (var item in startingItems) if (!string.IsNullOrEmpty(item)) items.Add(item);
             StartingItems = items;
+            var pool = new List<string>();
+            if (startingRandomItems != null) foreach (var item in startingRandomItems) if (!string.IsNullOrEmpty(item) && !pool.Contains(item)) pool.Add(item);
+            StartingRandomItems = pool;
             StartingArmor = string.IsNullOrEmpty(startingArmor) ? null : startingArmor;
             if (strength < 0) throw new ArgumentOutOfRangeException(nameof(strength), strength, "힘은 0 이상이어야 한다.");
             Strength = strength;
@@ -82,12 +87,12 @@ namespace ProjectM.Units
             if (percent == 100) return this;
             int S(int v) => (int)((long)v * percent / 100);
             return new UnitDef(VisualId, Math.Max(1, S(MaxHp)), S(AttackDamage), SightRange, MaxMana, StartingSpells,
-                S(Accuracy), S(Evasion), ExpReward, ExpMaxLevel, Strength, StartingArmor, StartingItems);
+                S(Accuracy), S(Evasion), ExpReward, ExpMaxLevel, Strength, StartingArmor, StartingItems, StartingRandomItems);
         }
 
         /// <summary>모습만 바꾼 사본 (캐릭터 선택 — 결정 2026-10-21: 지금은 외형만 다름). 수치 · 시작 주문 · 갑옷은 그대로.</summary>
         public UnitDef WithVisualId(string visualId) => new UnitDef(visualId, MaxHp, AttackDamage, SightRange, MaxMana, StartingSpells,
-            Accuracy, Evasion, ExpReward, ExpMaxLevel, Strength, StartingArmor, StartingItems);
+            Accuracy, Evasion, ExpReward, ExpMaxLevel, Strength, StartingArmor, StartingItems, StartingRandomItems);
 
         /// <summary>캐릭터(직업)의 시작 주문을 앞에 더한 사본 (3-21a — 루멘의 빛의 창 기술). 이미 있는 주문은 다시 넣지 않는다.</summary>
         public UnitDef WithExtraStartingSpells(IReadOnlyList<string> extra)
@@ -97,7 +102,7 @@ namespace ProjectM.Units
             foreach (var id in extra) if (!string.IsNullOrEmpty(id) && !spells.Contains(id)) spells.Add(id);
             foreach (var id in StartingSpells) if (!spells.Contains(id)) spells.Add(id);
             return new UnitDef(VisualId, MaxHp, AttackDamage, SightRange, MaxMana, spells,
-                Accuracy, Evasion, ExpReward, ExpMaxLevel, Strength, StartingArmor, StartingItems);
+                Accuracy, Evasion, ExpReward, ExpMaxLevel, Strength, StartingArmor, StartingItems, StartingRandomItems);
         }
     }
 }

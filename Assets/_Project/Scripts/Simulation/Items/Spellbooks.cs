@@ -172,7 +172,8 @@ namespace ProjectM.Items
     public static class Loot
     {
         /// <summary>마법서 배치 계획을 세운다 (판 시작에 한 번). floorCount = 전체 층 수 — 마지막 층(보스)은 빼되 1층뿐이면 1층에.</summary>
-        public static void PlanSpellbooks(World world, ItemBook items, LootConfig config, int floorCount)
+        /// <param name="exclude">놓지 않을 마법서 (2026-11-05 — 시작 배낭으로 받은 책). null = 없음.</param>
+        public static void PlanSpellbooks(World world, ItemBook items, LootConfig config, int floorCount, ICollection<string> exclude = null)
         {
             if (world == null) throw new ArgumentNullException(nameof(world));
             if (items == null) throw new ArgumentNullException(nameof(items));
@@ -180,7 +181,7 @@ namespace ProjectM.Items
 
             var books = new List<string>();
             foreach (var id in items.Ids)
-                if (items.TryGet(id, out var def) && def.Use == ItemUse.LearnSpell) books.Add(id);
+                if (items.TryGet(id, out var def) && def.Use == ItemUse.LearnSpell && (exclude == null || !exclude.Contains(id))) books.Add(id);
 
             var rng = world.Rng.Get(RngStream.Loot);
             for (int i = 0; i < books.Count - 1; i++)

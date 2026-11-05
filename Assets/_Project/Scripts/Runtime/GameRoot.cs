@@ -740,7 +740,8 @@ namespace ProjectM
                 Debug.LogWarning($"[GameRoot] 시작 갑옷 '{startingArmor}'가 ItemCatalog에 없다.", this);
             if (hunger?.StartingFood != null && Items.TryGet(hunger.StartingFood, out _))
                 Inventory.TryAdd(World, Spells, Items, player, InventoryRef.Item(hunger.StartingFood)); // 3-14: 식량 1개로 시작 (SPD)
-            foreach (var itemId in playerDef.StartingItems) // 2026-11-05 지스타 시연: 시작 배낭 (Player.asset — 마법 융합기)
+            var startKit = StartingKit.Roll(World, playerDef); // 2026-11-05 지스타 시연: 시작 배낭 (Player.asset — 융합기 · 물 마법서 · 치유 물약 + 무작위 마법서 하나)
+            foreach (var itemId in startKit)
             {
                 if (!Items.TryGet(itemId, out _)) { Debug.LogWarning($"[GameRoot] 시작 아이템 '{itemId}'가 ItemCatalog에 없다.", this); continue; }
                 Inventory.TryAdd(World, Spells, Items, player, InventoryRef.Item(itemId));
@@ -753,7 +754,7 @@ namespace ProjectM
                 // 3-5: 한 판의 마법서 배치 계획(1~마지막 전 층) → 1층 몫을 놓는다 (Loot 난수 — 맵 · 적 배치는 그대로)
                 // 3-17a: 한 번만 놓는 것(책 · 무기 · 갑옷 · 강화)은 앞 층(LootPlanFloors)에만 — 계획 함수는 '층 수 − 1'개 층에 나눈다
                 int planFloors = zones != null && _zoneCatalog.LootPlanFloors > 0 ? System.Math.Min(dungeonConfig.FloorCount, _zoneCatalog.LootPlanFloors + 1) : dungeonConfig.FloorCount;
-                Loot.PlanSpellbooks(World, Items, loot, planFloors);
+                Loot.PlanSpellbooks(World, Items, loot, planFloors, startKit); // 시작에 받은 마법서는 바닥에 또 놓지 않음
                 Loot.PlanWeapons(World, Items, loot, planFloors); // 3-7a: 책 계획 뒤에 붙인다
                 Loot.PlanConsumables(World, Items, loot, planFloors); // 3-7b: 강화 주문서 · 힘 물약 (무기 계획 뒤)
                 Loot.PlanRandomConsumables(World, Items, consumableConfig, dungeonConfig.FloorCount); // 3-9: 층마다 무작위 물약 · 주문서
@@ -761,6 +762,7 @@ namespace ProjectM
                 if (hunger != null) Loot.PlanFood(World, Items, hunger, dungeonConfig.FloorCount); // 3-14: 층마다 식량 1 + 가끔 빵 (앞 계획 뒤)
             }
             Identification.AssignLooks(World, Items, consumableConfig); // 3-9: 판마다 겉모습 (배치 계획 모두 뒤 — 앞 계획은 그대로)
+            foreach (var itemId in startKit) Identification.Identify(World, itemId); // 2026-11-05: 시작 배낭의 물약 · 주문서는 알고 시작 (겉모습 정한 뒤 — AssignLooks가 식별을 비움)
             if (loot != null) Loot.PlanRelics(World, Items, loot, dungeonConfig.FloorCount); // 3-28a: 유물 (겉모습 뒤 — 앞 계획 · 겉모습은 그대로)
             if (loot != null)
             {

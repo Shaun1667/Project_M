@@ -26,3 +26,10 @@ MonoBehaviour:
   _startingArmor: armor_cloth
   _startingItems:
   - fusion_device
+  - spellbook_water
+  - potion_healing
+  _startingRandomItems:
+  - spellbook_fire
+  - spellbook_ice
+  - spellbook_lightning
+  - spellbook_poison

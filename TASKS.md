@@ -927,6 +927,8 @@
   - 확인: 컴파일 오류 0, 에셋 `ToDef().StartingItems` = fusion_device (모습 바꾼 사본도)
   - 테스트 작성, 실행 안 함: `StartingItemsTests` 2개
   - 확인 방법: `Main.unity` 플레이 → 새 게임 → I(배낭)에 마법 융합기 · 식량. 주문 두 개를 배운 뒤 융합기 사용 → 융합 조준
+  - 추가 (2026-11-05 사용자 "시작 아이템에 마법서 2권이랑 치유 물약 넣어줘" → "물 마법이랑 하나는 랜덤하게 하나 해서 넣는걸로 해주고 치유물약은 처음부터 감정 되어있게 해줘"): 시작 배낭 = 마법 융합기 · **물보라 마법서** · **치유 물약** + **무작위 마법서 하나**(불 · 얼음 · 번개 · 독 중, `StartingKit.Roll` — 새 난수 `RngStream.StartKit`, 맵 · 적 · 아이템 배치 난수와 따로). 시작 배낭의 물약 · 주문서는 감정된 채 시작(`Identification.Identify` — 겉모습 정한 뒤), 받은 마법서는 1~4층 마법서 계획에서 뺌(`Loot.PlanSpellbooks(…, exclude)` — 그래서 그 뒤 아이템 배치는 바뀔 수 있음, 맵 · 적은 그대로). 데이터 `Player.asset` `_startingItems` · `_startingRandomItems`
+  - 확인: `dotnet build`(Simulation · Runtime · Tests) 오류 0 — Unity MCP가 응답하지 않아 에디터 컴파일은 못 봄. 테스트 작성, 실행 안 함: `StartingItemsTests` 4개(복사 유지 · 무작위 한 권 · 같은 시드 = 같은 책 · Loot 난수 그대로 · 마법서 계획 제외 · 에셋)
 - [~] **G-5. 3D로 되돌리기** (2026-10-28) — 플레이 확인 대기
   - 결정 (2026-10-28, 사용자): 그래픽 기준 = **실시간 3D**(Phase G)로 되돌림, Phase P 중단. 2D 코드 · 그림은 지우지 않고 남겨 둠(추천안) — `Pixel2D = true` + Setup이면 다시 2D. 맨 위 진행 요약 "최신 (2026-10-28)" 참고
   - 같은 날 두 갈래로 진행됨: 다른 PC · 세션이 main에 `e61e60d 10.28/P-X/BackTo3D`(Pixel2D 스위치 · PixelMap · FogSoft 정리 · 카메라 스카이박스)를 먼저 푸시했고, 이 PC는 `phaseP-fx16` 위에서 같은 되돌리기를 따로 함 → 사용자 결정(추천안, 2026-10-28): main 위에 다시 쌓음 — 코드 · 씬은 main 쪽을 쓰고 `PixelWallCaps` 삭제만 더함, 16프레임 시험 커밋은 그대로 올림

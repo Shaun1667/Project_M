@@ -37,7 +37,9 @@ namespace ProjectM.Data
         [Tooltip("판 시작 배낭 아이템 ID (2026-11-05 지스타 시연 — 플레이어 fusion_device). 비면 없음")] [SerializeField] private System.Collections.Generic.List<string> _startingItems = new System.Collections.Generic.List<string>();
 
         public UnitDef ToDef() => new UnitDef(_visualId, _maxHp, _attackDamage, _sightRange, _maxMana, _startingSpells,
-            _accuracy, _evasion, _expReward, _expMaxLevel, _strength, _startingArmor, _startingItems);
+            _accuracy, _evasion, _expReward, _expMaxLevel, _strength, _startingArmor, _startingItems, _startingRandomItems);
+
+        [Tooltip("이 중 하나를 판마다 무작위로 배낭에 더함 (2026-11-05 — 플레이어: 불 · 얼음 · 번개 · 독 마법서). 비면 없음")] [SerializeField] private System.Collections.Generic.List<string> _startingRandomItems = new System.Collections.Generic.List<string>();
 
         /// <summary>에디터 Setup용: 시작 아이템 목록에 없으면 더한다 (멱등).</summary>
         public bool AddStartingItemIfMissing(string itemId)

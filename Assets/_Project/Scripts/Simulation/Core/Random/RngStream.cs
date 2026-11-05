@@ -19,5 +19,7 @@ namespace ProjectM.Core
         Search = 6,
         /// <summary>적 종류 고르기 (3-17a 구역 표). 맵 생성과 따로 — 적 칸 · 다음 층 모양이 그대로.</summary>
         EnemyKind = 7,
+        /// <summary>시작 배낭 무작위 아이템 (2026-11-05 — 무작위 마법서 한 권). 아이템 배치(Loot)와 따로 — 맵 · 적 배치가 그대로.</summary>
+        StartKit = 8,
     }
 }
