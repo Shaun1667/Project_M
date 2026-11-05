@@ -173,6 +173,32 @@ namespace ProjectM.Tests
         }
 
         [Test]
+        public void ItemIcon_Prefers3DRender_OnlyWhenEnabled_FallsBackToPixel()
+        {
+            // G-17: 3D 아이콘을 켜면 렌더 그림 먼저, 없는 줄은 픽셀 그림 그대로
+            var items = ScriptableObject.CreateInstance<ItemVisualCatalog>();
+            var pixelSprite = Sprite.Create(_texture, new Rect(0, 0, 4, 4), new Vector2(0.5f, 0.5f), 4);
+            var renderSprite = Sprite.Create(_texture, new Rect(0, 0, 4, 4), new Vector2(0.5f, 0.5f), 4);
+            try
+            {
+                items.SetIcon("dart", pixelSprite);
+                items.SetIcon3D("dart", renderSprite);
+                items.SetIcon("potion_crimson", pixelSprite);
+                Assert.That(items.TryGetIcon("dart", out var icon) && icon == pixelSprite, Is.True, "끄면 픽셀 그림");
+                items.SetUse3DIcons(true);
+                Assert.That(items.TryGetIcon("dart", out icon) && icon == renderSprite, Is.True, "켜면 렌더 그림");
+                Assert.That(items.TryGetIcon("potion_crimson", out icon) && icon == pixelSprite, Is.True, "렌더 그림이 없으면 픽셀 그림");
+                Assert.That(items.TryGetIcon("food_ration", out _), Is.False);
+            }
+            finally
+            {
+                Object.DestroyImmediate(items);
+                Object.DestroyImmediate(pixelSprite);
+                Object.DestroyImmediate(renderSprite);
+            }
+        }
+
+        [Test]
         public void MapLoaded_ReplacesPreviousMap()
         {
             CreateTilemapPresenter();

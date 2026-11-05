@@ -62,6 +62,7 @@
 
 → **2026-11-05 이펙트 연결됨: 26 · 27번** (G-14, Setup/FX + `FxPresenter` 이벤트 연결) — 26 점화 순간 `reaction.grass_ignite` · `tallgrass_ignite` · `door_ignite`(팩 Ground AOE explosion을 1칸 크기로) / 27 `use.drink`(발밑에서 솟는 빛) · `use.read`(발밑 금빛 마법진) · `use.shatter`(던진 물약이 떨어진 칸에서 깨짐) · `trap.triggered`(함정 · 식물 발동 칸 불꽃 튐) · `boss.charge`(붉은 오라) · `boss.teleport`(떠난 칸 · 도착한 칸) · `boss.summon`(보스 발밑 붉은 문). 남은 3차: 29(UI).
 → **2026-11-05 연결됨: 25 · 28번** — 25 2구역 사막 타일 5종 + 구역별 타일 세트(G-15, 12-9번) · 28 갑옷 부품 5종을 루멘 · 시아 가슴 뼈에(G-16, 12-10번).
+→ **2026-11-05 29번 일부: 아이템 아이콘 60종** (G-17, 메뉴 Setup/Item Icons) — 바닥 모델을 게임 카메라 각도로 찍어 투명 PNG(`Art/Icons3D`, 128 px) → `ItemVisualCatalog.Icon3D`, 3D 그래픽이면 인벤토리 · 빠른 칸이 먼저 씀(픽셀 그림은 2D용으로 남김). 남은 29: 상태 아이콘 · 막대 · 틀 · 로그 바탕 · 결과 화면 · 너클 아이콘(모델 없음).
 
 | # | ID | 무엇 | 지금 | 만들 것 |
 |---|---|---|---|---|
