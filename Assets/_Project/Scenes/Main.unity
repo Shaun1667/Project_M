@@ -3432,7 +3432,7 @@ MonoBehaviour:
   _soft: {fileID: 2082808113}
   _hardUnexplored: 0
   _softResolution: 4
-  _softFade: 1
+  _softFade: 2
 --- !u!1839735485 &2006350449
 Tilemap:
   m_ObjectHideFlags: 0

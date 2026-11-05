@@ -728,18 +728,19 @@ namespace ProjectM.Tests
             fog.Configure(fogMap, _floorTile, soft);
             fog.Bind(_bus);
 
-            // 5 × 5 맵, x = 0 ~ 3 보임 · x = 4 안 봄. 칸 하나 = 4 텍셀, 둘레 한 칸 (텍셀 x = (칸 x + 1) × 4 + …)
-            _bus.Publish(new MapLoadedEvent(new GridMap(5, 5)));
+            // 9 × 5 맵, x = 0 ~ 7 보임 · x = 8 안 봄. 칸 하나 = 4 텍셀, 둘레 한 칸 (텍셀 x = (칸 x + 1) × 4 + …), 번짐 폭 2칸
+            _bus.Publish(new MapLoadedEvent(new GridMap(9, 5)));
             var visible = new System.Collections.Generic.List<GridPos>();
-            for (int y = 0; y < 5; y++) for (int x = 0; x < 4; x++) visible.Add(new GridPos(x, y));
-            _bus.Publish(Visibility(5, 5, visible.ToArray()));
+            for (int y = 0; y < 5; y++) for (int x = 0; x < 8; x++) visible.Add(new GridPos(x, y));
+            _bus.Publish(Visibility(9, 5, visible.ToArray()));
             _bus.Flush();
-            Assert.That(fogMap.GetTile(new Vector3Int(4, 2, 0)), Is.Null, "안 본 칸도 Tilemap 검정 없음 (번지게)");
+            Assert.That(fogMap.GetTile(new Vector3Int(8, 2, 0)), Is.Null, "안 본 칸도 Tilemap 검정 없음 (번지게)");
             var tex = soft.sprite.texture;
-            Assert.That(((Color32)tex.GetPixel(10, 14)).a, Is.EqualTo(0), "보이는 칸 (1,2) 가운데 = 투명");
-            Assert.That(((Color32)tex.GetPixel(22, 14)).a, Is.EqualTo(255), "안 본 칸 (4,2) = 검정");
-            byte nearEdge = ((Color32)tex.GetPixel(19, 14)).a, farther = ((Color32)tex.GetPixel(18, 14)).a;
-            Assert.That(nearEdge, Is.GreaterThan(farther).And.LessThan(255), "보이는 칸 (3,2) 안쪽 = 경계에 가까울수록 어둡게 (번짐 폭 1칸)");
+            Assert.That(((Color32)tex.GetPixel(20, 14)).a, Is.EqualTo(0), "보이는 칸 (4,2) = 투명 (어두운 곳에서 2칸 넘게)");
+            Assert.That(((Color32)tex.GetPixel(38, 14)).a, Is.EqualTo(255), "안 본 칸 (8,2) = 검정");
+            byte nearEdge = ((Color32)tex.GetPixel(35, 14)).a, farther = ((Color32)tex.GetPixel(34, 14)).a, far = ((Color32)tex.GetPixel(30, 14)).a;
+            Assert.That(nearEdge, Is.GreaterThan(farther).And.LessThan(255), "보이는 칸 (7,2) 안쪽 = 경계에 가까울수록 어둡게");
+            Assert.That(far, Is.GreaterThan(0).And.LessThan(farther), "경계에서 1칸 넘게 떨어진 (6,2)도 조금 어둡게 (번짐 폭 2칸)");
             Assert.That(tex.filterMode, Is.EqualTo(FilterMode.Bilinear), "이중 선형 = 경계가 흐릿");
             Object.DestroyImmediate(fogGo);
         }

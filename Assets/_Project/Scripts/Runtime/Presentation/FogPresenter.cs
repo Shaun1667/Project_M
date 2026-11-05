@@ -25,7 +25,7 @@ namespace ProjectM.Presentation
         [Tooltip("켜면 안 본 칸은 번짐 없이 Tilemap 검정으로 덮는다 (2026-10-23 2D). 끄면 검정 경계도 흐릿하게 (2026-11-05 사용자 \"SPD처럼 경계선이 흐릿하게\")")]
         [SerializeField] private bool _hardUnexplored;
         [Tooltip("부드러운 안개: 칸 하나를 몇 텍셀로 (클수록 매끈)")] [Range(1, 8)] [SerializeField] private int _softResolution = 4;
-        [Tooltip("부드러운 안개: 어두운 칸 경계에서 밝은 칸 안쪽으로 번지는 폭 (칸)")] [Range(0.1f, 2f)] [SerializeField] private float _softFade = 1f;
+        [Tooltip("부드러운 안개: 어두운 칸 경계에서 밝은 칸 안쪽으로 번지는 폭 (칸)")] [Range(0.1f, 4f)] [SerializeField] private float _softFade = 2f;
 
         private Texture2D _softTexture;
         private Color32[] _softPixels;
@@ -133,6 +133,7 @@ namespace ProjectM.Presentation
         /// 맵 크기 + 둘레 한 칸짜리 텍스처 (칸 하나 = _softResolution 텍셀, 이중 선형). 스프라이트 왼쪽 아래 = 칸 (−1, −1)의 왼쪽 아래 (1 칸 = 1 단위).
         /// 2026-11-05: 텍셀 하나 = 칸 하나일 때는 경계가 칸 가운데 ~ 가운데로 번져, 그리지 않는 안 본 칸(3D 바닥 모듈 없음) 앞에서 반쯤 어두운 채 끊겼다 →
         /// 더 잘게 나눠 "어두운 칸까지의 거리"로 칠한다 — 경계에 닿으면 그 칸 어둡기 그대로, 밝은 칸 안쪽 _softFade칸 동안 서서히 밝아짐.
+        /// 2026-11-05 사용자 "아직 선명 — 더 흐릿하게": 폭 1 → 2칸, 직선 대신 smoothstep 곡선.
         /// </summary>
         private void BuildSoft(int width, int height)
         {
@@ -170,6 +171,7 @@ namespace ProjectM.Presentation
             int r = Mathf.Max(1, _softResolution);
             int w = (_width + 2) * r, h = (_softHeight + 2) * r;
             float fade = Mathf.Max(0.01f, _softFade);
+            int reach = Mathf.CeilToInt(fade); // 번짐 폭만큼 떨어진 칸까지 본다
             Color32 baseColor = _unexploredColor;
             for (int ty = 0; ty < h; ty++)
             {
@@ -180,8 +182,8 @@ namespace ProjectM.Presentation
                     float px = (tx + 0.5f) / r - 1f;
                     int cx = Mathf.FloorToInt(px);
                     float d = Darkness(cx, cy);
-                    for (int oy = -1; oy <= 1; oy++)
-                        for (int ox = -1; ox <= 1; ox++)
+                    for (int oy = -reach; oy <= reach; oy++)
+                        for (int ox = -reach; ox <= reach; ox++)
                         {
                             if (ox == 0 && oy == 0) continue;
                             float v = Darkness(cx + ox, cy + oy);
@@ -189,7 +191,7 @@ namespace ProjectM.Presentation
                             float dx = Mathf.Max(0f, Mathf.Max(cx + ox - px, px - (cx + ox + 1)));
                             float dy = Mathf.Max(0f, Mathf.Max(cy + oy - py, py - (cy + oy + 1)));
                             float k = 1f - Mathf.Sqrt(dx * dx + dy * dy) / fade;
-                            if (k > 0f) d = Mathf.Max(d, v * k);
+                            if (k > 0f) d = Mathf.Max(d, v * k * k * (3f - 2f * k)); // smoothstep — 경계 · 끝에서 꺾임이 안 보이게
                         }
                     _softPixels[ty * w + tx] = new Color32(baseColor.r, baseColor.g, baseColor.b, (byte)Mathf.RoundToInt(Mathf.Clamp01(d) * 255f));
                 }
