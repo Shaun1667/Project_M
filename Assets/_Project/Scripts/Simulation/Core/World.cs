@@ -117,6 +117,9 @@ namespace ProjectM.Core
 
         public void SetShopRules(ProjectM.Dungeon.ShopRules rules) => ShopRules = rules;
 
+        /// <summary>디버그 무적 (2026-11-05): 켜면 플레이어 진영이 피해를 받지 않는다 (Combat.ApplyDamage). 개발 도구라 저장하지 않는다 — 새 판 · 불러오기 때 GameRoot가 다시 넣는다.</summary>
+        public bool DebugInvulnerable { get; set; }
+
         public void SetItemRules(Action<ProjectM.Magic.Element, IReadOnlyList<GridPos>> onCellsHit, Action<Unit> onUnitDied, Action<GridPos> onGrassTrampled = null)
         {
             OnCellsHit = onCellsHit;

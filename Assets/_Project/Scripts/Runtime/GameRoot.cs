@@ -98,6 +98,54 @@ namespace ProjectM
             }
         }
 
+        private bool _debugInvulnerable;
+        private PlayerVisionSystem _vision;
+        private ProgressionConfig _progression;
+
+        /// <summary>[상태 변경] 디버그 무적 (2026-11-05): 플레이어가 피해를 받지 않는다 (World.DebugInvulnerable — 저장 안 함, 새 판 · 이어하기에도 유지).</summary>
+        public bool DebugInvulnerable
+        {
+            get => _debugInvulnerable;
+            set
+            {
+                _debugInvulnerable = value;
+                if (World != null) World.DebugInvulnerable = value;
+            }
+        }
+
+        /// <summary>[상태 변경] 디버그 레벨: 플레이어를 levels만큼 올린다 (다음 레벨까지 경험치를 주는 평소 경로 — 체력 · 마나 · 명중 · 회피 · 특성 점수 그대로). 올린 레벨 수.</summary>
+        public int DebugAddLevels(int levels)
+        {
+            if (World == null || _progression == null || !World.Units.TryGet(_playerId, out var player)) return 0;
+            int start = player.Level;
+            for (int i = 0; i < levels && player.Level < _progression.MaxLevel; i++)
+                Progression.GainExp(World, player, System.Math.Max(1, _progression.ExpToNext(player.Level) - player.Exp), _progression);
+            World.Events.Flush(); // 틱 밖 변경 → HUD에 바로
+            return player.Level - start;
+        }
+
+        /// <summary>디버그 레벨 최대치 (없으면 0).</summary>
+        public int DebugMaxLevel => _progression != null ? _progression.MaxLevel : 0;
+
+        /// <summary>[상태 변경] 디버그 순간이동: 다음 맵 클릭 칸으로 플레이어를 옮긴다 (Esc · 오른쪽 클릭 = 취소). 시작했으면 true.</summary>
+        public bool DebugBeginTeleport() => _input != null && World != null && _input.BeginCellPick(DebugTeleport, HudText.DebugTeleportPick);
+
+        /// <summary>디버그 순간이동을 기다리는 중.</summary>
+        public bool DebugTeleportPending => _input != null && _input.IsPickingCell;
+
+        /// <summary>[상태 변경] 플레이어를 칸으로 옮긴다 — 걸을 수 있는 빈 칸만 (바닥 · 풀 · 계단 · 문, 벽 · 다른 유닛 칸은 거절). 틱을 쓰지 않는다. 옮겼으면 true.</summary>
+        public bool DebugTeleport(GridPos to)
+        {
+            if (World == null || !World.Units.TryGet(_playerId, out var player)) return false;
+            if (!World.Map.InBounds(to) || !GridMap.IsWalkableType(World.Map.Get(to)) || World.Units.IsOccupied(to)) return false;
+            var from = player.Pos;
+            World.Units.Move(player.Id, to);
+            World.Events.Publish(new EntityMovedEvent(player.Id, from, to));
+            _vision?.Refresh(); // 틱 밖 이동 → 시야 바로
+            World.Events.Flush();
+            return true;
+        }
+
         private EntityId _playerId;
         private Unit _player;
         private bool _playerDead;
@@ -465,6 +513,9 @@ namespace ProjectM
             var progression = _progressionConfig != null ? _progressionConfig.ToConfig() : null;
             var hunger = _hungerConfig != null ? _hungerConfig.ToConfig() : null; // 3-14
             var vision = World.InstallCoreSystems(sight, Magic, Statuses, Terrains, progression, _terrainCatalog.ToFireSpread(), hunger); // 3-11b 불 번짐 · 3-14 허기
+            _vision = vision; // 디버그 순간이동 뒤 시야
+            _progression = progression; // 디버그 레벨
+            World.DebugInvulnerable = _debugInvulnerable; // 디버그 무적 (저장 안 함 — 판마다 다시)
             var lootRules = _lootConfig != null ? _lootConfig.ToConfig() : null;
             // 3-14 · 3-15a: 바닥 고기 요리 · 적이 고기 · 금화 떨어뜨리기 (규칙 연결)
             World.SetItemRules((element, cells) => { if (hunger != null) ProjectM.Units.Hunger.TransformFloorItems(World, Items, element, cells); },

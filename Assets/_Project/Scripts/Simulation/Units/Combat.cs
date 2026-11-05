@@ -16,6 +16,7 @@ namespace ProjectM.Units
             if (target.TimeFrozenTicks > 0) return; // 3-28c 회중시계: 멈춘 동안 무적
             ProjectM.Dungeon.AngryShopkeeper.OnDamaged(world, attacker, target, cause); // 3-29: 상인을 주문 · 던지기로 치면 화냄 (체력이 바뀐 뒤 이 피해가 들어감)
             if (world.EnemyRules != null) amount = world.EnemyRules.ModifyDamage(target, cause, amount); // 3-17b 약점 · 저항
+            if (world.DebugInvulnerable && target.Faction == Faction.Player) amount = 0; // 디버그 무적
 
             target.Hp = Math.Max(0, target.Hp - amount);
             if (target.Faction == Faction.Player && amount > 0)

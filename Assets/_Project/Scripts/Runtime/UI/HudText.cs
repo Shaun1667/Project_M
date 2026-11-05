@@ -329,6 +329,8 @@ namespace ProjectM.UI
 
         // ── 타이틀 · 모드 · 시드 · 저장 · 실시간 (3-27) ──
         public const string GameTitle = "MoaDungeon"; // 2026-11-05 사용자: 타이틀 이름 (~~Project M~~)
+        /// <summary>디버그 순간이동 칸 고르기 안내 (2026-11-05).</summary>
+        public const string DebugTeleportPick = "[디버그] 순간이동할 칸을 누르세요 (Esc · 오른쪽 클릭 = 취소)";
         public const string GameSubtitle = "원소와 시간의 던전";
         public static string TitleItemName(TitleItem item) =>
             item == TitleItem.Continue ? "이어하기" : item == TitleItem.NewGame ? "게임 시작" : "종료";

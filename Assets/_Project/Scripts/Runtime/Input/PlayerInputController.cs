@@ -129,6 +129,52 @@ namespace ProjectM.Input
         public System.Action WorkbenchRequested { get; set; }
         public bool IsExamining => _examining;
 
+        private System.Func<GridPos, bool> _cellPick;
+        private string _cellPickHint;
+
+        /// <summary>칸 고르기를 기다리는 중 (디버그 순간이동, 2026-11-05).</summary>
+        public bool IsPickingCell => _cellPick != null;
+
+        /// <summary>
+        /// 다음 맵 클릭 칸을 onPicked에 넘긴다 (디버그 창 순간이동). onPicked가 false면(못 가는 칸) 계속 기다린다. Esc · 오른쪽 클릭 = 취소.
+        /// 다른 입력(이동 · 조준 · 정보 모드)은 고르는 동안 받지 않는다. 시작했으면 true.
+        /// </summary>
+        public bool BeginCellPick(System.Func<GridPos, bool> onPicked, string hint)
+        {
+            if (onPicked == null || _world == null) return false;
+            EndExamine();
+            CancelPath();
+            CancelAim();
+            _cellPick = onPicked;
+            _cellPickHint = hint ?? "";
+            Hint(_cellPickHint);
+            return true;
+        }
+
+        private void EndCellPick()
+        {
+            _cellPick = null;
+            Hint("");
+        }
+
+        /// <returns>칸 고르기 중이면 true (이번 프레임 입력을 썼음).</returns>
+        private bool HandleCellPick(Keyboard keyboard, Mouse mouse)
+        {
+            if (_cellPick == null) return false;
+            _pressing = _dragging = false;
+            if ((keyboard != null && keyboard[Key.Escape].wasPressedThisFrame) || (mouse != null && mouse.rightButton.wasPressedThisFrame))
+            {
+                EndCellPick();
+                return true;
+            }
+            if (mouse == null || !mouse.leftButton.wasPressedThisFrame || _camera == null || _grid == null) return true;
+            var screen = mouse.position.ReadValue();
+            if (_hud != null && _hud.QuickSlotAt(screen) >= 0) return true; // HUD 위 클릭은 무시
+            if (_cellPick(ScreenToCell(screen))) EndCellPick();
+            else Hint(_cellPickHint); // 못 가는 칸 — 계속 기다림
+            return true;
+        }
+
         public bool IsAiming => _aimSpellId != null || !_aimThrow.IsEmpty;
 
         /// <summary>
@@ -258,6 +304,7 @@ namespace ProjectM.Input
             if (_world == null) return;
             if (!PlayerActions.TryGetPlayer(_world, out var player))
             {
+                _cellPick = null;
                 EndExamine();
                 CancelPath();
                 CancelAim();
@@ -281,6 +328,7 @@ namespace ProjectM.Input
             }
             RefreshAttackTarget(player);
             HandleWheel(mouse);
+            if (HandleCellPick(keyboard, mouse)) return; // 디버그 순간이동 칸 고르기
             if (keyboard != null && (keyboard[Key.I].wasPressedThisFrame || keyboard[Key.F].wasPressedThisFrame)) // 3-10b: F로도 (SPD 배낭)
             {
                 EndExamine();

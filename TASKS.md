@@ -907,6 +907,12 @@
   - 확인: 컴파일 오류 0
   - 테스트 작성, 실행 안 함: `SpellTests.Check_ReportsWhyCastIsBlocked` — 기둥 뒤 칸 = 시전 가능 · 기둥 앞에서 멈춤, 적 주문은 기둥 너머 = 보이지 않는 칸
   - 확인 방법: `Main.unity` 플레이 → 타이틀 "MoaDungeon" → 주문 조준을 벽 · 기둥 뒤 어두운 칸에 두면 붉은 표시 없이 쏠 수 있고, 주문은 벽 앞에서 멈춤
+- [x] **3-32. 디버그 창: 무적 · 레벨 · 순간이동** (2026-11-05 사용자 "디버그 창에 무적 모드와 레벨 조정 버튼 만들어줘 순간이동 버튼도 순간이동을 누르고 맵의 장소를 누르면 이동되게 해줘") — 플레이 확인 대기
+  - 구현: 디버그 창 섹션 `[상태 변경] 무적 · 레벨 · 순간이동`. 무적 = `World.DebugInvulnerable`(저장 안 함 — `GameRoot.DebugInvulnerable`이 새 판 · 이어하기마다 다시 넣음) → `Combat.ApplyDamage`가 플레이어 진영 피해를 0으로. 레벨 = `GameRoot.DebugAddLevels`(+1 · +5 · 최대 — 다음 레벨까지 경험치를 주는 `Progression.GainExp` 평소 경로). 순간이동 = `GameRoot.DebugBeginTeleport` → `PlayerInputController.BeginCellPick`(다음 맵 클릭 칸, Esc · 오른쪽 클릭 = 취소) → `DebugTeleport`(걸을 수 있는 빈 칸만, 틱 안 씀, 이동 이벤트 + 시야 갱신)
+  - 정한 것 (Claude, 확인 필요): 레벨 내리기 버튼은 없음(레벨업 보상을 되돌리는 규칙이 없음), 순간이동은 안 가 본 칸 · 안 보이는 칸도 됨, 벽 · 유닛 칸을 누르면 그대로 기다림
+  - 확인: 컴파일 오류 0
+  - 테스트 작성, 실행 안 함: `ProgressionTests.DebugInvulnerable_PlayerTakesNoDamage_EnemiesStillDo`
+  - 확인 방법: `Main.unity` 플레이 → 메뉴 ProjectM/Debug/Debug Window → "무적" 켜고 적에게 맞아도 체력 그대로 · 레벨 "+1"로 레벨 · 최대 체력이 오름 · "칸 고르기" 누른 뒤 게임 화면의 바닥 칸 클릭 → 그 칸으로 이동하고 시야가 바뀜
 - [~] **G-5. 3D로 되돌리기** (2026-10-28) — 플레이 확인 대기
   - 결정 (2026-10-28, 사용자): 그래픽 기준 = **실시간 3D**(Phase G)로 되돌림, Phase P 중단. 2D 코드 · 그림은 지우지 않고 남겨 둠(추천안) — `Pixel2D = true` + Setup이면 다시 2D. 맨 위 진행 요약 "최신 (2026-10-28)" 참고
   - 같은 날 두 갈래로 진행됨: 다른 PC · 세션이 main에 `e61e60d 10.28/P-X/BackTo3D`(Pixel2D 스위치 · PixelMap · FogSoft 정리 · 카메라 스카이박스)를 먼저 푸시했고, 이 PC는 `phaseP-fx16` 위에서 같은 되돌리기를 따로 함 → 사용자 결정(추천안, 2026-10-28): main 위에 다시 쌓음 — 코드 · 씬은 main 쪽을 쓰고 `PixelWallCaps` 삭제만 더함, 16프레임 시험 커밋은 그대로 올림
