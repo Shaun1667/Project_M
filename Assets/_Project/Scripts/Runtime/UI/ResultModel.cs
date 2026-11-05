@@ -49,6 +49,9 @@ namespace ProjectM.UI
             return new ResultModel(run.Outcome, world.DeepestFloor, run.Kills, world.Scheduler.CurrentTick, seed, slots, equipment, cause);
         }
 
+        /// <summary>3-33 명예의 전당 순위 줄 (클리어일 때 GameRoot가 넣음). 비면 안 보임.</summary>
+        public string Ranking { get; set; } = string.Empty;
+
         public string Title => HudText.ResultTitle(Outcome);
 
         /// <summary>본문 여러 줄.</summary>
@@ -68,6 +71,7 @@ namespace ProjectM.UI
             sb.AppendLine($"빠른 칸: {slots}");
             sb.AppendLine($"장비: {Equipment}");
             if (Outcome == RunOutcome.Defeat) sb.AppendLine($"사망 원인: {Cause}");
+            if (!string.IsNullOrEmpty(Ranking)) sb.AppendLine(Ranking);
             sb.AppendLine();
             sb.Append(HudText.ResultRestart);
             return sb.ToString();

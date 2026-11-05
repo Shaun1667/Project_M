@@ -10,6 +10,8 @@ namespace ProjectM.UI
         Continue = 0,
         NewGame = 1,
         Quit = 2,
+        /// <summary>3-33 명예의 전당 (게임 시작 아래).</summary>
+        HallOfFame = 3,
     }
 
     /// <summary>타이틀 화면 단계 (3-27 · 3-30).</summary>
@@ -26,6 +28,8 @@ namespace ProjectM.UI
         SlotDetail = 4,
         /// <summary>3-30 삭제 한 번 더 묻기: 삭제 · 취소.</summary>
         ConfirmDelete = 5,
+        /// <summary>3-33 명예의 전당: 클리어 기록 (높은 점수 순).</summary>
+        HallOfFame = 6,
     }
 
     /// <summary>찬 슬롯 화면의 단추 (3-30).</summary>
@@ -60,10 +64,13 @@ namespace ProjectM.UI
     {
         private readonly List<TitleItem> _items = new List<TitleItem>();
         private readonly List<SlotInfo> _slots = new List<SlotInfo>();
+        private readonly List<string> _hallOfFame = new List<string>();
 
         public TitleScreen Screen { get; private set; }
         public IReadOnlyList<TitleItem> Items => _items;
         public IReadOnlyList<SlotInfo> Slots => _slots;
+        /// <summary>3-33 명예의 전당 줄 (순위 순, 글은 HudText가 만듦). 비면 기록 없음.</summary>
+        public IReadOnlyList<string> HallOfFame => _hallOfFame;
         /// <summary>첫 화면에서 고른 항목.</summary>
         public int Selected { get; private set; }
         /// <summary>슬롯 화면에서 고른 칸 (0부터). 슬롯 번호 = SlotSelected + 1.</summary>
@@ -87,9 +94,18 @@ namespace ProjectM.UI
             SetSlots(slots);
             _items.Clear();
             _items.Add(TitleItem.NewGame);
+            _items.Add(TitleItem.HallOfFame); // 3-33 게임 시작 아래
             _items.Add(TitleItem.Quit);
             Selected = 0;
             Screen = TitleScreen.Main;
+            Changed?.Invoke();
+        }
+
+        /// <summary>3-33 명예의 전당 줄을 바꾼다 (순위 순). 화면은 그대로.</summary>
+        public void SetHallOfFame(IReadOnlyList<string> lines)
+        {
+            _hallOfFame.Clear();
+            if (lines != null) _hallOfFame.AddRange(lines);
             Changed?.Invoke();
         }
 
@@ -182,6 +198,7 @@ namespace ProjectM.UI
                 case TitleScreen.Main:
                     if (_items.Count == 0) return;
                     if (_items[Selected] == TitleItem.Quit) { QuitChosen?.Invoke(); return; }
+                    if (_items[Selected] == TitleItem.HallOfFame) { Go(TitleScreen.HallOfFame); return; }
                     Go(TitleScreen.Slots);
                     return;
                 case TitleScreen.Slots:
@@ -217,6 +234,9 @@ namespace ProjectM.UI
                         Go(TitleScreen.SlotDetail);
                     }
                     return;
+                case TitleScreen.HallOfFame:
+                    Go(TitleScreen.Main); // 3-33: 확정 = 뒤로
+                    return;
                 case TitleScreen.NewGame:
                     int target = CurrentSlot;
                     var mode = Mode;
@@ -236,6 +256,7 @@ namespace ProjectM.UI
                 case TitleScreen.SlotDetail: Go(TitleScreen.Slots); break;
                 case TitleScreen.ConfirmDelete: OptionSelected = 0; Go(TitleScreen.SlotDetail); break;
                 case TitleScreen.Slots: Go(TitleScreen.Main); break;
+                case TitleScreen.HallOfFame: Go(TitleScreen.Main); break;
             }
         }
 

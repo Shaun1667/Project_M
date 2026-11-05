@@ -272,7 +272,45 @@ namespace ProjectM
                 return;
             }
             RunSaveStore.MigrateLegacy(); // 3-27 단일 저장 → 슬롯 1
+            _title.Model.SetHallOfFame(HallOfFameLines()); // 3-33
             _title.Open(SlotInfos());
+        }
+
+        /// <summary>3-33 명예의 전당 화면 줄 (위에서부터 HudText.HallOfFameShown개).</summary>
+        private static System.Collections.Generic.List<string> HallOfFameLines()
+        {
+            var lines = new System.Collections.Generic.List<string>();
+            var records = HallOfFameStore.Load();
+            for (int i = 0; i < records.Count && i < HudText.HallOfFameShown; i++) lines.Add(HudText.HallOfFameLine(i + 1, records[i]));
+            return lines;
+        }
+
+        /// <summary>3-33: 클리어한 판을 명예의 전당에 남긴다 (점수 순위 — 수치는 ZoneCatalog). 순위 줄 (못 남기면 빈 문자열).</summary>
+        private string RecordHallOfFame()
+        {
+            if (_zoneCatalog == null || _player == null || World == null) return string.Empty;
+            try
+            {
+                var config = _zoneCatalog.ToHallOfFame();
+                long turns = World.Scheduler.CurrentTick;
+                int score = HallOfFame.Score(config, turns, _player.Level, World.Run.Kills);
+                string form = string.Empty;
+                if (World.Run.FormId != null && _hudText.FormNames != null) _hudText.FormNames.TryGetValue(World.Run.FormId, out form);
+                var relics = new System.Collections.Generic.List<string>();
+                foreach (var relic in _player.Relics) if (!relic.IsEmpty) relics.Add(_hudText.Entry(relic));
+                var record = new HallOfFameRecord(System.DateTime.Now.ToString("yyyy-MM-dd HH:mm"), _characterName ?? _player.VisualId, form,
+                    World.Run.Mode, turns, _player.Level, World.Run.Kills, Seed, relics, score);
+                var records = HallOfFameStore.Load();
+                int rank = HallOfFame.Insert(records, record, config);
+                HallOfFameStore.Save(records);
+                Debug.Log($"[GameRoot] 명예의 전당: {rank}위 ({score}점) — {HallOfFameStore.DefaultPath}");
+                return HudText.HallOfFameRanked(rank, score);
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogWarning($"[GameRoot] 명예의 전당에 남기지 못했다: {ex.Message}");
+                return string.Empty;
+            }
         }
 
         /// <summary>3-30 저장 슬롯 5칸의 화면 정보 — 찬 슬롯은 스냅샷에서 플레이어 요약을 만든다 (읽을 수 없으면 그 표시).</summary>
@@ -1080,7 +1118,9 @@ namespace ProjectM
             _realTime = null; // 3-27: 실시간 시계 멈춤
             if (_slot > 0) RunSaveStore.Delete(_slot); // 3-27 · 3-30: 패배 · 승리 = 그 슬롯을 비움 (되돌리기 없음)
             _input.Unbind();
-            _result.Show(ResultModel.From(World, Seed, _player, _hudText));
+            var result = ResultModel.From(World, Seed, _player, _hudText);
+            if (e.Outcome == RunOutcome.Victory) result.Ranking = RecordHallOfFame(); // 3-33 클리어만
+            _result.Show(result);
             Debug.Log($"[GameRoot] 판 끝: {e.Outcome} — R로 새 판");
         }
     }

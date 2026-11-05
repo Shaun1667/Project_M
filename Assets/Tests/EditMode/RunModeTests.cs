@@ -127,7 +127,7 @@ namespace ProjectM.Tests
             };
             var m = new TitleMenuModel();
             m.Open(slots);
-            Assert.That(m.Items, Is.EqualTo(new[] { TitleItem.NewGame, TitleItem.Quit }), "3-30: 이어하기는 슬롯 화면으로 합침");
+            Assert.That(m.Items, Is.EqualTo(new[] { TitleItem.NewGame, TitleItem.HallOfFame, TitleItem.Quit }), "3-30: 이어하기는 슬롯 화면으로 합침 · 3-33 명예의 전당은 게임 시작 아래");
             m.Confirm();
             Assert.That(m.Screen, Is.EqualTo(TitleScreen.Slots));
 

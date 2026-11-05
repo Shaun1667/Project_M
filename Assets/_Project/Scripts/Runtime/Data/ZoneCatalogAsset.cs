@@ -173,6 +173,17 @@ namespace ProjectM.Data
         [Min(0)] [SerializeField] private int _ghostExpReward = 50;
         [Min(0)] [SerializeField] private int _ghostExpMaxLevel = 30;
 
+        [Header("명예의 전당 점수 (3-33 — BALANCE 25번)")]
+        [Tooltip("클리어 기본 점수")] [Min(0)] [SerializeField] private int _hofClearBonus = 10000;
+        [Tooltip("처치 하나당")] [Min(0)] [SerializeField] private int _hofPerKill = 20;
+        [Tooltip("레벨 하나당")] [Min(0)] [SerializeField] private int _hofPerLevel = 300;
+        [Tooltip("빠르기 기준 턴 — 이보다 빨리 깨면 남은 턴 × 아래 값")] [Min(0)] [SerializeField] private int _hofTurnBudget = 20000;
+        [Min(0)] [SerializeField] private int _hofPerTurnSaved = 1;
+        [Tooltip("남기는 기록 수")] [Min(1)] [SerializeField] private int _hofMaxEntries = 20;
+
+        public ProjectM.Dungeon.HallOfFameConfig ToHallOfFame() =>
+            new ProjectM.Dungeon.HallOfFameConfig(_hofClearBonus, _hofPerKill, _hofPerLevel, _hofTurnBudget, _hofPerTurnSaved, _hofMaxEntries);
+
         public int GhostHpPercent => _ghostHpPercent;
         public int GhostExpReward => _ghostExpReward;
         public int GhostExpMaxLevel => _ghostExpMaxLevel;

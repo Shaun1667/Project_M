@@ -915,6 +915,13 @@
   - 확인 방법: `Main.unity` 플레이 → 메뉴 ProjectM/Debug/Debug Window → "무적" 켜고 적에게 맞아도 체력 그대로 · 레벨 "+1"로 레벨 · 최대 체력이 오름 · "칸 고르기" 누른 뒤 게임 화면의 바닥 칸 클릭 → 그 칸으로 이동하고 시야가 바뀜
   - 추가 (2026-11-05 사용자 "디버그 창에 다음층으로 이동버튼하고 힘 조절 버튼(+ 랑 -) 넣어줘"): "다음 층으로" = `GameRoot.DebugNextFloor` → `FloorTransition.TryDescendAnywhere`(계단 위가 아니어도 계단을 쓴 것과 같은 길 — 보스 층 · 작업실 · 층 저장 그대로, 마지막 층이면 꺼짐). 힘 − / + = `GameRoot.DebugAddStrength` → `Consumables.AddStrength`(힘 물약도 이 길로 바꿈 — 힘은 1 아래로 안 내려감, 로그 "힘이 내려갔다"). 테스트 작성, 실행 안 함: `StrengthUpgradeTests.AddStrength_DebugMinus_StopsAtOne` · `HudModelTests.StrengthChanged_LogsUpOrDown`
   - 피드백 (2026-11-05, 사용자 "26층 클리어를 했더니 오류가 나"): 클릭 이동으로 유물 칸에 들어가 승리하면 `PlayerInputController.StepPath`에서 NullReferenceException — 원인: 그 걸음의 `SubmitPlayerCommand` 안에서 판이 끝나 `GameRoot.OnRunEnded` → `_input.Unbind()`가 `_path`를 비웠는데, 걸음 뒤 코드가 `_path.Count`를 읽음. 해결: 제출 뒤 `_path == null`이면 멈춤. 검사: 판을 끝내는 행동(승리 · 사망) 뒤에는 입력 상태가 비워질 수 있으니 제출 뒤 필드를 다시 확인한다
+- [x] **3-33. 명예의 전당** (2026-11-05 사용자 "게임시작 밑에 명예의 전당 버튼 하나 만들어주고 클리어 할 경우 거기에 기록들이 기록될 수 있도록 해줘") — 플레이 확인 대기
+  - 결정 (2026-11-05, 사용자): 정렬 = **높은 점수 순** (추천은 적은 턴 순), 기록 = **기본 묶음(날짜 · 캐릭터 · 모드 · 턴 · 레벨 · 처치) + 시드 + 직업 형태 · 유물**
+  - 구현: 타이틀 첫 화면 게임 시작 · **명예의 전당** · 종료 (`TitleItem.HallOfFame` · `TitleScreen.HallOfFame`, 위 10개 · Enter/Esc/클릭 뒤로). 규칙 `HallOfFame`(Score · Insert) + `HallOfFameRecord`(Simulation), 저장 `HallOfFameStore`(halloffame.json), 클리어 때 `GameRoot.RecordHallOfFame` → 결과 화면에 "명예의 전당 N위에 올랐다! (점수)"(`ResultModel.Ranking`). 수치 BALANCE 25번 (`ZoneCatalog.asset` 기본값)
+  - 정한 것 (Claude, 확인 필요): 점수 공식 [임시] = 10000 + 처치 × 20 + 레벨 × 300 + max(0, 20000 − 턴) × 1, 기록 20개까지 남김 · 화면 10개, 패배 판은 남기지 않음, 같은 점수면 적은 턴 → 먼저 남긴 기록
+  - 확인: 컴파일 오류 0, 플레이 모드에서 첫 화면 3단추 · 명예의 전당 화면(예시 줄 — 파일에는 안 씀) 캡처
+  - 테스트 작성, 실행 안 함: `HallOfFameTests` 5개(점수 · 순위 · 파일 왕복 · 타이틀 화면 · 에셋 = BALANCE), `RunModeTests.TitleMenu_Flow` 첫 화면 항목 고침
+  - 확인 방법: `Main.unity` 플레이 → 타이틀에 "명예의 전당" → 처음엔 "아직 클리어 기록이 없습니다" → 디버그 창 "다음 층으로"로 26층 → 모래시계 줍기 → 결과 화면에 순위 줄 → R 또는 다시 시작 후 타이틀 명예의 전당에 기록 한 줄
 - [~] **G-5. 3D로 되돌리기** (2026-10-28) — 플레이 확인 대기
   - 결정 (2026-10-28, 사용자): 그래픽 기준 = **실시간 3D**(Phase G)로 되돌림, Phase P 중단. 2D 코드 · 그림은 지우지 않고 남겨 둠(추천안) — `Pixel2D = true` + Setup이면 다시 2D. 맨 위 진행 요약 "최신 (2026-10-28)" 참고
   - 같은 날 두 갈래로 진행됨: 다른 PC · 세션이 main에 `e61e60d 10.28/P-X/BackTo3D`(Pixel2D 스위치 · PixelMap · FogSoft 정리 · 카메라 스카이박스)를 먼저 푸시했고, 이 PC는 `phaseP-fx16` 위에서 같은 되돌리기를 따로 함 → 사용자 결정(추천안, 2026-10-28): main 위에 다시 쌓음 — 코드 · 씬은 main 쪽을 쓰고 `PixelWallCaps` 삭제만 더함, 16프레임 시험 커밋은 그대로 올림

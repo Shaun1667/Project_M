@@ -333,7 +333,29 @@ namespace ProjectM.UI
         public const string DebugTeleportPick = "[디버그] 순간이동할 칸을 누르세요 (Esc · 오른쪽 클릭 = 취소)";
         public const string GameSubtitle = "원소와 시간의 던전";
         public static string TitleItemName(TitleItem item) =>
-            item == TitleItem.Continue ? "이어하기" : item == TitleItem.NewGame ? "게임 시작" : "종료";
+            item == TitleItem.Continue ? "이어하기" : item == TitleItem.NewGame ? "게임 시작" : item == TitleItem.HallOfFame ? "명예의 전당" : "종료";
+
+        // 3-33 명예의 전당
+        public const string HallOfFameTitle = "명예의 전당 — 클리어 기록 (높은 점수 순)";
+        public const string HallOfFameEmpty = "<color=#888888>아직 클리어 기록이 없습니다.\n26층 시간의 모래시계를 손에 넣으면 여기에 남습니다.</color>";
+        public const string HallOfFameHint = "Enter · Esc · 클릭 뒤로";
+        public const string HallOfFameBack = "뒤로";
+        /// <summary>명예의 전당에 한 번에 보이는 기록 수.</summary>
+        public const int HallOfFameShown = 10;
+
+        /// <summary>기록 한 줄 (두 줄 — 위: 순위 · 점수 · 캐릭터 · 레벨 · 턴 · 처치 · 모드, 아래: 날짜 · 시드 · 유물).</summary>
+        public static string HallOfFameLine(int rank, ProjectM.Dungeon.HallOfFameRecord r)
+        {
+            string who = string.IsNullOrEmpty(r.Form) ? r.Character : $"{r.Character} ({r.Form})";
+            string relics = r.Relics.Count > 0 ? string.Join(", ", r.Relics) : "없음";
+            return $"<color=#FFD54F>{rank}위</color>  <b>{N0(r.Score)}점</b>  {who} · Lv {r.Level} · {N0(r.Turns)}턴 · 처치 {r.Kills} · {ModeName(r.Mode)}\n"
+                + $"<size=80%><color=#AAAAAA>      {r.Date} · 시드 {(long)r.Seed} · 유물: {relics}</color></size>";
+        }
+
+        /// <summary>결과 화면 · 로그: 명예의 전당에 오른 순위 (0 = 순위 밖).</summary>
+        public static string HallOfFameRanked(int rank, int score) =>
+            rank > 0 ? $"명예의 전당 {rank}위에 올랐다! ({N0(score)}점)" : $"명예의 전당 순위 밖 ({N0(score)}점)";
+        private static string N0(long n) => n.ToString("N0", System.Globalization.CultureInfo.InvariantCulture);
         public const string TitleHint = "↑ ↓ 고르기 · Enter/클릭";
         public const string NewGameTitle = "게임 시작 — 모드 고르기";
         public const string ModeTurnName = "턴제";

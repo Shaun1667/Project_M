@@ -25,13 +25,14 @@ namespace ProjectM.UI
         private static readonly Color DangerColor = new Color(0.6f, 0.18f, 0.15f, 1f);
 
         private readonly TitleMenuModel _model = new TitleMenuModel();
-        private RectTransform _mainRoot, _newRoot, _slotsRoot, _detailRoot, _confirmRoot;
+        private RectTransform _mainRoot, _newRoot, _slotsRoot, _detailRoot, _confirmRoot, _hofRoot;
         private readonly List<(Image box, TMP_Text label)> _mainItems = new List<(Image, TMP_Text)>();
         private readonly List<(Image box, TMP_Text label)> _slotItems = new List<(Image, TMP_Text)>();
         private readonly List<(Image box, TMP_Text label)> _detailButtons = new List<(Image, TMP_Text)>();
         private readonly List<(Image box, TMP_Text label)> _confirmButtons = new List<(Image, TMP_Text)>();
+        private readonly List<(Image box, TMP_Text label)> _hofButtons = new List<(Image, TMP_Text)>(); // 3-33 뒤로
         private (Image box, TMP_Text label) _turnCard, _realCard, _startButton;
-        private TMP_Text _seedText, _hint, _detailTitle, _detailBody, _confirmText;
+        private TMP_Text _seedText, _hint, _detailTitle, _detailBody, _confirmText, _hofBody;
         private Vector2 _lastMouse;
         private bool _built;
         private Keyboard _typingKeyboard;
@@ -120,7 +121,7 @@ namespace ProjectM.UI
         }
 
         private List<(Image box, TMP_Text label)> ButtonsOf(TitleScreen screen) =>
-            screen == TitleScreen.Slots ? _slotItems : screen == TitleScreen.SlotDetail ? _detailButtons : screen == TitleScreen.ConfirmDelete ? _confirmButtons : _mainItems;
+            screen == TitleScreen.Slots ? _slotItems : screen == TitleScreen.SlotDetail ? _detailButtons : screen == TitleScreen.ConfirmDelete ? _confirmButtons : screen == TitleScreen.HallOfFame ? _hofButtons : _mainItems;
 
         private static bool Contains(Image box, Vector2 screen) =>
             box != null && RectTransformUtility.RectangleContainsScreenPoint((RectTransform)box.transform, screen, null);
@@ -164,6 +165,10 @@ namespace ProjectM.UI
             _slotsRoot.gameObject.SetActive(screen == TitleScreen.Slots);
             _detailRoot.gameObject.SetActive(screen == TitleScreen.SlotDetail);
             _confirmRoot.gameObject.SetActive(screen == TitleScreen.ConfirmDelete);
+            _hofRoot.gameObject.SetActive(screen == TitleScreen.HallOfFame);
+            if (screen == TitleScreen.HallOfFame)
+                _hofBody.text = _model.HallOfFame.Count > 0 ? string.Join("\n", _model.HallOfFame) : HudText.HallOfFameEmpty;
+            foreach (var b in _hofButtons) b.box.color = SelectedColor;
 
             for (int i = 0; i < _mainItems.Count; i++)
             {
@@ -200,7 +205,7 @@ namespace ProjectM.UI
                 ? $"{HudText.SeedLabel}  {_model.SeedText}<color=#FFD54F>_</color>"
                 : $"{HudText.SeedLabel}  <color=#777777>{HudText.SeedPlaceholder}</color><color=#FFD54F>_</color>";
             _hint.text = screen == TitleScreen.NewGame ? HudText.NewGameHint
-                : screen == TitleScreen.Main ? HudText.TitleHint : screen == TitleScreen.Slots ? HudText.SlotHint : HudText.SlotChoiceHint;
+                : screen == TitleScreen.HallOfFame ? HudText.HallOfFameHint : screen == TitleScreen.Main ? HudText.TitleHint : screen == TitleScreen.Slots ? HudText.SlotHint : HudText.SlotChoiceHint;
         }
 
         private void Build()
@@ -220,8 +225,8 @@ namespace ProjectM.UI
             _hint.color = new Color(0.65f, 0.65f, 0.65f);
 
             _mainRoot = Group("Main");
-            for (int i = 0; i < 2; i++)
-                _mainItems.Add(Button(_mainRoot, string.Empty, new Vector2(0.5f, 0.48f - i * 0.1f), new Vector2(420, 70), 36));
+            for (int i = 0; i < 3; i++) // 3-33: 게임 시작 · 명예의 전당 · 종료
+                _mainItems.Add(Button(_mainRoot, string.Empty, new Vector2(0.5f, 0.5f - i * 0.1f), new Vector2(420, 70), 36));
 
             _slotsRoot = Group("Slots");
             Text(_slotsRoot, HudText.SlotsTitle, 40, new Vector2(0.5f, 0.66f), new Vector2(1200, 60));
@@ -249,6 +254,18 @@ namespace ProjectM.UI
             string[] confirmNames = { HudText.SlotDeleteYes, HudText.SlotDeleteNo };
             for (int i = 0; i < confirmNames.Length; i++)
                 _confirmButtons.Add(Button(_confirmRoot, confirmNames[i], new Vector2(0.41f + i * 0.18f, 0.28f), new Vector2(300, 64), 30));
+
+            _hofRoot = Group("HallOfFame"); // 3-33
+            Text(_hofRoot, HudText.HallOfFameTitle, 40, new Vector2(0.5f, 0.66f), new Vector2(1200, 60));
+            var hof = Button(_hofRoot, string.Empty, new Vector2(0.5f, 0.38f), new Vector2(1500, 500), 22);
+            hof.box.color = SeedBoxColor;
+            _hofBody = hof.label;
+            _hofBody.alignment = TextAlignmentOptions.TopLeft;
+            _hofBody.margin = new Vector4(32, 20, 32, 20);
+            _hofBody.enableAutoSizing = true; // 기록이 많으면 줄여서 칸 안에
+            _hofBody.fontSizeMin = 14;
+            _hofBody.fontSizeMax = 22;
+            _hofButtons.Add(Button(_hofRoot, HudText.HallOfFameBack, new Vector2(0.5f, 0.1f), new Vector2(300, 64), 30));
 
             _newRoot = Group("NewGame");
             Text(_newRoot, HudText.NewGameTitle, 40, new Vector2(0.5f, 0.66f), new Vector2(1200, 60));
