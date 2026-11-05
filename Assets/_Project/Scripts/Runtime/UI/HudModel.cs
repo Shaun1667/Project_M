@@ -119,6 +119,7 @@ namespace ProjectM.UI
             _bus.Subscribe<RelicRejectedEvent>(OnRelicRejected);
             _bus.Subscribe<TimeRelicUsedEvent>(OnTimeRelicUsed); // 3-28c
             _bus.Subscribe<TimeRelicEndedEvent>(OnTimeRelicEnded);
+            _bus.Subscribe<ProjectM.Dungeon.ShopkeeperAngeredEvent>(OnShopkeeperAngered); // 3-29
             _bus.Subscribe<ArmorUpgradedEvent>(OnArmorUpgraded);
             _bus.Subscribe<ItemIdentifiedEvent>(OnIdentified);
             _bus.Subscribe<ProjectM.Dungeon.TrapTriggeredEvent>(OnTrapTriggered);
@@ -255,6 +256,12 @@ namespace ProjectM.UI
         {
             if (e.Unit != _playerId) return;
             AddLog(Text.TimeRelicUsed(e.RelicId, e.Kind, e.Amount, e.Power));
+            Changed?.Invoke();
+        }
+
+        private void OnShopkeeperAngered(ProjectM.Dungeon.ShopkeeperAngeredEvent e)
+        {
+            AddLog(HudText.ShopkeeperAngered(e.Taken));
             Changed?.Invoke();
         }
 
@@ -533,6 +540,7 @@ namespace ProjectM.UI
             _bus.Unsubscribe<RelicRejectedEvent>(OnRelicRejected);
             _bus.Unsubscribe<TimeRelicUsedEvent>(OnTimeRelicUsed);
             _bus.Unsubscribe<TimeRelicEndedEvent>(OnTimeRelicEnded);
+            _bus.Unsubscribe<ProjectM.Dungeon.ShopkeeperAngeredEvent>(OnShopkeeperAngered);
             _bus.Unsubscribe<ArmorUpgradedEvent>(OnArmorUpgraded);
             _bus.Unsubscribe<ItemIdentifiedEvent>(OnIdentified);
             _bus.Unsubscribe<ProjectM.Dungeon.TrapTriggeredEvent>(OnTrapTriggered);

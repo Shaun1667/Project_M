@@ -112,6 +112,11 @@ namespace ProjectM.Core
 
         public void SetRelicRules(ProjectM.Items.ItemBook items) => RelicItems = items;
 
+        /// <summary>화난 상인 규칙 (3-29). GameRoot가 넣는다 — 규칙 연결이라 저장하지 않는다. null이면 상인은 화내지 않는다.</summary>
+        internal ProjectM.Dungeon.ShopRules ShopRules { get; private set; }
+
+        public void SetShopRules(ProjectM.Dungeon.ShopRules rules) => ShopRules = rules;
+
         public void SetItemRules(Action<ProjectM.Magic.Element, IReadOnlyList<GridPos>> onCellsHit, Action<Unit> onUnitDied, Action<GridPos> onGrassTrampled = null)
         {
             OnCellsHit = onCellsHit;

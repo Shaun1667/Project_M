@@ -267,6 +267,9 @@ namespace ProjectM.UI
         /// <summary>상점 (3-15c).</summary>
         public const string SellTitle = "팔기 — 고른 물건을 값의 절반에  <size=70%><color=#AAAAAA>Esc 닫기</color></size>";
         public const string NothingToSell = "팔 물건이 없다";
+        // 3-29 화난 상인
+        public const string KeeperName = "상인";
+        public static string ShopkeeperAngered(int taken) => taken > 0 ? $"상인이 분노했다! 가게 물건 {taken}개를 챙겨 덤벼든다" : "상인이 분노했다!";
         public string Bought(string id, int price) => $"샀다: {Item(id)} (금화 {price})";
         public string Sold(string id, int price) => $"팔았다: {Item(id)} (금화 {price})";
         public string CannotAfford(string id, int price) => $"{Item(id)} — 금화 {price}개가 필요하다";

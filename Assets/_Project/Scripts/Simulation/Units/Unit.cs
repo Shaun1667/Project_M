@@ -13,11 +13,11 @@ namespace ProjectM.Units
     public sealed class Unit
     {
         public EntityId Id { get; }
-        public Faction Faction { get; }
+        public Faction Faction { get; internal set; } // 3-29: 화난 상인은 중립 → 적
         public string VisualId { get; }
         /// <summary>최대 체력. 레벨업(Progression)으로만 오른다.</summary>
         public int MaxHp { get; internal set; }
-        public int AttackDamage { get; }
+        public int AttackDamage { get; internal set; } // 3-29 화난 상인
         public int SightRange { get; }
         /// <summary>최대 마나. 레벨업(Progression)으로만 오른다.</summary>
         public int MaxMana { get; internal set; }

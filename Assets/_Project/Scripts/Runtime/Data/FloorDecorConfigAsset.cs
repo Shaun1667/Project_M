@@ -56,8 +56,12 @@ namespace ProjectM.Data
         [Tooltip("파는 값 = 아이템 값 × %")] [Min(0)] [SerializeField] private int _shopSellPercent = 50;
         [SerializeField] private string _shopkeeperVisualId = "shopkeeper";
         [Min(1)] [SerializeField] private int _shopkeeperHp = 999;
+        [Tooltip("3-29 화난 상인 체력 = 그 구역 보스 체력 × %")] [Min(1)] [SerializeField] private int _angryKeeperHpPercent = 150;
+        [Tooltip("3-29 화난 상인이 차례마다 물건(해로운 물약 · 던지는 무기)을 던질 확률 %")] [Range(0, 100)] [SerializeField] private int _angryKeeperItemPercent = 35;
+        [Tooltip("3-29 화난 상인이 치유 물약을 마시는 체력 % (이 아래)")] [Range(0, 100)] [SerializeField] private int _angryKeeperHealBelowPercent = 50;
 
-        public ShopConfig ToShop() => new ShopConfig(_shopFloor, _shopStock, _shopStockCount, _shopBuyPercent, _shopSellPercent, _shopkeeperVisualId, _shopkeeperHp);
+        public ShopConfig ToShop() => new ShopConfig(_shopFloor, _shopStock, _shopStockCount, _shopBuyPercent, _shopSellPercent, _shopkeeperVisualId, _shopkeeperHp,
+            _angryKeeperHpPercent, _angryKeeperItemPercent, _angryKeeperHealBelowPercent);
 
         [Header("작업실 · 마법 제작대 (3-28b — BALANCE 24번)")]
         [Tooltip("유물 하나 만들기 (에테르)")] [Min(0)] [SerializeField] private int _relicCraftCost = 12;

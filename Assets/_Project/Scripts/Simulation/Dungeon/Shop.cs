@@ -21,8 +21,18 @@ namespace ProjectM.Dungeon
         public string KeeperVisualId { get; }
         public int KeeperHp { get; }
 
-        public ShopConfig(int floor, IReadOnlyList<string> stock, int stockCount, int buyPercent, int sellPercent, string keeperVisualId, int keeperHp)
+        /// <summary>3-29 화난 상인: 체력 = 그 구역 보스 체력 × % (공격 · 명중 · 회피는 보스 값) · 차례마다 물건을 쓸 확률 % · 체력이 이 % 아래면 치유 물약.</summary>
+        public int AngryHpPercent { get; }
+        public int ItemUsePercent { get; }
+        public int HealBelowPercent { get; }
+
+        public ShopConfig(int floor, IReadOnlyList<string> stock, int stockCount, int buyPercent, int sellPercent, string keeperVisualId, int keeperHp,
+            int angryHpPercent = 150, int itemUsePercent = 35, int healBelowPercent = 50)
         {
+            if (angryHpPercent < 1 || itemUsePercent < 0 || itemUsePercent > 100 || healBelowPercent < 0 || healBelowPercent > 100) throw new ArgumentOutOfRangeException(nameof(angryHpPercent));
+            AngryHpPercent = angryHpPercent;
+            ItemUsePercent = itemUsePercent;
+            HealBelowPercent = healBelowPercent;
             if (floor < 1 || stockCount < 0 || buyPercent < 1 || sellPercent < 0 || keeperHp < 1) throw new ArgumentOutOfRangeException(nameof(floor));
             Floor = floor;
             Stock = stock ?? Array.Empty<string>();
@@ -58,7 +68,7 @@ namespace ProjectM.Dungeon
             // 상인은 입구에서 가장 먼 칸 (막지 않게), 물건은 나머지 칸에
             cells.Sort((a, b) => GridMovement.Chebyshev(b, room.Entrance).CompareTo(GridMovement.Chebyshev(a, room.Entrance)));
             var keeperDef = new UnitDef(config.KeeperVisualId, config.KeeperHp, 0, 6);
-            UnitSpawner.SpawnNeutral(world, keeperDef, cells[0], keeperAi);
+            UnitSpawner.SpawnNeutral(world, keeperDef, cells[0], keeperAi, Math.Max(1, config.StockCount)); // 3-29: 화나면 물건을 챙길 칸
             cells.RemoveAt(0);
             var stock = new List<string>();
             foreach (var id in config.Stock) if (items.TryGet(id, out _)) stock.Add(id);

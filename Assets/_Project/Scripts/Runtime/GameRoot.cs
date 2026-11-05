@@ -367,6 +367,10 @@ namespace ProjectM
             // 적 · 아군 AI: 복원(World.Restore)은 새 World를 만들며 AI를 물어 오므로 처음 물을 때 그 World로 만든다 (상태 없음 — 규칙 6)
             var enemiesBook = _zoneCatalog != null ? _zoneCatalog.ToEnemyBook() : null; // 3-17b 적 종류 행동
             if (enemiesBook != null && _ghost != null) enemiesBook = enemiesBook.With(GhostBoss.Traits(_ghost)); // 3-23b 그림자 보스 행동
+            var shopConfig = _floorDecorConfig != null ? _floorDecorConfig.ToShop() : null; // 3-29 화난 상인 AI에 필요 (복원 전에)
+            var aiProgression = _progressionConfig != null ? _progressionConfig.ToConfig() : null;
+            var aiConsumableConfig = _consumableConfig != null ? _consumableConfig.ToConfig() : ConsumableConfig.Default;
+            ShopkeeperAi keeperAi = null;
             MeleeChaserAi enemyAi = null;
             AllyAi allyAi = null;
             void EnsureAi(World w)
@@ -374,11 +378,15 @@ namespace ProjectM
                 if (enemyAi != null) return;
                 enemyAi = new MeleeChaserAi(w, Config, sight, Statuses, enemiesBook, Spells, new BresenhamTargetingRule()); // 3-13a: 투명 · 3-17b 행동
                 allyAi = new AllyAi(w, Config, sight); // 3-13b 분신
+                if (shopConfig != null) // 3-29: 화난 상인 = 물건을 쓰며 쫓아옴 (근접은 적 AI)
+                    keeperAi = new ShopkeeperAi(w, Config, new ConsumableRules(Items, aiConsumableConfig, Statuses, Terrains, aiProgression, sight, allyAi, Spells),
+                        new BresenhamTargetingRule(), sight, shopConfig, enemyAi);
             }
             System.Func<World, EntityId, ICommandSource> aiFactory = (w, id) =>
             {
                 EnsureAi(w);
                 return !w.Units.TryGet(id, out var u) ? enemyAi : u.Faction == Faction.Ally ? allyAi
+                    : keeperAi != null && u.Faction == Faction.Enemy && u.VisualId == shopConfig.KeeperVisualId ? keeperAi // 3-29 화난 상인
                     : u.Faction == Faction.Neutral ? new ProjectM.Dungeon.IdleNeutralAi() : (ICommandSource)enemyAi; // 떠났던 층의 분신 · 상인
             };
             if (restoring)
@@ -410,6 +418,7 @@ namespace ProjectM
                     if (hunger != null) ProjectM.Units.Hunger.DropFood(World, hunger, dead);
                     if (lootRules != null) Loot.DropGold(World, lootRules, dead);
                     if (lootRules != null && World.Run.BossId.IsValid && dead.Id == World.Run.BossId) Loot.DropBossRelic(World, Items, lootRules, dead.Pos); // 3-28a 구역 보스 보상
+                    AngryShopkeeper.DropStock(World, dead); // 3-29 화난 상인을 이기면 물건 전부
                 },
                 pos => { if (lootRules != null) Loot.DropSeed(World, lootRules, pos); }); // 3-16b
             var consumableConfig = _consumableConfig != null ? _consumableConfig.ToConfig() : ConsumableConfig.Default;
@@ -424,9 +433,11 @@ namespace ProjectM
                 Debug.LogWarning($"[GameRoot] 구역 표의 층 수 {zones.FloorCount} ≠ DungeonGenConfig 층 수 {dungeonConfig.FloorCount}", this);
             var kindRng = World.Rng.Get(RngStream.EnemyKind);
             if (enemiesBook != null) World.SetEnemyRules(new EnemyRules(enemiesBook, Spells, Statuses, Terrains));
+            if (keeperAi != null) World.SetShopRules(new ShopRules(shopConfig, zones, keeperAi, Items)); // 3-29 화난 상인
             _unitVisuals.Clear();
             _enemyNames = _zoneCatalog != null ? _zoneCatalog.DisplayNames() : new System.Collections.Generic.Dictionary<string, string>();
             if (_ghost != null) _enemyNames[_ghost.VisualId] = _ghost.DisplayName; // 3-23b "루멘의 그림자 #12"
+            if (shopConfig != null && !_enemyNames.ContainsKey(shopConfig.KeeperVisualId)) _enemyNames[shopConfig.KeeperVisualId] = HudText.KeeperName; // 3-29 화난 상인 로그 이름
             HudText.EnemyName = id => _unitVisuals.TryGetValue(id, out var v) && _enemyNames.TryGetValue(v, out var n) ? n : null;
             World.Scheduler.AddSystem(TickPhase.ManaRegen, new EnemyRespawnSystem(World, spawn, enemyDef, enemyAi, sight, dungeonConfig.FloorCount, zones));
             World.Scheduler.AddSystem(TickPhase.ManaRegen, new TimeRelicSystem(World, Items)); // 3-28c 시간 유물 정지 · 가속 · 게이지
