@@ -118,10 +118,14 @@ namespace ProjectM.Presentation
         private readonly Dictionary<EntityId, Color> _baseTints = new Dictionary<EntityId, Color>();
         // 3-7a: 엔티티가 든 무기 아이템 ID (표시 기억 — 모습을 다시 만들어도 같은 무기를 보인다)
         private readonly Dictionary<EntityId, string> _heldWeapons = new Dictionary<EntityId, string>();
+        // G-16: 엔티티가 입은 갑옷 아이템 ID (표시 기억 — 무기와 같음)
+        private readonly Dictionary<EntityId, string> _wornArmors = new Dictionary<EntityId, string>();
 
         /// <summary>프리팹 손 아래 지팡이 · 무기 오브젝트 이름 (메뉴 ProjectM/Setup/Varco Models가 붙임).</summary>
         public const string HeldStaffName = "Staff";
         public const string HeldWeaponPrefix = "Weapon_";
+        /// <summary>G-16 (2026-11-05): 가슴 뼈 아래 갑옷 부품 이름 "Armor_&lt;아이템 ID&gt;" (Setup/Varco Models가 꺼 둔 채 붙임).</summary>
+        public const string WornArmorPrefix = "Armor_";
         private readonly Dictionary<EntityId, List<StatusType>> _statuses = new Dictionary<EntityId, List<StatusType>>();
         private MaterialPropertyBlock _block;
 
@@ -222,6 +226,7 @@ namespace ProjectM.Presentation
             _bus.Subscribe<UnitDiedEvent>(OnDied);
             _bus.Subscribe<SpellCastEvent>(OnSpellCast);
             _bus.Subscribe<ProjectM.Items.WeaponEquippedEvent>(OnWeaponEquipped);
+            _bus.Subscribe<ProjectM.Items.ArmorEquippedEvent>(OnArmorEquipped);
         }
 
         public void Unbind()
@@ -237,6 +242,7 @@ namespace ProjectM.Presentation
             _bus.Unsubscribe<UnitDiedEvent>(OnDied);
             _bus.Unsubscribe<SpellCastEvent>(OnSpellCast);
             _bus.Unsubscribe<ProjectM.Items.WeaponEquippedEvent>(OnWeaponEquipped);
+            _bus.Unsubscribe<ProjectM.Items.ArmorEquippedEvent>(OnArmorEquipped);
             _bus = null;
         }
 
@@ -316,6 +322,7 @@ namespace ProjectM.Presentation
             ApplyTint(e.Id, view);
             ApplyVisibility(e.Id, view);
             if (_heldWeapons.TryGetValue(e.Id, out var held)) ShowHeld(view, held);
+            if (_wornArmors.TryGetValue(e.Id, out var worn)) ShowArmor(view, worn);
         }
 
         // ── 3-7a 손에 든 무기 ──
@@ -352,6 +359,36 @@ namespace ProjectM.Presentation
             if (!_views.TryGetValue(id, out var view) || view.Root == null) return null;
             foreach (var t in view.Root.GetComponentsInChildren<Transform>(false))
                 if (t.name.StartsWith(HeldWeaponPrefix)) return t.name.Substring(HeldWeaponPrefix.Length);
+            return null;
+        }
+
+        // ── G-16 입은 갑옷 (2026-11-05, ART_ASSETS ★ 3차 28) ──
+
+        private void OnArmorEquipped(ProjectM.Items.ArmorEquippedEvent e)
+        {
+            string id = e.Armor.IsEmpty ? null : e.Armor.ItemId;
+            _wornArmors[e.Unit] = id;
+            if (_views.TryGetValue(e.Unit, out var view)) ShowArmor(view, id);
+        }
+
+        /// <summary>
+        /// 입은 갑옷의 "Armor_&lt;아이템 ID&gt;"만 켜고 다른 갑옷 부품은 끈다 (결정 2026-11-05 — 부품을 가슴 뼈에 붙임). itemId null = 맨몸(모두 끔).
+        /// 프리팹에 갑옷 부품이 없으면(그레이박스 · 적) 아무것도 바뀌지 않는다.
+        /// </summary>
+        public static void ShowArmor(EntityView view, string itemId)
+        {
+            if (view?.Root == null) return;
+            string wanted = itemId != null ? WornArmorPrefix + itemId : null;
+            foreach (var t in view.Root.GetComponentsInChildren<Transform>(true))
+                if (t.name.StartsWith(WornArmorPrefix)) t.gameObject.SetActive(t.name == wanted);
+        }
+
+        /// <summary>지금 몸에 보이는 갑옷 아이템 ID (테스트용), 맨몸 · 부품 없음이면 null.</summary>
+        public string WornArmorOf(EntityId id)
+        {
+            if (!_views.TryGetValue(id, out var view) || view.Root == null) return null;
+            foreach (var t in view.Root.GetComponentsInChildren<Transform>(false))
+                if (t.name.StartsWith(WornArmorPrefix)) return t.name.Substring(WornArmorPrefix.Length);
             return null;
         }
 

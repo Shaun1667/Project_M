@@ -64,3 +64,7 @@ MonoBehaviour:
     RandomRotation: 0
     StandHeight: 0
   _pillarModule: {fileID: 2250049114770325675, guid: 20655c15c02cde04d993f35f16442fef, type: 3}
+  _zoneSets:
+  - FirstFloor: 6
+    LastFloor: 10
+    Set: {fileID: 11400000, guid: 9d7ccd852ae7e484c9d003126f75875e, type: 2}

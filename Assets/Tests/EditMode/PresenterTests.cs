@@ -92,6 +92,87 @@ namespace ProjectM.Tests
         }
 
         [Test]
+        public void ZoneTileSet_SwapsWhenFloorEntersAndLeavesZone()
+        {
+            // G-15: 6 ~ 10층 = 사막 세트 (바닥 타일만 다름)
+            var desertFloor = ScriptableObject.CreateInstance<Tile>();
+            var desert = ScriptableObject.CreateInstance<TileVisualSet>();
+            try
+            {
+                desert.CopyEntriesFrom(_tileVisuals);
+                desert.Set(TileType.Floor, desertFloor);
+                _tileVisuals.SetZoneSet(6, 10, desert);
+                Assert.That(_tileVisuals.ForFloor(5), Is.SameAs(_tileVisuals));
+                Assert.That(_tileVisuals.ForFloor(6), Is.SameAs(desert));
+                Assert.That(_tileVisuals.ForFloor(11), Is.SameAs(_tileVisuals));
+
+                var presenter = CreateTilemapPresenter();
+                var map = new GridMap(2, 1);
+                map.Set(new GridPos(0, 0), TileType.Floor);
+                map.Set(new GridPos(1, 0), TileType.Wall);
+                _bus.Publish(new MapLoadedEvent(map));
+                _bus.Flush();
+                Assert.That(_tilemap.GetTile(new Vector3Int(0, 0, 0)), Is.SameAs(_floorTile));
+
+                _bus.Publish(new MapLoadedEvent(map)); // 층 이동 순서: MapLoaded(옛 세트) → FloorChanged
+                _bus.Publish(new ProjectM.Dungeon.FloorChangedEvent(5, 6));
+                _bus.Flush();
+                Assert.That(presenter.Visuals, Is.SameAs(desert));
+                Assert.That(_tilemap.GetTile(new Vector3Int(0, 0, 0)), Is.SameAs(desertFloor), "구역이 바뀌면 지금 맵을 새 세트로 다시 그림");
+                Assert.That(_tilemap.GetTile(new Vector3Int(1, 0, 0)), Is.SameAs(_wallTile), "복사한 나머지 타입은 그대로");
+
+                _bus.Publish(new ProjectM.Dungeon.FloorChangedEvent(10, 11));
+                _bus.Flush();
+                Assert.That(_tilemap.GetTile(new Vector3Int(0, 0, 0)), Is.SameAs(_floorTile));
+
+                presenter.Bind(_bus, 7); // 이어하기: 저장된 층의 구역 세트로 시작
+                Assert.That(presenter.Visuals, Is.SameAs(desert));
+            }
+            finally
+            {
+                Object.DestroyImmediate(desert);
+                Object.DestroyImmediate(desertFloor);
+            }
+        }
+
+        [Test]
+        public void ArmorEquipped_ShowsOnlyWornArmorPart_EvenBeforeSpawn()
+        {
+            // G-16: 프리팹 가슴 아래 Armor_<ID> 부품 둘 — 입은 것만 켬. 판 시작 천 갑옷은 유닛 모습보다 먼저 올 수 있다
+            var prefab = new GameObject("ArmoredHero");
+            var chest = new GameObject("Chest").transform;
+            chest.SetParent(prefab.transform, false);
+            foreach (var id in new[] { "armor_cloth", "armor_plate" })
+            {
+                var part = new GameObject(EntityPresenter.WornArmorPrefix + id);
+                part.transform.SetParent(chest, false);
+                part.SetActive(false);
+            }
+            try
+            {
+                _catalog.SetPrefab("player", prefab);
+                var presenter = CreateEntityPresenter();
+                var unit = new EntityId(1);
+                _bus.Publish(new ProjectM.Items.ArmorEquippedEvent(unit, new ProjectM.Units.EquippedArmor("armor_cloth", 1, 0, 10, 0, 2, 0, 3), null));
+                _bus.Publish(new EntitySpawnedEvent(unit, new GridPos(0, 0), "player"));
+                _bus.Flush();
+                Assert.That(presenter.WornArmorOf(unit), Is.EqualTo("armor_cloth"), "모습을 만들 때 기억한 갑옷을 켬");
+
+                _bus.Publish(new ProjectM.Items.ArmorEquippedEvent(unit, new ProjectM.Units.EquippedArmor("armor_plate", 5, 0, 18, 0, 10, 0, 3), "armor_cloth"));
+                _bus.Flush();
+                Assert.That(presenter.WornArmorOf(unit), Is.EqualTo("armor_plate"), "갈아입으면 새 것만");
+
+                _bus.Publish(new ProjectM.Items.ArmorEquippedEvent(unit, ProjectM.Units.EquippedArmor.Empty, "armor_plate"));
+                _bus.Flush();
+                Assert.That(presenter.WornArmorOf(unit), Is.Null, "맨몸 = 모두 끔");
+            }
+            finally
+            {
+                Object.DestroyImmediate(prefab);
+            }
+        }
+
+        [Test]
         public void MapLoaded_ReplacesPreviousMap()
         {
             CreateTilemapPresenter();

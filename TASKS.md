@@ -1025,6 +1025,16 @@
   - 구현: `FxPresenter`가 `ConsumableUsedEvent`(마심 `use.drink` · 읽음 `use.read` = 쓴 유닛, 던짐 `use.shatter` = 떨어진 칸) · `TrapTriggeredEvent`(`trap.triggered`) · `BossChargingEvent`(`boss.charge`) · `BossTeleportedEvent`(`boss.teleport` 떠난 칸 · 도착한 칸) · `BossSummonedEvent`(`boss.summon`, 0마리면 없음)를 구독 — 도우미 `SpawnAtCell` · `SpawnOnUnit`(시야 밖 · 없는 키 건너뜀). 키 앞말 `use.`는 바닥 아이템 반짝임 `item.<ID>`와 겹치지 않게. `FxSetup` 표에 위 7키 + 점화 3키(`reaction.grass_ignite` · `tallgrass_ignite` · `door_ignite` — 반응 표 ID 그대로, 코드 없음)
   - 확인: 컴파일 오류 0 · Setup/FX 실행 · 카탈로그 10키 · 정지 렌더(0.25 · 0.6초 — 처음엔 점화가 회색 연기 · 함정 · 순간이동 · 소환이 너무 작아 팩 효과 · 크기를 고침. 마지막 수정(함정 = Sparks explode yellow 0.45 · 순간이동 1.2)은 플레이 모드가 다시 켜져 Setup/FX 대신 카탈로그를 같은 값으로 직접 고쳤고 렌더는 못 함). 테스트 4개 작성(`FxPresenterTests` — 마심 · 던짐 자리, 키 없으면 없음, 함정 시야, 순간이동 2곳 · 소환 0마리), 실행 안 함. 확인 못 한 것: 게임 화면에서 움직이는 모습
   - 확인 방법: Main 씬 플레이 → 물약 마시기 · 주문서 읽기 · 물약 던지기, 함정 · 식물 밟기, 불로 풀 · 문 태우기, 5층 보스(소환 · 순간이동) · 보스 힘 모으기에서 각 효과
+- 결정 (2026-11-05, 사용자 "남은 3차도 진행"): 25 2구역 타일 = Varco 새 모델 5 + 구역별 타일 세트 / 28 갑옷 입은 모습 = 갑옷 부품을 따로 만들어 뼈에 붙임(무기 · 지팡이와 같은 방식) / 29 UI = 모델 렌더 아이콘부터(G-4 재개) / 폰트 = Galmuri11 유지 — 모두 추천안
+- [x] **G-15. 2구역 사막 피라미드 타일 (★ 3차 25)** — 플레이 확인 대기
+  - 구현: Varco 5종(바닥 · 벽 · 기둥 · 내려가는 · 올라가는 계단, 후보는 사용자가 고름 — ART_ASSETS 12-9). `TileVisualSet._zoneSets`(층 범위 → 세트) · `ForFloor` · `CopyEntriesFrom`, `TilemapPresenter.Bind(bus, 층)` + `FloorChangedEvent` → `SetFloor`(세트가 달라질 때만 지금 맵 다시 세움), `GameRoot`가 `World.Floor`로 묶음(이어하기 = 저장된 층 · 해 색도). Setup/Varco Models `BuildDesertTiles`가 기본 세트를 복사해 `TileVisualSet_Desert.asset`(풀 · 문 · 솥은 사막 바닥 위에 다시 짜고 문틀 = 사막 벽)
+  - 확인: 컴파일 오류 0 · Setup/Varco Models 실행 · 7층 세트 = TileVisualSet_Desert(바닥 · 벽 · 기둥 · 계단 · 문 · 풀 모두 사막 프리팹) · 사막 방 정지 렌더. 테스트 1개 작성(`PresenterTests.ZoneTileSet_SwapsWhenFloorEntersAndLeavesZone`), 실행 안 함. 확인 못 한 것: 게임 안 층 이동 · 이어하기. Setup 대기 중 플레이 모드가 여러 번 켜져 있어 기다림
+  - 확인 방법: Main 씬 플레이 → 디버그 창으로 6층에 가면(또는 5층 보스 뒤 계단) 바닥 · 벽 · 기둥 · 계단 · 문이 사암, 11층에서 다시 돌 타일
+- [x] **G-16. 입은 갑옷 부품 (★ 3차 28)** — 플레이 확인 대기
+  - 구현: Varco 몸통 갑옷 5종(후보는 사용자가 고름 — ART_ASSETS 12-10). Setup/Varco Models `AttachArmors`가 루멘 · 시아 가슴 뼈에 `Armor_<ID>`(꺼 둠, 어깨 너비 × 배율 · 목 높이에 맞춤, 캐릭터 배율 `ArmorFits`), `EntityPresenter`가 `ArmorEquippedEvent`로 입은 것만 켬(`ShowArmor` · `WornArmorOf`, 모습보다 먼저 온 장착도 기억)
+  - 확인: 컴파일 오류 0 · Setup 실행 · 프리팹마다 부품 5 · 두 캐릭터 × 맨몸 + 5종 정지 렌더(처음엔 옷 속에 묻혀 크기를 캐릭터별로 키움). 테스트 1개 작성(`PresenterTests.ArmorEquipped_ShowsOnlyWornArmorPart_EvenBeforeSpawn`), 실행 안 함. 확인 못 한 것: 걷기 중 뚫림 · 이어하기 뒤 표시(장착 이벤트가 다시 오지 않음 — 무기와 같은 기존 한계)
+  - 확인 방법: Main 씬 플레이 → 시작하면 천 갑옷 조끼, 다른 갑옷을 주워 입으면 그 갑옷으로 바뀜
+  - 커밋: G-15와 한 커밋 (VarcoModelSetup · PresenterTests를 함께 고쳐 나누지 못함)
 - [ ] **G-4. UI 아트** — 아이콘 12(모델 렌더) · 막대 · 빠른 칸 · 인벤토리 · 로그 바탕 · 결과 화면 · (폰트 결정) — **일시중지 (2026-10-19, 사용자): 아트 에셋이 없음.** 재개 조건: ART_ASSETS.md 9번 목록의 1차 에셋(아이콘 · 틀)을 받거나, Varco 모델 렌더로 아이콘을 만들기로 정할 때. 재개 시 먼저 물을 것: 아이콘 출처(직접 렌더 / 에셋) · 폰트(Galmuri11 유지 / 한글 일반 폰트) · 범위
 
 ## Phase 4 — 재미 검증 (멈추고 플레이)

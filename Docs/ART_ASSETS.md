@@ -60,7 +60,8 @@
 
 ### 3차 — 연출 · 구역 분위기 · UI
 
-→ **2026-11-05 이펙트 연결됨: 26 · 27번** (G-14, Setup/FX + `FxPresenter` 이벤트 연결) — 26 점화 순간 `reaction.grass_ignite` · `tallgrass_ignite` · `door_ignite`(팩 Ground AOE explosion을 1칸 크기로) / 27 `use.drink`(발밑에서 솟는 빛) · `use.read`(발밑 금빛 마법진) · `use.shatter`(던진 물약이 떨어진 칸에서 깨짐) · `trap.triggered`(함정 · 식물 발동 칸 불꽃 튐) · `boss.charge`(붉은 오라) · `boss.teleport`(떠난 칸 · 도착한 칸) · `boss.summon`(보스 발밑 붉은 문). 남은 3차: 25(2구역 타일) · 28(갑옷 입은 모습) · 29(UI).
+→ **2026-11-05 이펙트 연결됨: 26 · 27번** (G-14, Setup/FX + `FxPresenter` 이벤트 연결) — 26 점화 순간 `reaction.grass_ignite` · `tallgrass_ignite` · `door_ignite`(팩 Ground AOE explosion을 1칸 크기로) / 27 `use.drink`(발밑에서 솟는 빛) · `use.read`(발밑 금빛 마법진) · `use.shatter`(던진 물약이 떨어진 칸에서 깨짐) · `trap.triggered`(함정 · 식물 발동 칸 불꽃 튐) · `boss.charge`(붉은 오라) · `boss.teleport`(떠난 칸 · 도착한 칸) · `boss.summon`(보스 발밑 붉은 문). 남은 3차: 29(UI).
+→ **2026-11-05 연결됨: 25 · 28번** — 25 2구역 사막 타일 5종 + 구역별 타일 세트(G-15, 12-9번) · 28 갑옷 부품 5종을 루멘 · 시아 가슴 뼈에(G-16, 12-10번).
 
 | # | ID | 무엇 | 지금 | 만들 것 |
 |---|---|---|---|---|
@@ -470,6 +471,39 @@ Varco는 모든 모델을 **가장 긴 쪽 1 m**로 보내므로 크기는 프�
 - 얼음버섯은 처음 3D에서 버섯 갓이 사라져 얼음 기둥처럼 나와 **다시 생성** (2026-11-05, 사용자): 투명 · 결정 표현을 빼고 갓이 큰 불투명 버섯 한 송이로 — 3D가 형태를 유지했다. 투명 · 결정 같은 표현은 Varco 3D가 형태를 잃기 쉽다.
 - 확인 못 한 것: 게임 화면 · 안개 밖(안 보이는 칸)에서도 식물이 보이는지(안개 Tilemap은 바닥만 덮는다).
 - Varco 플로우 `MoaDungeon` y 133000 ~ 135400. 포인트 이미지 500 + 3D 1,000.
+
+### 12-9. 2구역 사막 피라미드 타일 (2026-11-05 — ★ 3차 25)
+
+결정 (2026-11-05, 사용자): Varco 새 모델 5종 + 구역별 타일 세트. 기본 세트(`TileVisualSet.asset`)의 구역 목록 `_zoneSets`에 층 범위 6 ~ 10 → `TileVisualSet_Desert.asset`(기본 세트를 복사해 아래 타입만 바꿈 — 메뉴 Setup/Varco Models `BuildDesertTiles`). `TilemapPresenter`가 `Bind(bus, 층)` · `FloorChangedEvent`로 세트를 고르고, 구역이 바뀌는 층에서만 지금 맵을 다시 세운다 (표시만 — 규칙 · 시뮬레이션은 모름).
+
+| 타입 | 모델 | 크기 | 후보 |
+|---|---|---|---|
+| `Floor` (90° 단위로 돌림) | Tile_Desert_Floor | 1 (윗면 = y 0으로 내림) | 1-2 — 큰 사암 판 + 상형문자 줄 하나 |
+| `Wall` | Tile_Desert_Wall | 1 | 2-1 — 정육면체에 가까운 사암 벽돌 + 상형문자 띠 |
+| 외톨이 벽 (기둥) | Tile_Desert_Pillar + 사막 바닥 | 1 | 3-2 — 연꽃 기둥머리 · 넓은 받침 |
+| `StairsDown` | Tile_Desert_StairsDown | 1 | 4-2 — 사암 테두리 · 풍뎅이 조각 |
+| `StairsUp` | Tile_Desert_StairsUp | 1 | 5-2 — 위에 빛 · 양옆 조각 벽 |
+| 풀 · 문 · 솥 | `Tile_Desert_Grass/TallGrass/Door/OpenDoor/LockedDoor/AlchemyPot` | — | 1구역과 같은 모델을 사막 바닥 위에 다시 짬, 문틀 = 사막 벽 모델 |
+
+- 해 색(3-17c `ZoneThemePresenter`)은 그대로 함께 쓴다. 이어하기도 저장된 층의 구역 세트 · 해 색으로 시작(`GameRoot` → `Bind(…, World.Floor)`).
+- 3 ~ 5구역은 아직 기본 세트 (같은 방식으로 표 한 줄 + Setup 상수).
+- Varco 플로우 `MoaDungeon` y 136600 ~ 139000. 포인트 이미지 500 + 3D 1,000.
+
+### 12-10. 입은 갑옷 부품 (2026-11-05 — ★ 3차 28)
+
+결정 (2026-11-05, 사용자): 갑옷 부품을 따로 만들어 뼈에 붙임 (무기 · 지팡이와 같은 방식). 몸통만 덮는 껍데기(소매 · 팔 없음) 5종 — 메뉴 Setup/Varco Models `AttachArmors`가 루멘 · 시아 프리팹의 가슴 뼈(UpperChest → Chest → Spine, Mixamo `Spine2`)에 `Armor_<아이템 ID>`로 꺼 둔 채 붙이고, `EntityPresenter`가 `ArmorEquippedEvent`로 입은 것만 켠다 (판 시작 천 갑옷 포함, 맨몸 = 모두 끔).
+
+| 아이템 | 모델 | 후보 |
+|---|---|---|
+| `armor_cloth` | Prop_Armor_Cloth | 1-1 누빔 베스트 · 끈 허리띠 |
+| `armor_leather` | Prop_Armor_Leather | 2-1 가죽 흉갑 · 버클 둘 |
+| `armor_mail` | Prop_Armor_Mail | 3-2 사슬 셔츠 · 가죽 깃 |
+| `armor_scale` | Prop_Armor_Scale | 4-1 청동 비늘 조끼 |
+| `armor_plate` | Prop_Armor_Plate | 5-2 강철 흉갑 · 금테 · 어깨 덮개 |
+
+- 크기: 너비 = 어깨 관절(위팔 뼈) 사이 × 1.45 × 캐릭터 배율(루멘 1.6 — 긴 코트 위 · 시아 1.3, 정지 렌더로 맞춤), 두께 × 1.15, 윗면 = 목 뼈 높이. 후보는 두 캐릭터가 같이 쓰므로 체형이 덜 드러나는 쪽(사용자 선택).
+- 확인 못 한 것: 걷기 애니메이션 중 몸 · 팔이 부품을 뚫는지, 이어하기 뒤 갑옷이 보이는지(무기와 같이 장착 이벤트가 다시 오지 않음 — 기존 무기도 같음).
+- Varco 플로우 `MoaDungeon` y 140200 ~ 142600. 포인트 이미지 500 + 3D 1,000.
 
 ### 12-2. 무기 (3-7a, 2026-10-19)
 

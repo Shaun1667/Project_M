@@ -281,14 +281,14 @@ namespace ProjectM
                     ? GhostBoss.ToUnitDef(_ghost, _zoneCatalog.GhostHpPercent, _zoneCatalog.GhostExpReward, _zoneCatalog.GhostExpMaxLevel) : null); // 3-23b 그림자 보스
 
             if (_pixelMap != null) _pixelMap.Bind(World.Events); // P-3a 2D 맵 — 3D 맵은 묶지 않음
-            else _tilemapPresenter.Bind(World.Events);
+            else _tilemapPresenter.Bind(World.Events, World.Floor); // G-15: 구역 타일 세트 (이어하기 = 저장된 층)
             _entityPresenter.Bind(World.Events);
             if (_fogPresenter != null) _fogPresenter.Bind(World.Events);
             if (_terrainOverlay != null) _terrainOverlay.Bind(World.Events);
             if (_traps != null) _traps.Bind(World.Events);
             if (_fx != null) _fx.Bind(World.Events); // G-3: 엔티티 모습 다음에 (상태 효과가 유닛에 붙음)
             if (_floorItems != null) _floorItems.Bind(World.Events);
-            if (_zoneTheme != null) _zoneTheme.Bind(World.Events, 1); // 3-17c
+            if (_zoneTheme != null) _zoneTheme.Bind(World.Events, World.Floor); // 3-17c (G-15: 이어하기도 지금 층 색)
             World.Events.Subscribe<EntityMovedEvent>(OnEntityMoved);
             World.Events.Subscribe<EntitySpawnedEvent>(OnEntitySpawned); // 3-17b 로그의 적 이름
             World.Events.Subscribe<UnitDiedEvent>(OnUnitDied);
