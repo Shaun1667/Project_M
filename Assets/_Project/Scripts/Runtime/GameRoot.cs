@@ -791,7 +791,7 @@ namespace ProjectM
                 if (World != world || _player == null) return; // 그새 새 판
                 ClassForms.Choose(World, Classes, Spells, _player, entry.Forms[index].Id);
                 World.Events.Flush();
-            }, title: HudText.FormSelectTitle, hint: HudText.FormSelectHint, details: details);
+            }, title: HudText.FormSelectTitle(_characterName), hint: HudText.FormSelectHint, details: details);
         }
 
         /// <summary>남은 특성 점수 (모든 단계 — 2단계는 형태를 고른 뒤에만 셈).</summary>

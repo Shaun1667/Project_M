@@ -511,7 +511,7 @@ namespace ProjectM.UI
         public const string CharacterSelectTitle = "캐릭터 선택";
         public const string CharacterSelectHint = "← → 고르기 · Enter/클릭 시작";
         // 3-21b 직업 형태 선택 창 · 로그
-        public const string FormSelectTitle = "빛의 창 — 형태를 고르세요";
+        public static string FormSelectTitle(string characterName) => string.IsNullOrEmpty(characterName) ? "형태를 고르세요" : $"{characterName} — 형태를 고르세요"; // 2026-11-05: 캐릭터마다 (~~"빛의 창 — …" 고정~~)
         public const string FormSelectHint = "← → 고르기 · Enter/클릭 확정 (한 번만 고를 수 있음)";
 
         // 3-23b 지난 회차 플레이어 보스

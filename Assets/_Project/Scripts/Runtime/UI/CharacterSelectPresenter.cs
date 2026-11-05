@@ -160,6 +160,9 @@ namespace ProjectM.UI
                 {
                     var detail = MakeText(rect, "Detail", new Vector2(0, 30), new Vector2(_cardSize.x - 30, _cardSize.y - 110), 24);
                     detail.alignment = TextAlignmentOptions.Top;
+                    detail.enableAutoSizing = true; // 2026-11-05: 긴 설명이 아래 이름 줄과 겹치지 않게 줄여서 맞춤
+                    detail.fontSizeMin = 14;
+                    detail.fontSizeMax = 24;
                     detail.text = details[i];
                 }
                 if (sprite != null)
