@@ -189,7 +189,7 @@ namespace ProjectM.Tests
             Assert.That(asset, Is.Not.Null, "TerrainCatalog.asset 없음 — 메뉴 ProjectM/Setup/Main Scene 실행");
             var book = asset.ToBook(statusAsset.ToBook());
             var expected = SpellTests.BalanceTerrains();
-            Assert.That(book.Count, Is.EqualTo(expected.Count));
+            Assert.That(book.Count, Is.EqualTo(expected.Count + 1), "+ 보스 예고 칸 Warning (3-17d, BossPatternTests가 검산)");
             foreach (var type in new[] { TerrainEffectType.FireZone, TerrainEffectType.PoisonCloud, TerrainEffectType.Water, TerrainEffectType.ContaminatedWater, TerrainEffectType.IcePatch, TerrainEffectType.ParalyticGas })
             {
                 Assert.That(book.TryGet(type, out var a), Is.True, type.ToString());

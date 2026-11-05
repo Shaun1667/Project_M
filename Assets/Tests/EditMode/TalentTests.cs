@@ -221,7 +221,7 @@ namespace ProjectM.Tests
             var enemy = UnitSpawner.SpawnEnemy(s.World, new UnitDef("enemy_melee", 50, 2, 6), new GridPos(5, 2), new Idle());
             s.World.Events.Flush();
             Assert.That(enemy.LastSeenTargetPos.HasValue, Is.False, "가만히 있는 적 = 플레이어를 기억하지 않음");
-            var block = SpellCasting.TryCreateCastSpell(s.World, Config, s.Book, Targeting, Sight, "light_spear_throw_plus", enemy.Pos, out var cmd);
+            var block = SpellCasting.TryCreateCastSpell(s.World, Config, s.Book, Targeting, Sight, "light_spear_throw", enemy.Pos, out var cmd); // 테스트 형태 표는 배우는 주문이 없어 던지기 그대로
             Assert.That(block, Is.EqualTo(CastBlock.None));
             s.Clock.SubmitPlayerCommand(cmd);
             s.World.Events.Flush();

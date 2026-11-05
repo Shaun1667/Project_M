@@ -243,7 +243,8 @@ namespace ProjectM.Tests
             var statuses = statusAsset.ToBook();
             var book = asset.ToBook(statuses, terrainAsset.ToBook(statuses));
             var expected = BalanceBookFull();
-            Assert.That(book.Count, Is.EqualTo(expected.Count + TrapTests.TrapSpellCount), "+ 함정 효과 주문 (3-12a, TrapTests가 검산)");
+            Assert.That(book.Count, Is.EqualTo(expected.Count + TrapTests.TrapSpellCount + 10 + 14),
+                "+ 함정 · 식물 효과 주문 (3-12a · 3-16b, TrapTests) + 적 · 보스 주문 10 (3-17 ~ 3-20, ZoneTests · BossPatternTests) + 직업 기술 14 (루멘 8 · 시아 6 — 3-21 · 3-22)");
             foreach (var id in new[] { "fire_basic", "ice_basic", "lightning_basic", "poison_basic", "water_basic" })
             {
                 Assert.That(book.TryGet(id, out var a), Is.True, id);

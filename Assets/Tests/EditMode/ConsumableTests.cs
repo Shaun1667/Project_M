@@ -34,8 +34,10 @@ namespace ProjectM.Tests
             "#########",
         };
 
-        private static readonly string[] PotionLooks = { "potion_crimson", "potion_amber", "potion_golden", "potion_jade", "potion_blue", "potion_sky", "potion_navy", "potion_magenta" };
-        private static readonly string[] ScrollLooks = { "scroll_tyr", "scroll_feoh", "scroll_ur", "scroll_thorn", "scroll_rad", "scroll_gyfu", "scroll_wynn", "scroll_haegl" };
+        private static readonly string[] PotionLooks = { "potion_crimson", "potion_amber", "potion_golden", "potion_jade", "potion_blue", "potion_sky", "potion_navy", "potion_magenta",
+            "potion_bistre", "potion_charcoal", "potion_silver", "potion_ivory" }; // 12색 — 3-13a에서 물약이 12종이 됨
+        private static readonly string[] ScrollLooks = { "scroll_tyr", "scroll_feoh", "scroll_ur", "scroll_thorn", "scroll_rad", "scroll_gyfu", "scroll_wynn", "scroll_haegl",
+            "scroll_is", "scroll_sigel", "scroll_beorc", "scroll_oethel" }; // 12룬
 
         // BALANCE 14번 무게
         internal static ItemBook Book() => new ItemBook(new[]

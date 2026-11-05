@@ -75,7 +75,7 @@ namespace ProjectM.Tests
 
         private static void HoldSpear(Session s)
         {
-            Assert.That(Inventory.TryAdd(s.World, s.Book, s.Items, s.Player, InventoryRef.Item("spear")), Is.True);
+            Assert.That(Inventory.TryAdd(s.World, s.Book, s.Items, s.Player, InventoryRef.Item("spear")), Is.GreaterThanOrEqualTo(0), "넣은 칸 번호");
             int index = System.Array.IndexOf(s.Player.InventorySlots, InventoryRef.Item("spear"));
             Assert.That(Weapons.Equip(s.World, s.Items, s.Player, index), Is.True);
             Assert.That(s.Player.Weapon.ItemId, Is.EqualTo("spear"));

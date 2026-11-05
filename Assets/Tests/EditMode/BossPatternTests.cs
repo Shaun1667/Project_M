@@ -24,6 +24,11 @@ namespace ProjectM.Tests
             new EnemyTraits("minion"),
         });
 
+        private sealed class IdleAi : ICommandSource
+        {
+            public ICommand NextCommand(in TickContext context) => new WaitCommand(1);
+        }
+
         private sealed class Run
         {
             public World World;
@@ -116,7 +121,7 @@ namespace ProjectM.Tests
             var r = Start("charger", new GridPos(3, 2));
             r.Boss.ChargeTarget = new GridPos(5, 1);
             r.Boss.Summoned = true;
-            var restored = World.Restore(WorldSnapshotCodec.Decode(WorldSnapshotCodec.Encode(r.World.Capture())), (w, id) => null);
+            var restored = World.Restore(WorldSnapshotCodec.Decode(WorldSnapshotCodec.Encode(r.World.Capture())), (w, id) => new IdleAi()); // 적(보스)이 있으면 AI가 필요
             Assert.That(restored.Units.TryGet(r.Boss.Id, out var b), Is.True);
             Assert.That(b.ChargeTarget, Is.EqualTo((GridPos?)new GridPos(5, 1)));
             Assert.That(b.Summoned, Is.True);
