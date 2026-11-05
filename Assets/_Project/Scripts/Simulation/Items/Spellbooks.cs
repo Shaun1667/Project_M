@@ -506,7 +506,7 @@ namespace ProjectM.Items
     /// 인벤토리가 꽉 차면 바닥에 남기고 ItemPickupFailedEvent (HUD가 같은 칸이면 한 번만 알림). 차례를 더 쓰지 않는다. 상태를 갖지 않는다.
     /// 등록: TickPhase.ManaRegen (⑤, 행동 다음).
     /// </summary>
-    public sealed class ItemPickupSystem : ITickSystem
+    public sealed class ItemPickupSystem : IInstantTickSystem // 3-27 실시간 즉시 행동 뒤에도
     {
         private readonly World _world;
         private readonly ItemBook _items;

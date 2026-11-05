@@ -8,7 +8,7 @@ namespace ProjectM.Dungeon
     /// ⑤ 문 열고 닫기 (3-11c, SPD): 살아 있는 유닛이 선 닫힌 문은 열린 문, 아무도 없는 열린 문은 닫힌 문으로.
     /// ⑥ 시야 갱신 전에 돌아 같은 틱에 문 너머가 보인다. 상태를 갖지 않는다 (문 상태는 칸 종류 = 맵에 저장).
     /// </summary>
-    public sealed class DoorSystem : ITickSystem
+    public sealed class DoorSystem : IInstantTickSystem // 3-27 실시간 즉시 행동 뒤에도
     {
         private readonly World _world;
 

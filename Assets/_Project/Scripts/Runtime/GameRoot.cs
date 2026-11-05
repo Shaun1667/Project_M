@@ -42,6 +42,7 @@ namespace ProjectM
         [Tooltip("물약 · 주문서 수치 · 겉모습 (3-9). 비우면 식별 · 무작위 배치 없음")] [SerializeField] private ConsumableConfigAsset _consumableConfig;
         [Tooltip("고를 수 있는 캐릭터 (2026-10-21). 비우거나 창이 없으면 고르지 않고 Player.asset 모습으로 시작")] [SerializeField] private CharacterCatalogAsset _characters;
         [SerializeField] private CharacterSelectPresenter _characterSelect;
+        [Tooltip("타이틀 화면 (3-27 — 이어하기 · 게임 시작 → 모드 · 시드). 비우면 바로 캐릭터 선택 (턴제 · 무작위 시드)")] [SerializeField] private TitlePresenter _title;
         [Tooltip("직업 · 형태 표 (3-21b). 비우면 형태 선택 없음")] [SerializeField] private ClassCatalogAsset _classCatalog;
         [SerializeField] private TilemapPresenter _tilemapPresenter;
         [Tooltip("2D 픽셀 맵 (P-3a). 있으면 3D TilemapPresenter 대신 이것을 쓴다")] [SerializeField] private PixelMapPresenter _pixelMap;
@@ -136,7 +137,7 @@ namespace ProjectM
             _input.InfoChanged += _hud.SetInfo;
             // 2026-10-20: 이동 · 공격 · 주문 연출이 끝날 때까지 다음 행동(= 다음 틱)을 받지 않는다
             _input.PresentationBusy = () => _entityPresenter.IsAnimating || (_fx != null && _fx.IsPlaying)
-                || (_characterSelect != null && _characterSelect.IsOpen); // 3-21b: 형태 선택 창이 열려 있으면 행동을 받지 않음
+                || (_characterSelect != null && _characterSelect.IsOpen) || (_title != null && _title.IsOpen); // 3-21b: 형태 선택 창이 열려 있으면 행동을 받지 않음 · 3-27 타이틀
         }
 
         private void OnDestroy()
@@ -148,7 +149,79 @@ namespace ProjectM
         private void Start()
         {
             if (Config == null) return;
-            BeginCharacterSelect();
+            if (_title != null)
+            {
+                _title.Model.ContinueChosen += () => Defer(ContinueRun);
+                _title.Model.StartChosen += (mode, seedText) => Defer(() =>
+                {
+                    _pendingMode = mode;
+                    _pendingSeed = SeedInput.TryParse(seedText, out var s) ? s : (ulong?)null;
+                    BeginCharacterSelect();
+                });
+                _title.Model.QuitChosen += Quit;
+            }
+            OpenTitle();
+        }
+
+        // ── 타이틀 · 모드 · 시드 (3-27, 결정 2026-11-05) ──
+
+        private RunMode _pendingMode;
+        private ulong? _pendingSeed;
+        private System.Action _deferred;
+        private int _deferredFrame;
+        private RealTimeClock _realTime; // 실시간 판이면 시계 (턴제면 null)
+        private bool _paused;
+        private long _savedFlush = -1; // 자동 저장: 마지막으로 저장한 SimEventBus.FlushCount
+
+        /// <summary>확정한 프레임의 키(Enter)가 다음 창에 또 읽히지 않게 다음 프레임에 연다.</summary>
+        private void Defer(System.Action action)
+        {
+            _deferred = action;
+            _deferredFrame = Time.frameCount;
+        }
+
+        /// <summary>타이틀을 연다 (게임 처음 · 판이 끝난 뒤 R). 타이틀이 없으면 바로 턴제 · 무작위 시드로 캐릭터 선택.</summary>
+        private void OpenTitle()
+        {
+            if (_title == null)
+            {
+                _pendingMode = RunMode.TurnBased;
+                _pendingSeed = null;
+                BeginCharacterSelect();
+                return;
+            }
+            _title.Open(RunSaveStore.Exists());
+        }
+
+        private static void Quit()
+        {
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
+        }
+
+        /// <summary>저장에서 이어하기 (3-27). 저장이 깨졌으면 타이틀로.</summary>
+        private void ContinueRun()
+        {
+            var snapshot = RunSaveStore.Load();
+            if (snapshot == null)
+            {
+                RunSaveStore.Delete();
+                OpenTitle();
+                return;
+            }
+            try
+            {
+                BeginRun(snapshot, null, null, null, snapshot.Mode, snapshot.RngSeed);
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"[GameRoot] 저장을 불러오지 못했다 — 지우고 타이틀로: {ex}");
+                RunSaveStore.Delete();
+                OpenTitle();
+            }
         }
 
         /// <summary>지난 판에 고른 캐릭터 (다음 선택 창의 처음 칸). 저장 대상 아님 — 판의 캐릭터는 플레이어 유닛의 모습 ID에 남는다.</summary>
@@ -177,18 +250,63 @@ namespace ProjectM
                 _characterIndex = index;
                 _characterName = string.IsNullOrEmpty(list[index].DisplayName) ? list[index].Id : list[index].DisplayName; // 3-23b 기록 이름
                 StartNewRun(list[index].VisualId, list[index].StartingSpells, list[index].ClassId); // 3-21a: 루멘 = 빛의 창 기술 2개 · 3-21b 직업
-            }, illustrations);
+            }, illustrations, onCancel: _title != null ? () => Defer(OpenTitle) : (System.Action)null); // 3-27 Esc = 타이틀로
         }
 
         private void Update()
         {
             // 입력만 읽는다 — 규칙은 틱으로만 진행한다.
+            if (_deferred != null && Time.frameCount > _deferredFrame)
+            {
+                var action = _deferred;
+                _deferred = null;
+                action();
+                return;
+            }
             var keyboard = Keyboard.current;
-            if (_runEnded && keyboard != null && keyboard.rKey.wasPressedThisFrame && (_characterSelect == null || !_characterSelect.IsOpen))
-                BeginCharacterSelect();
+            bool titleOpen = _title != null && _title.IsOpen;
+            if (_runEnded && keyboard != null && keyboard.rKey.wasPressedThisFrame && !titleOpen && (_characterSelect == null || !_characterSelect.IsOpen))
+                OpenTitle(); // 3-27: 판이 끝나면 타이틀로 (모드 · 시드를 다시 고름)
             else if (!_runEnded && World != null && keyboard != null && keyboard.tKey.wasPressedThisFrame
                      && _characterSelect != null && !_characterSelect.IsOpen && !_entityPresenter.IsAnimating)
                 OpenTalents(); // 3-21c 특성 창
+            else if (_realTime != null && !_runEnded && keyboard != null && keyboard.pKey.wasPressedThisFrame)
+            {
+                _paused = !_paused; // 3-27 실시간 일시정지
+                _hud.SetHint(_paused ? HudText.Paused : string.Empty);
+            }
+
+            // 3-27 실시간: 1초마다 1틱 — 일시정지 · 창(캐릭터 · 형태 · 특성 · 배낭 · 타이틀)이 열려 있으면 멈춤
+            if (_realTime != null && !_runEnded && !_paused && !titleOpen && (_characterSelect == null || !_characterSelect.IsOpen) && !_input.Inventory.IsOpen)
+            {
+                _realTime.Update(Time.deltaTime);
+                if (_realTime.LastTicks > 0) World.Events.Flush();
+            }
+        }
+
+        /// <summary>3-27 자동 저장 (결정 2026-11-05 — 매 행동 · 매 틱): 이번 프레임에 화면에 보낸 이벤트가 있었으면(= 무언가 바뀜) 저장. 판이 끝났으면 안 함.</summary>
+        private void LateUpdate() => AutoSave();
+
+        private void OnApplicationQuit() => AutoSave();
+
+        private void OnApplicationPause(bool paused)
+        {
+            if (paused) AutoSave();
+        }
+
+        private void AutoSave()
+        {
+            if (World == null || _runEnded || _playerDead || !_playerId.IsValid || World.Events.FlushCount == _savedFlush) return;
+            try
+            {
+                RunSaveStore.Save(World);
+                _savedFlush = World.Events.FlushCount;
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogWarning($"[GameRoot] 자동 저장 실패: {ex.Message}");
+                _savedFlush = World.Events.FlushCount; // 같은 상태로 매 프레임 다시 시도하지 않게
+            }
         }
 
         /// <param name="visualId">고른 캐릭터의 모습 ID (null이면 Player.asset 그대로).</param>
@@ -196,7 +314,21 @@ namespace ProjectM
         /// <param name="classId">고른 캐릭터의 직업 ID (3-21b — RunState.ClassId). null이면 직업 없음.</param>
         private void StartNewRun(string visualId, System.Collections.Generic.IReadOnlyList<string> characterSpells = null, string classId = null)
         {
-            ulong seed = _fixedSeed != 0 ? (ulong)_fixedSeed : (ulong)System.DateTime.UtcNow.Ticks;
+            // 3-27: 시드 = 타이틀 입력 칸 → 인스펙터 고정 시드 → 지금 시각
+            ulong seed = _pendingSeed ?? (_fixedSeed != 0 ? (ulong)_fixedSeed : (ulong)System.DateTime.UtcNow.Ticks);
+            RunSaveStore.Delete(); // 새 판 = 지난 저장은 버림 (저장은 하나)
+            BeginRun(null, visualId, characterSpells, classId, _pendingMode, seed);
+        }
+
+        /// <summary>
+        /// 판을 연결한다 (3-27): snapshot이 null이면 새 판(seed로 1층 생성 · 플레이어 · 적 · 배치 계획), 있으면 저장에서 복원(World.Restore → 시스템 · 규칙을 다시 연결 → 화면에 지금 층 전체 알림).
+        /// 규칙 연결(시스템 · 적 · 아이템 · 직업 규칙 · 계단 · 입력)은 두 경우 같은 코드.
+        /// </summary>
+        private void BeginRun(WorldSnapshot snapshot, string visualId, System.Collections.Generic.IReadOnlyList<string> characterSpells, string classId,
+            RunMode mode, ulong seed)
+        {
+            bool restoring = snapshot != null;
+            _paused = false;
             Seed = seed;
             Debug.Log($"[GameRoot] 시드 {(long)seed}");
             // 3-23b: 지난 회차 기록(있으면 마지막 보스 = 그 플레이어) · 그 보스 주문을 더한 판 주문 표
@@ -225,14 +357,41 @@ namespace ProjectM
 
             var dungeonConfig = _dungeonConfig.ToConfig();
             var generator = new DungeonGenerator(dungeonConfig);
-            DungeonFloor floor = null;
-            World = World.Create(seed, rng =>
-            {
-                floor = generator.Generate(rng, stairsUp: false, stairsDown: dungeonConfig.FloorCount > 1);
-                return floor.Map;
-            });
-            Floor = floor;
             var sight = new ShadowcastSightRule();
+            // 적 · 아군 AI: 복원(World.Restore)은 새 World를 만들며 AI를 물어 오므로 처음 물을 때 그 World로 만든다 (상태 없음 — 규칙 6)
+            var enemiesBook = _zoneCatalog != null ? _zoneCatalog.ToEnemyBook() : null; // 3-17b 적 종류 행동
+            if (enemiesBook != null && _ghost != null) enemiesBook = enemiesBook.With(GhostBoss.Traits(_ghost)); // 3-23b 그림자 보스 행동
+            MeleeChaserAi enemyAi = null;
+            AllyAi allyAi = null;
+            void EnsureAi(World w)
+            {
+                if (enemyAi != null) return;
+                enemyAi = new MeleeChaserAi(w, Config, sight, Statuses, enemiesBook, Spells, new BresenhamTargetingRule()); // 3-13a: 투명 · 3-17b 행동
+                allyAi = new AllyAi(w, Config, sight); // 3-13b 분신
+            }
+            System.Func<World, EntityId, ICommandSource> aiFactory = (w, id) =>
+            {
+                EnsureAi(w);
+                return !w.Units.TryGet(id, out var u) ? enemyAi : u.Faction == Faction.Ally ? allyAi
+                    : u.Faction == Faction.Neutral ? new ProjectM.Dungeon.IdleNeutralAi() : (ICommandSource)enemyAi; // 떠났던 층의 분신 · 상인
+            };
+            if (restoring)
+            {
+                World = World.Restore(snapshot, aiFactory);
+                Floor = null;
+            }
+            else
+            {
+                DungeonFloor floor = null;
+                World = World.Create(seed, rng =>
+                {
+                    floor = generator.Generate(rng, stairsUp: false, stairsDown: dungeonConfig.FloorCount > 1);
+                    return floor.Map;
+                });
+                Floor = floor;
+                World.Run.Mode = mode; // 3-27: 판 시작 때 고정 (스냅샷 v27)
+            }
+            EnsureAi(World);
             var progression = _progressionConfig != null ? _progressionConfig.ToConfig() : null;
             var hunger = _hungerConfig != null ? _hungerConfig.ToConfig() : null; // 3-14
             var vision = World.InstallCoreSystems(sight, Magic, Statuses, Terrains, progression, _terrainCatalog.ToFireSpread(), hunger); // 3-11b 불 번짐 · 3-14 허기
@@ -246,7 +405,6 @@ namespace ProjectM
                 },
                 pos => { if (lootRules != null) Loot.DropSeed(World, lootRules, pos); }); // 3-16b
             var consumableConfig = _consumableConfig != null ? _consumableConfig.ToConfig() : ConsumableConfig.Default;
-            var allyAi = new AllyAi(World, Config, sight); // 3-13b 분신
             var consumables = new ConsumableRules(Items, consumableConfig, Statuses, Terrains, progression, sight, allyAi, Spells); // 3-9 물약 · 주문서 효과
 
             // 3-4a: 적 재생성(⑤) · 계단 사용(틱 밖 — 입력이 부른다)
@@ -257,17 +415,11 @@ namespace ProjectM
             if (zones != null && zones.FloorCount != dungeonConfig.FloorCount)
                 Debug.LogWarning($"[GameRoot] 구역 표의 층 수 {zones.FloorCount} ≠ DungeonGenConfig 층 수 {dungeonConfig.FloorCount}", this);
             var kindRng = World.Rng.Get(RngStream.EnemyKind);
-            var enemies = _zoneCatalog != null ? _zoneCatalog.ToEnemyBook() : null; // 3-17b 적 종류 행동
-            if (enemies != null && _ghost != null) enemies = enemies.With(GhostBoss.Traits(_ghost)); // 3-23b 그림자 보스 행동
-            if (enemies != null) World.SetEnemyRules(new EnemyRules(enemies, Spells, Statuses, Terrains));
+            if (enemiesBook != null) World.SetEnemyRules(new EnemyRules(enemiesBook, Spells, Statuses, Terrains));
             _unitVisuals.Clear();
             _enemyNames = _zoneCatalog != null ? _zoneCatalog.DisplayNames() : new System.Collections.Generic.Dictionary<string, string>();
             if (_ghost != null) _enemyNames[_ghost.VisualId] = _ghost.DisplayName; // 3-23b "루멘의 그림자 #12"
             HudText.EnemyName = id => _unitVisuals.TryGetValue(id, out var v) && _enemyNames.TryGetValue(v, out var n) ? n : null;
-            var enemyAi = new MeleeChaserAi(World, Config, sight, Statuses, enemies, Spells, new BresenhamTargetingRule()); // 3-13a: 투명 · 3-17b 행동
-            System.Func<World, EntityId, ICommandSource> aiFactory = (w, id) =>
-                !w.Units.TryGet(id, out var u) ? enemyAi : u.Faction == Faction.Ally ? allyAi
-                : u.Faction == Faction.Neutral ? new ProjectM.Dungeon.IdleNeutralAi() : (ICommandSource)enemyAi; // 떠났던 층의 분신 · 상인
             World.Scheduler.AddSystem(TickPhase.ManaRegen, new EnemyRespawnSystem(World, spawn, enemyDef, enemyAi, sight, dungeonConfig.FloorCount, zones));
             var loot = _lootConfig != null ? _lootConfig.ToConfig() : null;
             if (loot != null) World.Scheduler.AddSystem(TickPhase.ManaRegen, new ItemPickupSystem(World, Items)); // 3-5: 걸어 들어가면 줍기
@@ -299,7 +451,77 @@ namespace ProjectM
             World.Events.Subscribe<StairsUnsealedEvent>(OnStairsUnsealed); // 3-21b: 선택 층 보스 처치 → 형태 선택
             World.Events.Subscribe<LevelUpEvent>(OnLevelUp); // 3-21c: 특성 점수 안내
             World.SetClassRules(Classes); // 3-21c: 특성 효과 조회 (규칙 연결 — 저장 안 함)
+            var consumableConfigForRun = consumableConfig;
 
+            Unit player;
+            if (restoring)
+            {
+                // 3-27 이어하기: 저장된 판 그대로 — 화면에 지금 층 전체를 알린다
+                if (!PlayerActions.TryGetPlayer(World, out player)) throw new System.InvalidOperationException("저장에 플레이어가 없다.");
+                _characterName = CharacterNameOf(player.VisualId);
+                FloorTransition.AnnounceRestored(World);
+                _playerId = player.Id;
+                _player = player;
+                _playerDead = false;
+                _runEnded = false;
+            }
+            else
+            {
+                player = SpawnNewRun(visualId, characterSpells, classId, decor, water, traps, zones, kindRng, spawn, enemyDef, enemyAi, hunger, loot, dungeonConfig, consumableConfigForRun);
+            }
+            vision.Refresh(); // 첫 시야 — 이후는 매 틱 ⑥ 단계에서
+
+            _hudText.Run = World.Run; // 3-9: 모르는 물약 · 주문서는 겉모습 이름으로
+            _hud.Bind(World.Events, player, Spells, _hudText, progression);
+            // 3-27: 판의 시계 — 턴제(행동 = 틱) / 실시간(1초 = 1틱, 플레이어 즉시 행동)
+            ITickClock clock;
+            if (World.Run.Mode == RunMode.RealTime)
+            {
+                _realTime = new RealTimeClock(World.Scheduler, Config.RealtimeTickIntervalSeconds);
+                clock = _realTime;
+            }
+            else
+            {
+                _realTime = null;
+                clock = new TurnClock(World.Scheduler, World.PlayerInput);
+            }
+            _input.Bind(World, Config, clock, sight, Spells, new BresenhamTargetingRule(), Items, Fusions, stairs, consumables, search, hunger, _floorDecorConfig != null ? _floorDecorConfig.ToShop() : null);
+            World.Events.Flush();
+            _savedFlush = -1; // 새 판 · 이어하기 바로 저장
+            if (restoring) _hud.SetHint(HudText.RunContinued);
+            else if (_realTime != null) _hud.SetHint(HudText.RealTimeStarted);
+
+            if (_camera != null)
+            {
+                _camera.SetPanBounds(World.Map.Width, World.Map.Height); // 둘러보기 범위 = 맵
+                _camera.SnapToTarget(_entityPresenter.CellCenter(player.Pos));
+            }
+            if (restoring) OpenFormSelectIfReady(bossDefeated: !HasSealedStairs()); // 형태를 고르기 전에 껐으면 다시 묻는다
+        }
+
+        /// <summary>캐릭터 모습 ID → 캐릭터 이름 (3-23b 기록 이름 — 이어하기에서 다시 찾음).</summary>
+        private string CharacterNameOf(string visualId)
+        {
+            if (_characters != null && _characters.Characters != null)
+                foreach (var c in _characters.Characters)
+                    if (c.VisualId == visualId) return string.IsNullOrEmpty(c.DisplayName) ? c.Id : c.DisplayName;
+            return visualId;
+        }
+
+        private bool HasSealedStairs()
+        {
+            var map = World.Map;
+            for (int y = 0; y < map.Height; y++)
+                for (int x = 0; x < map.Width; x++)
+                    if (map.Get(new GridPos(x, y)) == TileType.SealedStairs) return true;
+            return false;
+        }
+
+        /// <summary>새 판 (3-27 이전 StartNewRun 그대로): 1층 꾸미기 → 플레이어 · 적 → 직업 · 갑옷 · 식량 → 배치 계획 · 1층 아이템. 플레이어를 돌려준다.</summary>
+        private Unit SpawnNewRun(string visualId, System.Collections.Generic.IReadOnlyList<string> characterSpells, string classId,
+            FloorDecorConfig decor, TerrainDef water, TrapBook traps, ProjectM.Dungeon.ZoneBook zones, IRng kindRng, SpawnConfig spawn, UnitDef enemyDef,
+            ICommandSource enemyAi, HungerConfig hunger, LootConfig loot, DungeonGenConfig dungeonConfig, ConsumableConfig consumableConfig)
+        {
             World.Events.Publish(new MapLoadedEvent(World.Map));
             if (decor != null) FloorDecor.Apply(World, Floor, decor, water, traps); // 3-11a · 3-12a: MapLoaded 뒤에 (화면이 지우지 않게), 적 배치 전
             var playerDef = _playerDef.ToDef();
@@ -347,18 +569,7 @@ namespace ProjectM
                 Loot.PlaceGold(World, Floor.Start, loot); // 3-15a
                 Loot.PlaceThrown(World, Floor.Start, loot); // 3-16a
             }
-            vision.Refresh(); // 첫 시야 — 이후는 매 틱 ⑥ 단계에서
-
-            _hudText.Run = World.Run; // 3-9: 모르는 물약 · 주문서는 겉모습 이름으로
-            _hud.Bind(World.Events, player, Spells, _hudText, progression);
-            _input.Bind(World, Config, new TurnClock(World.Scheduler, World.PlayerInput), sight, Spells, new BresenhamTargetingRule(), Items, Fusions, stairs, consumables, search, hunger, _floorDecorConfig != null ? _floorDecorConfig.ToShop() : null);
-            World.Events.Flush();
-
-            if (_camera != null)
-            {
-                _camera.SetPanBounds(World.Map.Width, World.Map.Height); // 둘러보기 범위 = 맵
-                _camera.SnapToTarget(_entityPresenter.CellCenter(Floor.Start));
-            }
+            return player;
         }
 
         /// <summary>3-17b: 엔티티 → 모습 ID (로그의 적 이름 — 죽은 뒤에도 남겨 둠, 판마다 비움).</summary>
@@ -427,10 +638,13 @@ namespace ProjectM
         /// 3-21b: 선택 층 보스를 쓰러뜨려 봉인 계단이 열리면, 아직 형태를 안 고른 직업이면 형태 선택 창을 연다 (캐릭터 선택 창을 같이 씀).
         /// 고르면 틱 밖 변경(ClassForms.Choose) 뒤 이벤트를 비운다. 창이 열린 동안 입력은 PresentationBusy로 막힌다.
         /// </summary>
-        private void OnStairsUnsealed(StairsUnsealedEvent e)
+        private void OnStairsUnsealed(StairsUnsealedEvent e) => OpenFormSelectIfReady(bossDefeated: true);
+
+        /// <summary>형태를 고를 때면 형태 선택 창 (봉인 계단 열림 · 3-27 이어하기 — 고르기 전에 껐을 때).</summary>
+        private void OpenFormSelectIfReady(bool bossDefeated)
         {
             if (_characterSelect == null || Classes == null || _player == null) return;
-            if (ClassForms.CanChoose(World, Classes, bossDefeated: true) != ChooseFormResult.Chosen) return;
+            if (ClassForms.CanChoose(World, Classes, bossDefeated) != ChooseFormResult.Chosen) return;
             if (!_classCatalog.TryGetClass(World.Run.ClassId, out var entry) || entry.Forms == null || entry.Forms.Count == 0) return;
             var names = new System.Collections.Generic.List<string>();
             var details = new System.Collections.Generic.List<string>();
@@ -505,6 +719,8 @@ namespace ProjectM
         private void OnRunEnded(RunEndedEvent e)
         {
             _runEnded = true;
+            _realTime = null; // 3-27: 실시간 시계 멈춤
+            RunSaveStore.Delete(); // 3-27: 패배 · 승리 = 저장 삭제 (되돌리기 없음)
             _input.Unbind();
             _result.Show(ResultModel.From(World, Seed, _player, _hudText));
             Debug.Log($"[GameRoot] 판 끝: {e.Outcome} — R로 새 판");

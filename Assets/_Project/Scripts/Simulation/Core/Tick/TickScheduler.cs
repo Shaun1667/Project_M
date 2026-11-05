@@ -129,10 +129,46 @@ namespace ProjectM.Core
             _systems[(int)phase].Add(system);
         }
 
-        /// <summary>플레이어가 이번 틱에 행동해야 하는데 입력이 없다 → 턴제에서는 여기서 멈춘다.</summary>
+        /// <summary>
+        /// 실시간 모드 (3-27, 결정 2026-11-05 — "플레이어는 무제한 행동"): true면 플레이어는 틱 차례가 없고 ExecutePlayerNow로 즉시 행동한다 —
+        /// 틱은 플레이어를 기다리지 않는다. 규칙 연결이라 저장하지 않는다 (모드는 RunState.Mode에 저장, 시계가 켠다).
+        /// </summary>
+        public bool PlayerActsImmediately { get; set; }
+
+        /// <summary>플레이어가 이번 틱에 행동해야 하는데 입력이 없다 → 턴제에서는 여기서 멈춘다. 실시간 모드에서는 늘 false.</summary>
         public bool IsWaitingForPlayer =>
-            _playerId.IsValid && _actors[_playerId].ReadyTick <= CurrentTick && !_playerSource.HasCommand
+            !PlayerActsImmediately && _playerId.IsValid && _actors[_playerId].ReadyTick <= CurrentTick && !_playerSource.HasCommand
             && (_canAct == null || _canAct(_playerId));
+
+        /// <summary>
+        /// 실시간 모드 (3-27): 플레이어 커맨드를 틱을 쓰지 않고 지금 실행한 뒤, 위치에 반응하는 시스템(IInstantTickSystem — 줍기 · 함정 · 문 ·
+        /// 사망 · 시야 · 이벤트)만 단계 순서대로 돌린다. 행동 불가(마비 · 빙결 · 잠)면 실행하지 않고 false. 비용(틱)은 쓰지 않는다.
+        /// </summary>
+        public bool ExecutePlayerNow(ICommand command)
+        {
+            if (command == null) throw new ArgumentNullException(nameof(command));
+            if (_ticking) throw new InvalidOperationException("틱 처리 중에는 즉시 행동할 수 없다.");
+            if (!_playerId.IsValid) return false;
+            if (_canAct != null && !_canAct(_playerId)) return false;
+
+            _ticking = true; // 이 안에서 생긴 유닛은 다음 틱부터 행동 (DefaultReadyTick)
+            try
+            {
+                command.Execute(new TickContext(CurrentTick, _playerId));
+                var context = new TickContext(CurrentTick, EntityId.None);
+                for (int phase = (int)TickPhase.Actions + 1; phase < _systems.Length; phase++)
+                {
+                    var systems = _systems[phase];
+                    for (int i = 0; i < systems.Count; i++)
+                        if (systems[i] is IInstantTickSystem) systems[i].Run(context);
+                }
+            }
+            finally
+            {
+                _ticking = false;
+            }
+            return true;
+        }
 
         /// <summary>1틱 진행.</summary>
         public void Tick()
@@ -167,7 +203,7 @@ namespace ProjectM.Core
             _turnOrder.Clear();
             foreach (var entry in _actors.Values)
             {
-                if (entry.ReadyTick <= tick)
+                if (entry.ReadyTick <= tick && !(PlayerActsImmediately && entry.Id == _playerId)) // 3-27 실시간: 플레이어는 틱 차례 없음
                     _turnOrder.Add(entry);
             }
             _turnOrder.Sort(CompareTurnOrder);

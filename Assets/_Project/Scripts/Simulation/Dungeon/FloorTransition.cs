@@ -176,20 +176,35 @@ namespace ProjectM.Dungeon
         /// 화면을 새 층으로: 맵 → 지형 → (돌아온 층이면) 유닛 생성 · 상태 → 플레이어 위치.
         /// 처음 가는 층의 적은 UnitSpawner가 이미 생성 이벤트를 냈다.
         /// </summary>
-        private void Announce(Unit player, bool restored)
+        private void Announce(Unit player, bool restored) => Announce(_world, player, restored, includePlayer: false);
+
+        /// <summary>
+        /// 저장에서 이어하기 (3-27): 화면에 지금 층 전체를 알린다 — 맵 · 지형 · 함정 · 바닥 아이템 · 플레이어 포함 모든 유닛(상태 · 든 무기 · 입은 갑옷) · 플레이어 위치.
+        /// 시야는 부른 쪽이 PlayerVisionSystem.Refresh로.
+        /// </summary>
+        public static void AnnounceRestored(World world)
         {
-            var events = _world.Events;
-            events.Publish(new MapLoadedEvent(_world.Map));
-            foreach (var pair in _world.Terrain.ToSortedList())
+            if (world == null) throw new ArgumentNullException(nameof(world));
+            if (!PlayerActions.TryGetPlayer(world, out var player)) return;
+            Announce(world, player, restored: true, includePlayer: true);
+            if (!player.Weapon.IsEmpty) world.Events.Publish(new ProjectM.Items.WeaponEquippedEvent(player.Id, player.Weapon, null));
+            if (!player.Armor.IsEmpty) world.Events.Publish(new ProjectM.Items.ArmorEquippedEvent(player.Id, player.Armor, null));
+        }
+
+        private static void Announce(World world, Unit player, bool restored, bool includePlayer)
+        {
+            var events = world.Events;
+            events.Publish(new MapLoadedEvent(world.Map));
+            foreach (var pair in world.Terrain.ToSortedList())
                 foreach (var t in pair.Value)
-                    events.Publish(new TerrainChangedEvent(_world.Terrain.PosOf(pair.Key), t.Type, t.Remaining));
-            foreach (var pair in _world.Traps.ToSortedList()) // 3-12a: 드러난 함정만
-                if (!pair.Value.Hidden) events.Publish(new TrapChangedEvent(_world.Traps.PosOf(pair.Key), pair.Value.Type, true));
-            foreach (var item in _world.FloorItems.All)
-                events.Publish(new FloorItemPlacedEvent(item.Pos, item.ItemId, ProjectM.Items.Identification.VisualOf(_world, item.ItemId)));
-            foreach (var unit in _world.Units.ToSortedList())
+                    events.Publish(new TerrainChangedEvent(world.Terrain.PosOf(pair.Key), t.Type, t.Remaining));
+            foreach (var pair in world.Traps.ToSortedList()) // 3-12a: 드러난 함정만
+                if (!pair.Value.Hidden) events.Publish(new TrapChangedEvent(world.Traps.PosOf(pair.Key), pair.Value.Type, true));
+            foreach (var item in world.FloorItems.All)
+                events.Publish(new FloorItemPlacedEvent(item.Pos, item.ItemId, ProjectM.Items.Identification.VisualOf(world, item.ItemId)));
+            foreach (var unit in world.Units.ToSortedList())
             {
-                if (!restored || unit.Id == player.Id) continue;
+                if (!restored || (unit.Id == player.Id && !includePlayer)) continue;
                 events.Publish(new EntitySpawnedEvent(unit.Id, unit.Pos, unit.VisualId));
                 foreach (var s in unit.Statuses)
                     events.Publish(new StatusChangedEvent(unit.Id, s.Type, s.Remaining, true));

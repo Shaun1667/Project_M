@@ -58,6 +58,15 @@ namespace ProjectM.Core
         Defeat = 2,
     }
 
+    /// <summary>한 판의 시계 (3-27, 결정 2026-11-05 — 판 시작 때 고정). 끝에만 추가한다.</summary>
+    public enum RunMode
+    {
+        /// <summary>턴제 — 플레이어가 행동하면 그 비용만큼 틱 진행 (TurnClock).</summary>
+        TurnBased = 0,
+        /// <summary>실시간 — 1초마다 1틱, 플레이어는 즉시 · 무제한 행동 (RealTimeClock).</summary>
+        RealTime = 1,
+    }
+
     /// <summary>
     /// 한 판 기록 (3-4b): 처치 수 · 결과 · 보스 ID · 플레이어가 마지막으로 받은 피해(사망 원인). World에 두고 스냅샷 v10에 저장한다.
     /// 도달 층은 World.Floor · StoredFloors에서, 턴 수는 Scheduler.CurrentTick에서 계산하므로 따로 두지 않는다.
@@ -68,6 +77,8 @@ namespace ProjectM.Core
         public int Kills { get; internal set; }
         /// <summary>가진 금화 (3-15a — 플레이어 지갑, 스냅샷 v21).</summary>
         public int Gold { get; internal set; }
+        /// <summary>이 판의 시계 (3-27 — 판 시작 때 정하고 바꾸지 않음, 스냅샷 v27).</summary>
+        public RunMode Mode { get; set; }
         public RunOutcome Outcome { get; internal set; }
         /// <summary>보스 층에 놓인 보스 (없으면 None). 이 유닛이 죽으면 승리.</summary>
         public EntityId BossId { get; internal set; }

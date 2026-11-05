@@ -48,6 +48,8 @@
 검산 (`GameConfigTests.ProjectAsset_MatchesBalanceTable`): 에셋 값이 위 표와 같다.
 범위 (`GameConfigTests.Constructor_*`): 행동 비용 ≥ 1, 틱 간격 > 0.
 
+3-27 실시간 모드(결정 2026-11-05): 이 간격마다 세계가 1틱 — 플레이어 행동은 틱을 쓰지 않는다(즉시). 한 프레임에 따라잡는 틱은 최대 `RealTimeClock.MaxTicksPerUpdate`(5, 코드 상수 — 멈췄다 돌아온 프레임 보호용, 게임 수치 아님).
+
 ---
 
 ## 2. 맵 생성 — `DungeonGenConfig.asset`

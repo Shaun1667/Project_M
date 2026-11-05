@@ -245,6 +245,7 @@ namespace ProjectM.Editor
 
             var (hud, inventoryView, result) = EnsureHud();
             var characterSelect = EnsureCharacterSelect(); // 2026-10-21 판 시작 캐릭터 선택 창
+            var title = EnsureTitle(); // 3-27 타이틀 (이어하기 · 게임 시작 → 모드 · 시드) — 캐릭터 선택 창보다 위
             var characterCatalog = EnsureCharacterCatalog();
 
             // 3-5: 바닥 아이템(마법서) — 배치 수치(없을 때만 BALANCE 11번 값) · 표시 (색 · 반짝임은 메뉴 ProjectM/Setup/FX가 채움)
@@ -304,6 +305,7 @@ namespace ProjectM.Editor
                 ("_consumableConfig", consumableConfig),
                 ("_characters", characterCatalog),
                 ("_characterSelect", characterSelect),
+                ("_title", title), // 3-27
                 ("_classCatalog", EnsureClassCatalog()), // 3-21b 직업 · 형태
                 ("_progressionConfig", progressionConfig),
                 ("_floorItems", floorItems),
@@ -1437,6 +1439,23 @@ namespace ProjectM.Editor
             GetOrAdd<Image>(panelGo).raycastTarget = false;
             panelGo.transform.SetAsLastSibling();
             var view = GetOrAdd<CharacterSelectPresenter>(canvasGo);
+            SetRefs(view, ("_panel", panel), ("_font", font));
+            return view;
+        }
+
+        /// <summary>타이틀 화면 (3-27): HUD 위를 덮는 판 — 글 · 칸은 실행 중에 만든다. 캐릭터 선택 창보다 뒤에 만들어 맨 위.</summary>
+        private static TitlePresenter EnsureTitle()
+        {
+            var canvasGo = FindOrCreate("HUD", null);
+            var font = EnsureHudFont();
+            var panelGo = FindOrCreate("Title", canvasGo.transform);
+            var panel = GetOrAdd<RectTransform>(panelGo);
+            panel.anchorMin = Vector2.zero;
+            panel.anchorMax = Vector2.one;
+            panel.offsetMin = panel.offsetMax = Vector2.zero;
+            GetOrAdd<Image>(panelGo).raycastTarget = true;
+            panelGo.transform.SetAsLastSibling();
+            var view = GetOrAdd<TitlePresenter>(canvasGo);
             SetRefs(view, ("_panel", panel), ("_font", font));
             return view;
         }

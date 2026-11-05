@@ -8,7 +8,7 @@ namespace ProjectM.Units
     /// VisibilityChangedEvent를 발행한다. 지금 보이는 칸은 맵 · 플레이어 위치에서 다시 계산할 수 있으므로 저장하지 않는다.
     /// 층 시작 · 불러오기 직후에는 Refresh()를 직접 한 번 부른다.
     /// </summary>
-    public sealed class PlayerVisionSystem : ITickSystem
+    public sealed class PlayerVisionSystem : IInstantTickSystem // 3-27 실시간 즉시 행동 뒤에도
     {
         private readonly World _world;
         private readonly ISightRule _sight;

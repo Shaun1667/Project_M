@@ -227,6 +227,26 @@ namespace ProjectM.UI
         public const string ExamineHint = "정보: 방향키 · 마우스로 칸 고르기 · E 한 번 더 = 주변 8칸 찾기 (1턴) · Esc/우클릭 닫기";
         public const string CellUnknown = "알 수 없는 곳";
 
+        // ── 타이틀 · 모드 · 시드 · 저장 · 실시간 (3-27) ──
+        public const string GameTitle = "Project M";
+        public const string GameSubtitle = "원소와 시간의 던전";
+        public static string TitleItemName(TitleItem item) =>
+            item == TitleItem.Continue ? "이어하기" : item == TitleItem.NewGame ? "게임 시작" : "종료";
+        public const string TitleHint = "↑ ↓ 고르기 · Enter/클릭";
+        public const string NewGameTitle = "게임 시작 — 모드 고르기";
+        public const string ModeTurnName = "턴제";
+        public const string ModeTurnDesc = "내가 행동해야 시간이 흐른다\n\n천천히 생각하며 한 수씩";
+        public const string ModeRealName = "실시간";
+        public const string ModeRealDesc = "1초마다 시간이 흐른다\n\n내 행동은 기다림 없이 바로 —\n원하는 만큼 움직이고 쏜다\nP 일시정지";
+        public static string ModeName(RunMode mode) => mode == RunMode.RealTime ? ModeRealName : ModeTurnName;
+        public const string SeedLabel = "시드";
+        public const string SeedPlaceholder = "비우면 무작위 (숫자 또는 글자)";
+        public const string StartButton = "시작";
+        public const string NewGameHint = "← → 모드 · 글자 입력 = 시드 · Backspace 지우기 · Enter 시작 · Esc 뒤로";
+        public const string Paused = "일시정지 — P로 계속";
+        public const string RealTimeStarted = "실시간 모드 — 1초마다 시간이 흐른다 (P 일시정지)";
+        public const string RunContinued = "저장한 곳에서 이어한다";
+
         // ── 공격 대상 표시 (3-25, SPD) ──
         public const string AttackIndicatorHint = "Q 공격 · Tab 다음 적";
         public static string AttackTargetName(Unit target) => $"{Enemy(target.Id)}  HP {target.Hp}/{target.MaxHp}";
@@ -350,7 +370,7 @@ namespace ProjectM.UI
         public const string MenuClose = "닫기";
         public const string MenuThrow = "던지기";
 
-        public const string DeadHint = "쓰러졌다 — R 키로 새 판";
+        public const string DeadHint = "쓰러졌다 — R 키로 타이틀";
 
         // ── 캐릭터 선택 (2026-10-21) ──
         public const string CharacterSelectTitle = "캐릭터 선택";
@@ -492,7 +512,7 @@ namespace ProjectM.UI
         public static string FloorChanged(int from, int to) => to > from ? $"{to}층으로 내려왔다" : $"{to}층으로 올라왔다";
         // ── 결과 화면 (3-4b) ──
         public static string ResultTitle(RunOutcome outcome) => outcome == RunOutcome.Victory ? "승리 — 보스를 쓰러뜨렸다" : "패배 — 쓰러졌다";
-        public const string ResultRestart = "R 키로 새 판";
+        public const string ResultRestart = "R 키로 타이틀"; // 3-27: 판이 끝나면 타이틀 (모드 · 시드를 다시 고름)
         public const string NoEquipment = "없음";
 
         public static string Terrain(TerrainEffectType type)

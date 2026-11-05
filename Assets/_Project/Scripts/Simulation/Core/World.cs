@@ -273,6 +273,7 @@ namespace ProjectM.Core
                 IdentifiedItems = new List<string>(Run.Identified).ToArray(),
                 Traps = CaptureTraps(),
                 Gold = Run.Gold,
+                Mode = Run.Mode, // 27 (3-27)
                 ClassId = Run.ClassId, // 24 (3-21b)
                 FormId = Run.FormId,
                 Talents = new List<TalentPoint>(Run.Talents).ToArray(), // 25 (3-21c)
@@ -375,6 +376,7 @@ namespace ProjectM.Core
             world._storedFloors.AddRange(snapshot.StoredFloors);
             world.Run.Kills = snapshot.Kills;
             world.Run.Gold = snapshot.Gold;
+            world.Run.Mode = snapshot.Mode; // 27 (3-27)
             world.Run.ClassId = snapshot.ClassId; // 24 (3-21b)
             world.Run.FormId = snapshot.FormId;
             world.Run.SetTalents(snapshot.Talents ?? System.Array.Empty<TalentPoint>()); // 25 (3-21c)
