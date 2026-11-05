@@ -64,10 +64,13 @@ namespace ProjectM.Editor
         // Height > 0 = 바닥 기준(칸 바닥에서 띄움), 0 = 몸 · 지팡이 높이 그대로.
         private static readonly Row[] Table =
         {
-            // 지형 효과 (칸 루프) — 물 · 빙판은 바닥 무늬만
+            // 지형 효과 (칸 루프) — 물은 바닥 무늬만
             new Row("terrain.FireZone", Hovl + "Sparks/Sparks flashing yellow", 1.4f, Fire),
             new Row("terrain.PoisonCloud", Hovl + "Smoke effects/Smoke ground", 0.16f, Poison, 0.8f),
             new Row("terrain.ContaminatedWater", Hovl + "Sparks/Sparks flashing green", 0.45f, Dirty),
+            // G-13 (2026-11-05) — ART_ASSETS ★ 2차 24
+            new Row("terrain.IcePatch", Hovl + "Sparks/Sparks flashing white", 1.3f, Ice),                         // 빙판: 바닥 서리 반짝임 (무늬 fx_ice와 함께)
+            new Row("terrain.ParalyticGas", Hovl + "Smoke effects/Smoke ground", 0.12f, Lightning, 0.8f),            // 마비 가스: 독구름과 같은 땅 연기, 노랗게
             // 상태 이상 (유닛에 붙는 루프)
             new Row("status.Frozen", Hovl + "Environment/Crystal effect blue", 0.55f, Keep, 1f, 0f, 0.45f),
             new Row("status.Paralyze", Hovl + "Character auras/Lightning aura", 0.32f, Lightning, 1f, 0f, 0.4f),
@@ -75,6 +78,13 @@ namespace ProjectM.Editor
             new Row("status.Poison", Hovl + "Character auras/Star aura", 0.3f, Poison, 1f, 0f, 0.4f),
             new Row("status.Slow", Hovl + "Sparks/Sparks white", 0.45f, Ice, 1f, 0f, 0.05f),
             new Row("status.Wet", Hovl + "Sparks/Sparks blue", 0.4f, Water, 1f, 0f, 0.5f),
+            // G-13 (2026-11-05) 3-13 물약 · 주문서 상태 — ART_ASSETS ★ 2차 23
+            new Row("status.Haste", Hovl + "Character auras/Buff", 0.3f, new Color(1f, 0.92f, 0.45f), 1.6f, 0f, 0.05f),        // 신속: 빠르게 솟는 금빛 오라
+            new Row("status.Invisible", Hovl + "Smoke effects/Smoke loop", 0.08f, new Color(0.75f, 0.8f, 0.95f, 0.35f), 0.6f, 0f, 0.3f), // 투명: 옅은 아지랑이 (몸은 그대로 — 반투명 재질은 아직)
+            new Row("status.Levitating", Hovl + "Magic circles/Magic circle 2", 0.1f, new Color(0.6f, 0.95f, 1f), 1f, 0f, 0.02f), // 부양: 발밑 하늘색 마법진
+            new Row("status.MindVision", Hovl + "Sparks/Sparks flashing pink", 0.5f, new Color(0.8f, 0.45f, 1f), 1f, 0f, 0.85f), // 정신 시야: 머리 위 보라 반짝임
+            new Row("status.Asleep", Hovl + "Sparks/Sparks flashing white", 0.7f, new Color(0.7f, 0.8f, 1f), 0.5f, 0f, 0.95f),   // 잠: 머리 위 느린 푸른 반짝임
+            new Row("status.Terrified", Hovl + "Character auras/Debuff", 0.3f, new Color(0.45f, 0.2f, 0.55f), 1.2f, 0f, 0.05f), // 공포: 어두운 보라 오라
             // 시전: 지팡이 끝 빛
             new Row("cast.Fire", Hovl + "Hits and explosions/Holy hit", 0.14f, Fire, 1.5f, 0.6f),
             new Row("cast.Ice", Hovl + "Hits and explosions/Holy hit", 0.14f, Ice, 1.5f, 0.6f),
@@ -108,6 +118,10 @@ namespace ProjectM.Editor
             new Row("burst.Water", Hovl + "AoE effects/Smoke AOE explosion", 0.33f, Water, 1.6f, 1f, 0.02f),
             new Row("burst.Lightning", Hovl + "Hits and explosions/Electro hit", 1f, Lightning, 1.3f, 0.8f, 0.02f),
             new Row("burst.Neutral", Hovl + "AoE effects/Ground AOE explosion", 0.33f, LightGold, 1.6f, 1f, 0.02f), // 3-22b 진각 (내 둘레 — 시전자 자리)
+            new Row("burst.Earth", Hovl + "AoE effects/Smoke AOE explosion", 0.36f, Sand, 1.6f, 1f, 0.02f), // G-12 (2026-11-05): 파라오 모래 폭풍 · 대지 3×3 — 모래빛 연기 폭발
+            new Row("burst.Wind", Hovl + "AoE effects/Smoke AOE explosion", 0.33f, Gust, 1.8f, 1f, 0.02f),
+            // G-12 보스 예고 칸 (3-17d 지형 Warning): 칸마다 붉은 마법진이 돈다 — 바닥 무늬(fx_warning 줄무늬)와 함께
+            new Row("terrain.Warning", Hovl + "Magic circles/Magic circle", 0.13f, new Color(1f, 0.15f, 0.1f), 1.5f, 0f, 0.03f),
             // 융합 주문 (맞는 효과만 바꿈)
             new Row("fusion.fusion_fire_water", Hovl + "AoE effects/Meteors AOE", 0.33f, Keep, 2f, 1f, 0.02f),
             new Row("fusion.fusion_water_poison", Hovl + "AoE effects/Smoke AOE explosion", 0.33f, Dirty, 1.6f, 1f, 0.02f),
@@ -133,6 +147,18 @@ namespace ProjectM.Editor
             new Row("reaction.shock", Hovl + "Hits and explosions/Electro hit", 0.5f, Lightning, 1.3f, 0.8f),
             new Row("reaction.shock_water", Hovl + "Hits and explosions/Electro hit", 0.5f, Lightning, 1.3f, 0.8f),
             new Row("reaction.shock_contaminated", Hovl + "Hits and explosions/Electro hit", 0.5f, Lightning, 1.3f, 0.8f),
+            // G-14 (2026-11-05) 칸 점화 (3-11b 풀 · 3-11c 문) — ART_ASSETS ★ 3차 26. 불이 붙는 순간 칸 바닥에서 불길이 확 (불 3×3 폭발을 1칸 크기로) (뒤로는 terrain.FireZone 루프)
+            new Row("reaction.grass_ignite", Hovl + "AoE effects/Ground AOE explosion", 0.13f, Keep, 1.5f, 0.8f, 0.02f),
+            new Row("reaction.tallgrass_ignite", Hovl + "AoE effects/Ground AOE explosion", 0.17f, Keep, 1.5f, 0.8f, 0.02f),
+            new Row("reaction.door_ignite", Hovl + "AoE effects/Ground AOE explosion", 0.17f, Keep, 1.5f, 0.8f, 0.02f),
+            // G-14 아이템 사용 · 함정 · 보스 행동 — ART_ASSETS ★ 3차 27 (FxPresenter가 이벤트에서 띄움)
+            new Row("use.drink", Hovl + "Character auras/Healing", 0.3f, new Color(0.6f, 1f, 0.75f), 1.6f, 1f, 0.05f),      // 물약 마심: 발밑에서 솟는 빛
+            new Row("use.read", Hovl + "Magic circles/Magic circle", 0.1f, ScrollGold, 2f, 1f, 0.03f),                     // 주문서 읽음: 발밑 금빛 마법진
+            new Row("use.shatter", Hovl + "Sparks/Sparks explode white", 0.4f, new Color(0.8f, 0.9f, 1f), 1.3f, 0.9f, 0.1f), // 던진 물약 깨짐: 유리 조각 튐
+            new Row("trap.triggered", Hovl + "Sparks/Sparks explode yellow", 0.45f, new Color(1f, 0.6f, 0.25f), 1.3f, 0.8f, 0.05f), // 함정 · 식물 발동: 바닥 섬광
+            new Row("boss.charge", Hovl + "Character auras/Debuff", 0.32f, new Color(1f, 0.2f, 0.1f), 1.5f, 1f, 0.05f),      // 힘 모으기: 붉은 오라
+            new Row("boss.teleport", Hovl + "Environment/Teleport", 1.2f, Keep, 1.5f, 1f, 0.02f),                            // 순간이동: 떠난 칸 · 도착한 칸
+            new Row("boss.summon", Hovl + "Portals/Portal red", 0.4f, Keep, 1.5f, 1.2f, 0.02f),                             // 소환: 보스 발밑 붉은 문
             // 바닥 마법서 (3-5): 틴트 = 책 색, 프리팹 = 책 주위 반짝임 루프 (FloorItemPresenter)
             new Row("item.spellbook_fire", Hovl + "Sparks/Sparks flashing yellow", 0.35f, Fire, 1f, 0f, 0.25f),
             new Row("item.spellbook_ice", Hovl + "Sparks/Sparks flashing yellow", 0.35f, Ice, 1f, 0f, 0.25f),
@@ -287,8 +313,11 @@ namespace ProjectM.Editor
             var overlay = UnityEngine.Object.FindAnyObjectByType<TerrainOverlayPresenter>();
             if (overlay != null)
                 SetRefs(overlay, ("_fireZoneTile", tiles["fx_scorch"]), ("_poisonCloudTile", tiles["fx_haze"]), ("_waterTile", tiles["fx_water"]),
-                    ("_contaminatedWaterTile", tiles["fx_dirty_water"]), ("_icePatchTile", tiles["fx_ice"]));
+                    ("_contaminatedWaterTile", tiles["fx_dirty_water"]), ("_icePatchTile", tiles["fx_ice"]), ("_warningTile", tiles["fx_warning"]));
             else Debug.LogWarning("[FxSetup] TerrainOverlayPresenter 없음 — 먼저 ProjectM/Setup/Main Scene");
+
+            var traps = UnityEngine.Object.FindAnyObjectByType<TrapPresenter>(); // G-12 함정 문양 (종류 순서 = TrapType 1 ~ 7)
+            if (traps != null) traps.ConfigureTypeTiles(new TileBase[] { tiles["trap_fire"], tiles["trap_toxic"], tiles["trap_paralytic"], tiles["trap_flood"], tiles["trap_shock"], tiles["trap_teleport"], tiles["trap_alarm"] });
 
             var aim = UnityEngine.Object.FindAnyObjectByType<AimPreviewPresenter>();
             if (aim != null)
@@ -357,6 +386,16 @@ namespace ProjectM.Editor
             Make("fx_water", (u, v) => Mathf.Clamp01(0.45f + 0.3f * Ripple(u, v)));
             Make("fx_dirty_water", (u, v) => Mathf.Clamp01(0.5f + 0.2f * Ripple(u, v) + (Noise(u, v, 4f, 3) > 0.62f ? 0.3f : 0f)));
             Make("fx_ice", (u, v) => Mathf.Clamp01(0.5f + 0.15f * Noise(u, v, 2f, 4) + Crack(u, v) + 0.2f * Mathf.Clamp01(1f - Mathf.Abs(u - v) * 6f)));
+            // G-12 (2026-11-05) 보스 예고 칸: 두꺼운 테두리 + 사선 경고 줄무늬 (색은 TerrainOverlayPresenter의 붉은 경고색)
+            Make("fx_warning", (u, v) => Border(u, v, 0.08f) > 0f ? 1f : (Mathf.Repeat((u + v) * 4f, 1f) < 0.45f ? 0.75f : 0.15f));
+            // G-12 함정 문양 7종 (드러난 함정 — 색은 TrapPresenter 종류 색): 둥근 테 + 종류 기호
+            Make("trap_fire", (u, v) => Mathf.Max(Ring(u, v), Flame(u, v)));
+            Make("trap_toxic", (u, v) => Mathf.Max(Ring(u, v), Mathf.Max(Dot(u, v, 0.4f, 0.42f, 0.09f), Mathf.Max(Dot(u, v, 0.6f, 0.44f, 0.08f), Dot(u, v, 0.5f, 0.62f, 0.1f)))));
+            Make("trap_paralytic", (u, v) => Mathf.Max(Ring(u, v), Mathf.Max(Dot(u, v, 0.5f, 0.5f, 0.06f), Mathf.Abs(Dist(u, v) - 0.17f) < 0.025f ? 1f : 0f)));
+            Make("trap_flood", (u, v) => Mathf.Max(Ring(u, v), Wave(u, v, 0.42f) + Wave(u, v, 0.58f)));
+            Make("trap_shock", (u, v) => Mathf.Max(Ring(u, v), Bolt(u, v)));
+            Make("trap_teleport", (u, v) => Mathf.Max(Ring(u, v), Spiral(u, v)));
+            Make("trap_alarm", (u, v) => Mathf.Max(Ring(u, v), (Mathf.Abs(u - 0.5f) < 0.045f && v > 0.42f && v < 0.72f) || Dot(u, v, 0.5f, 0.33f, 0.05f) > 0f ? 1f : 0f));
             // 조준 데칼
             Make("aim_path", (u, v) => Mathf.Clamp01(1f - (Dist(u, v) - 0.12f) / 0.06f));
             Make("aim_affected", (u, v) => Border(u, v, 0.09f) > 0f ? 1f : 0.28f);
@@ -369,6 +408,43 @@ namespace ProjectM.Editor
         private static float Dist(float u, float v) => Mathf.Sqrt((u - 0.5f) * (u - 0.5f) + (v - 0.5f) * (v - 0.5f));
         private static float Ripple(float u, float v) => Mathf.Sin((v * 3f + 0.12f * Mathf.Sin(u * Mathf.PI * 4f)) * Mathf.PI * 2f); // 칸 경계에서 이어지게 정수 주기
         private static float Border(float u, float v, float t) => (u < t || u > 1f - t || v < t || v > 1f - t) ? 1f : 0f;
+
+        // ── G-12 함정 문양 도형 (0 ~ 1 칸 좌표, v = 위) ──
+        private static float Ring(float u, float v) => Mathf.Abs(Dist(u, v) - 0.38f) < 0.035f ? 1f : 0f;
+        private static float Dot(float u, float v, float cx, float cy, float r) => (u - cx) * (u - cx) + (v - cy) * (v - cy) < r * r ? 1f : 0f;
+
+        /// <summary>불꽃: 아래 둥근 몸 + 위로 좁아지는 끝.</summary>
+        private static float Flame(float u, float v)
+        {
+            if (Dot(u, v, 0.5f, 0.4f, 0.14f) > 0f && Dot(u, v, 0.5f, 0.36f, 0.06f) == 0f) return 1f; // 몸 (가운데 작은 구멍 = 불꽃 속)
+            float t = (v - 0.4f) / 0.34f; // 0 = 몸 가운데, 1 = 끝 (위)
+            return t > 0f && t < 1f && Mathf.Abs(u - 0.5f) < 0.14f * Mathf.Pow(1f - t, 0.8f) && Dot(u, v, 0.5f, 0.36f, 0.06f) == 0f ? 1f : 0f;
+        }
+
+        private static float Wave(float u, float v, float y) =>
+            u > 0.24f && u < 0.76f && Mathf.Abs(v - (y + 0.04f * Mathf.Sin((u - 0.24f) * Mathf.PI * 4f))) < 0.025f ? 1f : 0f;
+
+        /// <summary>번개: 위 → 가운데 → 아래로 꺾이는 굵은 선 세 토막.</summary>
+        private static float Bolt(float u, float v)
+        {
+            float Seg(float ax, float ay, float bx, float by)
+            {
+                float dx = bx - ax, dy = by - ay, t = Mathf.Clamp01(((u - ax) * dx + (v - ay) * dy) / (dx * dx + dy * dy));
+                float px = ax + t * dx - u, py = ay + t * dy - v;
+                return px * px + py * py < 0.035f * 0.035f ? 1f : 0f;
+            }
+            return Mathf.Max(Seg(0.56f, 0.72f, 0.42f, 0.5f), Mathf.Max(Seg(0.42f, 0.5f, 0.58f, 0.5f), Seg(0.58f, 0.5f, 0.44f, 0.28f)));
+        }
+
+        /// <summary>소용돌이: 반지름이 각도에 따라 커지는 선.</summary>
+        private static float Spiral(float u, float v)
+        {
+            float d = Dist(u, v);
+            if (d > 0.3f || d < 0.03f) return 0f;
+            float a = Mathf.Atan2(v - 0.5f, u - 0.5f) / (Mathf.PI * 2f) + 0.5f; // 0 ~ 1
+            float turns = (d / 0.09f) - a; // 한 바퀴 = 0.09
+            return Mathf.Abs(turns - Mathf.Round(turns)) < 0.22f ? 1f : 0f;
+        }
 
         private static float Corner(float u, float v)
         {

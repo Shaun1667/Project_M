@@ -194,7 +194,8 @@ namespace ProjectM.Editor
             GetOrAdd<TilemapRenderer>(trapsGo).sortingOrder = 6;
             trapsGo.transform.localPosition = new Vector3(0f, 0f, -0.012f);
             var trapPresenter = GetOrAdd<TrapPresenter>(trapsGo);
-            SetRefs(trapPresenter, ("_tilemap", trapsTilemap), ("_tile", EnsureFogTile()));
+            SetRefs(trapPresenter, ("_tilemap", trapsTilemap), ("_tile", EnsureFogTile()),
+                ("_plantModels", LoadOrCreate<ItemVisualCatalog>(ItemVisualCatalogPath))); // G-11 식물 3D (Setup/Consumables가 plant_* 줄을 채움)
 
             // 시야 안개: 엔티티(정렬 10) 위
             var fogGo = FindOrCreate("Fog", gridGo.transform);

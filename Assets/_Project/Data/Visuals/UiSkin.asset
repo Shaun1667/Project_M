@@ -1,0 +1,70 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c6047f321783674dbca14cfa8fadba9, type: 3}
+  m_Name: UiSkin
+  m_EditorClassIdentifier: ProjectM.Runtime::ProjectM.UI.UiSkin
+  Panel: {fileID: 21300000, guid: 2787545f4280b9a42b330d08543fecb3, type: 3}
+  SlotNormal: {fileID: 21300000, guid: 7bc77beacbdd3e942806d803af965aa0, type: 3}
+  SlotSelected: {fileID: 21300000, guid: 119bd83f452814f40998cb8768e68122, type: 3}
+  SlotEmpty: {fileID: 21300000, guid: 4eef3654f1326ab4b941a1c63c1f31cf, type: 3}
+  SlotDisabled: {fileID: 21300000, guid: 44b5b1840488aae448e2e9cef2163c15, type: 3}
+  BarFrame: {fileID: 21300000, guid: d783678856b60b7408d53fb0e96df335, type: 3}
+  Plaque: {fileID: 21300000, guid: 3263b8884c27f55428ec2f4995300159, type: 3}
+  Victory: {fileID: 21300000, guid: c5cb8206abacdac4f94c133738628c8a, type: 3}
+  Defeat: {fileID: 21300000, guid: dc115c84b1b639d48befe399e1f96f56, type: 3}
+  FusionIcon: {fileID: 21300000, guid: 890718d7a0f9de044b5bf9149233c630, type: 3}
+  _statuses:
+  - Type: 1
+    Icon: {fileID: 21300000, guid: 0450762804d5be64e8734a77d1fb41a3, type: 3}
+  - Type: 2
+    Icon: {fileID: 21300000, guid: f40c577d0b68fc24fab3922dc8632ecd, type: 3}
+  - Type: 3
+    Icon: {fileID: 21300000, guid: fada5b61d17ac934186ce369cfbff656, type: 3}
+  - Type: 4
+    Icon: {fileID: 21300000, guid: 89d2423169a7e254d805d5bbe5d6c25e, type: 3}
+  - Type: 5
+    Icon: {fileID: 21300000, guid: 3d27cd24e0b8a7643b80038d0c581233, type: 3}
+  - Type: 6
+    Icon: {fileID: 21300000, guid: ebf815ba2459d804a99fe5b9810bcc51, type: 3}
+  - Type: 7
+    Icon: {fileID: 21300000, guid: f827a139e1b198d4294e85c79365fabe, type: 3}
+  - Type: 8
+    Icon: {fileID: 21300000, guid: 1cfcd8e1a5ca32f4d9401abf3db0a7fa, type: 3}
+  - Type: 9
+    Icon: {fileID: 21300000, guid: c6e824edcbf8a6d44b6cfc7683497660, type: 3}
+  - Type: 10
+    Icon: {fileID: 21300000, guid: 6aa80b2801905924abde59462a59e2e8, type: 3}
+  - Type: 11
+    Icon: {fileID: 21300000, guid: 137aeb686296ea04bb5925a7db5895b6, type: 3}
+  - Type: 12
+    Icon: {fileID: 21300000, guid: 8f3dd34dcbaeb264799a0f7d82a7a73c, type: 3}
+  _elements:
+  - Element: 0
+    Icon: {fileID: 21300000, guid: fbb623aacef6ea54b8b97635db3b973e, type: 3}
+  - Element: 1
+    Icon: {fileID: 21300000, guid: 0b933c26072fea34f9fe4539f2dd0646, type: 3}
+  - Element: 2
+    Icon: {fileID: 21300000, guid: c1039483b3389d44cba9b197b11ee9ea, type: 3}
+  - Element: 3
+    Icon: {fileID: 21300000, guid: 8ee8989aebc504143b9c0237ce51ce6b, type: 3}
+  - Element: 4
+    Icon: {fileID: 21300000, guid: ada5fd260007ea54f8b0f8509bfe0773, type: 3}
+  - Element: 5
+    Icon: {fileID: 21300000, guid: 6399f0422dfd8c949a70bea88d1c53df, type: 3}
+  - Element: 6
+    Icon: {fileID: 21300000, guid: b924d41d144c8ab4281c14c89e17e8af, type: 3}
+  - Element: 7
+    Icon: {fileID: 21300000, guid: ac511cdeadfaa444192fab8f9ff6f77d, type: 3}
+  PanelBorder: 22
+  SlotBorder: 7
+  BarBorder: 9
+  PlaqueBorder: 26

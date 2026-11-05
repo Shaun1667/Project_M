@@ -35,6 +35,8 @@
 
 ### 2차 — 바닥 아이템 · 맵 칸 · 새 상태
 
+→ **2026-11-05 바닥 아이템 연결됨: 12 ~ 18번** (25종 = 모델 15 + 마법서 1 × 5색 + 씨앗 1 × 5색) — 12-6번 표. 남은 2차: 19 ~ 24.
+
 | # | ID | 무엇 | 지금 | 만들 것 |
 |---|---|---|---|---|
 | 12 | `armor_cloth` · `armor_leather` · `armor_mail` · `armor_scale` · `armor_plate` | 갑옷 5 (바닥) | 그레이박스 상자 | 소품 모델 5 (티어별 재질 차이). 입은 모습은 3차 |
@@ -426,6 +428,25 @@ Varco는 모든 모델을 **가장 긴 쪽 1 m**로 보내므로 크기는 프�
 - 3~5구역 15종 (2026-11-05, 사용자 요청): Varco 플로우 `MoaDungeon` y 159600 ~ 168400 (그림 2장씩 1,500 + 3D 3,000 포인트). 텍스처는 FBX에 묻힌 `base_color` · `normal`을 Blender로 꺼내 `Textures/<모델>_…`로 (Unity `ExtractTextures`는 확인 창이 떠서 MCP에서 막힘). 표의 '리깅' 칸이 Mixamo가 아닌 사람형은 `ZoneUnits` 줄이 rigged = true라서 `<모델>_Rigged.fbx`를 넣고 Varco Models를 다시 돌리면 그대로 바뀐다.
 - Mixamo 자동 리깅 (2026-11-05): **팔꿈치 표시는 실제 팔꿈치에** — 어깨에 두면 `Unknown error while generating motion`으로 실패했다(얼음 마녀 · 화염 주술사에서 확인, 화염 주술사는 팔꿈치로 옮기자 성공). 가는 로브형(주술사 · 사제 · 임프)은 성공, 큰 치마(마녀) · 갑옷 덩어리(골렘 · 시계병) · 덩굴 가장자리(잔상)는 손가락 없는 뼈대로도 실패.
 - 확인 못 한 것: 게임 화면(고각도 카메라)에서의 크기 · 걷기 모습, 고블린 Idle이 비틀어져 보이는지.
+
+### 12-6. 바닥 아이템 (2026-11-05 — ★ 2차 12 ~ 18)
+
+메뉴 **ProjectM/Setup/Consumables**(`ConsumableArtSetup.BuildFloorItems`, 물약 · 주문서 다음)가 `Prefabs/Varco/Item_*`을 만들고 `ItemVisualCatalog`에 넣는다(Upright — 원점 = 바닥 중앙). 모델 `Art/Varco3D/Item_*.fbx`(Varco, 폴리곤 2,000 · 텍스처 1024, 원점 = 발밑으로 받음), 텍스처 · 재질 `Item_*_base_color · _normal · _Mat`.
+
+| 아이템 ID | 모델 | 바닥 크기 (긴 쪽) | 눕힘 |
+|---|---|---|---|
+| `armor_cloth` · `armor_leather` · `armor_mail` · `armor_scale` · `armor_plate` | Item_ArmorCloth · Leather · Mail · Scale · Plate | 0.5 m (판금 0.55) | X −90° + Y 180° (Varco가 세워 만듦 — 목이 화면 위로) |
+| `food_ration` · `food_bread` | Item_FoodRation · Item_FoodBread | 0.3 · 0.25 m | — |
+| `food_mystery_meat` · `food_cooked_meat` · `food_frozen_meat` | Item_MeatMystery · Cooked · Frozen | 0.32 m | 같음 |
+| `gold` · `key_iron` · `dart` · `javelin` · `fusion_device` | Item_Gold · KeyIron · Dart · Javelin · FusionDevice | 0.3 · 0.3 · 0.3 · 0.7 · 0.4 m | — |
+| `spellbook_fire/ice/lightning/poison/water` | Item_Spellbook (흰 표지) × 5색 | 0.35 m | — |
+| `seed_firebloom/icecap/sorrowmoss/sungrass/fadeleaf` | Item_Seed (흰 씨앗) × 5색 | 0.22 m | — |
+
+- **결정 (2026-11-05, 사용자)**: 마법서 · 씨앗은 **모델 하나 + 색만 바꿈**(물약처럼, `TintWhite` — 밝고 채도 낮은 픽셀만 칠함). 색: 마법서 불 빨강 · 얼음 하늘 · 번개 노랑 · 독 보라 · 물 파랑, 씨앗 화염꽃 주황 · 얼음버섯 하늘 · 독이끼 초록 · 햇볕풀 노랑 · 사라짐잎 연보라 ✎ Claude.
+- **얼린 고기 (2026-11-05, 사용자)**: 얼음덩이로 감싸지 말고 **고기 자체가 아주 연한 파란색** — 정체불명 고기 그림을 색만 바꿔(EditImage) 같은 모양.
+- 천 갑옷은 다시 생성 (2026-11-05, 사용자): 처음 것은 눕히면 천 뭉치처럼 보여서, 가죽 갑옷 그림을 구도 참고로 넣어 펼친 누빔 조끼(끈 · 밧줄 띠)로 — 다른 갑옷과 같이 눕혀 읽힘.
+- 확인 못 한 것: 게임 화면(고각도 카메라 · 떠서 도는 연출)에서의 크기.
+- Varco 플로우 `MoaDungeon` y 118000 ~ 128000. 포인트 이미지 1,800 + 3D 3,400.
 
 ### 12-2. 무기 (3-7a, 2026-10-19)
 

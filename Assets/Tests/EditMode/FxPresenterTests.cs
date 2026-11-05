@@ -1,5 +1,7 @@
 using NUnit.Framework;
 using ProjectM.Core;
+using ProjectM.Dungeon;
+using ProjectM.Items;
 using ProjectM.Magic;
 using ProjectM.Presentation;
 using ProjectM.Status;
@@ -33,7 +35,7 @@ namespace ProjectM.Tests
             _prefab.SetActive(false); // 프리팹 대신 — 복제본만 켠다
             _visuals = ScriptableObject.CreateInstance<EntityVisualCatalog>();
             _catalog = ScriptableObject.CreateInstance<FxCatalog>();
-            foreach (var key in new[] { "terrain.FireZone", "status.Burn", "cast.Fire", "projectile.Fire", "impact.Fire", "burst.Poison", "reaction.toxic_ignite" })
+            foreach (var key in new[] { "terrain.FireZone", "status.Burn", "cast.Fire", "projectile.Fire", "impact.Fire", "burst.Poison", "reaction.toxic_ignite", "use.drink", "use.shatter", "trap.triggered", "boss.teleport", "boss.summon" })
                 _catalog.Set(new FxCatalog.Entry { Key = key, Prefab = _prefab, Scale = 0.5f, Speed = 1f, Lifetime = key.StartsWith("terrain") || key.StartsWith("status") || key.StartsWith("projectile") ? 0f : 0.5f });
 
             _bus = new SimEventBus();
@@ -217,6 +219,69 @@ namespace ProjectM.Tests
             Assert.That(_fx.TerrainFxCount, Is.EqualTo(0));
             Assert.That(_fx.TransientCount, Is.EqualTo(0));
             Assert.That(_fx.transform.childCount, Is.EqualTo(0));
+        }
+
+        // ── G-14 아이템 사용 · 함정 · 보스 행동 ──
+
+        [Test]
+        public void DrinkPotion_PlaysOnUnit_ThrownPotion_PlaysAtLanding()
+        {
+            var id = new EntityId(1);
+            _bus.Publish(new EntitySpawnedEvent(id, new GridPos(1, 1), "player"));
+            _bus.Publish(new ConsumableUsedEvent(id, "potion_healing", default, ConsumeMode.Drink, new GridPos(1, 1), "crimson", false, true));
+            _bus.Publish(new ConsumableUsedEvent(id, "potion_healing", default, ConsumeMode.Throw, new GridPos(4, 2), "crimson", true, true));
+            _bus.Flush();
+            var drink = _fx.transform.Find("use.drink");
+            var shatter = _fx.transform.Find("use.shatter");
+            Assert.That(drink, Is.Not.Null, "마시면 쓴 유닛 자리");
+            Assert.That(drink.position.x, Is.EqualTo(1.5f).Within(0.001f));
+            Assert.That(shatter, Is.Not.Null, "던지면 떨어진 칸");
+            Assert.That(shatter.position.x, Is.EqualTo(4.5f).Within(0.001f));
+            Assert.That(shatter.position.z, Is.EqualTo(2.5f).Within(0.001f));
+            _fx.FinishTransients();
+            Assert.That(_fx.transform.childCount, Is.EqualTo(0), "한 번 재생은 모두 지움");
+        }
+
+        [Test]
+        public void ReadScroll_WithoutCatalogKey_ShowsNothing()
+        {
+            var id = new EntityId(1);
+            _bus.Publish(new EntitySpawnedEvent(id, new GridPos(1, 1), "player"));
+            _bus.Publish(new ConsumableUsedEvent(id, "scroll_upgrade", default, ConsumeMode.Read, new GridPos(1, 1), "rune", false, true)); // use.read 키 없음
+            _bus.Flush();
+            Assert.That(_fx.transform.childCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void TrapTriggered_PlaysAtCell_OnlyWhenVisible()
+        {
+            _bus.Publish(Sight(6, 6, new GridPos(2, 2)));
+            _bus.Publish(new TrapTriggeredEvent(new GridPos(2, 2), TrapType.Fire, new EntityId(1)));
+            _bus.Publish(new TrapTriggeredEvent(new GridPos(5, 5), TrapType.Fire, new EntityId(1))); // 시야 밖
+            _bus.Flush();
+            int count = 0;
+            foreach (Transform child in _fx.transform)
+                if (child.name == "trap.triggered") count++;
+            Assert.That(count, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void BossTeleport_PlaysAtBothCells_SummonOnBoss()
+        {
+            var boss = new EntityId(7);
+            _bus.Publish(new EntitySpawnedEvent(boss, new GridPos(3, 3), "enemy_melee"));
+            _bus.Publish(new BossTeleportedEvent(boss, new GridPos(1, 1), new GridPos(3, 3)));
+            _bus.Publish(new BossSummonedEvent(boss, "enemy_melee", 2));
+            _bus.Publish(new BossSummonedEvent(boss, "enemy_melee", 0)); // 하나도 못 부름 = 효과 없음
+            _bus.Flush();
+            int teleports = 0, summons = 0;
+            foreach (Transform child in _fx.transform)
+            {
+                if (child.name == "boss.teleport") teleports++;
+                if (child.name == "boss.summon") summons++;
+            }
+            Assert.That(teleports, Is.EqualTo(2), "떠난 칸 · 도착한 칸");
+            Assert.That(summons, Is.EqualTo(1));
         }
 
         [Test]

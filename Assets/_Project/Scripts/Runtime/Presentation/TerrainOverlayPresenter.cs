@@ -30,6 +30,7 @@ namespace ProjectM.Presentation
         [SerializeField] private TileBase _contaminatedWaterTile;
         [SerializeField] private TileBase _icePatchTile;
         [SerializeField] private TileBase _paralyticGasTile;
+        [Tooltip("G-12 보스 예고 칸 무늬 (테두리 + 사선 줄무늬)")] [SerializeField] private TileBase _warningTile;
 
         private readonly Dictionary<GridPos, List<TerrainEffectType>> _cells = new Dictionary<GridPos, List<TerrainEffectType>>();
         private SimEventBus _bus;
@@ -85,6 +86,7 @@ namespace ProjectM.Presentation
                 case TerrainEffectType.ContaminatedWater: tile = _contaminatedWaterTile; break;
                 case TerrainEffectType.IcePatch: tile = _icePatchTile; break;
                 case TerrainEffectType.ParalyticGas: tile = _paralyticGasTile != null ? _paralyticGasTile : _poisonCloudTile; break; // 무늬는 독구름과 같게
+                case TerrainEffectType.Warning: tile = _warningTile; break; // G-12
             }
             return tile != null ? tile : _tile;
         }

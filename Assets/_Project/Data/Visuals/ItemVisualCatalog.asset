@@ -17,163 +17,300 @@ MonoBehaviour:
     Prefab: {fileID: 8192922997588066181, guid: 47984cc36b347894bb459ab632e2cf13, type: 3}
     Upright: 0
     Icon: {fileID: 21300000, guid: 322064611ced5a841b664d1628f79889, type: 3}
+    Icon3D: {fileID: -6390804812818889632, guid: a04b09eb9c0d61c46b24bb93f575d7a4, type: 3}
   - ItemId: hand_axe
     Prefab: {fileID: 5532462945212376050, guid: 619c03e136892f64b8e17c1492004db0, type: 3}
     Upright: 0
     Icon: {fileID: 21300000, guid: 2e6b53d8d483fb8408b4a74edc8c59c1, type: 3}
+    Icon3D: {fileID: -6597086012001039675, guid: 907898c09577b3447950982c643362ec, type: 3}
   - ItemId: spear
     Prefab: {fileID: 1417899640532911181, guid: 715eeebfeb389574bb384ff56f17385b, type: 3}
     Upright: 0
     Icon: {fileID: 21300000, guid: e7256e51ec241164fb5810d953e6edc0, type: 3}
+    Icon3D: {fileID: 5018245360316724722, guid: b0e24997c90cd43478ffaa2c7a2a5b43, type: 3}
   - ItemId: quarterstaff
     Prefab: {fileID: 3214055739092215042, guid: 03bc9e49328d50748974e66ae8b621b2, type: 3}
     Upright: 0
     Icon: {fileID: 21300000, guid: 19ee1ddd3ce611f40b8639419b2e238f, type: 3}
+    Icon3D: {fileID: -1492489287468389453, guid: b9f670145daf15c4cbb13f9fcc1e84bc, type: 3}
   - ItemId: dirk
     Prefab: {fileID: 6921370684022954228, guid: e4c9fe7725de42d45a9ebd66d585d8cd, type: 3}
     Upright: 0
     Icon: {fileID: 21300000, guid: 4a4e3209f75b89145b625a556ee15529, type: 3}
+    Icon3D: {fileID: 4118013941600465536, guid: 4bfae2013bb590547b0c9df355b8d436, type: 3}
   - ItemId: sickle
     Prefab: {fileID: 1248244440567604610, guid: f9cd6b87868024e4998b41f10c161409, type: 3}
     Upright: 0
     Icon: {fileID: 21300000, guid: 6d76170363bf3034ca30a7845806a27a, type: 3}
+    Icon3D: {fileID: -7243430734322799159, guid: 23b4518f9c832824caf59a701732da58, type: 3}
   - ItemId: potion_crimson
     Prefab: {fileID: 6597522984230732604, guid: ffbbd87cae874c342ae004f016629bf2, type: 3}
     Upright: 1
     Icon: {fileID: 21300000, guid: 1fbdeb66417209740be1ab6abe9a2859, type: 3}
+    Icon3D: {fileID: 6576518662407727394, guid: 8d6c637eb9db81e4b94a804b35c37c2b, type: 3}
   - ItemId: potion_amber
     Prefab: {fileID: 7534083070186696182, guid: f796e5873a7a0494d97a4a031808d195, type: 3}
     Upright: 1
     Icon: {fileID: 21300000, guid: 57c89ce1e04f8b74e88461b55e9be819, type: 3}
+    Icon3D: {fileID: -571402073432662436, guid: 52131927d6c5a20478601dce5b109341, type: 3}
   - ItemId: potion_golden
     Prefab: {fileID: 4598724213237714419, guid: 7f6cba2eddce8224893093a790ac0638, type: 3}
     Upright: 1
     Icon: {fileID: 21300000, guid: 8c67ce8a0616d7148a02ac4b3a6fde9e, type: 3}
+    Icon3D: {fileID: -6755687112440071729, guid: 11f3df2712e0b0b4abb66e192d3d4f00, type: 3}
   - ItemId: potion_jade
     Prefab: {fileID: 8394832719078201787, guid: 1c8eea466e5eba94ba27c3323cf776cd, type: 3}
     Upright: 1
     Icon: {fileID: 21300000, guid: 8604f85446a682e43b1cc191c52e7647, type: 3}
+    Icon3D: {fileID: 4743368698924317586, guid: a01568c11e64beb4eb6e2d5bc8a14eb5, type: 3}
   - ItemId: potion_blue
     Prefab: {fileID: 5273005031227786031, guid: b6f73f68441845f4e81e943564f040b8, type: 3}
     Upright: 1
     Icon: {fileID: 21300000, guid: 2cb2d7386c642c844b85d776d6537671, type: 3}
+    Icon3D: {fileID: 3814741172318646935, guid: 5fcd5ddd41e2b7848bb705f55245e76d, type: 3}
   - ItemId: potion_sky
     Prefab: {fileID: 9076644700592483096, guid: 1f28c19066cc2484093516dc7da33311, type: 3}
     Upright: 1
     Icon: {fileID: 21300000, guid: 9ce0e4f30683d5a438789a325675687c, type: 3}
+    Icon3D: {fileID: -8013128872038009699, guid: 10b307f1e8d736e40afdeac87a59da8e, type: 3}
   - ItemId: potion_navy
     Prefab: {fileID: 3041479173221862600, guid: 61a250516cc40d848b0550e94458ac9b, type: 3}
     Upright: 1
     Icon: {fileID: 21300000, guid: 9cba42c53c2baa349912da82396cef72, type: 3}
+    Icon3D: {fileID: 6606326288850793664, guid: 21344fe965d330e4facfb5b3eacf5ddb, type: 3}
   - ItemId: potion_magenta
     Prefab: {fileID: 4143275637953525772, guid: 9392e571b7f71f240968bd90be2a5a2f, type: 3}
     Upright: 1
     Icon: {fileID: 21300000, guid: 1d3daff55e8e03d45b97057a4254ee7e, type: 3}
+    Icon3D: {fileID: -7513702055330997483, guid: 668666db0e2e41c4aac0dd64896ed161, type: 3}
   - ItemId: potion_bistre
     Prefab: {fileID: 1822610211986188296, guid: 4f40262133b67724f87a0fb6e0557dcf, type: 3}
     Upright: 1
     Icon: {fileID: 21300000, guid: 34fd50e9b11f2394395d6854ba67a206, type: 3}
+    Icon3D: {fileID: -113713842936316806, guid: 0c98b8d4fb6a9d24fbe3dbf561b93b3c, type: 3}
   - ItemId: potion_charcoal
     Prefab: {fileID: 1995222269433277961, guid: 3fa6a5389b718e14f8185ccbaed43ca2, type: 3}
     Upright: 1
     Icon: {fileID: 21300000, guid: 273eb49156a56bb4aa9ac65928bb9d93, type: 3}
+    Icon3D: {fileID: 5677647270221329150, guid: ce99e47cfbba12a49baae785cec541a6, type: 3}
   - ItemId: potion_silver
     Prefab: {fileID: 2713790082131987742, guid: c9db5afa4c08c4b47b0a24d02771c288, type: 3}
     Upright: 1
     Icon: {fileID: 21300000, guid: ac0055f1bea953c4b9f9ad559f9cc818, type: 3}
+    Icon3D: {fileID: 5472170938613986782, guid: b5e4d872b672cb041a6124cfe14dec9b, type: 3}
   - ItemId: potion_ivory
     Prefab: {fileID: 4508321067190977029, guid: 13f4224ee9427614ba5e0e7daa24096d, type: 3}
     Upright: 1
     Icon: {fileID: 21300000, guid: fef5cec7efdd22541aac51a677062dc5, type: 3}
+    Icon3D: {fileID: 1546601811317497711, guid: 7f4eb1c2bca5e1b46be3a5406de83336, type: 3}
   - ItemId: scroll_tyr
     Prefab: {fileID: 3235129944693728020, guid: 14c54e00f99416449887c949f9f3fd5d, type: 3}
     Upright: 1
     Icon: {fileID: 21300000, guid: 3a3be2c4da48ac44b88905d08c850498, type: 3}
+    Icon3D: {fileID: -3547416318868045149, guid: 7136bce35348c55459e2a6927e56bd05, type: 3}
   - ItemId: scroll_feoh
     Prefab: {fileID: 4520822192821734519, guid: fc43509b2b42c5c429b5a5be9e2c700c, type: 3}
     Upright: 1
     Icon: {fileID: 21300000, guid: 137b541b65b6ebe45ada4a1e92a74d88, type: 3}
+    Icon3D: {fileID: -4163805259671130242, guid: 61b1f3597bd3ae146a8ee7bb125d08a8, type: 3}
   - ItemId: scroll_ur
     Prefab: {fileID: 5225568866316347728, guid: 4aaa85966498f9445bf5e10616ba4006, type: 3}
     Upright: 1
     Icon: {fileID: 21300000, guid: 6254d6a594b141243bf2b0e7e4a1191b, type: 3}
+    Icon3D: {fileID: 4092932377004213772, guid: a71c5cc73094fb640a743320aed50218, type: 3}
   - ItemId: scroll_thorn
     Prefab: {fileID: 6123407152707051515, guid: eb8aa3b07b759a845918e8b52cb3ff7c, type: 3}
     Upright: 1
     Icon: {fileID: 21300000, guid: 83da8ab8127d28d45ba0c06d8196dcf8, type: 3}
+    Icon3D: {fileID: 7459186490241262919, guid: ca37355dec3985d4385705ae62ca01a7, type: 3}
   - ItemId: scroll_rad
     Prefab: {fileID: 1381091846170657240, guid: 3773e1f1776eb21479c5029451a7b034, type: 3}
     Upright: 1
     Icon: {fileID: 21300000, guid: 6f9bc3e84aff0f54c84849147e986b2e, type: 3}
+    Icon3D: {fileID: -279958325241755907, guid: fa4f1b9fd675d2b49811cbc6bc6924f3, type: 3}
   - ItemId: scroll_gyfu
     Prefab: {fileID: 7270887390887432546, guid: 8a3bf65b7ed83644595e83faf183949c, type: 3}
     Upright: 1
     Icon: {fileID: 21300000, guid: 9586d4f2285070f40a29e793b1b27925, type: 3}
+    Icon3D: {fileID: -9172181534190117691, guid: d5a406bc7af7376468eb5fb52a1cf65d, type: 3}
   - ItemId: scroll_wynn
     Prefab: {fileID: 2033104481032747264, guid: 7ffcb7e9ac4fd2640ae1a779c435a4ef, type: 3}
     Upright: 1
     Icon: {fileID: 21300000, guid: 5224eb87cfcd50f4b9c0d177ac03d5c3, type: 3}
+    Icon3D: {fileID: 486214254964641764, guid: 9ac2eded191e5384694f2e0675878e77, type: 3}
   - ItemId: scroll_haegl
     Prefab: {fileID: 3510233505417282668, guid: 8a76472869951ac4b9477859967e5ea1, type: 3}
     Upright: 1
     Icon: {fileID: 21300000, guid: af1d35489d663354a872362bb0af1ce7, type: 3}
+    Icon3D: {fileID: 373266057150060562, guid: b3e1fa7d639926243a32e4dbad196e67, type: 3}
   - ItemId: scroll_is
     Prefab: {fileID: 7816636836359137867, guid: fb1ccbab1ea116c449d4be3894de67d1, type: 3}
     Upright: 1
     Icon: {fileID: 21300000, guid: 1dc5894f61ed2934bb120ceee5f4bee4, type: 3}
+    Icon3D: {fileID: -2912039154855162397, guid: 8fc4b1a5379fd4a478df2a09edf18833, type: 3}
   - ItemId: scroll_sigel
     Prefab: {fileID: 2208613667171944522, guid: acda1eed3763d7a4dbe4020883e8da6a, type: 3}
     Upright: 1
     Icon: {fileID: 21300000, guid: df2c29b3de247934f8cab9b3460de632, type: 3}
+    Icon3D: {fileID: -7531512606878742727, guid: 09bd2e5d3d945974faa9bf298d11cd4c, type: 3}
   - ItemId: scroll_beorc
     Prefab: {fileID: 3819441828811450668, guid: 06e223a2d52d6e84aaa723b437a5705c, type: 3}
     Upright: 1
     Icon: {fileID: 21300000, guid: f375e96b05bcb984f96fffcb5fcf602c, type: 3}
+    Icon3D: {fileID: 3467512632054037302, guid: 37a5b72fa633b1246bdafa5245703a52, type: 3}
   - ItemId: scroll_oethel
     Prefab: {fileID: 9111982496064111048, guid: 4e85913d0c2b5b241a07285bd7d18050, type: 3}
     Upright: 1
     Icon: {fileID: 21300000, guid: 5433edf8a36d8914bac7e89a32a758d7, type: 3}
+    Icon3D: {fileID: 4318019518657058086, guid: 51e29abe407a0f7419afa0a6c7e8a399, type: 3}
   - ItemId: armor_cloth
-    Prefab: {fileID: 0}
-    Upright: 0
+    Prefab: {fileID: 1788249430161082472, guid: 0f28b978bb3e86a4e861562075334c68, type: 3}
+    Upright: 1
     Icon: {fileID: 21300000, guid: 2ae7b99c62672744a9b4bd224a6575a3, type: 3}
+    Icon3D: {fileID: 6534654491996901957, guid: 6d65b5eab91005d4aad1e8451800fd50, type: 3}
   - ItemId: armor_leather
-    Prefab: {fileID: 0}
-    Upright: 0
+    Prefab: {fileID: 5341239403517235846, guid: 16081adf3eb200f45a4100531fb51289, type: 3}
+    Upright: 1
     Icon: {fileID: 21300000, guid: 47b6bec333e4c9a4c85731ab57c6aa12, type: 3}
+    Icon3D: {fileID: 711202085246821667, guid: 56f0bf7f1293a4042842a5990d4773eb, type: 3}
   - ItemId: armor_mail
-    Prefab: {fileID: 0}
-    Upright: 0
+    Prefab: {fileID: 1553272596017219823, guid: 5a4e24aacfe086349bf0c3507b4e5716, type: 3}
+    Upright: 1
     Icon: {fileID: 21300000, guid: b5a90176ae86a194282045578775e137, type: 3}
+    Icon3D: {fileID: -7520788466666500967, guid: f443dc9a197680b4b8a2cb70e8e7e84c, type: 3}
   - ItemId: armor_plate
-    Prefab: {fileID: 0}
-    Upright: 0
+    Prefab: {fileID: 5149572325023533564, guid: 0a2c5208e21be2b44beddde567b1e796, type: 3}
+    Upright: 1
     Icon: {fileID: 21300000, guid: 0293d8fbe8b02314bbbdc9197172441b, type: 3}
+    Icon3D: {fileID: 7344884545163679818, guid: 15f34f733eb6fc741ac351c3ebf59cde, type: 3}
   - ItemId: armor_scale
-    Prefab: {fileID: 0}
-    Upright: 0
+    Prefab: {fileID: 8874995833969968860, guid: bbc4bcd3e333b2746abf435eaee26557, type: 3}
+    Upright: 1
     Icon: {fileID: 21300000, guid: e683631ae1ce99c4b924e14cb4d9f937, type: 3}
+    Icon3D: {fileID: 4011892874839561343, guid: 343dd3ac9a4752147a61761a91d80890, type: 3}
   - ItemId: fusion_device
-    Prefab: {fileID: 0}
-    Upright: 0
+    Prefab: {fileID: 3811810985368752304, guid: 763747f2d029a0645b3fa49e831e8040, type: 3}
+    Upright: 1
     Icon: {fileID: 21300000, guid: bfae76ea4c45bd146a414b5b6c4ff855, type: 3}
+    Icon3D: {fileID: 8151518614286966874, guid: 892596938bb90754d8f6ccf612bd5bc3, type: 3}
   - ItemId: spellbook_fire
-    Prefab: {fileID: 0}
-    Upright: 0
+    Prefab: {fileID: 2847757247251586355, guid: 2e847fe0df86c75439bab809ec9b46ac, type: 3}
+    Upright: 1
     Icon: {fileID: 21300000, guid: e5a15c93895fa4a4b80c9ed4ad99db87, type: 3}
+    Icon3D: {fileID: -4782061814216523988, guid: 88eab98714886e244962c36bba3d5273, type: 3}
   - ItemId: spellbook_ice
-    Prefab: {fileID: 0}
-    Upright: 0
+    Prefab: {fileID: 261690085025028637, guid: f539545bc4c0a034b93d43b17a35ae43, type: 3}
+    Upright: 1
     Icon: {fileID: 21300000, guid: 4e0cd15e79c25e84597f8782763ba0d1, type: 3}
+    Icon3D: {fileID: 5981777279578741203, guid: b122123dee292ad40bbdbfea5e90c4f8, type: 3}
   - ItemId: spellbook_lightning
-    Prefab: {fileID: 0}
-    Upright: 0
+    Prefab: {fileID: 7354998074046057276, guid: 5c2678cd316d45e46899a14721a9ab74, type: 3}
+    Upright: 1
     Icon: {fileID: 21300000, guid: e6c5329a91cc1524caf2741def04c288, type: 3}
+    Icon3D: {fileID: 8222725598952845898, guid: 917b855f6e94fbc4ca4c106630eb95ea, type: 3}
   - ItemId: spellbook_poison
-    Prefab: {fileID: 0}
-    Upright: 0
+    Prefab: {fileID: 4255454481417418927, guid: 3d1f9f27bd1f85247af4521a87d46bce, type: 3}
+    Upright: 1
     Icon: {fileID: 21300000, guid: 0c62f1f77bc4cae41ab00ae42b6ce31e, type: 3}
+    Icon3D: {fileID: -167415852454389901, guid: a2ae0155cb6b8304392bf243574163c5, type: 3}
   - ItemId: spellbook_water
-    Prefab: {fileID: 0}
-    Upright: 0
+    Prefab: {fileID: 1759053405375310825, guid: 61768df4ba49f954a9404f4f5f5b6a49, type: 3}
+    Upright: 1
     Icon: {fileID: 21300000, guid: 8beacbd5647d8024b87ca0fc32a6a8dd, type: 3}
+    Icon3D: {fileID: 2957045354875956374, guid: 8e4b0e13b2a5dda4784e607113183a9c, type: 3}
+  - ItemId: food_ration
+    Prefab: {fileID: 4589182083640384577, guid: 14f34a2a2aba93e4484324261abf6e6c, type: 3}
+    Upright: 1
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 4840164866778356582, guid: 7b437d3d8a8998444907bac7f04055ac, type: 3}
+  - ItemId: food_bread
+    Prefab: {fileID: 6694387731782957813, guid: b949162743aec3c4ba1ed98976671425, type: 3}
+    Upright: 1
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 639633287478129758, guid: fb84e2127f23311439aee2dd2eef9d4b, type: 3}
+  - ItemId: food_mystery_meat
+    Prefab: {fileID: 5233582469934021710, guid: 05fa2bb34168bb540bceecb3ed58ee20, type: 3}
+    Upright: 1
+    Icon: {fileID: 0}
+    Icon3D: {fileID: -4469461650480943924, guid: ae1454bb127740746af3b48ce3945235, type: 3}
+  - ItemId: food_cooked_meat
+    Prefab: {fileID: 8222478346134636683, guid: d838fcad80a73af4d87fdf82a3a44a9d, type: 3}
+    Upright: 1
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 7010063864553928789, guid: 5d8f8ffd62ac4f04e93460f39b99d573, type: 3}
+  - ItemId: food_frozen_meat
+    Prefab: {fileID: 5277031155046263259, guid: 1e0746465763c2f4b8ad21ae2d538d0b, type: 3}
+    Upright: 1
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 5495543501074246823, guid: 51e6f55ac5de15a44b1468ab8b29ba14, type: 3}
+  - ItemId: gold
+    Prefab: {fileID: 6955854426593008552, guid: 9a367a53582ad6b4a80928053542cd1b, type: 3}
+    Upright: 1
+    Icon: {fileID: 0}
+    Icon3D: {fileID: -6301429047446442448, guid: 02ab882019886b54f8f8eb2300b8bbbb, type: 3}
+  - ItemId: key_iron
+    Prefab: {fileID: 4073024342558104240, guid: a4ae5e7079a01d9449557e8eb5bf04a9, type: 3}
+    Upright: 1
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 7440189005516238840, guid: d5ca25bd0a67f4b4ba0b95c7abf394ba, type: 3}
+  - ItemId: dart
+    Prefab: {fileID: 8803532871576756261, guid: ba4367c0fe545d647afde0c6dd81ec08, type: 3}
+    Upright: 1
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 5648082686200402338, guid: e1b11af0aa24f0f428ad24d2e71a48ed, type: 3}
+  - ItemId: javelin
+    Prefab: {fileID: 834816987818709887, guid: 6bddd182c6465ce43b17e6c60294da3a, type: 3}
+    Upright: 1
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 1955742168755860186, guid: 3502bee25da8a424eb0493b757ff97be, type: 3}
+  - ItemId: seed_firebloom
+    Prefab: {fileID: 2055054147253860130, guid: c9c2a014b24af5d4086e187274248f5c, type: 3}
+    Upright: 1
+    Icon: {fileID: 0}
+    Icon3D: {fileID: -1107560569653559104, guid: 4d0557c9b575f2b4da5423d35cecaea6, type: 3}
+  - ItemId: seed_icecap
+    Prefab: {fileID: 776926267723041992, guid: a29796f7c21c30943a93c5ff2f16cfc5, type: 3}
+    Upright: 1
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 4304873409832304254, guid: 575605c153168d4459f4b23d8b365e21, type: 3}
+  - ItemId: seed_sorrowmoss
+    Prefab: {fileID: 5816634496096445069, guid: 548538d712093494e8754a83a5ede819, type: 3}
+    Upright: 1
+    Icon: {fileID: 0}
+    Icon3D: {fileID: -3319348121514898445, guid: d75b80ef4415a034ebcc747edc934594, type: 3}
+  - ItemId: seed_sungrass
+    Prefab: {fileID: 2898036067364530978, guid: a96b3971ade440c4c853675216af4e78, type: 3}
+    Upright: 1
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 7530207620922572906, guid: e9f358d699bccdb4f9789fc66b47e54e, type: 3}
+  - ItemId: seed_fadeleaf
+    Prefab: {fileID: 2982224990707104177, guid: b80f48f5530d04d47b198ceb7c04bc7f, type: 3}
+    Upright: 1
+    Icon: {fileID: 0}
+    Icon3D: {fileID: -3304812887988264713, guid: 4db78fbb4dc3e444b9d4ffd5c5c7c51d, type: 3}
+  - ItemId: plant_firebloom
+    Prefab: {fileID: 7259613008349115596, guid: 42159821136e66d49919419bc354d831, type: 3}
+    Upright: 1
+    Icon: {fileID: 0}
+    Icon3D: {fileID: -4330929749790441544, guid: 8c037002e9ed97d4abd851ba6a8c7803, type: 3}
+  - ItemId: plant_icecap
+    Prefab: {fileID: 5111714399610775038, guid: ba2982e4307c6b7448b7ea7569cad902, type: 3}
+    Upright: 1
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 2227670779545739967, guid: 835d4075bca591649b6e6d78f295f5ef, type: 3}
+  - ItemId: plant_sorrowmoss
+    Prefab: {fileID: 7964138009821291169, guid: 5674751427743e340ac6cfe8945cc477, type: 3}
+    Upright: 1
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 1174656238549104204, guid: 117bcd9c8269092448bdde762abd1125, type: 3}
+  - ItemId: plant_sungrass
+    Prefab: {fileID: 424516329413800037, guid: 9d38132d646270b448d75d4313c3298d, type: 3}
+    Upright: 1
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 4358601828932744240, guid: 3301f36e943dca84a884fb8ee360746a, type: 3}
+  - ItemId: plant_fadeleaf
+    Prefab: {fileID: 882368901040003703, guid: ab5b12ae0b85f4a4a8d6f549af854698, type: 3}
+    Upright: 1
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 8827431892080204260, guid: 580d0128618e3044d958eb0081cb1878, type: 3}
+  _use3DIcons: 1

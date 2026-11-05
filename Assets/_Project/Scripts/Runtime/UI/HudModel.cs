@@ -49,6 +49,8 @@ namespace ProjectM.UI
         /// <summary>힘 (3-7b).</summary>
         public int Strength { get; private set; }
         public bool Dead { get; private set; }
+        /// <summary>지금 층 (G-18 층 표시판). Bind의 floor로 시작, 층 이동마다 바뀜.</summary>
+        public int Floor { get; private set; } = 1;
         /// <summary>빠른 칸 (3-2a). 빈 칸은 Empty.</summary>
         public IReadOnlyList<InventoryRef> QuickSlots => _quickSlots;
         /// <summary>칸마다 마나 비용, 주문이 아니면(빈 칸 · 아이템) -1.</summary>
@@ -61,11 +63,21 @@ namespace ProjectM.UI
         /// <summary>값이 바뀌면 (이벤트 하나마다) 알린다.</summary>
         public event Action Changed;
 
+        /// <summary>G-18 주문 아이콘: 주문 ID의 속성 (주문 표가 없거나 모르는 주문이면 false).</summary>
+        public bool TryGetSpellElement(string spellId, out Element element)
+        {
+            element = default;
+            if (_spellBook == null || spellId == null || !_spellBook.TryGet(spellId, out var spell)) return false;
+            element = spell.Element;
+            return true;
+        }
+
         /// <param name="progression">3-6: 첫 경험치 막대 (다음 레벨 필요량). null이면 막대 비움.</param>
-        public void Bind(SimEventBus bus, Unit player, SpellBook spellBook = null, ProgressionConfig progression = null)
+        public void Bind(SimEventBus bus, Unit player, SpellBook spellBook = null, ProgressionConfig progression = null, int floor = 1)
         {
             Unbind();
             _bus = bus;
+            Floor = floor;
             _playerId = player.Id;
             Level = player.Level;
             Exp = player.Exp;
@@ -344,6 +356,7 @@ namespace ProjectM.UI
         // 층 이동 로그 (3-4a): "2층으로 내려왔다" · "1층으로 올라왔다"
         private void OnFloorChanged(ProjectM.Dungeon.FloorChangedEvent e)
         {
+            Floor = e.To;
             AddLog(HudText.FloorChanged(e.From, e.To));
             Changed?.Invoke();
         }

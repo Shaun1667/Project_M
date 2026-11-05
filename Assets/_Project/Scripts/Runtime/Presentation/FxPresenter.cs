@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using ProjectM.Core;
+using ProjectM.Dungeon;
+using ProjectM.Items;
 using ProjectM.Magic;
 using ProjectM.Status;
 using ProjectM.Units;
@@ -151,6 +153,11 @@ namespace ProjectM.Presentation
             _bus.Subscribe<EntityRemovedEvent>(OnEntityRemoved);
             _bus.Subscribe<SpellCastEvent>(OnSpellCast);
             _bus.Subscribe<ReactionTriggeredEvent>(OnReaction);
+            _bus.Subscribe<ConsumableUsedEvent>(OnConsumableUsed);
+            _bus.Subscribe<TrapTriggeredEvent>(OnTrapTriggered);
+            _bus.Subscribe<BossChargingEvent>(OnBossCharging);
+            _bus.Subscribe<BossTeleportedEvent>(OnBossTeleported);
+            _bus.Subscribe<BossSummonedEvent>(OnBossSummoned);
         }
 
         public void Unbind()
@@ -163,6 +170,11 @@ namespace ProjectM.Presentation
             _bus.Unsubscribe<EntityRemovedEvent>(OnEntityRemoved);
             _bus.Unsubscribe<SpellCastEvent>(OnSpellCast);
             _bus.Unsubscribe<ReactionTriggeredEvent>(OnReaction);
+            _bus.Unsubscribe<ConsumableUsedEvent>(OnConsumableUsed);
+            _bus.Unsubscribe<TrapTriggeredEvent>(OnTrapTriggered);
+            _bus.Unsubscribe<BossChargingEvent>(OnBossCharging);
+            _bus.Unsubscribe<BossTeleportedEvent>(OnBossTeleported);
+            _bus.Unsubscribe<BossSummonedEvent>(OnBossSummoned);
             _bus = null;
         }
 
@@ -336,6 +348,60 @@ namespace ProjectM.Presentation
             var ground = CellCenter(e.Pos);
             var at = entry.Height > 0f ? ground : point; // 바닥 효과(높이 지정)는 칸 바닥 기준
             Schedule(delay, () => SpawnOnce(entry, at, Quaternion.identity));
+        }
+
+        // ── 아이템 · 함정 · 보스 행동 (G-14, 2026-11-05 — ART_ASSETS ★ 3차 27) ──
+
+        /// <summary>물약 마시기 · 주문서 읽기 = 쓴 유닛 몸, 던진 물약 = 떨어진 칸 바닥에서 깨짐. 키 use.drink · use.read · use.shatter (item.아이템ID는 바닥 아이템 반짝임이라 따로).</summary>
+        private void OnConsumableUsed(ConsumableUsedEvent e)
+        {
+            if (e.Mode == ConsumeMode.Throw)
+            {
+                SpawnAtCell("use.shatter", e.At);
+                return;
+            }
+            SpawnOnUnit(e.Mode == ConsumeMode.Drink ? "use.drink" : "use.read", e.Unit, e.At);
+        }
+
+        /// <summary>함정 · 식물 발동 순간 (효과 주문의 터짐과 따로) — 칸 바닥. 키 trap.triggered.</summary>
+        private void OnTrapTriggered(TrapTriggeredEvent e) => SpawnAtCell("trap.triggered", e.Pos);
+
+        /// <summary>보스 힘 모으기 — 보스 몸 (예고 칸은 지형 Warning이 따로). 키 boss.charge.</summary>
+        private void OnBossCharging(BossChargingEvent e) => SpawnOnUnit("boss.charge", e.Boss, null);
+
+        /// <summary>보스 순간이동 — 떠난 칸 · 도착한 칸 바닥 둘 다. 키 boss.teleport.</summary>
+        private void OnBossTeleported(BossTeleportedEvent e)
+        {
+            SpawnAtCell("boss.teleport", e.From);
+            SpawnAtCell("boss.teleport", e.To);
+        }
+
+        /// <summary>보스 소환 — 보스 발밑 (소환된 적은 EntitySpawned로 따로 나타남). 키 boss.summon.</summary>
+        private void OnBossSummoned(BossSummonedEvent e)
+        {
+            if (e.Count > 0) SpawnOnUnit("boss.summon", e.Boss, null);
+        }
+
+        /// <summary>칸 바닥에 한 번짜리 효과 (시야 밖 · 없는 키는 조용히 건너뜀).</summary>
+        private void SpawnAtCell(string key, GridPos pos)
+        {
+            if (!IsCellVisible(pos) || !TryGetFx(key, out var entry)) return;
+            SpawnOnce(entry, CellCenter(pos), Quaternion.identity);
+        }
+
+        /// <summary>유닛 자리(높이 지정 = 발밑, 아니면 몸 가운데)에 한 번짜리 효과. 안 보이는 유닛은 건너뜀, 뷰가 없으면 fallback 칸.</summary>
+        private void SpawnOnUnit(string key, EntityId id, GridPos? fallback)
+        {
+            if (!TryGetFx(key, out var entry)) return;
+            if (_entities != null && _entities.TryGetView(id, out var view) && view.Root != null)
+            {
+                if (!view.Visible) return;
+                var feet = view.Root.position;
+                SpawnOnce(entry, entry.Height > 0f ? feet : feet + Vector3.up * BodyHeight, Quaternion.identity);
+                return;
+            }
+            if (fallback.HasValue && IsCellVisible(fallback.Value))
+                SpawnOnce(entry, entry.Height > 0f ? CellCenter(fallback.Value) : BodyPoint(fallback.Value), Quaternion.identity);
         }
 
         // ── 프레임 진행 ──

@@ -20,9 +20,13 @@ namespace ProjectM.Presentation
             [Tooltip("모델 프리팹 (세워 둔 모습, 원점 = 가운데). 바닥에서는 눕혀서 떠 돈다")] public GameObject Prefab;
             [Tooltip("켜면 눕히지 않고 프리팹 모습 그대로 (3-9a 물약 · 주문서 — 원점 = 바닥 중앙). 끄면 무기처럼 눕힘")] public bool Upright;
             [Tooltip("2D 픽셀 그림 (64 PPU · 가운데 피벗) — 바닥 · 인벤토리 · 빠른 칸")] public Sprite Icon;
+            [Tooltip("G-17 (2026-11-05): 3D 모델을 렌더한 아이콘 (인벤토리 · 빠른 칸) — 메뉴 Setup/Item Icons가 채움")] public Sprite Icon3D;
         }
 
         [SerializeField] private List<Entry> _entries = new List<Entry>();
+        [Tooltip("G-17: 켜면 아이콘으로 3D 렌더 그림(Icon3D)을 먼저 쓴다 — 3D 그래픽일 때 Setup/Item Icons가 켬, 없으면 픽셀 그림")] [SerializeField] private bool _use3DIcons;
+
+        public bool Use3DIcons => _use3DIcons;
 
         public bool TryGet(string itemId, out GameObject prefab) => TryGet(itemId, out prefab, out _);
 
@@ -40,13 +44,14 @@ namespace ProjectM.Presentation
             return false;
         }
 
-        /// <summary>픽셀 그림 (P-3 ⓒ). 겉모습 키(물약 · 주문서)나 아이템 ID.</summary>
+        /// <summary>아이콘 — 겉모습 키(물약 · 주문서)나 아이템 ID. G-17: 3D 아이콘을 켰으면 렌더 그림 먼저, 없으면 픽셀 그림 (P-3 ⓒ).</summary>
         public bool TryGetIcon(string id, out Sprite icon)
         {
             foreach (var e in _entries)
             {
-                if (e.ItemId != id || e.Icon == null) continue;
-                icon = e.Icon;
+                var sprite = _use3DIcons && e.Icon3D != null ? e.Icon3D : e.Icon;
+                if (e.ItemId != id || sprite == null) continue;
+                icon = sprite;
                 return true;
             }
             icon = null;
@@ -80,6 +85,30 @@ namespace ProjectM.Presentation
                 return;
             }
             _entries.Add(new Entry { ItemId = id, Icon = icon });
+        }
+
+        /// <summary>G-17 에디터 Setup · 테스트용: 3D 렌더 아이콘 연결 (있으면 그림만 바꾸고 없으면 추가).</summary>
+        public void SetIcon3D(string id, Sprite icon)
+        {
+            for (int i = 0; i < _entries.Count; i++)
+            {
+                if (_entries[i].ItemId != id) continue;
+                var e = _entries[i];
+                e.Icon3D = icon;
+                _entries[i] = e;
+                return;
+            }
+            _entries.Add(new Entry { ItemId = id, Icon3D = icon });
+        }
+
+        /// <summary>G-17 에디터 Setup · 테스트용: 3D 아이콘을 먼저 쓸지.</summary>
+        public void SetUse3DIcons(bool on) => _use3DIcons = on;
+
+        /// <summary>에디터 Setup용 (G-17): 모델이 있는 줄의 키 · 프리팹 · 세움 여부.</summary>
+        public IEnumerable<(string Id, GameObject Prefab, bool Upright)> Models()
+        {
+            foreach (var e in _entries)
+                if (e.Prefab != null) yield return (e.ItemId, e.Prefab, e.Upright);
         }
     }
 }

@@ -92,6 +92,113 @@ namespace ProjectM.Tests
         }
 
         [Test]
+        public void ZoneTileSet_SwapsWhenFloorEntersAndLeavesZone()
+        {
+            // G-15: 6 ~ 10층 = 사막 세트 (바닥 타일만 다름)
+            var desertFloor = ScriptableObject.CreateInstance<Tile>();
+            var desert = ScriptableObject.CreateInstance<TileVisualSet>();
+            try
+            {
+                desert.CopyEntriesFrom(_tileVisuals);
+                desert.Set(TileType.Floor, desertFloor);
+                _tileVisuals.SetZoneSet(6, 10, desert);
+                Assert.That(_tileVisuals.ForFloor(5), Is.SameAs(_tileVisuals));
+                Assert.That(_tileVisuals.ForFloor(6), Is.SameAs(desert));
+                Assert.That(_tileVisuals.ForFloor(11), Is.SameAs(_tileVisuals));
+
+                var presenter = CreateTilemapPresenter();
+                var map = new GridMap(2, 1);
+                map.Set(new GridPos(0, 0), TileType.Floor);
+                map.Set(new GridPos(1, 0), TileType.Wall);
+                _bus.Publish(new MapLoadedEvent(map));
+                _bus.Flush();
+                Assert.That(_tilemap.GetTile(new Vector3Int(0, 0, 0)), Is.SameAs(_floorTile));
+
+                _bus.Publish(new MapLoadedEvent(map)); // 층 이동 순서: MapLoaded(옛 세트) → FloorChanged
+                _bus.Publish(new ProjectM.Dungeon.FloorChangedEvent(5, 6));
+                _bus.Flush();
+                Assert.That(presenter.Visuals, Is.SameAs(desert));
+                Assert.That(_tilemap.GetTile(new Vector3Int(0, 0, 0)), Is.SameAs(desertFloor), "구역이 바뀌면 지금 맵을 새 세트로 다시 그림");
+                Assert.That(_tilemap.GetTile(new Vector3Int(1, 0, 0)), Is.SameAs(_wallTile), "복사한 나머지 타입은 그대로");
+
+                _bus.Publish(new ProjectM.Dungeon.FloorChangedEvent(10, 11));
+                _bus.Flush();
+                Assert.That(_tilemap.GetTile(new Vector3Int(0, 0, 0)), Is.SameAs(_floorTile));
+
+                presenter.Bind(_bus, 7); // 이어하기: 저장된 층의 구역 세트로 시작
+                Assert.That(presenter.Visuals, Is.SameAs(desert));
+            }
+            finally
+            {
+                Object.DestroyImmediate(desert);
+                Object.DestroyImmediate(desertFloor);
+            }
+        }
+
+        [Test]
+        public void ArmorEquipped_ShowsOnlyWornArmorPart_EvenBeforeSpawn()
+        {
+            // G-16: 프리팹 가슴 아래 Armor_<ID> 부품 둘 — 입은 것만 켬. 판 시작 천 갑옷은 유닛 모습보다 먼저 올 수 있다
+            var prefab = new GameObject("ArmoredHero");
+            var chest = new GameObject("Chest").transform;
+            chest.SetParent(prefab.transform, false);
+            foreach (var id in new[] { "armor_cloth", "armor_plate" })
+            {
+                var part = new GameObject(EntityPresenter.WornArmorPrefix + id);
+                part.transform.SetParent(chest, false);
+                part.SetActive(false);
+            }
+            try
+            {
+                _catalog.SetPrefab("player", prefab);
+                var presenter = CreateEntityPresenter();
+                var unit = new EntityId(1);
+                _bus.Publish(new ProjectM.Items.ArmorEquippedEvent(unit, new ProjectM.Units.EquippedArmor("armor_cloth", 1, 0, 10, 0, 2, 0, 3), null));
+                _bus.Publish(new EntitySpawnedEvent(unit, new GridPos(0, 0), "player"));
+                _bus.Flush();
+                Assert.That(presenter.WornArmorOf(unit), Is.EqualTo("armor_cloth"), "모습을 만들 때 기억한 갑옷을 켬");
+
+                _bus.Publish(new ProjectM.Items.ArmorEquippedEvent(unit, new ProjectM.Units.EquippedArmor("armor_plate", 5, 0, 18, 0, 10, 0, 3), "armor_cloth"));
+                _bus.Flush();
+                Assert.That(presenter.WornArmorOf(unit), Is.EqualTo("armor_plate"), "갈아입으면 새 것만");
+
+                _bus.Publish(new ProjectM.Items.ArmorEquippedEvent(unit, ProjectM.Units.EquippedArmor.Empty, "armor_plate"));
+                _bus.Flush();
+                Assert.That(presenter.WornArmorOf(unit), Is.Null, "맨몸 = 모두 끔");
+            }
+            finally
+            {
+                Object.DestroyImmediate(prefab);
+            }
+        }
+
+        [Test]
+        public void ItemIcon_Prefers3DRender_OnlyWhenEnabled_FallsBackToPixel()
+        {
+            // G-17: 3D 아이콘을 켜면 렌더 그림 먼저, 없는 줄은 픽셀 그림 그대로
+            var items = ScriptableObject.CreateInstance<ItemVisualCatalog>();
+            var pixelSprite = Sprite.Create(_texture, new Rect(0, 0, 4, 4), new Vector2(0.5f, 0.5f), 4);
+            var renderSprite = Sprite.Create(_texture, new Rect(0, 0, 4, 4), new Vector2(0.5f, 0.5f), 4);
+            try
+            {
+                items.SetIcon("dart", pixelSprite);
+                items.SetIcon3D("dart", renderSprite);
+                items.SetIcon("potion_crimson", pixelSprite);
+                Assert.That(items.TryGetIcon("dart", out var icon) && icon == pixelSprite, Is.True, "끄면 픽셀 그림");
+                items.SetUse3DIcons(true);
+                Assert.That(items.TryGetIcon("dart", out icon) && icon == renderSprite, Is.True, "켜면 렌더 그림");
+                Assert.That(items.TryGetIcon("potion_crimson", out icon) && icon == pixelSprite, Is.True, "렌더 그림이 없으면 픽셀 그림");
+                Assert.That(items.TryGetIcon("food_ration", out _), Is.False);
+            }
+            finally
+            {
+                Object.DestroyImmediate(items);
+                Object.DestroyImmediate(pixelSprite);
+                Object.DestroyImmediate(renderSprite);
+            }
+        }
+
+        [Test]
         public void MapLoaded_ReplacesPreviousMap()
         {
             CreateTilemapPresenter();
@@ -351,9 +458,9 @@ namespace ProjectM.Tests
             Assert.That(presenter.CurrentTint(id), Is.EqualTo(Color.white));
         }
 
-        // 바닥 · 계단은 모듈이 있으면 3D (Tilemap에는 안 그림), 외톨이 벽 = 기둥 + 아래 바닥, 낮은 바닥 판은 본 칸이면 안개가 가리고 안 가본 칸이면 숨김 (2026-11-05)
+        // 바닥 · 계단은 모듈이 있으면 3D (Tilemap에는 안 그림), 외톨이 벽 = 기둥 + 아래 바닥, 낮은 바닥 판은 안개 덮개가 가리므로 시야와 무관
         [Test]
-        public void Modules3D_FloorStairsPillar_LowModulesHiddenUntilExplored()
+        public void Modules3D_FloorStairsPillar_LowModulesIgnoreVisibility()
         {
             _tileVisuals.SetModule(TileType.Floor, TestModule("Floor", 0.06f, sunk: true), randomRotation: true);
             _tileVisuals.SetModule(TileType.StairsDown, TestModule("Stairs", 0.4f));
@@ -382,14 +489,9 @@ namespace ProjectM.Tests
             Assert.That(presenter.WallCount, Is.EqualTo(7 * 2 + 3 * 2 + 1), "둘레 20 + 기둥 1");
 
             var none = new bool[7 * 5];
-            var explored = new bool[7 * 5];
-            explored[1 * 7 + 1] = true; // (1,1) 바닥만 본 적 있음
-            _bus.Publish(new ProjectM.Units.VisibilityChangedEvent(7, 5, none, explored));
+            _bus.Publish(new ProjectM.Units.VisibilityChangedEvent(7, 5, none, (bool[])none.Clone()));
             _bus.Flush();
-            Assert.That(floor.GetComponentInChildren<Renderer>().enabled, Is.True, "본 적 있는 낮은 바닥 판은 그대로 (안개가 어둡게 가림)");
-            presenter.TryGetModule(new GridPos(2, 1), out var unseenFloor);
-            Assert.That(unseenFloor.GetComponentInChildren<Renderer>().enabled, Is.False,
-                "안 가본 칸의 낮은 모듈도 숨김 (2026-11-05 플레이 확인 — 밟힌 짧은 풀이 안개 위로 보였음)");
+            Assert.That(floor.GetComponentInChildren<Renderer>().enabled, Is.True, "낮은 바닥 판은 숨기지 않음 (안개가 가림)");
             presenter.TryGetModule(new GridPos(5, 2), out var stairs);
             Assert.That(stairs.GetComponentInChildren<Renderer>().enabled, Is.False, "높은 모듈(계단)은 안 본 칸이면 숨김");
         }

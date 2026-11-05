@@ -820,7 +820,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -1171,7 +1171,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -1653,7 +1653,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -1982,6 +1982,15 @@ MonoBehaviour:
   _shockColor: {r: 0.6, g: 0.9, b: 1, a: 0.9}
   _teleportColor: {r: 0.9, g: 0.4, b: 0.9, a: 0.9}
   _alarmColor: {r: 1, g: 0.15, b: 0.15, a: 0.9}
+  _plantModels: {fileID: 11400000, guid: 481eb5d51281c1848a2a10324a470689, type: 2}
+  _typeTiles:
+  - {fileID: 11400000, guid: 97aee36cd47617743afdd98bef96a8f1, type: 2}
+  - {fileID: 11400000, guid: fd4a2000fe20c8f49b02fd25a16caa4c, type: 2}
+  - {fileID: 11400000, guid: e33ee4c09bceffe43bb3c22b872cb210, type: 2}
+  - {fileID: 11400000, guid: 812564b42d7d97c409afe60578034e0e, type: 2}
+  - {fileID: 11400000, guid: 34ae00a4384be0a4bb17e695017e6619, type: 2}
+  - {fileID: 11400000, guid: 005247f2a96555d41bfed05122f83602, type: 2}
+  - {fileID: 11400000, guid: 3e9933a75ad346740b08c4365bcefde6, type: 2}
 --- !u!483693784 &1277504542
 TilemapRenderer:
   serializedVersion: 2
@@ -2908,7 +2917,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -3152,7 +3161,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -3290,6 +3299,7 @@ MonoBehaviour:
   _contaminatedWaterTile: {fileID: 11400000, guid: a557661a8ee4a6241b66daa82d6a7a11, type: 2}
   _icePatchTile: {fileID: 11400000, guid: b48d9b3b9685e6f4a88e98958833c303, type: 2}
   _paralyticGasTile: {fileID: 0}
+  _warningTile: {fileID: 11400000, guid: 25dd24f92a85df244847b6a67b1819ed, type: 2}
 --- !u!483693784 &1977550035
 TilemapRenderer:
   serializedVersion: 2
@@ -3727,6 +3737,10 @@ MonoBehaviour:
   _iconSize: {x: 110, y: 30}
   _quickSlotSize: {x: 230, y: 40}
   _itemIcons: {fileID: 11400000, guid: 481eb5d51281c1848a2a10324a470689, type: 2}
+  _skin: {fileID: 11400000, guid: 252751c2d9975f148addac834dca91ac, type: 2}
+  _statusIconSide: 46
+  _barInset: {x: 7, y: 6}
+  _plaqueSize: {x: 230, y: 64}
 --- !u!114 &2085256666
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3824,6 +3838,7 @@ MonoBehaviour:
   _spacing: 8
   _menuItemSize: {x: 150, y: 40}
   _itemIcons: {fileID: 11400000, guid: 481eb5d51281c1848a2a10324a470689, type: 2}
+  _skin: {fileID: 11400000, guid: 252751c2d9975f148addac834dca91ac, type: 2}
 --- !u!114 &2085256670
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3839,6 +3854,8 @@ MonoBehaviour:
   _panel: {fileID: 1153024588}
   _title: {fileID: 1841486321}
   _body: {fileID: 546779308}
+  _skin: {fileID: 11400000, guid: 252751c2d9975f148addac834dca91ac, type: 2}
+  _emblemSize: 200
 --- !u!114 &2085256671
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3919,6 +3936,11 @@ MonoBehaviour:
   _teleportCells: 1.6
   _walkHold: 0.2
   _pixel2D: 0
+  _damageFont: {fileID: 11400000, guid: 338c26c4c2562ae4faab95c889e4d7f7, type: 2}
+  _numberDuration: 0.8
+  _numberRise: 0.55
+  _numberHeight: 1.15
+  _numberSize: 3.2
   _spriteMaterial: {fileID: 2100000, guid: 86f15b1ede84ed747a44e692fd5e5ea7, type: 2}
   _pixelsPerUnit: 64
   _footPixels: 26

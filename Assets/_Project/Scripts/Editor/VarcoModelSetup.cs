@@ -173,6 +173,8 @@ namespace ProjectM.Editor
                 {
                     SetupAnimator(model, controller, idle);
                     AttachWeapons(model); // 2026-11-05 사용자 요청: 루멘 · 시아는 맨손으로 시작 — 지팡이를 붙이지 않음 (무기를 들면 그 무기만)
+                    // ~~G-16: 갑옷 부품 5종을 가슴 뼈에 꺼 둔 채 — 입으면 EntityPresenter가 그것만 켬~~ → 제거 (2026-11-05 사용자: 갑옷을 입어도 기본 캐릭터 모습 그대로)
+                    // AttachArmors(model, ArmorFitOf(id));
                 });
                 catalog.SetPrefab(id, hero != null ? hero : player);
             }
@@ -212,19 +214,28 @@ namespace ProjectM.Editor
             var floorPrefab = BuildPrefab(Floor, SinkToGround);
             tiles.SetModule(TileType.Floor, floorPrefab, randomRotation: true);
             // 3-11a 풀 (그레이박스): 바닥 모듈 + 초록 풀잎 — 높은 풀은 0.15 m보다 높아 시야를 직접 따른다 (TilemapPresenter)
-            tiles.SetModule(TileType.Grass, BuildGrassPrefab(floorPrefab, "Tile_Grass", GrassBladeHeight), randomRotation: true);
-            tiles.SetModule(TileType.TallGrass, BuildGrassPrefab(floorPrefab, "Tile_TallGrass", TallGrassBladeHeight), randomRotation: true);
-            // 3-11c 문 (그레이박스): 바닥 + 문틀 + 문짝 — 방향은 TilemapPresenter가 옆 벽을 보고 돌린다 (문짝이 벽 사이를 막게)
-            tiles.SetModule(TileType.Door, BuildDoorPrefab(floorPrefab, "Tile_Door", open: false));
-            tiles.SetModule(TileType.OpenDoor, BuildDoorPrefab(floorPrefab, "Tile_OpenDoor", open: true));
-            tiles.SetModule(TileType.LockedDoor, AssetDatabase.LoadAssetAtPath<GameObject>($"{PrefabDir}/Tile_Door.prefab")); // 3-15b: 닫힌 문 모양 (색은 타일)
-            tiles.SetModule(TileType.AlchemyPot, BuildPotPrefab(floorPrefab)); // 3-16c 연금 솥 (그레이박스)
+            // G-10 (2026-11-05): Varco 모델이 있으면 그것, 없으면 그레이박스 (풀잎 상자 · 상자 문 · 원기둥 솥)
+            bool varcoTiles = HasModels(GrassShortModel, GrassTallModel, DoorLeafModel, DoorLeafLockedModel, CauldronModel);
+            tiles.SetModule(TileType.Grass, varcoTiles ? BuildModelGrassPrefab(floorPrefab, "Tile_Grass", GrassShortModel, GrassShortHeight)
+                : BuildGrassPrefab(floorPrefab, "Tile_Grass", GrassBladeHeight), randomRotation: true);
+            tiles.SetModule(TileType.TallGrass, varcoTiles ? BuildModelGrassPrefab(floorPrefab, "Tile_TallGrass", GrassTallModel, GrassTallHeight)
+                : BuildGrassPrefab(floorPrefab, "Tile_TallGrass", TallGrassBladeHeight), randomRotation: true);
+            // 3-11c 문: 바닥 + 문틀 + 문짝 — 방향은 TilemapPresenter가 옆 벽을 보고 돌린다 (문짝이 벽 사이를 막게)
+            // G-10 (결정 2026-11-05, 사용자): SPD처럼 양쪽으로 여는 여닫이 양문 — 닫힘 = 가운데서 만남, 열림 = 양옆 경첩을 축으로 90°
+            tiles.SetModule(TileType.Door, varcoTiles ? BuildDoubleDoorPrefab(floorPrefab, "Tile_Door", DoorLeafModel, open: false)
+                : BuildDoorPrefab(floorPrefab, "Tile_Door", open: false));
+            tiles.SetModule(TileType.OpenDoor, varcoTiles ? BuildDoubleDoorPrefab(floorPrefab, "Tile_OpenDoor", DoorLeafModel, open: true)
+                : BuildDoorPrefab(floorPrefab, "Tile_OpenDoor", open: true));
+            tiles.SetModule(TileType.LockedDoor, varcoTiles ? BuildDoubleDoorPrefab(floorPrefab, "Tile_LockedDoor", DoorLeafLockedModel, open: false)
+                : AssetDatabase.LoadAssetAtPath<GameObject>($"{PrefabDir}/Tile_Door.prefab")); // 3-15b 잠긴 문 = 자물쇠 문짝
+            tiles.SetModule(TileType.AlchemyPot, varcoTiles ? BuildModelPotPrefab(floorPrefab) : BuildPotPrefab(floorPrefab)); // 3-16c 연금 솥
             tiles.SetModule(TileType.Wall, BuildPrefab(Wall, null));
             tiles.SetModule(TileType.StairsDown, BuildPrefab(StairsDown, null));
             tiles.SetModule(TileType.StairsUp, BuildPrefab(StairsUp, null));
             tiles.SetPillarModule(BuildPrefab(Pillar, null));
             // G-2b: 올라가는 계단(0.57 m) 위에 선 유닛은 가운데 단 높이에 — 이미 값이 있으면(사용자가 고친 값) 두고 비었을 때만
             if (tiles.StandHeight(TileType.StairsUp) == 0f) tiles.SetStandHeight(TileType.StairsUp, StairsUpStandHeight);
+            foreach (var zone in ZoneTiles) BuildZoneTiles(tiles, varcoTiles, zone.Name, zone.FirstFloor, zone.LastFloor); // G-15 · G-19 구역 타일
             EditorUtility.SetDirty(tiles);
 
             BuildWeaponPrefabs();
@@ -232,6 +243,180 @@ namespace ProjectM.Editor
             AssetDatabase.SaveAssets();
             Debug.Log("[VarcoModelSetup] 완료: " + PrefabDir);
         }
+
+        // ── G-15 · G-19 구역 타일 (2026-11-05, ART_ASSETS ★ 3차 25 = 12-9번 · 12-12번) ──
+        /// <summary>
+        /// 구역마다 Varco 타일 5종 `Tile_&lt;이름&gt;_Floor/Wall/Pillar/StairsDown/StairsUp` → `TileVisualSet_&lt;이름&gt;.asset`.
+        /// 층 범위 = ZoneCatalog 구역 줄 (BALANCE 20번) — 구역 층이 바뀌면 같이 고친다. 1구역(숲 속 동굴)은 기본 세트.
+        /// </summary>
+        private static readonly (string Name, int FirstFloor, int LastFloor)[] ZoneTiles =
+        {
+            ("Desert", 6, 10), // 2구역 사막 피라미드 (G-15)
+            ("Ice", 11, 15),   // 3구역 얼음 동굴 (G-19)
+            ("Lava", 16, 20),  // 4구역 용암 동굴
+            ("Time", 21, 25),  // 5구역 시간 신전 폐허
+        };
+
+        /// <summary>
+        /// 구역 세트: 기본 세트를 그대로 복사하고 바닥 · 벽 · 기둥 · 계단을 그 구역 모델로, 바닥을 깐 칸(풀 · 문 · 솥)은 구역 바닥으로 다시 짠다 (문틀 = 구역 벽).
+        /// 기본 세트의 구역 목록에 층 범위로 건다 — TilemapPresenter가 층마다 고른다. 모델이 하나라도 없으면 건너뜀 (구역 목록에서도 뺌).
+        /// </summary>
+        /// <summary>G-19: 벽 모델의 가로 · 세로(바닥 면)를 칸 1 × 1 m에 맞춘다 — 통(Fit)에 비균일 배율 (FBX 축 변환과 섞이지 않게), 높이는 그대로, 가운데 · 바닥 맞춤.</summary>
+        private static void FillCellFootprint(GameObject model)
+        {
+            var root = model.transform.parent;
+            var fit = new GameObject("Fit").transform;
+            fit.SetParent(root, false);
+            model.transform.SetParent(fit, true);
+            var b = RendererBounds(model);
+            fit.localScale = new Vector3(1f / Mathf.Max(0.01f, b.size.x), 1f, 1f / Mathf.Max(0.01f, b.size.z));
+            b = RendererBounds(model);
+            fit.position += new Vector3(root.position.x - b.center.x, root.position.y - b.min.y, root.position.z - b.center.z);
+        }
+
+        private static void BuildZoneTiles(TileVisualSet tiles, bool varcoTiles, string zone, int firstFloor, int lastFloor)
+        {
+            string prefix = "Tile_" + zone + "_";
+            ModelSpec Spec(string part) => new ModelSpec(prefix + part, prefix + part, 1f, 0f);
+            var floorSpec = Spec("Floor");
+            var wallSpec = Spec("Wall");
+            if (!HasModels(floorSpec.Model, wallSpec.Model, prefix + "Pillar", prefix + "StairsDown", prefix + "StairsUp"))
+            {
+                tiles.SetZoneSet(firstFloor, lastFloor, null);
+                return;
+            }
+            string path = $"Assets/_Project/Data/Visuals/TileVisualSet_{zone}.asset";
+            var set = AssetDatabase.LoadAssetAtPath<TileVisualSet>(path);
+            if (set == null)
+            {
+                set = ScriptableObject.CreateInstance<TileVisualSet>();
+                AssetDatabase.CreateAsset(set, path);
+            }
+            set.CopyEntriesFrom(tiles);
+            var floor = BuildPrefab(floorSpec, SinkToGround);
+            set.SetModule(TileType.Floor, floor, randomRotation: true);
+            set.SetModule(TileType.Wall, BuildPrefab(wallSpec, FillCellFootprint)); // 바닥 면을 칸에 꽉 채움 (용암 벽처럼 가장자리가 들쭉날쭉하면 틈이 남)
+            set.SetModule(TileType.StairsDown, BuildPrefab(Spec("StairsDown"), null));
+            set.SetModule(TileType.StairsUp, BuildPrefab(Spec("StairsUp"), null));
+            set.SetPillarModule(BuildPrefab(Spec("Pillar"), null));
+            if (varcoTiles)
+            {
+                set.SetModule(TileType.Grass, BuildModelGrassPrefab(floor, prefix + "Grass", GrassShortModel, GrassShortHeight), randomRotation: true);
+                set.SetModule(TileType.TallGrass, BuildModelGrassPrefab(floor, prefix + "TallGrass", GrassTallModel, GrassTallHeight), randomRotation: true);
+                set.SetModule(TileType.Door, BuildDoubleDoorPrefab(floor, prefix + "Door", DoorLeafModel, open: false, wallSpec.Model));
+                set.SetModule(TileType.OpenDoor, BuildDoubleDoorPrefab(floor, prefix + "OpenDoor", DoorLeafModel, open: true, wallSpec.Model));
+                set.SetModule(TileType.LockedDoor, BuildDoubleDoorPrefab(floor, prefix + "LockedDoor", DoorLeafLockedModel, open: false, wallSpec.Model));
+                set.SetModule(TileType.AlchemyPot, BuildModelPotPrefab(floor, prefix + "AlchemyPot"));
+            }
+            EditorUtility.SetDirty(set);
+            tiles.SetZoneSet(firstFloor, lastFloor, set);
+        }
+
+        // ── G-10 풀 · 문 · 솥 Varco 모델 (2026-11-05, ART_ASSETS 12-7) ──
+        private const string GrassShortModel = "Prop_GrassShort";
+        private const string GrassTallModel = "Prop_GrassTall";
+        /// <summary>문틀 (벽 모델로 짬): 높이 · 두께 · 상인방 높이 (m). 벽 높이 1 m와 같게.</summary>
+        private const float DoorFrameHeight = 1f;
+        private const float DoorFrameDepth = 0.3f;
+        private const float DoorLintelHeight = 0.14f;
+        private const string DoorLeafModel = "Prop_DoorLeaf";
+        private const string DoorLeafLockedModel = "Prop_DoorLeafLocked";
+        private const string CauldronModel = "Prop_Cauldron";
+        /// <summary>풀 덤불 키(m) — 높은 풀은 0.15 m보다 높아야 시야를 가린다(TilemapPresenter).</summary>
+        private const float GrassShortHeight = 0.12f;
+        private const float GrassTallHeight = 0.55f;
+        /// <summary>문: 문짝이 들어갈 구멍 너비(m) · 문틀 높이에 대한 문짝 높이 비율 (상인방 아래까지).</summary>
+        private const float DoorOpeningWidth = 0.64f;
+        private const float DoorLeafHeightRatio = 0.86f;
+        private const float CauldronWidth = 0.7f;
+
+        private static bool HasModels(params string[] models)
+        {
+            foreach (var m in models)
+                if (AssetDatabase.LoadAssetAtPath<GameObject>(ModelDir + m + ".fbx") == null) return false;
+            foreach (var m in models) EnsureVarcoMaterial(m, ModelDir + m + ".fbx");
+            return true;
+        }
+
+        /// <summary>
+        /// Varco 모델을 parent 아래에 크기를 맞춰 놓는다: 축에 맞춘 상자(Fit) 안에 모델 — size의 0인 축은 다른 축 배율을 따라감, 원점 = 모델 바닥 가운데.
+        /// </summary>
+        private static Transform AddFitted(Transform parent, string model, string name, Vector3 size)
+        {
+            var source = LoadModel(model);
+            var fit = new GameObject(name).transform;
+            fit.SetParent(parent, false);
+            var instance = (GameObject)PrefabUtility.InstantiatePrefab(source);
+            instance.transform.SetParent(fit, false);
+            instance.transform.localRotation = source.transform.localRotation;
+            instance.transform.localScale = source.transform.localScale;
+            StripColliders(instance);
+            var b = RendererBounds(instance);
+            float sx = size.x > 0f ? size.x / b.size.x : 0f, sy = size.y > 0f ? size.y / b.size.y : 0f, sz = size.z > 0f ? size.z / b.size.z : 0f;
+            float uniform = Mathf.Max(sx, Mathf.Max(sy, sz));
+            fit.localScale = new Vector3(sx > 0f ? sx : uniform, sy > 0f ? sy : uniform, sz > 0f ? sz : uniform);
+            b = RendererBounds(instance);
+            instance.transform.position += fit.position - new Vector3(b.center.x, b.min.y, b.center.z);
+            return fit;
+        }
+
+        private static Bounds RendererBounds(GameObject go)
+        {
+            var renderers = go.GetComponentsInChildren<Renderer>(true);
+            var b = renderers[0].bounds;
+            foreach (var r in renderers) b.Encapsulate(r.bounds);
+            return b;
+        }
+
+        private static GameObject SaveTilePrefab(GameObject floor, string name, System.Action<Transform> build)
+        {
+            var root = new GameObject(name);
+            try
+            {
+                if (floor != null) ((GameObject)PrefabUtility.InstantiatePrefab(floor)).transform.SetParent(root.transform, false);
+                build(root.transform);
+                return PrefabUtility.SaveAsPrefabAsset(root, $"{PrefabDir}/{name}.prefab");
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        /// <summary>풀: 바닥 + 칸을 채우는 풀 덤불(가로 · 세로 0.98 m, 키 height).</summary>
+        private static GameObject BuildModelGrassPrefab(GameObject floor, string name, string model, float height) =>
+            SaveTilePrefab(floor, name, root => AddFitted(root, model, "Grass", new Vector3(0.98f, height, 0.98f)));
+
+        /// <summary>
+        /// 여닫이 양문 (SPD식): 바닥 + 문틀(너비 1 칸) + 경첩 축 둘(구멍 양끝) 아래 문짝 하나씩 — 오른쪽은 좌우 반전.
+        /// 닫힘 = 두 문짝이 X축(벽 사이)을 막고 가운데서 만남, 열림 = 각 축이 90° 돌아 문짝이 +Z쪽으로 양옆 기둥에 붙음.
+        /// </summary>
+        private static GameObject BuildDoubleDoorPrefab(GameObject floor, string name, string leafModel, bool open, string frameModel = null) =>
+            SaveTilePrefab(floor, name, root =>
+            {
+                // 문틀 = 벽 모델(Tile_Wall)로 짠 기둥 둘 + 상인방 — Varco 문틀 모델은 깊이를 잘못 추정해 십자 아치로 나와 쓰지 않음 (2026-11-05). 옆 벽과 돌 질감이 이어진다
+                float postWidth = (1f - DoorOpeningWidth) * 0.5f;
+                string frame = frameModel ?? Wall.Model; // G-15: 구역 문은 그 구역 벽 모델로
+                AddFitted(root, frame, "PostL", new Vector3(postWidth, DoorFrameHeight, DoorFrameDepth)).localPosition = new Vector3(-0.5f + postWidth * 0.5f, 0f, 0f);
+                AddFitted(root, frame, "PostR", new Vector3(postWidth, DoorFrameHeight, DoorFrameDepth)).localPosition = new Vector3(0.5f - postWidth * 0.5f, 0f, 0f);
+                AddFitted(root, frame, "Lintel", new Vector3(DoorOpeningWidth, DoorLintelHeight, DoorFrameDepth)).localPosition = new Vector3(0f, DoorFrameHeight - DoorLintelHeight, 0f);
+                float frameHeight = DoorFrameHeight;
+                float leafWidth = DoorOpeningWidth * 0.5f;
+                for (int side = -1; side <= 1; side += 2)
+                {
+                    var hinge = new GameObject(side < 0 ? "HingeL" : "HingeR").transform;
+                    hinge.SetParent(root, false);
+                    hinge.localPosition = new Vector3(side * leafWidth, 0f, 0f);
+                    var leaf = AddFitted(hinge, leafModel, "Leaf", new Vector3(leafWidth, frameHeight * DoorLeafHeightRatio, 0f));
+                    leaf.localPosition = new Vector3(-side * leafWidth * 0.5f, 0f, 0f); // 경첩에서 가운데 쪽으로
+                    if (side > 0) leaf.localScale = Vector3.Scale(leaf.localScale, new Vector3(-1f, 1f, 1f)); // 오른쪽 = 좌우 반전 (경첩 · 손잡이 위치)
+                    if (open) hinge.localRotation = Quaternion.Euler(0f, side < 0 ? -90f : 90f, 0f);
+                }
+            });
+
+        /// <summary>연금 솥: 바닥 + 솥(너비 CauldronWidth).</summary>
+        private static GameObject BuildModelPotPrefab(GameObject floor, string name = "Tile_AlchemyPot") =>
+            SaveTilePrefab(floor, name, root => AddFitted(root, CauldronModel, "Pot", new Vector3(CauldronWidth, 0f, 0f)));
 
         /// <summary>
         /// 3-11a 풀 모듈 (그레이박스 — 모델이 생기면 ModelSpec으로 바꾼다): 바닥 모듈 + 4 × 4 풀잎(가는 상자). 잎 위치 · 높이는 고정 무늬 (난수 안 씀).
@@ -611,6 +796,75 @@ namespace ProjectM.Editor
                 // 원점이 가운데라 아래 끝 = 원점 − 길이/2 → 손이 아래 끝에서 길이 × Grip 지점에 오게 (날 방향 축을 따라)
                 weapon.transform.position = hand.position - (tilt * Vector3.up) * (spec.Length * (spec.Grip - 0.5f));
                 weapon.SetActive(false);
+            }
+        }
+
+        /// <summary>
+        /// G-16 갑옷 부품 (2026-11-05, ART_ASSETS ★ 3차 28 = 12-10번): 아이템 ID · 모델 · 너비 배율(어깨 관절 사이 거리 × 배율 = 부품 너비).
+        /// Varco 원본은 앞이 +Z · 위가 +Y인 몸통 껍데기(소매 · 팔 없음).
+        /// </summary>
+        private static readonly (string ItemId, string Model, float WidthRatio)[] ArmorSpecs =
+        {
+            ("armor_cloth", "Prop_Armor_Cloth", ArmorWidthRatio),
+            ("armor_leather", "Prop_Armor_Leather", ArmorWidthRatio),
+            ("armor_mail", "Prop_Armor_Mail", ArmorWidthRatio),
+            ("armor_scale", "Prop_Armor_Scale", ArmorWidthRatio),
+            ("armor_plate", "Prop_Armor_Plate", ArmorWidthRatio),
+        };
+        /// <summary>부품 너비 = 어깨 관절(위팔 뼈) 사이 × 이 값 — 어깨 덮개가 관절 바깥까지 덮게.</summary>
+        private const float ArmorWidthRatio = 1.45f;
+        /// <summary>캐릭터별 갑옷 크기 배율 (정지 렌더로 맞춤 2026-11-05) — 루멘은 긴 코트 위라 크게, 시아는 몸에 붙는 옷이라 작게. 없으면 1.</summary>
+        private static readonly (string VisualId, float Fit)[] ArmorFits = { ("hero_blond", 1.6f), ("hero_black", 1.3f) };
+
+        private static float ArmorFitOf(string visualId)
+        {
+            foreach (var (id, fit) in ArmorFits) if (id == visualId) return fit;
+            return 1f;
+        }
+
+        /// <summary>부품 두께 배율 (앞뒤) — 몸이 껍데기 밖으로 비치지 않게 조금 두껍게.</summary>
+        private const float ArmorDepthRatio = 1.15f;
+        /// <summary>부품 윗면 = 목 뼈 높이 + 이 값 × 부품 높이.</summary>
+        private const float ArmorTopOffset = 0.04f;
+
+        /// <summary>
+        /// 갑옷 부품을 가슴 뼈(UpperChest → Chest → Spine)에 붙인다 (G-16): 어깨 너비에 맞춰 키우고, 윗면을 목 높이에, 가로 · 앞뒤 가운데를 어깨 가운데 · 가슴 뼈에 맞춘다.
+        /// 이름 "Armor_&lt;아이템 ID&gt;", 처음엔 꺼 둠. Humanoid가 아니면 붙이지 않는다.
+        /// </summary>
+        private static void AttachArmors(GameObject model, float fit = 1f)
+        {
+            var animator = model.GetComponent<Animator>();
+            if (animator == null || !animator.isHuman) return;
+            var chest = animator.GetBoneTransform(HumanBodyBones.UpperChest);
+            if (chest == null) chest = animator.GetBoneTransform(HumanBodyBones.Chest);
+            if (chest == null) chest = animator.GetBoneTransform(HumanBodyBones.Spine);
+            var left = animator.GetBoneTransform(HumanBodyBones.LeftUpperArm);
+            var right = animator.GetBoneTransform(HumanBodyBones.RightUpperArm);
+            var neck = animator.GetBoneTransform(HumanBodyBones.Neck);
+            if (chest == null || left == null || right == null || neck == null) return;
+            var upright = model.transform.parent; // 프리팹 루트 (Y-up, 앞 +Z)
+            float shoulder = Vector3.Distance(left.position, right.position);
+            var center = (left.position + right.position) * 0.5f;
+            foreach (var spec in ArmorSpecs)
+            {
+                if (!HasModels(spec.Model)) continue;
+                var source = LoadModel(spec.Model);
+                // 통 (프리팹 루트 축 = Y-up · 앞 +Z) 아래에 모델 — 배율 · 두께는 통에 걸어 FBX 축 변환(Z-up 회전)과 섞이지 않게
+                var armor = new GameObject(EntityPresenter.WornArmorPrefix + spec.ItemId);
+                armor.transform.SetParent(upright, false);
+                var mesh = (GameObject)PrefabUtility.InstantiatePrefab(source);
+                mesh.name = "Model";
+                StripColliders(mesh);
+                mesh.transform.SetParent(armor.transform, false);
+                mesh.transform.localRotation = source.transform.localRotation;
+                mesh.transform.localScale = source.transform.localScale;
+                var b = RendererBounds(armor);
+                float s = shoulder * spec.WidthRatio * fit / Mathf.Max(1e-4f, b.size.x);
+                armor.transform.localScale = new Vector3(s, s, s * ArmorDepthRatio);
+                b = RendererBounds(armor);
+                armor.transform.position += new Vector3(center.x - b.center.x, neck.position.y + b.size.y * ArmorTopOffset - b.max.y, chest.position.z - b.center.z);
+                armor.transform.SetParent(chest, true);
+                armor.SetActive(false);
             }
         }
 

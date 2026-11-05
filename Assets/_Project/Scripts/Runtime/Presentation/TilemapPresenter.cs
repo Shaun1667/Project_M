@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ProjectM.Core;
+using ProjectM.Dungeon;
 using ProjectM.Units;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -52,8 +53,12 @@ namespace ProjectM.Presentation
         private VisibilityChangedEvent _visibility;
         private bool _revealAll;
         private MaterialPropertyBlock _block;
+        private TileVisualSet _active; // G-15: 지금 층 구역의 세트 (null = _visuals)
 
         public Tilemap Tilemap => _tilemap;
+
+        /// <summary>지금 그리는 세트 (G-15 — 구역 세트 또는 기본).</summary>
+        public TileVisualSet Visuals => _active != null ? _active : _visuals;
 
         /// <summary>세운 벽(벽 블록 · 기둥) 칸 수.</summary>
         public int WallCount
@@ -86,6 +91,7 @@ namespace ProjectM.Presentation
         {
             _tilemap = tilemap;
             _visuals = visuals;
+            _active = null;
         }
 
         /// <summary>테스트 · 에디터 Setup용: 3D 켜기.</summary>
@@ -107,8 +113,8 @@ namespace ProjectM.Presentation
         /// <summary>그 칸에 선 유닛의 발밑 높이 (G-2b — 3D 모듈을 쓸 때만, TileVisualSet 값).</summary>
         public float StandHeight(GridPos pos)
         {
-            if (!_walls3D || _visuals == null || !InBounds(pos)) return 0f;
-            return _visuals.StandHeight(TypeAt(pos));
+            if (!_walls3D || Visuals == null || !InBounds(pos)) return 0f;
+            return Visuals.StandHeight(TypeAt(pos));
         }
 
         /// <summary>그 칸의 3D 모듈 (벽 · 바닥 · 계단 · 기둥).</summary>
@@ -119,13 +125,16 @@ namespace ProjectM.Presentation
             return found;
         }
 
-        public void Bind(SimEventBus bus)
+        /// <param name="floor">지금 층 (G-15 — 구역 타일 세트를 고름. 이어하기는 저장된 층)</param>
+        public void Bind(SimEventBus bus, int floor = 1)
         {
             Unbind();
             _bus = bus;
+            _active = _visuals != null ? _visuals.ForFloor(floor) : null;
             _bus.Subscribe<MapLoadedEvent>(OnMapLoaded);
             _bus.Subscribe<TileChangedEvent>(OnTileChanged);
             _bus.Subscribe<VisibilityChangedEvent>(OnVisibilityChanged);
+            _bus.Subscribe<FloorChangedEvent>(OnFloorChanged);
         }
 
         public void Unbind()
@@ -134,7 +143,35 @@ namespace ProjectM.Presentation
             _bus.Unsubscribe<MapLoadedEvent>(OnMapLoaded);
             _bus.Unsubscribe<TileChangedEvent>(OnTileChanged);
             _bus.Unsubscribe<VisibilityChangedEvent>(OnVisibilityChanged);
+            _bus.Unsubscribe<FloorChangedEvent>(OnFloorChanged);
             _bus = null;
+        }
+
+        /// <summary>
+        /// G-15 구역 타일: 층이 바뀌어 구역 세트가 달라지면 지금 맵을 새 세트로 다시 그린다 (표시만).
+        /// 층 이동은 MapLoaded(옛 세트로 그림) → FloorChanged 순서로 오므로 여기서 한 번 더 세운다 — 구역이 바뀌는 층에서만.
+        /// </summary>
+        private void OnFloorChanged(FloorChangedEvent e) => SetFloor(e.To);
+
+        public void SetFloor(int floor)
+        {
+            var next = _visuals != null ? _visuals.ForFloor(floor) : null;
+            if (next == Visuals) return;
+            _active = next;
+            if (_types.Length == 0) return;
+            var positions = new Vector3Int[_types.Length];
+            var tiles = new TileBase[_types.Length];
+            for (int i = 0; i < _types.Length; i++)
+            {
+                positions[i] = new Vector3Int(i % _width, i / _width, 0);
+                tiles[i] = TileFor(_types[i]);
+            }
+            _tilemap.SetTiles(positions, tiles);
+            ClearModules();
+            if (!_walls3D) return;
+            for (int i = 0; i < _types.Length; i++)
+                BuildCell(new GridPos(i % _width, i / _width));
+            ApplyVisibility();
         }
 
         private void OnDestroy() => Unbind();
@@ -187,8 +224,8 @@ namespace ProjectM.Presentation
         private TileBase TileFor(TileType type)
         {
             if (type == TileType.HiddenDoor || type == TileType.SealedStairs) type = TileType.Wall; // 3-12b: 찾기 전엔 벽으로 그림 · 3-17a 봉인된 계단
-            if (_walls3D && (type == TileType.Wall || (_visuals != null && _visuals.TryGetModule(type, out _, out _)))) return null;
-            return _visuals != null ? _visuals.Get(type) : null;
+            if (_walls3D && (type == TileType.Wall || (Visuals != null && Visuals.TryGetModule(type, out _, out _)))) return null;
+            return Visuals != null ? Visuals.Get(type) : null;
         }
 
         private bool InBounds(GridPos p) => p.X >= 0 && p.Y >= 0 && p.X < _width && p.Y < _height;
@@ -227,15 +264,15 @@ namespace ProjectM.Presentation
             var type = TypeAt(pos);
             GameObject floorModule = null;
             bool floorRotate = false;
-            if (_visuals != null) _visuals.TryGetModule(TileType.Floor, out floorModule, out floorRotate);
+            if (Visuals != null) Visuals.TryGetModule(TileType.Floor, out floorModule, out floorRotate);
 
             if (GridMap.IsWallLikeType(type)) // 3-12b: 숨겨진 문도 벽
             {
                 if (!TouchesWalkable(pos)) return;
                 var root = CreateCellRoot(pos, "Wall");
-                var pillar = _visuals != null ? _visuals.PillarModule : null;
+                var pillar = Visuals != null ? Visuals.PillarModule : null;
                 GameObject wallModule = _wallPrefab;
-                if (wallModule == null && _visuals != null) _visuals.TryGetModule(TileType.Wall, out wallModule, out _);
+                if (wallModule == null && Visuals != null) Visuals.TryGetModule(TileType.Wall, out wallModule, out _);
                 Color baseColor = Color.white;
                 if (pillar != null && IsIsolatedWall(pos))
                 {
@@ -253,7 +290,7 @@ namespace ProjectM.Presentation
                 return;
             }
 
-            if (_visuals == null || !_visuals.TryGetModule(type, out var module, out var rotate)) return;
+            if (Visuals == null || !Visuals.TryGetModule(type, out var module, out var rotate)) return;
             var cellRoot = CreateCellRoot(pos, type.ToString());
             int rotation = GridMap.IsDoorType(type) || type == TileType.LockedDoor ? DoorRotation(pos) : rotate ? RotationIndex(pos) : 0;
             var instance = Spawn(module, cellRoot.transform, rotation);
