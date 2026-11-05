@@ -257,6 +257,45 @@ namespace ProjectM.Editor
             ("Time", 21, 25),  // 5구역 시간 신전 폐허
         };
 
+        /// <summary>
+        /// G-22 (2026-11-05, 사용자 “용암층 벽이 뚫린 느낌 — 육면체 딱 맞게”): `Textures/&lt;이름&gt;Face.png`(이어 붙는 벽돌 면 그림, Varco 이미지)가 있으면
+        /// Unity 정육면체(1 × 1 × 1 m, 원점 = 바닥 가운데)에 그 그림을 입힌 벽 프리팹을 만든다 — 모양이 정확해 이웃 벽과 틈이 없다. 그림이 없으면 null.
+        /// </summary>
+        /// <summary>정육면체 벽 면 하나에 보일 그림 비율 (1 = 그림 전체 · 0.5 = 절반 — 벽돌이 두 배 크게).</summary>
+        private const float CubeWallTiling = 0.5f;
+
+        private static GameObject BuildTexturedCubeWall(string name)
+        {
+            var face = AssetDatabase.LoadAssetAtPath<Texture2D>(ModelDir + "Textures/" + name + "Face.png");
+            if (face == null) return null;
+            string matPath = ModelDir + "Materials/" + name + "Face_Mat.mat";
+            var material = AssetDatabase.LoadAssetAtPath<Material>(matPath);
+            if (material == null)
+            {
+                material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { enableInstancing = true };
+                AssetDatabase.CreateAsset(material, matPath);
+            }
+            material.SetTexture("_BaseMap", face);
+            material.SetFloat("_Smoothness", 0.1f);
+            material.SetTextureScale("_BaseMap", new Vector2(CubeWallTiling, CubeWallTiling)); // 면 하나 = 그림의 일부 (벽돌이 다른 구역 벽과 비슷한 크기로)
+            EditorUtility.SetDirty(material);
+            var root = new GameObject(name);
+            try
+            {
+                var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                cube.name = "Model";
+                StripColliders(cube);
+                cube.transform.SetParent(root.transform, false);
+                cube.transform.localPosition = new Vector3(0f, 0.5f, 0f);
+                cube.GetComponent<Renderer>().sharedMaterial = material;
+                return PrefabUtility.SaveAsPrefabAsset(root, $"{PrefabDir}/{name}.prefab");
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
         /// <summary>G-19: 모델의 가로 · 세로(바닥 면)를 칸 1 × 1 m에 맞춘다 (벽 · 올라가는 계단 — 틈 없게). 아래 = 바닥.</summary>
         private static void FillCellFootprint(GameObject model) => FitCell(model, sinkTop: false);
 
@@ -301,7 +340,8 @@ namespace ProjectM.Editor
             set.CopyEntriesFrom(tiles);
             var floor = BuildPrefab(floorSpec, FillCellSunk);
             set.SetModule(TileType.Floor, floor, randomRotation: true);
-            set.SetModule(TileType.Wall, BuildPrefab(wallSpec, FillCellFootprint)); // 바닥 면을 칸에 꽉 채움 (용암 벽처럼 가장자리가 들쭉날쭉하면 틈이 남)
+            var cubeWall = BuildTexturedCubeWall(prefix + "Wall"); // G-22: 면 텍스처가 있으면 정확한 1 m 정육면체 (Varco 3D가 벽을 울퉁불퉁하게 만든 구역)
+            set.SetModule(TileType.Wall, cubeWall != null ? cubeWall : BuildPrefab(wallSpec, FillCellFootprint)); // 바닥 면을 칸에 꽉 채움 (용암 벽처럼 가장자리가 들쭉날쭉하면 틈이 남)
             set.SetModule(TileType.StairsDown, BuildPrefab(Spec("StairsDown"), FillCellSunk));
             set.SetModule(TileType.StairsUp, BuildPrefab(Spec("StairsUp"), FillCellFootprint));
             set.SetPillarModule(BuildPrefab(Spec("Pillar"), null));
