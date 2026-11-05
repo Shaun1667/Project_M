@@ -20,8 +20,11 @@ namespace ProjectM.Presentation
         [SerializeField] private Color _shockColor = new Color(0.6f, 0.9f, 1f, 0.9f);
         [SerializeField] private Color _teleportColor = new Color(0.9f, 0.4f, 0.9f, 0.9f);
         [SerializeField] private Color _alarmColor = new Color(1f, 0.15f, 0.15f, 0.9f);
+        [Tooltip("G-11 (2026-11-05): 식물 3D 모델 — 키 \"plant_<식물>\"(plant_firebloom 등). 있으면 색 칸 대신 칸 위에 세운다 (원점 = 바닥 중앙)")]
+        [SerializeField] private ItemVisualCatalog _plantModels;
 
         private SimEventBus _bus;
+        private readonly System.Collections.Generic.Dictionary<Vector3Int, GameObject> _plants = new System.Collections.Generic.Dictionary<Vector3Int, GameObject>();
 
         public Tilemap Tilemap => _tilemap;
 
@@ -53,21 +56,57 @@ namespace ProjectM.Presentation
         private void OnMapLoaded(MapLoadedEvent e)
         {
             if (_tilemap != null) _tilemap.ClearAllTiles();
+            foreach (var plant in _plants.Values)
+                if (plant != null) Remove(plant);
+            _plants.Clear();
         }
 
         private void OnTrapChanged(TrapChangedEvent e)
         {
             if (_tilemap == null) return;
             var cell = new Vector3Int(e.Pos.X, e.Pos.Y, 0);
+            if (_plants.TryGetValue(cell, out var old))
+            {
+                if (old != null) Remove(old);
+                _plants.Remove(cell);
+            }
             if (!e.Visible)
             {
                 _tilemap.SetTile(cell, null);
+                return;
+            }
+            if (TryPlantModel(e.Type, out var prefab))
+            {
+                _tilemap.SetTile(cell, null);
+                var world = _tilemap.GetCellCenterWorld(cell);
+                var plant = Instantiate(prefab, new Vector3(world.x, 0f, world.z), Quaternion.identity, transform);
+                plant.name = "Plant_" + e.Type;
+                _plants[cell] = plant;
                 return;
             }
             _tilemap.SetTile(cell, _tile);
             _tilemap.SetTileFlags(cell, TileFlags.None);
             _tilemap.SetColor(cell, ColorOf(e.Type));
             _tilemap.SetTransformMatrix(cell, Matrix4x4.TRS(Vector3.zero, Quaternion.Euler(0f, 0f, 45f), new Vector3(0.45f, 0.45f, 1f))); // 칸 가운데 작은 마름모
+        }
+
+        private static void Remove(GameObject go)
+        {
+            if (Application.isPlaying) Destroy(go);
+            else DestroyImmediate(go); // EditMode 테스트
+        }
+
+        /// <summary>식물(3-16b) 종류만 — 키 "plant_" + 종류 이름 소문자. 함정은 색 칸 그대로.</summary>
+        private bool TryPlantModel(TrapType type, out GameObject prefab)
+        {
+            prefab = null;
+            switch (type)
+            {
+                case TrapType.Firebloom: case TrapType.Icecap: case TrapType.Sorrowmoss: case TrapType.Sungrass: case TrapType.Fadeleaf:
+                    return _plantModels != null && _plantModels.TryGet("plant_" + type.ToString().ToLowerInvariant(), out prefab);
+                default:
+                    return false;
+            }
         }
 
         public Color ColorOf(TrapType type)

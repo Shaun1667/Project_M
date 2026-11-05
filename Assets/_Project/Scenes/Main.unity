@@ -1907,6 +1907,7 @@ MonoBehaviour:
   _shockColor: {r: 0.6, g: 0.9, b: 1, a: 0.9}
   _teleportColor: {r: 0.9, g: 0.4, b: 0.9, a: 0.9}
   _alarmColor: {r: 1, g: 0.15, b: 0.15, a: 0.9}
+  _plantModels: {fileID: 11400000, guid: 481eb5d51281c1848a2a10324a470689, type: 2}
 --- !u!483693784 &1277504542
 TilemapRenderer:
   serializedVersion: 2

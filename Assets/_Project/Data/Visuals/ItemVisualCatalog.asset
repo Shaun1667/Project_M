@@ -233,3 +233,23 @@ MonoBehaviour:
     Prefab: {fileID: 2982224990707104177, guid: b80f48f5530d04d47b198ceb7c04bc7f, type: 3}
     Upright: 1
     Icon: {fileID: 0}
+  - ItemId: plant_firebloom
+    Prefab: {fileID: 7259613008349115596, guid: 42159821136e66d49919419bc354d831, type: 3}
+    Upright: 1
+    Icon: {fileID: 0}
+  - ItemId: plant_icecap
+    Prefab: {fileID: 5111714399610775038, guid: ba2982e4307c6b7448b7ea7569cad902, type: 3}
+    Upright: 1
+    Icon: {fileID: 0}
+  - ItemId: plant_sorrowmoss
+    Prefab: {fileID: 7964138009821291169, guid: 5674751427743e340ac6cfe8945cc477, type: 3}
+    Upright: 1
+    Icon: {fileID: 0}
+  - ItemId: plant_sungrass
+    Prefab: {fileID: 424516329413800037, guid: 9d38132d646270b448d75d4313c3298d, type: 3}
+    Upright: 1
+    Icon: {fileID: 0}
+  - ItemId: plant_fadeleaf
+    Prefab: {fileID: 882368901040003703, guid: ab5b12ae0b85f4a4a8d6f549af854698, type: 3}
+    Upright: 1
+    Icon: {fileID: 0}
