@@ -313,4 +313,9 @@ MonoBehaviour:
     Upright: 1
     Icon: {fileID: 0}
     Icon3D: {fileID: 8827431892080204260, guid: 580d0128618e3044d958eb0081cb1878, type: 3}
+  - ItemId: time_hourglass
+    Prefab: {fileID: 1223867251604061215, guid: a2e0fc89caaf6884a84bef6733d8c83b, type: 3}
+    Upright: 1
+    Icon: {fileID: 0}
+    Icon3D: {fileID: -6973632885279942985, guid: 27c2d216e76a65e4fba7f930c53ca383, type: 3}
   _use3DIcons: 1

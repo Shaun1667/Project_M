@@ -165,6 +165,7 @@ namespace ProjectM.Editor
             new Row("item.spellbook_lightning", Hovl + "Sparks/Sparks flashing yellow", 0.35f, Lightning, 1f, 0f, 0.25f),
             new Row("item.spellbook_poison", Hovl + "Sparks/Sparks flashing yellow", 0.35f, Poison, 1f, 0f, 0.25f),
             new Row("item.spellbook_water", Hovl + "Sparks/Sparks flashing yellow", 0.35f, Water, 1f, 0f, 0.25f),
+            new Row("item.time_hourglass", Hovl + "Sparks/Sparks flashing yellow", 0.5f, new Color(0.45f, 0.95f, 1f), 0.8f, 0f, 0.3f), // G-21 시간의 모래시계: 청록 반짝임 (제단 위)
             // 3-7a 무기: 은빛 반짝임 (모델은 ItemVisualCatalog — 색은 반짝임에만)
             new Row("item.shortsword", Hovl + "Sparks/Sparks flashing yellow", 0.35f, Steel, 1f, 0f, 0.25f),
             new Row("item.hand_axe", Hovl + "Sparks/Sparks flashing yellow", 0.35f, Steel, 1f, 0f, 0.25f),

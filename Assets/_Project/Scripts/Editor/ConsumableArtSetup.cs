@@ -141,6 +141,7 @@ namespace ProjectM.Editor
             ("dart", "Item_Dart", 0.3f, 0f),
             ("javelin", "Item_Javelin", 0.7f, 0f),
             ("fusion_device", "Item_FusionDevice", 0.4f, 0f),
+            ("time_hourglass", "Item_TimeHourglass", 0.5f, 0f), // G-21 (2026-11-05): 26층 제단의 시간의 모래시계 (후보 A-2, 사용자) — 세운 키 0.5 m
             // G-11 (2026-11-05): 심은 식물 — 아이템이 아니지만 같은 카탈로그(키 plant_*)를 TrapPresenter가 읽는다. 크기 = 가장 긴 쪽(m)
             ("plant_firebloom", "Prop_PlantFirebloom", 0.5f, 0f),
             ("plant_icecap", "Prop_PlantIcecap", 0.45f, 0f),

@@ -1344,3 +1344,14 @@ MonoBehaviour:
     Fps: 0
     PixelCells: 0
     PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: item.time_hourglass
+    Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+    Scale: 0.5
+    Tint: {r: 0.45, g: 0.95, b: 1, a: 1}
+    Speed: 0.8
+    Lifetime: 0
+    Height: 0.3
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
