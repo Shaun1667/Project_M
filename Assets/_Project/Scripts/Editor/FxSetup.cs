@@ -64,10 +64,13 @@ namespace ProjectM.Editor
         // Height > 0 = 바닥 기준(칸 바닥에서 띄움), 0 = 몸 · 지팡이 높이 그대로.
         private static readonly Row[] Table =
         {
-            // 지형 효과 (칸 루프) — 물 · 빙판은 바닥 무늬만
+            // 지형 효과 (칸 루프) — 물은 바닥 무늬만
             new Row("terrain.FireZone", Hovl + "Sparks/Sparks flashing yellow", 1.4f, Fire),
             new Row("terrain.PoisonCloud", Hovl + "Smoke effects/Smoke ground", 0.16f, Poison, 0.8f),
             new Row("terrain.ContaminatedWater", Hovl + "Sparks/Sparks flashing green", 0.45f, Dirty),
+            // G-13 (2026-11-05) — ART_ASSETS ★ 2차 24
+            new Row("terrain.IcePatch", Hovl + "Sparks/Sparks flashing white", 1.3f, Ice),                         // 빙판: 바닥 서리 반짝임 (무늬 fx_ice와 함께)
+            new Row("terrain.ParalyticGas", Hovl + "Smoke effects/Smoke ground", 0.12f, Lightning, 0.8f),            // 마비 가스: 독구름과 같은 땅 연기, 노랗게
             // 상태 이상 (유닛에 붙는 루프)
             new Row("status.Frozen", Hovl + "Environment/Crystal effect blue", 0.55f, Keep, 1f, 0f, 0.45f),
             new Row("status.Paralyze", Hovl + "Character auras/Lightning aura", 0.32f, Lightning, 1f, 0f, 0.4f),
@@ -75,6 +78,13 @@ namespace ProjectM.Editor
             new Row("status.Poison", Hovl + "Character auras/Star aura", 0.3f, Poison, 1f, 0f, 0.4f),
             new Row("status.Slow", Hovl + "Sparks/Sparks white", 0.45f, Ice, 1f, 0f, 0.05f),
             new Row("status.Wet", Hovl + "Sparks/Sparks blue", 0.4f, Water, 1f, 0f, 0.5f),
+            // G-13 (2026-11-05) 3-13 물약 · 주문서 상태 — ART_ASSETS ★ 2차 23
+            new Row("status.Haste", Hovl + "Character auras/Buff", 0.3f, new Color(1f, 0.92f, 0.45f), 1.6f, 0f, 0.05f),        // 신속: 빠르게 솟는 금빛 오라
+            new Row("status.Invisible", Hovl + "Smoke effects/Smoke loop", 0.08f, new Color(0.75f, 0.8f, 0.95f, 0.35f), 0.6f, 0f, 0.3f), // 투명: 옅은 아지랑이 (몸은 그대로 — 반투명 재질은 아직)
+            new Row("status.Levitating", Hovl + "Magic circles/Magic circle 2", 0.1f, new Color(0.6f, 0.95f, 1f), 1f, 0f, 0.02f), // 부양: 발밑 하늘색 마법진
+            new Row("status.MindVision", Hovl + "Sparks/Sparks flashing pink", 0.5f, new Color(0.8f, 0.45f, 1f), 1f, 0f, 0.85f), // 정신 시야: 머리 위 보라 반짝임
+            new Row("status.Asleep", Hovl + "Sparks/Sparks flashing white", 0.7f, new Color(0.7f, 0.8f, 1f), 0.5f, 0f, 0.95f),   // 잠: 머리 위 느린 푸른 반짝임
+            new Row("status.Terrified", Hovl + "Character auras/Debuff", 0.3f, new Color(0.45f, 0.2f, 0.55f), 1.2f, 0f, 0.05f), // 공포: 어두운 보라 오라
             // 시전: 지팡이 끝 빛
             new Row("cast.Fire", Hovl + "Hits and explosions/Holy hit", 0.14f, Fire, 1.5f, 0.6f),
             new Row("cast.Ice", Hovl + "Hits and explosions/Holy hit", 0.14f, Ice, 1.5f, 0.6f),

@@ -1016,6 +1016,11 @@
   - 구현: `FxSetup` 표에 `burst.Earth` · `burst.Wind`(팩 Smoke AOE explosion, 모래 · 바람 색) · `terrain.Warning`(Magic circle, 붉게), 생성 무늬 `fx_warning` · 함정 문양 `trap_fire/toxic/paralytic/flood/shock/teleport/alarm`(코드로 그린 흰 + 알파 64px — `Ring` · `Flame` · `Wave` · `Bolt` · `Spiral` 등). `TerrainOverlayPresenter._warningTile`, `TrapPresenter._typeTiles`(TrapType 1 ~ 7 순서, 종류 색으로 칠함, 비면 예전 마름모) — Setup/FX가 연결
   - 확인: 컴파일 오류 0 · Setup/FX 실행 · 카탈로그 3키 · 씬 연결(문양 7 · 경고 무늬) · 문양 미리보기 · 모래 폭발 · 마법진 정지 렌더. 확인 못 한 것: 게임 화면에서 움직이는 모습 · 테스트(표시만 — 테스트 없음)
   - 확인 방법: Main 씬 플레이 → 10층 파라오의 모래 폭풍에 모래빛 폭발, 5 · 10층 보스가 힘을 모으면 붉은 줄무늬 칸 + 마법진, 찾기(Z)로 드러난 함정이 종류별 문양
+- [x] **G-13. 2차 이펙트 8종 — 상태 6 · 지형 2** (2026-11-05 사용자 "2차 이펙트 8종도 진행") — 플레이 확인 대기
+  - 구현: `FxSetup` 표에 `status.Haste`(Buff 오라, 금빛 · 빠르게) · `status.Invisible`(Smoke loop, 옅은 아지랑이) · `status.Levitating`(Magic circle 2, 발밑 하늘색) · `status.MindVision`(Sparks pink, 머리 위 보라) · `status.Asleep`(Sparks white, 머리 위 느리게) · `status.Terrified`(Debuff 오라, 어두운 보라) · `terrain.IcePatch`(Sparks white, 서리 반짝임) · `terrain.ParalyticGas`(Smoke ground, 노랗게). 코드 변경 없음 — 키만 추가 (FxPresenter가 기존 status · terrain 키로 띄움)
+  - 확인: 컴파일 오류 0 · Setup/FX 실행 · 정지 렌더(신속 · 부양 · 정신 시야 · 잠 · 공포 · 마비 가스 보임, 투명은 옅어 크기 0.05 → 0.08로 키움). 확인 못 한 것: 게임 화면에서 움직이는 모습 · 테스트(표시만 — 테스트 없음)
+  - 확인 방법: Main 씬 플레이 → 신속 · 투명 · 부양 · 정신 시야 물약을 마시면 몸 주위 효과, 잠 · 공포 주문서 / 적에게 걸리면 머리 위 · 몸 주위 효과, 얼음 주문이 물을 얼린 빙판 · 마비 가스 함정 칸에 루프 효과
+  - 남음: 투명 = 몸을 반투명하게 하는 재질 바꾸기(EntityPresenter 코드 변경)는 따로 결정
 - [ ] **G-4. UI 아트** — 아이콘 12(모델 렌더) · 막대 · 빠른 칸 · 인벤토리 · 로그 바탕 · 결과 화면 · (폰트 결정) — **일시중지 (2026-10-19, 사용자): 아트 에셋이 없음.** 재개 조건: ART_ASSETS.md 9번 목록의 1차 에셋(아이콘 · 틀)을 받거나, Varco 모델 렌더로 아이콘을 만들기로 정할 때. 재개 시 먼저 물을 것: 아이콘 출처(직접 렌더 / 에셋) · 폰트(Galmuri11 유지 / 한글 일반 폰트) · 범위
 
 ## Phase 4 — 재미 검증 (멈추고 플레이)
