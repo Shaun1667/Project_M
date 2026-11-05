@@ -318,7 +318,7 @@ namespace ProjectM.UI
 
         // ── 조준 안내 ── slot = 빠른 칸 번호, -1 = 인벤토리에서 바로 씀
         public string AimHint(int slot, string spellId, int manaCost) =>
-            $"{SlotPrefix(slot)}{Spell(spellId)} ({manaCost} MP): Space/클릭 시전 · Tab 다음 대상 · Esc 취소";
+            $"{SlotPrefix(slot)}{Spell(spellId)} ({manaCost} MP): {(slot >= 0 ? $"{slot + 1} 다시 · " : string.Empty)}Space/클릭 시전 · Tab 다음 대상 · Esc 취소"; // 3-26
 
         public static string EmptySlot(int slot) => $"[{slot + 1}] 빈 칸";
 

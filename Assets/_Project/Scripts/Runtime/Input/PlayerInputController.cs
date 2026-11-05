@@ -690,7 +690,7 @@ namespace ProjectM.Input
             _aimSpellId = spellId;
             _aimFusionSecond = fusionSecondId;
             _aimSlot = slot;
-            _aimCursor = NearestVisibleEnemy(player, range) ?? player.Pos;
+            _aimCursor = LastAttackedInRange(player, range) ?? NearestVisibleEnemy(player, range) ?? player.Pos; // 3-26 마지막에 공격한 적 → 가까운 적
             if (Mouse.current != null) _lastMousePos = Mouse.current.position.ReadValue();
             _nextRepeatTime = Time.time + _keyRepeatDelay;
             if (_hud != null) _hud.SetHighlightSlot(_aimSlot);
@@ -702,9 +702,14 @@ namespace ProjectM.Input
             if (keyboard != null)
             {
                 int slot = PressedSlotKey(keyboard, player.QuickSlots.Length);
-                if (keyboard[Key.Escape].wasPressedThisFrame || (slot >= 0 && slot == _aimSlot))
+                if (keyboard[Key.Escape].wasPressedThisFrame)
                 {
                     CancelAim();
+                    return;
+                }
+                if (slot >= 0 && slot == _aimSlot)
+                {
+                    TryCast(player); // 3-26 같은 칸 다시 = 조준한 곳에 발사 (SPD) — 막히면 이유만 보이고 조준은 그대로
                     return;
                 }
                 if (slot >= 0)
@@ -750,8 +755,13 @@ namespace ProjectM.Input
                     int slot = _hud.QuickSlotAt(screen);
                     if (slot >= 0)
                     {
+                        if (slot == _aimSlot)
+                        {
+                            TryCast(player); // 3-26 같은 칸 다시 = 조준한 곳에 발사 (SPD)
+                            return;
+                        }
                         CancelAim();
-                        if (slot != _aimSlot) UseQuickSlot(player, slot);
+                        UseQuickSlot(player, slot);
                         return;
                     }
                 }
@@ -1033,6 +1043,14 @@ namespace ProjectM.Input
                 return a.Id.Value.CompareTo(b.Id.Value);
             });
             return list;
+        }
+
+        /// <summary>3-26: 마지막에 공격한 적(3-25)이 살아 있고 보이며 사거리 안이면 그 칸.</summary>
+        private GridPos? LastAttackedInRange(Unit player, int range)
+        {
+            if (!_lastAttacked.IsValid || !_world.Units.TryGet(_lastAttacked, out var unit) || !unit.IsAlive) return null;
+            if (!Factions.AreHostile(unit.Faction, player.Faction) || !_targeting.InRange(player.Pos, unit.Pos, range)) return null;
+            return _sight.CanSee(_world.Map, player.Pos, unit.Pos, player.SightRange) ? unit.Pos : (GridPos?)null;
         }
 
         private GridPos? NearestVisibleEnemy(Unit player, int range)

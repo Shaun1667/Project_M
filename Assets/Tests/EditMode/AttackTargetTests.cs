@@ -56,6 +56,15 @@ namespace ProjectM.Tests
             Assert.That(AttackTargets.Pick(world, Sight, player, far.Id), Is.SameAs(a), "마지막에 공격한 적이 안 닿으면 가까운 적");
         }
 
+        // 3-26 빠른 칸 조준 안내: 같은 번호를 다시 누르면 시전 (인벤토리에서 바로 쓸 때는 번호 없음)
+        [Test]
+        public void AimHint_MentionsSameSlotAgain()
+        {
+            var text = new ProjectM.UI.HudText();
+            Assert.That(text.AimHint(2, "fire_basic", 3), Does.StartWith("[3] ").And.Contain("3 다시 · Space/클릭 시전"));
+            Assert.That(text.AimHint(-1, "fire_basic", 3), Does.Not.Contain("다시"));
+        }
+
         // 아군 · 중립은 대상이 아님
         [Test]
         public void Pick_IgnoresAlliesAndNeutrals()
