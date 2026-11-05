@@ -211,7 +211,7 @@ namespace ProjectM.Editor
             }
             EditorUtility.SetDirty(catalog);
 
-            var floorPrefab = BuildPrefab(Floor, SinkToGround);
+            var floorPrefab = BuildPrefab(Floor, FillCellSunk); // G-20: 칸 1 × 1 m에 꽉 (0.98 m 원본 — 칸 사이 틈 없게), 윗면 = y 0
             tiles.SetModule(TileType.Floor, floorPrefab, randomRotation: true);
             // 3-11a 풀 (그레이박스): 바닥 모듈 + 초록 풀잎 — 높은 풀은 0.15 m보다 높아 시야를 직접 따른다 (TilemapPresenter)
             // G-10 (2026-11-05): Varco 모델이 있으면 그것, 없으면 그레이박스 (풀잎 상자 · 상자 문 · 원기둥 솥)
@@ -230,8 +230,8 @@ namespace ProjectM.Editor
                 : AssetDatabase.LoadAssetAtPath<GameObject>($"{PrefabDir}/Tile_Door.prefab")); // 3-15b 잠긴 문 = 자물쇠 문짝
             tiles.SetModule(TileType.AlchemyPot, varcoTiles ? BuildModelPotPrefab(floorPrefab) : BuildPotPrefab(floorPrefab)); // 3-16c 연금 솥
             tiles.SetModule(TileType.Wall, BuildPrefab(Wall, null));
-            tiles.SetModule(TileType.StairsDown, BuildPrefab(StairsDown, null));
-            tiles.SetModule(TileType.StairsUp, BuildPrefab(StairsUp, null));
+            tiles.SetModule(TileType.StairsDown, BuildPrefab(StairsDown, FillCellSunk)); // G-20: 테두리 = 바닥 높이 (원본은 0.39 m 솟아 있었음)
+            tiles.SetModule(TileType.StairsUp, BuildPrefab(StairsUp, FillCellFootprint));
             tiles.SetPillarModule(BuildPrefab(Pillar, null));
             // G-2b: 올라가는 계단(0.57 m) 위에 선 유닛은 가운데 단 높이에 — 이미 값이 있으면(사용자가 고친 값) 두고 비었을 때만
             if (tiles.StandHeight(TileType.StairsUp) == 0f) tiles.SetStandHeight(TileType.StairsUp, StairsUpStandHeight);
@@ -257,12 +257,14 @@ namespace ProjectM.Editor
             ("Time", 21, 25),  // 5구역 시간 신전 폐허
         };
 
-        /// <summary>
-        /// 구역 세트: 기본 세트를 그대로 복사하고 바닥 · 벽 · 기둥 · 계단을 그 구역 모델로, 바닥을 깐 칸(풀 · 문 · 솥)은 구역 바닥으로 다시 짠다 (문틀 = 구역 벽).
-        /// 기본 세트의 구역 목록에 층 범위로 건다 — TilemapPresenter가 층마다 고른다. 모델이 하나라도 없으면 건너뜀 (구역 목록에서도 뺌).
-        /// </summary>
-        /// <summary>G-19: 벽 모델의 가로 · 세로(바닥 면)를 칸 1 × 1 m에 맞춘다 — 통(Fit)에 비균일 배율 (FBX 축 변환과 섞이지 않게), 높이는 그대로, 가운데 · 바닥 맞춤.</summary>
-        private static void FillCellFootprint(GameObject model)
+        /// <summary>G-19: 모델의 가로 · 세로(바닥 면)를 칸 1 × 1 m에 맞춘다 (벽 · 올라가는 계단 — 틈 없게). 아래 = 바닥.</summary>
+        private static void FillCellFootprint(GameObject model) => FitCell(model, sinkTop: false);
+
+        /// <summary>G-20: 칸에 맞추고 윗면을 바닥 높이(y 0)로 내린다 (바닥 판 · 내려가는 계단 — 튀어나오지 않게, 계단은 바닥 아래로 꺼짐).</summary>
+        private static void FillCellSunk(GameObject model) => FitCell(model, sinkTop: true);
+
+        /// <summary>통(Fit)에 비균일 배율 (FBX 축 변환과 섞이지 않게) — 높이 배율은 그대로, 가운데 맞춤, sinkTop이면 윗면 = 프리팹 원점 높이 · 아니면 아랫면.</summary>
+        private static void FitCell(GameObject model, bool sinkTop)
         {
             var root = model.transform.parent;
             var fit = new GameObject("Fit").transform;
@@ -271,9 +273,13 @@ namespace ProjectM.Editor
             var b = RendererBounds(model);
             fit.localScale = new Vector3(1f / Mathf.Max(0.01f, b.size.x), 1f, 1f / Mathf.Max(0.01f, b.size.z));
             b = RendererBounds(model);
-            fit.position += new Vector3(root.position.x - b.center.x, root.position.y - b.min.y, root.position.z - b.center.z);
+            fit.position += new Vector3(root.position.x - b.center.x, root.position.y - (sinkTop ? b.max.y : b.min.y), root.position.z - b.center.z);
         }
 
+        /// <summary>
+        /// 구역 세트: 기본 세트를 그대로 복사하고 바닥 · 벽 · 기둥 · 계단을 그 구역 모델로, 바닥을 깐 칸(풀 · 문 · 솥)은 구역 바닥으로 다시 짠다 (문틀 = 구역 벽).
+        /// 기본 세트의 구역 목록에 층 범위로 건다 — TilemapPresenter가 층마다 고른다. 모델이 하나라도 없으면 건너뜀 (구역 목록에서도 뺌).
+        /// </summary>
         private static void BuildZoneTiles(TileVisualSet tiles, bool varcoTiles, string zone, int firstFloor, int lastFloor)
         {
             string prefix = "Tile_" + zone + "_";
@@ -293,11 +299,11 @@ namespace ProjectM.Editor
                 AssetDatabase.CreateAsset(set, path);
             }
             set.CopyEntriesFrom(tiles);
-            var floor = BuildPrefab(floorSpec, SinkToGround);
+            var floor = BuildPrefab(floorSpec, FillCellSunk);
             set.SetModule(TileType.Floor, floor, randomRotation: true);
             set.SetModule(TileType.Wall, BuildPrefab(wallSpec, FillCellFootprint)); // 바닥 면을 칸에 꽉 채움 (용암 벽처럼 가장자리가 들쭉날쭉하면 틈이 남)
-            set.SetModule(TileType.StairsDown, BuildPrefab(Spec("StairsDown"), null));
-            set.SetModule(TileType.StairsUp, BuildPrefab(Spec("StairsUp"), null));
+            set.SetModule(TileType.StairsDown, BuildPrefab(Spec("StairsDown"), FillCellSunk));
+            set.SetModule(TileType.StairsUp, BuildPrefab(Spec("StairsUp"), FillCellFootprint));
             set.SetPillarModule(BuildPrefab(Spec("Pillar"), null));
             if (varcoTiles)
             {
