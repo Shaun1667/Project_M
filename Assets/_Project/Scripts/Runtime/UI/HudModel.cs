@@ -593,11 +593,12 @@ namespace ProjectM.UI
         private void OnDamaged(UnitDamagedEvent e)
         {
             bool fromStatus = !e.Attacker.IsValid; // 상태 이상(화상 · 중독) · 지형 피해
+            bool silent = fromStatus && e.Amount == 0; // 저항 등으로 0이 된 지속 피해는 로그를 남기지 않음 (2026-11-05 플레이 확인)
             if (e.Target == _playerId)
             {
                 Hp = e.Hp;
                 MaxHp = e.MaxHp;
-                AddLog(fromStatus
+                if (!silent) AddLog(fromStatus
                     ? $"나: 지속 피해 {e.Amount} (HP {e.Hp}/{e.MaxHp})"
                     : $"{HudText.Enemy(e.Attacker)}의 공격: 피해 {e.Amount} (HP {e.Hp}/{e.MaxHp})");
             }
@@ -605,7 +606,7 @@ namespace ProjectM.UI
             {
                 AddLog($"{HudText.Enemy(e.Target)}에게 피해 {e.Amount} ({e.Hp}/{e.MaxHp})");
             }
-            else if (fromStatus)
+            else if (fromStatus && !silent)
             {
                 AddLog($"{HudText.Enemy(e.Target)}: 지속 피해 {e.Amount} ({e.Hp}/{e.MaxHp})");
             }
@@ -659,6 +660,14 @@ namespace ProjectM.UI
             {
                 AddLog($"{HudText.Enemy(e.Id)} 쓰러짐");
             }
+            Changed?.Invoke();
+        }
+
+        /// <summary>로그에 안내 한 줄 (판 시작 · 이어하기 · 되돌리기처럼 이벤트가 아닌 알림 — 안내 줄에 계속 남지 않게, 2026-11-05).</summary>
+        public void AddNotice(string line)
+        {
+            if (string.IsNullOrEmpty(line)) return;
+            AddLog(line);
             Changed?.Invoke();
         }
 

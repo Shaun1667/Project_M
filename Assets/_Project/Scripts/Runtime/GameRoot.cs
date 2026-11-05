@@ -513,8 +513,8 @@ namespace ProjectM
             _input.Bind(World, Config, _timeClock, sight, Spells, new BresenhamTargetingRule(), Items, Fusions, stairs, consumables, search, hunger, _floorDecorConfig != null ? _floorDecorConfig.ToShop() : null);
             World.Events.Flush();
             _savedFlush = -1; // 새 판 · 이어하기 바로 저장
-            if (restoring) _hud.SetHint(HudText.RunContinued);
-            else if (_realTime != null) _hud.SetHint(HudText.RealTimeStarted);
+            if (restoring) _hud.Model?.AddNotice(HudText.RunContinued); // 2026-11-05: 안내 줄이 아니라 로그 (계속 남지 않게)
+            else if (_realTime != null) _hud.Model?.AddNotice(HudText.RealTimeStarted);
 
             if (_camera != null)
             {
@@ -815,7 +815,7 @@ namespace ProjectM
                 if (PlayerActions.TryGetPlayer(w, out var p)) TimeRelics.CarryOver(oldWorld, oldPlayer, w, p);
             });
             _history.AddRange(kept);
-            _hud.SetHint(HudText.TimeMachineRewound(turns));
+            _hud.Model?.AddNotice(HudText.TimeMachineRewound(turns));
         }
 
         // ── 마법 제작대 (3-28b, 결정 2026-11-05): 만들기 · 강화 · 분해 — 카드 창(형태 · 특성 창과 같음), 모두 틱 밖 ──

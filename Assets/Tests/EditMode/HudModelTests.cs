@@ -137,6 +137,30 @@ namespace ProjectM.Tests
             Assert.That(s.Hud.Hp, Is.EqualTo(17));
         }
 
+        // 2026-11-05 플레이 확인: 0이 된 지속 피해(저항)는 로그 없음 · 체력은 맞춤, 판 알림은 로그로 (안내 줄에 남지 않게)
+        [Test]
+        public void ZeroTickDamage_Silent_NoticeGoesToLog()
+        {
+            var s = Start();
+            var bus = s.World.Events;
+            bus.Publish(new UnitDamagedEvent(s.Enemy.Id, EntityId.None, 0, 8, 8));
+            bus.Publish(new UnitDamagedEvent(s.Player.Id, EntityId.None, 0, 19, 20));
+            bus.Flush();
+            Assert.That(s.Hud.Log, Is.Empty, "0 지속 피해는 조용히");
+            Assert.That(s.Hud.Hp, Is.EqualTo(19), "체력은 맞춤");
+            s.Hud.AddNotice(HudText.RunContinued);
+            Assert.That(s.Hud.Log, Is.EqualTo(new[] { HudText.RunContinued }));
+        }
+
+        // 2026-11-05 플레이 확인: 제작대 카드 글은 줄을 직접 나눔 (한글 줄 10자 · 숫자 줄 14자 이하 — 화면에서 한 줄에 들어간 폭)
+        [Test]
+        public void WorkbenchDetails_LinesFitCard()
+        {
+            foreach (var text in new[] { HudText.WorkbenchCraftDetail(12), HudText.WorkbenchUpgradeDetail(new[] { 6, 9, 12 }), HudText.WorkbenchDisassembleDetail(6) })
+                foreach (var line in text.Split('\n'))
+                    Assert.That(line.Length, Is.LessThanOrEqualTo(line.StartsWith("에테르 ") ? 14 : 10), line); // 한글 줄은 10자 (11자째에서 끊겼음)
+        }
+
         [Test]
         public void Log_KeepsOnlyNewestLines()
         {

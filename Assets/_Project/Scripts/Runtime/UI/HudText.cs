@@ -177,10 +177,11 @@ namespace ProjectM.UI
         public const string WorkbenchCraft = "유물 만들기";
         public const string WorkbenchUpgrade = "유물 강화";
         public const string WorkbenchDisassemble = "유물 분해";
-        public static string WorkbenchCraftDetail(int cost) => $"목록에서 골라 만든다\n\n에테르 {cost}";
+        // 카드 폭에 맞춰 줄을 직접 나눔 (2026-11-05 플레이 확인 — 저절로 줄바꿈되면 "만든 / 다"처럼 끊김)
+        public static string WorkbenchCraftDetail(int cost) => $"유물 목록에서\n골라 만든다\n\n에테르 {cost}";
         public static string WorkbenchUpgradeDetail(System.Collections.Generic.IReadOnlyList<int> costs) =>
-            $"낀 유물 · 배낭 유물을 강화\n최대 +{costs.Count}\n\n에테르 {string.Join(" / ", costs)}";
-        public static string WorkbenchDisassembleDetail(int gain) => $"배낭의 유물 하나를 없애고\n에테르를 얻는다 (강화는 사라짐)\n\n에테르 +{gain}";
+            $"낀 유물이나\n배낭 유물을 강화\n(최대 +{costs.Count})\n\n에테르 {string.Join(" / ", costs)}";
+        public static string WorkbenchDisassembleDetail(int gain) => $"배낭 유물을 없애고\n에테르를 얻는다\n(강화는 사라짐)\n\n에테르 +{gain}";
         public static string EtherCost(int cost) => $"에테르 {cost}";
         public static string EtherGain(int gain) => $"에테르 +{gain}";
         public const string RelicWornMark = " (낀 것)";
