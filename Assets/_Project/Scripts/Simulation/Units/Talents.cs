@@ -35,6 +35,10 @@ namespace ProjectM.Units
         MaxHp = 10,
         /// <summary>자신을 못 본 적(기습과 같은 판정)에게 대상 주문 피해 + 값%.</summary>
         UnseenDamagePercent = 11,
+        /// <summary>기본 근접 공격 피해 + 값 (3-22b 시아 연타 자세 — 타격마다, 방어 전).</summary>
+        MeleeDamage = 12,
+        /// <summary>기본 근접 공격이 맞으면 값% 확률로 한 번 더 친다 (3-22c 시아 빠른 손 — 공격 속도, 추가 타격은 다시 추가 타격을 부르지 않음).</summary>
+        MeleeExtraHitChance = 13,
     }
 
     /// <summary>특성 하나의 효과 한 줄: 종류 · 찍은 점수별 값(Values[점수 − 1], 누적 값) · 대상 주문(비면 효과 종류에 따라 없음) · 무기 · 상태.</summary>
@@ -187,8 +191,18 @@ namespace ProjectM.Units
                 foreach (var e in t.Effects)
                     if (e.Effect == effect && (filter == null || filter(e))) total += e.ValueAt(points);
             }
+            var form = world.Run.FormId != null ? def.FormOf(world.Run.FormId) : null; // 3-22b: 고른 형태의 늘 켜진 효과 (1점 값)
+            if (form != null)
+                foreach (var e in form.PassiveEffects)
+                    if (e.Effect == effect && (filter == null || filter(e))) total += e.ValueAt(1);
             return total;
         }
+
+        /// <summary>기본 근접 공격 피해 보너스 (3-22b 연타 자세).</summary>
+        public static int MeleeDamageBonus(World world, Unit attacker) => Sum(world, attacker, TalentEffect.MeleeDamage);
+
+        /// <summary>기본 근접 공격 추가 타격 확률 % (3-22c 빠른 손).</summary>
+        public static int MeleeExtraHitPercent(World world, Unit attacker) => Sum(world, attacker, TalentEffect.MeleeExtraHitChance);
 
         /// <summary>주문 하나에 걸린 효과 값 합.</summary>
         public static int ForSpell(World world, Unit caster, TalentEffect effect, string spellId) =>

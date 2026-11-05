@@ -1102,3 +1102,14 @@ MonoBehaviour:
     Fps: 16
     PixelCells: 1
     PixelTint: {r: 1, g: 0.95, b: 0.7, a: 1}
+  - Key: burst.Neutral
+    Prefab: {fileID: 4994997792314849709, guid: 3dd50886582244645be87adb42aa8528, type: 3}
+    Scale: 0.33
+    Tint: {r: 1, g: 0.95, b: 0.7, a: 1}
+    Speed: 1.6
+    Lifetime: 1
+    Height: 0.02
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}

@@ -602,6 +602,22 @@ namespace ProjectM.Editor
                 { Id = "sia_leap", Element = Element.Neutral, Shape = SpellShape.Leap, Range = 3, Damage = 0, ManaCost = 2 });
             changed |= catalog.SetDisplayNameIfEmpty("sia_leap", "도약");
             changed |= catalog.SetBoostIfNone("sia_leap", "knuckle", 150, 1);
+            // 3-22b 시아 형태 기술 (Docs/직업_시아.md 3번) — 연타: 연타 · 질풍 연격, 강타: 붕권 · 진각 · 정권. 모두 무속성 · 너클 150% · +1
+            foreach (var (id, name, shape, range, damage, mana, radius, hits) in new[]
+            {
+                ("sia_combo", "연타", SpellShape.Bolt, 1, 2, 3, 0, 4),
+                ("sia_rush", "질풍 연격", SpellShape.Dash, 3, 3, 4, 0, 2),
+                ("sia_crush", "붕권", SpellShape.Beam, 3, 6, 4, 0, 1),
+                ("sia_quake", "진각", SpellShape.Around, 1, 5, 4, 1, 1),
+                ("sia_fist", "정권", SpellShape.Bolt, 1, 9, 3, 0, 1),
+            })
+            {
+                changed |= catalog.AddIfMissing(new SpellCatalogAsset.Entry
+                    { Id = id, Element = Element.Neutral, Shape = shape, Range = range, Damage = damage, ManaCost = mana, Radius = radius });
+                changed |= catalog.SetDisplayNameIfEmpty(id, name);
+                if (hits > 1) changed |= catalog.SetHitCountIfEmpty(id, hits);
+                changed |= catalog.SetBoostIfNone(id, "knuckle", 150, 1);
+            }
             // 3-12a 함정 효과 주문 (BALANCE 17번): 함정 칸 중심 3×3, 시전자 없음 · 마나 0 · 배우지 않음. 마비 가스는 바람 속성(반응 없음)
             foreach (var (id, name, element, damage, status, chance, terrain) in new[]
             {
@@ -1472,6 +1488,33 @@ namespace ProjectM.Editor
                         Fx(ProjectM.Units.TalentEffect.SpellRange, new[] { 0, 1, 2 }, L("light_spear_throw_plus"))),
                     T("shadow_hunt", "그림자 사냥", "나를 못 본 적에게 빛의 창 피해\n× 1.25 / × 1.5 / × 1.75", 2, "ranged", 3, Fx(ProjectM.Units.TalentEffect.UnseenDamagePercent, new[] { 25, 50, 75 }, all)),
                 });
+            // 3-22b 시아 (Docs/직업_시아.md 3번): 5층 보스 뒤 연타 / 강타. 연타 자세 = 기본 근접 공격 피해 +1 (형태 효과). 특성은 3-22c
+            changed |= catalog.AddIfMissing(new ClassCatalogAsset.ClassEntry
+            {
+                Id = "sia",
+                ChooseAtFloor = 5,
+                Forms = new List<ClassCatalogAsset.Form>
+                {
+                    new ClassCatalogAsset.Form
+                    {
+                        Id = "combo", DisplayName = "연타 — 권법",
+                        Description = "주먹을 쉬지 않고 꽂는다\n\n연타 자세 — 기본 공격 피해 +1\n연타 — 옆 칸 적을 4번\n질풍 연격 — 3칸 달려가 2번",
+                        LearnSpells = new List<string> { "sia_combo", "sia_rush" },
+                        ReplaceSpells = new List<ClassCatalogAsset.SpellSwap>(),
+                        Passive = new List<ClassCatalogAsset.TalentEffectEntry> { Fx(ProjectM.Units.TalentEffect.MeleeDamage, new[] { 1 }) },
+                    },
+                    new ClassCatalogAsset.Form
+                    {
+                        Id = "smash", DisplayName = "강타 — 진각",
+                        Description = "한 방에 땅을 울린다\n\n붕권 — 직선 3칸\n진각 — 내 둘레 8칸\n정권 — 옆 칸 적에 큰 한 방",
+                        LearnSpells = new List<string> { "sia_crush", "sia_quake", "sia_fist" },
+                        ReplaceSpells = new List<ClassCatalogAsset.SpellSwap>(),
+                        Passive = new List<ClassCatalogAsset.TalentEffectEntry>(),
+                    },
+                },
+                Tiers = new List<ClassCatalogAsset.Tier> { new ClassCatalogAsset.Tier { FirstLevel = 2, LastLevel = 6 }, new ClassCatalogAsset.Tier { FirstLevel = 7, LastLevel = 12 } },
+                Talents = new List<ClassCatalogAsset.Talent>(),
+            });
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }

@@ -107,6 +107,7 @@ namespace ProjectM.Editor
             new Row("burst.Poison", Hovl + "AoE effects/Red energy explosion", 0.4f, Poison, 1.6f, 1f, 0.02f),
             new Row("burst.Water", Hovl + "AoE effects/Smoke AOE explosion", 0.33f, Water, 1.6f, 1f, 0.02f),
             new Row("burst.Lightning", Hovl + "Hits and explosions/Electro hit", 1f, Lightning, 1.3f, 0.8f, 0.02f),
+            new Row("burst.Neutral", Hovl + "AoE effects/Ground AOE explosion", 0.33f, LightGold, 1.6f, 1f, 0.02f), // 3-22b 진각 (내 둘레 — 시전자 자리)
             // 융합 주문 (맞는 효과만 바꿈)
             new Row("fusion.fusion_fire_water", Hovl + "AoE effects/Meteors AOE", 0.33f, Keep, 2f, 1f, 0.02f),
             new Row("fusion.fusion_water_poison", Hovl + "AoE effects/Smoke AOE explosion", 0.33f, Dirty, 1.6f, 1f, 0.02f),

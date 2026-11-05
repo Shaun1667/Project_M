@@ -36,6 +36,8 @@ namespace ProjectM.Magic
         Multi = 4,
         /// <summary>뛰어넘기 (3-22a 시아 도약): 사거리 안의 빈 걸을 수 있는 칸으로 시전자가 바로 옮겨 간다 — 사이의 유닛은 넘고 벽은 못 넘음. 맞히는 대상 없음.</summary>
         Leap = 5,
+        /// <summary>내 둘레 (3-22b 시아 진각): 시전자 중심 반지름(체비셰프) 안의 걸을 수 있는 칸 — 시전자 칸은 빼서 나는 안 맞음. 조준 칸은 방향만(사거리 안 아무 칸).</summary>
+        Around = 6,
     }
 
     /// <summary>
@@ -114,8 +116,8 @@ namespace ProjectM.Magic
             if (range < 1) throw new ArgumentOutOfRangeException(nameof(range), range, "사거리는 1 이상이어야 한다.");
             if (damage < 0) throw new ArgumentOutOfRangeException(nameof(damage), damage, "피해는 0 이상이어야 한다.");
             if (manaCost < 0) throw new ArgumentOutOfRangeException(nameof(manaCost), manaCost, "마나 소모는 0 이상이어야 한다.");
-            if (shape == SpellShape.Burst ? radius < 1 : radius != 0)
-                throw new ArgumentOutOfRangeException(nameof(radius), radius, "범위 폭발만 반지름 1 이상, 나머지는 0.");
+            if (shape == SpellShape.Burst || shape == SpellShape.Around ? radius < 1 : radius != 0)
+                throw new ArgumentOutOfRangeException(nameof(radius), radius, "범위 폭발 · 내 둘레만 반지름 1 이상, 나머지는 0.");
 
             Id = id;
             Element = element;

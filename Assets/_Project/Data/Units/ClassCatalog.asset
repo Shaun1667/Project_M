@@ -24,6 +24,7 @@ MonoBehaviour:
       - light_spear_pierce
       - light_spear_charge
       ReplaceSpells: []
+      Passive: []
     - Id: ranged
       DisplayName: "\uC6D0\uAC70\uB9AC\uD615 \u2014 \uD22C\uCC3D"
       Description: "\uBE5B\uC758 \uCC3D\uC744 \uB0A0\uB824 \uACF5\uACA9\uD55C\uB2E4\n\n\uAD00\uD1B5 \uBC1C\uC0AC \u2014 \uC9C1\uC120 7\uCE78\n\uB2E4\uC911 \uBC1C\uC0AC \u2014 \uC801 3\uBA85\uC5D0\uAC8C \uD55C \uBC1C\uC529\n\uB358\uC9C0\uAE30 \uAC15\uD654 \u2014 \uC0AC\uAC70\uB9AC 7 \xB7 \uB9C8\uB098 2"
@@ -33,6 +34,7 @@ MonoBehaviour:
       ReplaceSpells:
       - From: light_spear_throw
         To: light_spear_throw_plus
+      Passive: []
     Tiers:
     - FirstLevel: 2
       LastLevel: 6
@@ -229,3 +231,34 @@ MonoBehaviour:
         - light_spear_throw_plus
         WeaponId: 
         Status: 0
+  - Id: sia
+    ChooseAtFloor: 5
+    Forms:
+    - Id: combo
+      DisplayName: "\uC5F0\uD0C0 \u2014 \uAD8C\uBC95"
+      Description: "\uC8FC\uBA39\uC744 \uC26C\uC9C0 \uC54A\uACE0 \uAF42\uB294\uB2E4\n\n\uC5F0\uD0C0 \uC790\uC138 \u2014 \uAE30\uBCF8 \uACF5\uACA9 \uD53C\uD574 +1\n\uC5F0\uD0C0 \u2014 \uC606 \uCE78 \uC801\uC744 4\uBC88\n\uC9C8\uD48D \uC5F0\uACA9 \u2014 3\uCE78 \uB2EC\uB824\uAC00 2\uBC88"
+      LearnSpells:
+      - sia_combo
+      - sia_rush
+      ReplaceSpells: []
+      Passive:
+      - Effect: 12
+        Values: 01000000i
+        SpellIds: []
+        WeaponId: 
+        Status: 0
+    - Id: smash
+      DisplayName: "\uAC15\uD0C0 \u2014 \uC9C4\uAC01"
+      Description: "\uD55C \uBC29\uC5D0 \uB545\uC744 \uC6B8\uB9B0\uB2E4\n\n\uBD95\uAD8C \u2014 \uC9C1\uC120 3\uCE78\n\uC9C4\uAC01 \u2014 \uB0B4 \uB458\uB808 8\uCE78\n\uC815\uAD8C \u2014 \uC606 \uCE78 \uC801\uC5D0 \uD070 \uD55C \uBC29"
+      LearnSpells:
+      - sia_crush
+      - sia_quake
+      - sia_fist
+      ReplaceSpells: []
+      Passive: []
+    Tiers:
+    - FirstLevel: 2
+      LastLevel: 6
+    - FirstLevel: 7
+      LastLevel: 12
+    Talents: []

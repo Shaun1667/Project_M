@@ -31,25 +31,31 @@ namespace ProjectM.Units
 
             bool surprise = MeleeWeapon.IsSurprise(attacker, target); // 3-7c: 못 본 적 = 항상 명중 (첫 타격 전에 정함 — 타격마다 같음)
             int hits = attacker.Weapon.HitsPerAttack; // 3-22a 너클: 한 번 공격에 2타 (명중 · 피해 · 방어 따로)
-            for (int h = 0; h < hits && target.IsAlive && attacker.IsAlive; h++) Strike(attacker, target, surprise);
+            bool landed = false;
+            for (int h = 0; h < hits && target.IsAlive && attacker.IsAlive; h++) landed |= Strike(attacker, target, surprise);
+            // 3-22c 빠른 손: 맞혔으면 % 확률로 한 번 더 (추가 타격은 다시 굴리지 않음). 특성이 없으면 난수를 쓰지 않는다
+            int extra = Talents.MeleeExtraHitPercent(_world, attacker);
+            if (landed && extra > 0 && target.IsAlive && attacker.IsAlive && _world.Rng.Get(RngStream.Combat).Range(0, 100) < extra)
+                Strike(attacker, target, surprise);
         }
 
-        /// <summary>타격 하나: 명중 판정 → 피해 굴림 → 방어 → 피해 · 명중 시 효과 · 맞힘 마나.</summary>
-        private void Strike(Unit attacker, Unit target, bool surprise)
+        /// <summary>타격 하나: 명중 판정 → 피해 굴림(+ 형태 · 특성 근접 피해) → 방어 → 피해 · 명중 시 효과 · 맞힘 마나. 맞았으면 true.</summary>
+        private bool Strike(Unit attacker, Unit target, bool surprise)
         {
             if (surprise) _world.Events.Publish(new SurpriseAttackEvent(attacker.Id, target.Id));
             else if (!Combat.RollHit(_world, attacker, target)) // 3-7 명중 · 회피 (SPD)
             {
                 _world.Events.Publish(new AttackMissedEvent(attacker.Id, target.Id));
-                return;
+                return false;
             }
-            int damage = MeleeWeapon.RollDamage(_world, attacker, surprise); // 3-7a: 무기면 굴림 · 3-7c 더크 기습
+            int damage = MeleeWeapon.RollDamage(_world, attacker, surprise) + Talents.MeleeDamageBonus(_world, attacker); // 3-7a 굴림 · 3-22b 연타 자세
             damage = MeleeWeapon.ApplyDefense(_world, target, damage); // 3-7c: 방어 굴림 (육척봉)
             Combat.ApplyDamage(_world, attacker.Id, target, damage, DamageCause.Attack);
             if (damage > 0) _world.EnemyRules?.OnMeleeHit(_world, attacker, target); // 3-17b: 전갈 중독
             int manaPercent = Talents.MeleeHitManaPercent(_world, attacker); // 3-21c 창의 기세: 맞으면 % 확률로 마나 +1
             if (manaPercent > 0 && attacker.IsAlive && _world.Rng.Get(RngStream.Combat).Range(0, 100) < manaPercent)
                 ProjectM.Magic.Mana.Restore(_world, attacker, 1);
+            return true;
         }
     }
 }

@@ -28,6 +28,7 @@ namespace ProjectM.Data
             [Tooltip("선택 창 설명 (표시 전용, 줄바꿈 가능)")] [TextArea] public string Description;
             [Tooltip("고르면 배우는 주문 (SpellCatalog) — 빈 빠른 칸에 차례로 등록")] public List<string> LearnSpells;
             [Tooltip("고르면 같은 칸에서 바뀌는 주문")] public List<SpellSwap> ReplaceSpells;
+            [Tooltip("고르면 늘 켜지는 효과 (3-22b 연타 자세 — 특성과 같은 효과 표, Values[0] 값)")] public List<TalentEffectEntry> Passive;
         }
 
         [Serializable]
@@ -117,7 +118,10 @@ namespace ProjectM.Data
                 {
                     var swaps = new List<(string, string)>();
                     foreach (var s in f.ReplaceSpells ?? new List<SpellSwap>()) swaps.Add((s.From, s.To));
-                    forms.Add(new ClassFormDef(f.Id, f.LearnSpells ?? new List<string>(), swaps));
+                    var passive = new List<TalentEffectDef>();
+                    foreach (var e in f.Passive ?? new List<TalentEffectEntry>())
+                        passive.Add(new TalentEffectDef(e.Effect, e.Values ?? new List<int>(), e.SpellIds ?? new List<string>(), e.WeaponId, e.Status));
+                    forms.Add(new ClassFormDef(f.Id, f.LearnSpells ?? new List<string>(), swaps, passive));
                 }
                 var tiers = new List<TalentTier>();
                 foreach (var t in c.Tiers ?? new List<Tier>()) tiers.Add(new TalentTier(t.FirstLevel, t.LastLevel));

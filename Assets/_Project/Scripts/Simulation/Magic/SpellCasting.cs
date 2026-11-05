@@ -125,6 +125,18 @@ namespace ProjectM.Magic
                 }
                 case SpellShape.Multi:
                     return PreviewMulti(world, targeting, caster, spell, target);
+                case SpellShape.Around:
+                {
+                    // 3-22b 진각: 시전자 둘레 반지름 칸 (시전자 칸 제외). 경로 = [시전자 칸] — 연출이 시전자 자리에서 터지게
+                    var area = new List<GridPos>();
+                    for (int y = caster.Y - spell.Radius; y <= caster.Y + spell.Radius; y++)
+                        for (int x = caster.X - spell.Radius; x <= caster.X + spell.Radius; x++)
+                        {
+                            var p = new GridPos(x, y);
+                            if (p != caster && map.IsWalkable(p)) area.Add(p);
+                        }
+                    return new SpellPreview(new List<GridPos> { caster }, area);
+                }
                 case SpellShape.Leap:
                 {
                     // 3-22a 도약: 조준선(유닛 무시 — 넘어감, 벽에서 멈춤)이 조준 칸까지 닿고, 그 칸이 빈 걸을 수 있는 칸이어야 함. 아니면 빈 경로 = 막힘

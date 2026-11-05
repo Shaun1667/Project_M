@@ -525,3 +525,83 @@ MonoBehaviour:
     BoostRange: 1
     HitCount: 0
     MaxTargets: 0
+  - Id: sia_combo
+    Element: 7
+    Shape: 0
+    Range: 1
+    Damage: 2
+    ManaCost: 3
+    Radius: 0
+    AppliesStatus: 0
+    StatusChancePercent: 0
+    LeavesTerrain: 0
+    DisplayName: "\uC5F0\uD0C0"
+    BoostWeaponId: knuckle
+    BoostDamagePercent: 150
+    BoostRange: 1
+    HitCount: 4
+    MaxTargets: 0
+  - Id: sia_rush
+    Element: 7
+    Shape: 3
+    Range: 3
+    Damage: 3
+    ManaCost: 4
+    Radius: 0
+    AppliesStatus: 0
+    StatusChancePercent: 0
+    LeavesTerrain: 0
+    DisplayName: "\uC9C8\uD48D \uC5F0\uACA9"
+    BoostWeaponId: knuckle
+    BoostDamagePercent: 150
+    BoostRange: 1
+    HitCount: 2
+    MaxTargets: 0
+  - Id: sia_crush
+    Element: 7
+    Shape: 1
+    Range: 3
+    Damage: 6
+    ManaCost: 4
+    Radius: 0
+    AppliesStatus: 0
+    StatusChancePercent: 0
+    LeavesTerrain: 0
+    DisplayName: "\uBD95\uAD8C"
+    BoostWeaponId: knuckle
+    BoostDamagePercent: 150
+    BoostRange: 1
+    HitCount: 0
+    MaxTargets: 0
+  - Id: sia_quake
+    Element: 7
+    Shape: 6
+    Range: 1
+    Damage: 5
+    ManaCost: 4
+    Radius: 1
+    AppliesStatus: 0
+    StatusChancePercent: 0
+    LeavesTerrain: 0
+    DisplayName: "\uC9C4\uAC01"
+    BoostWeaponId: knuckle
+    BoostDamagePercent: 150
+    BoostRange: 1
+    HitCount: 0
+    MaxTargets: 0
+  - Id: sia_fist
+    Element: 7
+    Shape: 0
+    Range: 1
+    Damage: 9
+    ManaCost: 3
+    Radius: 0
+    AppliesStatus: 0
+    StatusChancePercent: 0
+    LeavesTerrain: 0
+    DisplayName: "\uC815\uAD8C"
+    BoostWeaponId: knuckle
+    BoostDamagePercent: 150
+    BoostRange: 1
+    HitCount: 0
+    MaxTargets: 0

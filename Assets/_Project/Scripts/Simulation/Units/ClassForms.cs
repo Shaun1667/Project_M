@@ -15,9 +15,13 @@ namespace ProjectM.Units
         public string Id { get; }
         public IReadOnlyList<string> LearnSpells { get; }
         public IReadOnlyList<(string From, string To)> ReplaceSpells { get; }
+        /// <summary>형태를 고르면 늘 켜지는 효과 (3-22b 시아 연타 자세 — 특성과 같은 효과 표, 1점 값). 비면 없음.</summary>
+        public IReadOnlyList<TalentEffectDef> PassiveEffects { get; }
 
-        public ClassFormDef(string id, IReadOnlyList<string> learnSpells = null, IReadOnlyList<(string From, string To)> replaceSpells = null)
+        public ClassFormDef(string id, IReadOnlyList<string> learnSpells = null, IReadOnlyList<(string From, string To)> replaceSpells = null,
+            IReadOnlyList<TalentEffectDef> passiveEffects = null)
         {
+            PassiveEffects = passiveEffects ?? Array.Empty<TalentEffectDef>();
             if (string.IsNullOrEmpty(id)) throw new ArgumentException("형태 ID가 비어 있다.", nameof(id));
             Id = id;
             LearnSpells = learnSpells ?? Array.Empty<string>();
