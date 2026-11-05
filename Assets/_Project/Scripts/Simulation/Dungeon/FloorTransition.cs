@@ -33,16 +33,19 @@ namespace ProjectM.Dungeon
         private readonly ShopConfig _shop;
         private readonly ItemBook _items;
         private readonly ZoneBook _zones;
+        private readonly TerrainBook _terrains;
 
         /// <param name="bossDef">마지막 층(보스 층)의 보스 (3-4b). null이면 마지막 층도 일반 층처럼 만든다 (테스트용).</param>
         /// <param name="loot">바닥 아이템 배치 수치 (3-5). null이면 새 층에 아이템을 놓지 않는다.</param>
         /// <param name="decor">층 꾸미기 수치 (3-11a — 풀 · 물 웅덩이). null이면 꾸미지 않는다. 보스 층은 꾸미지 않는다.</param>
         /// <param name="water">물 웅덩이에 쓸 물 지형 규칙. null이면 웅덩이 없이 풀만.</param>
+        /// <param name="terrains">지형 규칙 표 (3-18). 있으면 웅덩이 지형을 구역 표(PuddleTerrain)에서 고른다 — 없으면 water.</param>
         public FloorTransition(World world, DungeonGenerator generator, int floorCount, UnitDef enemyDef, SpawnConfig spawn,
             Func<World, EntityId, ICommandSource> aiFactory, PlayerVisionSystem vision, UnitDef bossDef = null, LootConfig loot = null,
             FloorDecorConfig decor = null, TerrainDef water = null, TrapBook traps = null, ShopConfig shop = null, ItemBook items = null,
-            ZoneBook zones = null)
+            ZoneBook zones = null, TerrainBook terrains = null)
         {
+            _terrains = terrains;
             _zones = zones; // 3-17a: 있으면 보스 층 · 보스 · 적 종류를 구역 표에서
             _shop = shop;
             _items = items;
@@ -116,7 +119,7 @@ namespace ProjectM.Dungeon
                 bool last = target == _floorCount;
                 var floor = _generator.Generate(_world.Rng.Get(RngStream.MapGen), stairsUp: target > 1, stairsDown: !last);
                 _world.EnterNewFloor(target, floor.Map);
-                if (_decor != null) FloorDecor.Apply(_world, floor, _decor, _water, _traps); // 3-11a · 3-12a: 이벤트는 아래 Announce가 맵 · 지형 · 함정을 다시 보낸다
+                if (_decor != null) FloorDecor.Apply(_world, floor, _decor, PuddleOf(target), _traps); // 3-11a · 3-12a: 이벤트는 아래 Announce가 맵 · 지형 · 함정을 다시 보낸다
                 Shop.Build(_world, floor, _shop, _items, _world.Rng.Get(RngStream.Decor), new IdleNeutralAi()); // 3-15c: 상점 층이면
                 _world.Units.Teleport(player.Id, floor.Start);
                 if (_zones != null)
@@ -137,6 +140,13 @@ namespace ProjectM.Dungeon
             }
             _world.Events.Publish(new FloorChangedEvent(from, target));
             _vision.Refresh();
+        }
+
+        /// <summary>그 층 웅덩이의 지형 규칙 (3-18): 구역 표의 PuddleTerrain, 규칙이 없으면 물.</summary>
+        private TerrainDef PuddleOf(int floor)
+        {
+            if (_zones == null || _terrains == null) return _water;
+            return _terrains.TryGet(_zones.ZoneOf(floor).PuddleTerrain, out var def) ? def : _water;
         }
 
         /// <summary>그 층의 보스 (구역 표가 있으면 구역 보스 층, 없으면 마지막 층의 bossDef). 보스 층이 아니면 null.</summary>

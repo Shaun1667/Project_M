@@ -70,6 +70,52 @@ namespace ProjectM.Data
             public List<ZoneEnemyRow> Enemies;
             [Tooltip("보스 적 ID — 구역 마지막 층이 보스 층. 비면 보스 없음")] public string BossId;
             [Tooltip("구역 분위기 (3-17c): 해 색. 알파 0 = 기본 색 그대로")] public Color LightColor;
+            [Tooltip("층 꾸미기 웅덩이의 지형 (3-18): None = 물. 얼음 동굴 = 빙판")] public TerrainEffectType PuddleTerrain;
+        }
+
+        /// <summary>에디터 Setup용 (3-18): 웅덩이 지형이 비어 있으면(None) 채운다.</summary>
+        public bool SetPuddleTerrainIfNone(int firstFloor, TerrainEffectType type)
+        {
+            for (int i = 0; i < _zones.Count; i++)
+            {
+                var z = _zones[i];
+                if (z.FirstFloor != firstFloor || z.PuddleTerrain != TerrainEffectType.None) continue;
+                z.PuddleTerrain = type;
+                _zones[i] = z;
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>에디터 Setup용 (3-18): 구역 이름이 from이면 to로 (임시 구역 → 테마 구역).</summary>
+        public bool ReplaceName(int firstFloor, string from, string to)
+        {
+            for (int i = 0; i < _zones.Count; i++)
+            {
+                var z = _zones[i];
+                if (z.FirstFloor != firstFloor || z.Name != from) continue;
+                z.Name = to;
+                _zones[i] = z;
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>에디터 Setup용 (3-18): 구역 적 표가 정확히 from이면 to로 (3~5구역 임시 사막 4종 → 새 구역 적).</summary>
+        public bool ReplaceEnemies(int firstFloor, string[] from, params (string id, int weight)[] to)
+        {
+            for (int i = 0; i < _zones.Count; i++)
+            {
+                var z = _zones[i];
+                if (z.FirstFloor != firstFloor || z.Enemies == null || z.Enemies.Count != from.Length) continue;
+                for (int k = 0; k < from.Length; k++)
+                    if (z.Enemies[k].EnemyId != from[k]) return false;
+                z.Enemies = new List<ZoneEnemyRow>();
+                foreach (var (id, weight) in to) z.Enemies.Add(new ZoneEnemyRow { EnemyId = id, Weight = weight });
+                _zones[i] = z;
+                return true;
+            }
+            return false;
         }
 
         /// <summary>그 층 구역의 해 색 (3-17c). 정하지 않았으면(알파 0) false.</summary>
@@ -169,7 +215,7 @@ namespace ProjectM.Data
             for (int i = 0; i < _zones.Count; i++)
             {
                 var z = _zones[i];
-                if (z.FirstFloor != firstFloor || z.BossId != from) continue;
+                if (z.FirstFloor != firstFloor || (z.BossId ?? string.Empty) != (from ?? string.Empty)) continue; // null · 빈 문자열 = 보스 없음
                 z.BossId = to;
                 _zones[i] = z;
                 return true;
@@ -208,7 +254,8 @@ namespace ProjectM.Data
                     if (!TryGetEnemy(z.BossId, out var b)) throw new System.ArgumentException($"구역 '{z.Name}': 보스 '{z.BossId}'가 적 표에 없다.");
                     boss = ToDef(b);
                 }
-                zones.Add(new ZoneDef(z.Name, z.FirstFloor, z.LastFloor, enemies, z.StatPercent, boss));
+                var puddle = z.PuddleTerrain == TerrainEffectType.None ? TerrainEffectType.Water : z.PuddleTerrain;
+                zones.Add(new ZoneDef(z.Name, z.FirstFloor, z.LastFloor, enemies, z.StatPercent, boss, puddle));
             }
             return new ZoneBook(zones);
         }

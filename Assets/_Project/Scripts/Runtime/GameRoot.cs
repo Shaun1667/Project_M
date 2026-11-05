@@ -245,7 +245,7 @@ namespace ProjectM
             if (traps != null) World.Scheduler.AddSystem(TickPhase.ManaRegen, new TrapSystem(World, traps, Spells)); // ⑤ 밟으면 발동
             Terrains.TryGet(TerrainEffectType.Water, out var water); // 3-11a: 물 웅덩이 = 사라지지 않는 물 지형
             var stairs = new FloorTransition(World, generator, dungeonConfig.FloorCount, enemyDef, spawn, aiFactory, vision, _bossDef.ToDef(), loot,
-                decor, water, traps, _floorDecorConfig != null ? _floorDecorConfig.ToShop() : null, Items, zones); // 3-15c 상점 · 3-17a 구역
+                decor, water, traps, _floorDecorConfig != null ? _floorDecorConfig.ToShop() : null, Items, zones, Terrains); // 3-15c 상점 · 3-17a 구역 · 3-18 구역별 웅덩이
 
             if (_pixelMap != null) _pixelMap.Bind(World.Events); // P-3a 2D 맵 — 3D 맵은 묶지 않음
             else _tilemapPresenter.Bind(World.Events);

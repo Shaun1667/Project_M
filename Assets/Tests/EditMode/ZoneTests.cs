@@ -148,12 +148,12 @@ namespace ProjectM.Tests
             Assert.That(dungeon.FloorCount, Is.EqualTo(book.FloorCount));
             var bossFloors = new List<int>();
             for (int f = 1; f <= 25; f++) if (book.IsBossFloor(f)) bossFloors.Add(f);
-            Assert.That(bossFloors, Is.EqualTo(new[] { 5, 10, 25 }));
+            Assert.That(bossFloors, Is.EqualTo(new[] { 5, 10, 15, 25 }), "3-18: 15층 얼음 마녀");
             var percents = new List<int>();
             foreach (var z in book.Zones) percents.Add(z.StatPercent);
-            Assert.That(percents, Is.EqualTo(new[] { 100, 100, 130, 160, 200 }), "3-17c: 2구역은 사막 적 줄이 세기를 가짐, 3~5구역(임시)은 사막 적 × %");
-            // 3-17c: 2~5구역 = 사막 4종 (전갈 3 · 자칼 2 · 미라 2 · 사막 주술사 1)
-            foreach (int floor in new[] { 6, 11, 16, 21 })
+            Assert.That(percents, Is.EqualTo(new[] { 100, 100, 100, 160, 200 }), "3-17c · 3-18: 1~3구역은 적 줄이 세기를 가짐, 4~5구역(임시)은 사막 적 × %");
+            // 3-17c: 2 · 4 · 5구역 = 사막 4종 (전갈 3 · 자칼 2 · 미라 2 · 사막 주술사 1)
+            foreach (int floor in new[] { 6, 16, 21 })
             {
                 var ids = new List<string>();
                 foreach (var e in book.ZoneOf(floor).Enemies) ids.Add(e.Def.VisualId + ":" + e.Weight);
@@ -168,6 +168,92 @@ namespace ProjectM.Tests
             Assert.That(catalog.TryGetEnemy("enemy_mummy", out var m) && (m.MaxHp, m.AttackDamage, m.Accuracy, m.Evasion) == (22, 4, 10, 1), Is.True);
             Assert.That(catalog.TryGetLightColor(7, out var sand) && sand.b < sand.r, Is.True, "사막 = 모래빛 해");
             Assert.That(catalog.LootPlanFloors, Is.EqualTo(10));
+            foreach (var z in new[] { 1, 6, 16, 21 }) Assert.That(book.ZoneOf(z).PuddleTerrain, Is.EqualTo(ProjectM.Status.TerrainEffectType.Water), $"{z}층 웅덩이 = 물");
+        }
+
+        // 검산 (3-18): 3구역 얼음 동굴 = BALANCE 20-1 · 20-2 — 적 4종 · 행동 · 얼음 마녀 · 빙판 웅덩이 · 하늘색 해
+        [Test]
+        public void ProjectAsset_IceCave_MatchesBalanceTable()
+        {
+            var catalog = AssetDatabase.LoadAssetAtPath<ZoneCatalogAsset>("Assets/_Project/Data/Units/ZoneCatalog.asset");
+            var book = catalog.ToBook();
+            var zone = book.ZoneOf(11);
+            Assert.That((zone.Name, zone.FirstFloor, zone.LastFloor, zone.StatPercent), Is.EqualTo(("얼음 동굴", 11, 15, 100)));
+            var ids = new List<string>();
+            foreach (var e in zone.Enemies) ids.Add(e.Def.VisualId + ":" + e.Weight);
+            Assert.That(ids, Is.EqualTo(new[] { "enemy_frost_bat:3", "enemy_snow_wolf:2", "enemy_ice_golem:2", "enemy_frost_shaman:1" }));
+            Assert.That(zone.PuddleTerrain, Is.EqualTo(ProjectM.Status.TerrainEffectType.IcePatch));
+            Assert.That(book.BossOf(15)?.VisualId, Is.EqualTo("boss_ice_witch"));
+            Assert.That(catalog.TryGetLightColor(13, out var ice) && ice.b > ice.r, Is.True, "얼음 동굴 = 하늘색 해");
+
+            (int, int, int, int, int, int, int, int) Stats(string id)
+            {
+                Assert.That(catalog.TryGetEnemy(id, out var e), Is.True, id);
+                return (e.MaxHp, e.AttackDamage, e.SightRange, e.Accuracy, e.Evasion, e.ExpReward, e.ExpMaxLevel, e.MaxMana);
+            }
+            Assert.That(Stats("enemy_frost_bat"), Is.EqualTo((10, 3, 8, 15, 9, 5, 15, 0)));
+            Assert.That(Stats("enemy_snow_wolf"), Is.EqualTo((16, 4, 7, 15, 6, 6, 15, 0)));
+            Assert.That(Stats("enemy_ice_golem"), Is.EqualTo((32, 5, 5, 12, 2, 7, 16, 0)));
+            Assert.That(Stats("enemy_frost_shaman"), Is.EqualTo((14, 3, 8, 13, 7, 7, 16, 8)));
+            Assert.That(Stats("boss_ice_witch"), Is.EqualTo((110, 5, 10, 16, 12, 30, 30, 9)));
+
+            var traits = catalog.ToEnemyBook();
+            Assert.That(traits.TryGet("enemy_frost_bat", out var bat) && bat.MoveSteps == 2, Is.True);
+            Assert.That(traits.TryGet("enemy_snow_wolf", out var wolf) && wolf.HitStatus == ProjectM.Status.StatusType.Slow && wolf.HitStatusPercent == 40, Is.True);
+            Assert.That(traits.TryGet("enemy_ice_golem", out var golem) && golem.MoveCostTicks == 2 && golem.HurtTerrain == ProjectM.Status.TerrainEffectType.IcePatch
+                && golem.DamagePercent(Element.Fire) == 150 && golem.DamagePercent(Element.Ice) == 50, Is.True);
+            Assert.That(traits.TryGet("enemy_frost_shaman", out var shaman) && shaman.SpellId == "enemy_frost_bolt" && shaman.KeepDistance == 3, Is.True);
+            Assert.That(traits.TryGet("boss_ice_witch", out var witch) && witch.SpellId == "enemy_frost_bolt" && witch.KeepDistance == 2
+                && witch.ChargeSpellId == "boss_blizzard" && witch.ChargePercent == 30 && witch.TeleportPercent == 0
+                && witch.SummonDef?.VisualId == "enemy_frost_bat" && witch.SummonCount == 3 && witch.SummonAtHpPercent == 50
+                && witch.DamagePercent(Element.Ice) == 50, Is.True);
+
+            var statuses = AssetDatabase.LoadAssetAtPath<StatusCatalogAsset>("Assets/_Project/Data/Statuses/StatusCatalog.asset").ToBook();
+            var terrains = AssetDatabase.LoadAssetAtPath<TerrainCatalogAsset>("Assets/_Project/Data/Terrains/TerrainCatalog.asset").ToBook(statuses);
+            var spells = AssetDatabase.LoadAssetAtPath<SpellCatalogAsset>("Assets/_Project/Data/Spells/SpellCatalog.asset").ToBook(statuses, terrains);
+            Assert.That(spells.TryGet("enemy_frost_bolt", out var bolt), Is.True);
+            Assert.That((bolt.Element, bolt.Shape, bolt.Range, bolt.Damage, bolt.ManaCost, bolt.AppliesStatus, bolt.StatusChancePercent),
+                Is.EqualTo((Element.Ice, SpellShape.Bolt, 6, 4, 3, ProjectM.Status.StatusType.Slow, 40)));
+            Assert.That(spells.TryGet("boss_blizzard", out var storm), Is.True);
+            Assert.That((storm.Element, storm.Shape, storm.Range, storm.Damage, storm.ManaCost, storm.Radius, storm.AppliesStatus, storm.StatusChancePercent),
+                Is.EqualTo((Element.Ice, SpellShape.Burst, 6, 8, 0, 1, ProjectM.Status.StatusType.Slow, 70)));
+        }
+
+        // 3-18: 구역 웅덩이 지형 — 얼음 동굴 구역의 새 층은 웅덩이가 빙판(영구), 다른 구역은 물
+        [Test]
+        public void IceCaveZone_PuddlesAreIcePatches()
+        {
+            var dungeon = new DungeonGenConfig(50, 50, 10, 20, 7, 20, 10, 3, 5, 1000, 10, floorCount: 3);
+            var generator = new DungeonGenerator(dungeon);
+            DungeonFloor floor = null;
+            var world = World.Create(21UL, rng => (floor = generator.Generate(rng, stairsUp: false, stairsDown: true)).Map);
+            var terrains = SpellTests.BalanceTerrains();
+            var vision = world.InstallCoreSystems(Sight, Magic, SpellTests.BalanceStatuses(), terrains);
+            var zones = new ZoneBook(new[]
+            {
+                new ZoneDef("숲", 1, 1, new[] { new ZoneEnemy(Rat, 1) }),
+                new ZoneDef("얼음", 2, 3, new[] { new ZoneEnemy(Rat, 1) }, puddleTerrain: ProjectM.Status.TerrainEffectType.IcePatch),
+            });
+            terrains.TryGet(ProjectM.Status.TerrainEffectType.Water, out var water);
+            var decor = new FloorDecorConfig(0, 1, 1, 0, 6, 3, 9);
+            var idle = new IdleAi();
+            var stairs = new FloorTransition(world, generator, 3, Rat, new SpawnConfig(0, 8), (w, id) => idle, vision,
+                decor: decor, water: water, zones: zones, terrains: terrains);
+            var player = UnitSpawner.SpawnPlayer(world, PlayerDef, floor.Start, Magic.QuickSlotCount);
+            vision.Refresh();
+            world.Events.Flush();
+            world.Units.Teleport(player.Id, floor.Exit);
+            Assert.That(stairs.TryUse(), Is.True, "1 → 2층 (얼음 구역)");
+            world.Events.Flush();
+
+            int ice = 0;
+            foreach (var pair in world.Terrain.ToSortedList())
+                foreach (var t in pair.Value)
+                {
+                    Assert.That(t.Type, Is.Not.EqualTo(ProjectM.Status.TerrainEffectType.Water), "얼음 구역엔 물 웅덩이 없음");
+                    if (t.Type == ProjectM.Status.TerrainEffectType.IcePatch && t.Remaining == ProjectM.Status.TerrainLayer.Permanent) ice++;
+                }
+            Assert.That(ice, Is.GreaterThan(0), "영구 빙판 웅덩이");
         }
     }
 }

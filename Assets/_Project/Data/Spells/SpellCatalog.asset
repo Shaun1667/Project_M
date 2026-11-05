@@ -200,3 +200,25 @@ MonoBehaviour:
     StatusChancePercent: 50
     LeavesTerrain: 0
     DisplayName: "\uBAA8\uB798 \uD3ED\uD48D"
+  - Id: enemy_frost_bolt
+    Element: 1
+    Shape: 0
+    Range: 6
+    Damage: 4
+    ManaCost: 3
+    Radius: 0
+    AppliesStatus: 2
+    StatusChancePercent: 40
+    LeavesTerrain: 0
+    DisplayName: "\uC11C\uB9AC \uD654\uC0B4"
+  - Id: boss_blizzard
+    Element: 1
+    Shape: 2
+    Range: 6
+    Damage: 8
+    ManaCost: 0
+    Radius: 1
+    AppliesStatus: 2
+    StatusChancePercent: 70
+    LeavesTerrain: 0
+    DisplayName: "\uB208\uBCF4\uB77C"

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using ProjectM.Core;
+using ProjectM.Status;
 using ProjectM.Units;
 
 namespace ProjectM.Dungeon
@@ -33,9 +34,13 @@ namespace ProjectM.Dungeon
         public int StatPercent { get; }
         /// <summary>세기를 적용한 보스. null이면 보스 층 없음.</summary>
         public UnitDef Boss { get; }
+        /// <summary>층 꾸미기 웅덩이의 지형 (3-18 — 얼음 동굴 = 빙판). 기본 물.</summary>
+        public TerrainEffectType PuddleTerrain { get; }
 
-        public ZoneDef(string name, int firstFloor, int lastFloor, IReadOnlyList<ZoneEnemy> enemies, int statPercent = 100, UnitDef boss = null)
+        public ZoneDef(string name, int firstFloor, int lastFloor, IReadOnlyList<ZoneEnemy> enemies, int statPercent = 100, UnitDef boss = null,
+            TerrainEffectType puddleTerrain = TerrainEffectType.Water)
         {
+            if (puddleTerrain == TerrainEffectType.None) throw new ArgumentException("웅덩이 지형이 없다.", nameof(puddleTerrain));
             if (firstFloor < 1 || lastFloor < firstFloor) throw new ArgumentOutOfRangeException(nameof(lastFloor), "층 범위가 잘못됐다.");
             if (statPercent < 1) throw new ArgumentOutOfRangeException(nameof(statPercent));
             if (enemies == null || enemies.Count == 0) throw new ArgumentException("구역 적 표가 비어 있다.", nameof(enemies));
@@ -53,6 +58,7 @@ namespace ProjectM.Dungeon
             StatPercent = statPercent;
             Enemies = scaled;
             Boss = boss?.Scaled(statPercent);
+            PuddleTerrain = puddleTerrain;
         }
     }
 

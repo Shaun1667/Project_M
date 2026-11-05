@@ -307,6 +307,132 @@ MonoBehaviour:
     SummonId: enemy_mummy
     SummonCount: 2
     SummonAtHpPercent: 50
+  - Id: enemy_frost_bat
+    DisplayName: "\uC11C\uB9AC \uBC15\uC950"
+    MaxHp: 10
+    AttackDamage: 3
+    SightRange: 8
+    Accuracy: 15
+    Evasion: 9
+    ExpReward: 5
+    ExpMaxLevel: 15
+    MoveSteps: 2
+    MoveCostTicks: 0
+    HitStatus: 0
+    HitStatusPercent: 0
+    HurtTerrain: 0
+    SpellId: 
+    MaxMana: 0
+    KeepDistance: 0
+    DamagePercents: []
+    ChargeSpellId: 
+    ChargePercent: 0
+    TeleportPercent: 0
+    SummonId: 
+    SummonCount: 0
+    SummonAtHpPercent: 0
+  - Id: enemy_snow_wolf
+    DisplayName: "\uB208\uB291\uB300"
+    MaxHp: 16
+    AttackDamage: 4
+    SightRange: 7
+    Accuracy: 15
+    Evasion: 6
+    ExpReward: 6
+    ExpMaxLevel: 15
+    MoveSteps: 0
+    MoveCostTicks: 0
+    HitStatus: 2
+    HitStatusPercent: 40
+    HurtTerrain: 0
+    SpellId: 
+    MaxMana: 0
+    KeepDistance: 0
+    DamagePercents: []
+    ChargeSpellId: 
+    ChargePercent: 0
+    TeleportPercent: 0
+    SummonId: 
+    SummonCount: 0
+    SummonAtHpPercent: 0
+  - Id: enemy_ice_golem
+    DisplayName: "\uC5BC\uC74C \uACE8\uB818"
+    MaxHp: 32
+    AttackDamage: 5
+    SightRange: 5
+    Accuracy: 12
+    Evasion: 2
+    ExpReward: 7
+    ExpMaxLevel: 16
+    MoveSteps: 0
+    MoveCostTicks: 2
+    HitStatus: 0
+    HitStatusPercent: 0
+    HurtTerrain: 5
+    SpellId: 
+    MaxMana: 0
+    KeepDistance: 0
+    DamagePercents:
+    - Element: 0
+      Percent: 150
+    - Element: 1
+      Percent: 50
+    ChargeSpellId: 
+    ChargePercent: 0
+    TeleportPercent: 0
+    SummonId: 
+    SummonCount: 0
+    SummonAtHpPercent: 0
+  - Id: enemy_frost_shaman
+    DisplayName: "\uC11C\uB9AC \uC8FC\uC220\uC0AC"
+    MaxHp: 14
+    AttackDamage: 3
+    SightRange: 8
+    Accuracy: 13
+    Evasion: 7
+    ExpReward: 7
+    ExpMaxLevel: 16
+    MoveSteps: 0
+    MoveCostTicks: 0
+    HitStatus: 0
+    HitStatusPercent: 0
+    HurtTerrain: 0
+    SpellId: enemy_frost_bolt
+    MaxMana: 8
+    KeepDistance: 3
+    DamagePercents: []
+    ChargeSpellId: 
+    ChargePercent: 0
+    TeleportPercent: 0
+    SummonId: 
+    SummonCount: 0
+    SummonAtHpPercent: 0
+  - Id: boss_ice_witch
+    DisplayName: "\uC5BC\uC74C \uB9C8\uB140"
+    MaxHp: 110
+    AttackDamage: 5
+    SightRange: 10
+    Accuracy: 16
+    Evasion: 12
+    ExpReward: 30
+    ExpMaxLevel: 30
+    MoveSteps: 0
+    MoveCostTicks: 0
+    HitStatus: 0
+    HitStatusPercent: 0
+    HurtTerrain: 0
+    SpellId: enemy_frost_bolt
+    MaxMana: 9
+    KeepDistance: 2
+    DamagePercents:
+    - Element: 1
+      Percent: 50
+    ChargeSpellId: boss_blizzard
+    ChargePercent: 30
+    TeleportPercent: 0
+    SummonId: enemy_frost_bat
+    SummonCount: 3
+    SummonAtHpPercent: 50
   _zones:
   - Name: "\uC232 \uC18D \uB3D9\uAD74"
     FirstFloor: 1
@@ -323,6 +449,7 @@ MonoBehaviour:
       Weight: 1
     BossId: boss_slime_girl
     LightColor: {r: 0.85, g: 1, b: 0.88, a: 1}
+    PuddleTerrain: 0
   - Name: "\uC0AC\uB9C9 \uD53C\uB77C\uBBF8\uB4DC"
     FirstFloor: 6
     LastFloor: 10
@@ -338,21 +465,23 @@ MonoBehaviour:
       Weight: 1
     BossId: boss_pharaoh
     LightColor: {r: 1, g: 0.84, b: 0.58, a: 1}
-  - Name: "3\uAD6C\uC5ED (\uC784\uC2DC)"
+    PuddleTerrain: 0
+  - Name: "\uC5BC\uC74C \uB3D9\uAD74"
     FirstFloor: 11
     LastFloor: 15
-    StatPercent: 130
+    StatPercent: 100
     Enemies:
-    - EnemyId: enemy_scorpion
+    - EnemyId: enemy_frost_bat
       Weight: 3
-    - EnemyId: enemy_jackal
+    - EnemyId: enemy_snow_wolf
       Weight: 2
-    - EnemyId: enemy_mummy
+    - EnemyId: enemy_ice_golem
       Weight: 2
-    - EnemyId: enemy_desert_shaman
+    - EnemyId: enemy_frost_shaman
       Weight: 1
-    BossId: 
-    LightColor: {r: 0, g: 0, b: 0, a: 0}
+    BossId: boss_ice_witch
+    LightColor: {r: 0.75, g: 0.88, b: 1, a: 1}
+    PuddleTerrain: 5
   - Name: "4\uAD6C\uC5ED (\uC784\uC2DC)"
     FirstFloor: 16
     LastFloor: 20
@@ -368,6 +497,7 @@ MonoBehaviour:
       Weight: 1
     BossId: 
     LightColor: {r: 0, g: 0, b: 0, a: 0}
+    PuddleTerrain: 0
   - Name: "5\uAD6C\uC5ED (\uC784\uC2DC)"
     FirstFloor: 21
     LastFloor: 25
@@ -383,4 +513,5 @@ MonoBehaviour:
       Weight: 1
     BossId: boss
     LightColor: {r: 0, g: 0, b: 0, a: 0}
+    PuddleTerrain: 0
   _lootPlanFloors: 10

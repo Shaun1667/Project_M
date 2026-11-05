@@ -452,6 +452,11 @@ namespace ProjectM.Editor
                 ("enemy_desert_shaman", new Color(0.95f, 0.7f, 0.2f), 1f),
                 ("boss_slime_girl", new Color(0.4f, 0.7f, 1f), 1.8f), // 3-17d 보스 (모델은 Varco Models가 붙임)
                 ("boss_pharaoh", new Color(1f, 0.82f, 0.2f), 1.8f),
+                ("enemy_frost_bat", new Color(0.55f, 0.7f, 0.95f), 0.6f), // 3-18 얼음 동굴
+                ("enemy_snow_wolf", new Color(0.9f, 0.93f, 0.97f), 0.7f),
+                ("enemy_ice_golem", new Color(0.6f, 0.85f, 0.95f), 1.2f),
+                ("enemy_frost_shaman", new Color(0.3f, 0.45f, 0.85f), 1f),
+                ("boss_ice_witch", new Color(0.8f, 0.92f, 1f), 1.8f),
             })
                 catalog.Set(id, AssetDatabase.LoadAssetAtPath<Sprite>(UnitCircleSpritePath), color, height);
             // 3-4b 임시 보스: 짙은 자주색, 두 배 키 (판정은 1칸)
@@ -525,6 +530,15 @@ namespace ProjectM.Editor
                 { Id = "boss_sand_storm", Element = Element.Earth, Shape = SpellShape.Burst, Range = 6, Damage = 7, ManaCost = 0, Radius = 1 });
             changed |= catalog.SetStatusIfNone("boss_sand_storm", StatusType.Slow, 50);
             changed |= catalog.SetDisplayNameIfEmpty("boss_sand_storm", "모래 폭풍");
+            // 3-18 얼음 동굴 (BALANCE 20-1 · 20-2): 서리 주술사 · 얼음 마녀 — 젖은 대상에 맞으면 빙결 반응 (적도 반응을 일으킴)
+            changed |= catalog.AddIfMissing(new SpellCatalogAsset.Entry
+                { Id = "enemy_frost_bolt", Element = Element.Ice, Shape = SpellShape.Bolt, Range = 6, Damage = 4, ManaCost = 3 });
+            changed |= catalog.SetStatusIfNone("enemy_frost_bolt", StatusType.Slow, 40);
+            changed |= catalog.SetDisplayNameIfEmpty("enemy_frost_bolt", "서리 화살");
+            changed |= catalog.AddIfMissing(new SpellCatalogAsset.Entry
+                { Id = "boss_blizzard", Element = Element.Ice, Shape = SpellShape.Burst, Range = 6, Damage = 8, ManaCost = 0, Radius = 1 });
+            changed |= catalog.SetStatusIfNone("boss_blizzard", StatusType.Slow, 70);
+            changed |= catalog.SetDisplayNameIfEmpty("boss_blizzard", "눈보라");
             // 3-12a 함정 효과 주문 (BALANCE 17번): 함정 칸 중심 3×3, 시전자 없음 · 마나 0 · 배우지 않음. 마비 가스는 바람 속성(반응 없음)
             foreach (var (id, name, element, damage, status, chance, terrain) in new[]
             {
@@ -645,6 +659,22 @@ namespace ProjectM.Editor
             pharaoh.ChargeSpellId = "boss_sand_storm"; pharaoh.ChargePercent = 30; pharaoh.TeleportPercent = 40;
             pharaoh.SummonId = "enemy_mummy"; pharaoh.SummonCount = 2; pharaoh.SummonAtHpPercent = 50;
             foreach (var row in new[] { slimeGirl, pharaoh }) changed |= catalog.AddIfMissing(row);
+            // 3-18 3구역 얼음 동굴 (결정 2026-11-05, BALANCE 20-1 · 20-2 — 수치 Claude 임시)
+            var frostBat = E("enemy_frost_bat", "서리 박쥐", 10, 3, 8, 15, 9, 5, 15); frostBat.MoveSteps = 2;
+            var snowWolf = E("enemy_snow_wolf", "눈늑대", 16, 4, 7, 15, 6, 6, 15); snowWolf.HitStatus = StatusType.Slow; snowWolf.HitStatusPercent = 40;
+            var iceGolem = E("enemy_ice_golem", "얼음 골렘", 32, 5, 5, 12, 2, 7, 16); iceGolem.MoveCostTicks = 2; iceGolem.HurtTerrain = TerrainEffectType.IcePatch;
+            iceGolem.DamagePercents = new System.Collections.Generic.List<ZoneCatalogAsset.ElementPercent>
+            {
+                new ZoneCatalogAsset.ElementPercent { Element = Element.Fire, Percent = 150 },
+                new ZoneCatalogAsset.ElementPercent { Element = Element.Ice, Percent = 50 },
+            };
+            var frostShaman = E("enemy_frost_shaman", "서리 주술사", 14, 3, 8, 13, 7, 7, 16); frostShaman.SpellId = "enemy_frost_bolt"; frostShaman.MaxMana = 8; frostShaman.KeepDistance = 3;
+            var iceWitch = E("boss_ice_witch", "얼음 마녀", 110, 5, 10, 16, 12, 30, 30);
+            iceWitch.SpellId = "enemy_frost_bolt"; iceWitch.MaxMana = 9; iceWitch.KeepDistance = 2;
+            iceWitch.ChargeSpellId = "boss_blizzard"; iceWitch.ChargePercent = 30;
+            iceWitch.SummonId = "enemy_frost_bat"; iceWitch.SummonCount = 3; iceWitch.SummonAtHpPercent = 50;
+            iceWitch.DamagePercents = new System.Collections.Generic.List<ZoneCatalogAsset.ElementPercent> { new ZoneCatalogAsset.ElementPercent { Element = Element.Ice, Percent = 50 } };
+            foreach (var row in new[] { frostBat, snowWolf, iceGolem, frostShaman, iceWitch }) changed |= catalog.AddIfMissing(row);
             ZoneCatalogAsset.Zone Z(string name, int first, int last, int percent, string boss, params (string id, int weight)[] enemies)
             {
                 var rows = new System.Collections.Generic.List<ZoneCatalogAsset.ZoneEnemyRow>();
@@ -668,6 +698,14 @@ namespace ProjectM.Editor
             changed |= catalog.ReplaceStatPercent(21, 300, 200);
             changed |= catalog.SetLightColorIfEmpty(1, new Color(0.85f, 1f, 0.88f)); // 숲 속 동굴: 옅은 초록
             changed |= catalog.SetLightColorIfEmpty(6, new Color(1f, 0.84f, 0.58f)); // 사막 피라미드: 모래빛
+            // 3-18: 3구역(11~15층) = 얼음 동굴 — 임시 사막 4종 · 130%를 얼음 적 4종 · 100%(적 줄이 이미 셈)로, 15층 보스, 빙판 웅덩이, 옅은 하늘색 해
+            changed |= catalog.ReplaceName(11, "3구역 (임시)", "얼음 동굴");
+            changed |= catalog.ReplaceEnemies(11, new[] { "enemy_scorpion", "enemy_jackal", "enemy_mummy", "enemy_desert_shaman" },
+                ("enemy_frost_bat", 3), ("enemy_snow_wolf", 2), ("enemy_ice_golem", 2), ("enemy_frost_shaman", 1));
+            changed |= catalog.ReplaceStatPercent(11, 130, 100);
+            changed |= catalog.ReplaceBoss(11, null, "boss_ice_witch");
+            changed |= catalog.SetPuddleTerrainIfNone(11, TerrainEffectType.IcePatch);
+            changed |= catalog.SetLightColorIfEmpty(11, new Color(0.75f, 0.88f, 1f)); // 얼음 동굴: 옅은 하늘색
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }
