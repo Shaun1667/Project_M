@@ -180,5 +180,22 @@ namespace ProjectM.Data
             _items.Add(entry);
             return true;
         }
+
+        /// <summary>3-28b: 유물 첫 효과 줄의 강화 단계별 값 (값이 하나뿐일 때만 — 사용자가 고친 표는 그대로). 바꿨으면 true.</summary>
+        public bool FillRelicValues(string id, params int[] values)
+        {
+            for (int i = 0; i < _items.Count; i++)
+            {
+                var e = _items[i];
+                if (e.Id != id || e.Use != ItemUse.Relic || e.RelicEffects == null || e.RelicEffects.Count == 0) continue;
+                var effect = e.RelicEffects[0];
+                if (effect.Values != null && effect.Values.Count > 1) return false;
+                effect.Values = new List<int>(values);
+                e.RelicEffects[0] = effect;
+                _items[i] = e;
+                return true;
+            }
+            return false;
+        }
     }
 }

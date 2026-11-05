@@ -236,6 +236,7 @@ namespace ProjectM.UI
             if (_weaponLabel != null) _weaponLabel.text = _model.Text.WeaponLabel(_model.Weapon, _model.UnarmedDamage, _model.Strength);
             if (_armorLabel != null) _armorLabel.text = _model.Text.ArmorLabel(_model.Armor, _model.Strength)
                 + "  " + HudText.GoldLabel(_model.Gold) // 3-15a
+                + (_model.Ether > 0 ? "  " + HudText.EtherLabel(_model.Ether) : string.Empty) // 3-28b
                 + (_model.Hunger != HungerState.None ? "  " + HudText.HungerLabel(_model.Hunger) : string.Empty); // 3-14
             DrawStatusIcons();
             DrawQuickSlots();

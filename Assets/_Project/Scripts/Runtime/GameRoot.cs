@@ -132,6 +132,7 @@ namespace ProjectM
             _hudText = new HudText(_spellCatalog.DisplayNames(), _reactionCatalog.DisplayNames(), _itemCatalog.DisplayNames(), _fusionCatalog.DisplayNames());
             _hudText.FormNames = FormNames(); // 3-21b
             _hudText.TalentNames = _classCatalog != null ? _classCatalog.TalentNames() : null; // 3-21c
+            _workbench = _floorDecorConfig != null ? _floorDecorConfig.ToWorkbench() : null; // 3-28b 마법 제작대 수치
             _input.Text = _hudText;
             _input.HintChanged += _hud.SetHint;
             _input.InfoChanged += _hud.SetInfo;
@@ -433,7 +434,8 @@ namespace ProjectM
             var stairs = new FloorTransition(World, generator, dungeonConfig.FloorCount, enemyDef, spawn, aiFactory, vision, _bossDef.ToDef(), loot,
                 decor, water, traps, _floorDecorConfig != null ? _floorDecorConfig.ToShop() : null, Items, zones, Terrains, // 3-15c 상점 · 3-17a 구역 · 3-18 구역별 웅덩이
                 _ghost, _ghost != null && _zoneCatalog != null
-                    ? GhostBoss.ToUnitDef(_ghost, _zoneCatalog.GhostHpPercent, _zoneCatalog.GhostExpReward, _zoneCatalog.GhostExpMaxLevel) : null); // 3-23b 그림자 보스
+                    ? GhostBoss.ToUnitDef(_ghost, _zoneCatalog.GhostHpPercent, _zoneCatalog.GhostExpReward, _zoneCatalog.GhostExpMaxLevel) : null, // 3-23b 그림자 보스
+                _workbench); // 3-28b 작업실
 
             if (_pixelMap != null) _pixelMap.Bind(World.Events); // P-3a 2D 맵 — 3D 맵은 묶지 않음
             else _tilemapPresenter.Bind(World.Events);
@@ -453,6 +455,7 @@ namespace ProjectM
             World.Events.Subscribe<LevelUpEvent>(OnLevelUp); // 3-21c: 특성 점수 안내
             World.SetClassRules(Classes); // 3-21c: 특성 효과 조회 (규칙 연결 — 저장 안 함)
             World.SetRelicRules(Items); // 3-28a: 유물 효과 조회 (규칙 연결 — 저장 안 함)
+            _input.WorkbenchRequested = OpenWorkbench; // 3-28b 제작대에 부딪힘 → 창
             var consumableConfigForRun = consumableConfig;
 
             Unit player;
@@ -716,6 +719,131 @@ namespace ProjectM
                 if (UnspentTalents() > 0) OpenTalents();
             }, title: HudText.TalentSelectTitle(tier, Talents.Unspent(World, Classes, _player, tier)), hint: HudText.TalentSelectHint,
                details: details, onCancel: () => { });
+        }
+
+        // ── 마법 제작대 (3-28b, 결정 2026-11-05): 만들기 · 강화 · 분해 — 카드 창(형태 · 특성 창과 같음), 모두 틱 밖 ──
+
+        private WorkbenchConfig _workbench;
+
+        private System.Collections.Generic.List<string> RelicIds()
+        {
+            var ids = new System.Collections.Generic.List<string>();
+            foreach (var id in Items.Ids) if (Relics.IsRelic(Items, id)) ids.Add(id);
+            return ids;
+        }
+
+        private string RelicEffectsText(string id, int upgrade)
+        {
+            var lines = new System.Collections.Generic.List<string>();
+            foreach (var e in Relics.EffectsOf(Items, id)) lines.Add(HudText.RelicEffect(e, 1 + upgrade));
+            return string.Join("\n", lines);
+        }
+
+        /// <summary>제작대 첫 창: 만들기 · 강화 · 분해 (Esc 닫기).</summary>
+        private void OpenWorkbench()
+        {
+            if (_characterSelect == null || _workbench == null || _player == null || _runEnded) return;
+            var names = new System.Collections.Generic.List<string> { HudText.WorkbenchCraft, HudText.WorkbenchUpgrade, HudText.WorkbenchDisassemble };
+            var details = new System.Collections.Generic.List<string>
+            {
+                HudText.WorkbenchCraftDetail(_workbench.CraftCost),
+                HudText.WorkbenchUpgradeDetail(_workbench.UpgradeCosts),
+                HudText.WorkbenchDisassembleDetail(_workbench.DisassembleGain),
+            };
+            var world = World;
+            _characterSelect.Open(null, names, 0, index =>
+            {
+                if (World != world || _player == null) return;
+                if (index == 0) OpenWorkbenchCraft();
+                else if (index == 1) OpenWorkbenchUpgrade();
+                else OpenWorkbenchDisassemble();
+            }, title: HudText.WorkbenchTitle(World.Run.Ether), hint: HudText.WorkbenchHint, details: details, onCancel: () => { });
+        }
+
+        private void OpenWorkbenchCraft()
+        {
+            var ids = RelicIds();
+            if (ids.Count == 0) return;
+            var names = new System.Collections.Generic.List<string>();
+            var details = new System.Collections.Generic.List<string>();
+            foreach (var id in ids)
+            {
+                names.Add(_hudText.Item(id));
+                details.Add(RelicEffectsText(id, 0) + "\n\n" + HudText.EtherCost(_workbench.CraftCost));
+            }
+            var world = World;
+            _characterSelect.Open(null, names, 0, index =>
+            {
+                if (World != world || _player == null) return;
+                AfterWorkbench(Workbench.Craft(World, Items, _workbench, _player, ids[index]));
+            }, title: HudText.WorkbenchTitle(World.Run.Ether), hint: HudText.WorkbenchHint, details: details, onCancel: OpenWorkbench);
+        }
+
+        /// <summary>강화 대상: 낀 유물(칸) → 배낭 유물(칸 번호) 순.</summary>
+        private void OpenWorkbenchUpgrade()
+        {
+            var targets = new System.Collections.Generic.List<(int slot, int index, InventoryRef relic)>();
+            for (int i = 0; i < _player.Relics.Length; i++)
+                if (!_player.Relics[i].IsEmpty) targets.Add((i, -1, _player.Relics[i]));
+            for (int i = 0; i < _player.InventorySlots.Length; i++)
+                if (_player.InventorySlots[i].Kind == InventoryKind.Item && Relics.IsRelic(Items, _player.InventorySlots[i].Id)) targets.Add((-1, i, _player.InventorySlots[i]));
+            if (targets.Count == 0)
+            {
+                _hud.SetHint(HudText.NoRelics);
+                OpenWorkbench();
+                return;
+            }
+            var names = new System.Collections.Generic.List<string>();
+            var details = new System.Collections.Generic.List<string>();
+            foreach (var t in targets)
+            {
+                names.Add(_hudText.Entry(t.relic) + (t.slot >= 0 ? HudText.RelicWornMark : string.Empty));
+                int cost = _workbench.UpgradeCost(t.relic.Upgrade);
+                details.Add(cost < 0 ? RelicEffectsText(t.relic.Id, t.relic.Upgrade) + "\n\n" + HudText.RelicMaxUpgrade
+                    : $"{RelicEffectsText(t.relic.Id, t.relic.Upgrade)}\n→ {RelicEffectsText(t.relic.Id, t.relic.Upgrade + 1)}\n\n{HudText.EtherCost(cost)}");
+            }
+            var world = World;
+            _characterSelect.Open(null, names, 0, index =>
+            {
+                if (World != world || _player == null) return;
+                var t = targets[index];
+                AfterWorkbench(Workbench.Upgrade(World, Items, _workbench, _player, t.slot, t.index));
+            }, title: HudText.WorkbenchTitle(World.Run.Ether), hint: HudText.WorkbenchHint, details: details, onCancel: OpenWorkbench);
+        }
+
+        private void OpenWorkbenchDisassemble()
+        {
+            var indices = new System.Collections.Generic.List<int>();
+            for (int i = 0; i < _player.InventorySlots.Length; i++)
+                if (_player.InventorySlots[i].Kind == InventoryKind.Item && Relics.IsRelic(Items, _player.InventorySlots[i].Id)) indices.Add(i);
+            if (indices.Count == 0)
+            {
+                _hud.SetHint(HudText.NoRelicsInBackpack);
+                OpenWorkbench();
+                return;
+            }
+            var names = new System.Collections.Generic.List<string>();
+            var details = new System.Collections.Generic.List<string>();
+            foreach (var i in indices)
+            {
+                var r = _player.InventorySlots[i];
+                names.Add(_hudText.Entry(r));
+                details.Add(RelicEffectsText(r.Id, r.Upgrade) + "\n\n" + HudText.EtherGain(_workbench.DisassembleGain));
+            }
+            var world = World;
+            _characterSelect.Open(null, names, 0, index =>
+            {
+                if (World != world || _player == null) return;
+                AfterWorkbench(Workbench.Disassemble(World, Items, _workbench, _player, indices[index]));
+            }, title: HudText.WorkbenchTitle(World.Run.Ether), hint: HudText.WorkbenchHint, details: details, onCancel: OpenWorkbench);
+        }
+
+        /// <summary>제작대 결과: 이벤트를 비우고(로그 · 저장), 안 됐으면 이유 — 첫 창으로 돌아간다.</summary>
+        private void AfterWorkbench(WorkbenchResult result)
+        {
+            World.Events.Flush();
+            _hud.SetHint(result == WorkbenchResult.Done ? string.Empty : HudText.WorkbenchFailed(result));
+            OpenWorkbench();
         }
 
         /// <summary>판이 끝남 (3-4b): 입력을 멈추고 결과 화면. R로 새 판.</summary>

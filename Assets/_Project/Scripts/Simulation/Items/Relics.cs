@@ -72,6 +72,16 @@ namespace ProjectM.Items
             return RelicEquipResult.Equipped;
         }
 
+        /// <summary>낀 칸의 유물을 바꾼다 (3-28b 강화 — 같은 유물의 다른 단계). 최대 체력 효과는 차이만큼.</summary>
+        public static void ReplaceWorn(ItemBook items, Unit unit, int slot, InventoryRef relic)
+        {
+            if (unit == null || slot < 0 || slot >= unit.Relics.Length) return;
+            var old = unit.Relics[slot];
+            if (!old.IsEmpty) ApplyMaxHp(items, unit, old, -1);
+            unit.Relics[slot] = relic;
+            if (!relic.IsEmpty) ApplyMaxHp(items, unit, relic, +1);
+        }
+
         /// <summary>최대 체력 효과: 끼면 +값 (현재 체력도), 빼면 −값 (현재 체력은 최대를 넘지 않게, 최소 1).</summary>
         private static void ApplyMaxHp(ItemBook items, Unit unit, InventoryRef relic, int sign)
         {
@@ -95,9 +105,12 @@ namespace ProjectM.Items
         public string Previous { get; }
         public int Hp { get; }
         public int MaxHp { get; }
+        /// <summary>로그 없이 화면(장비 줄 · 체력 막대)만 맞춤 (3-28b 강화).</summary>
+        public bool Silent { get; }
 
-        public RelicEquippedEvent(EntityId unit, int slot, string itemId, string previous, int hp, int maxHp)
+        public RelicEquippedEvent(EntityId unit, int slot, string itemId, string previous, int hp, int maxHp, bool silent = false)
         {
+            Silent = silent;
             Unit = unit;
             Slot = slot;
             ItemId = itemId;

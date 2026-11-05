@@ -1610,7 +1610,7 @@ MonoBehaviour:
     BrewsInto: 
     RelicEffects:
     - Effect: 1
-      Values: 02000000i
+      Values: 02000000030000000400000005000000i
       SpellIds:
       - '*elemental'
       WeaponId: 
@@ -1644,7 +1644,7 @@ MonoBehaviour:
     BrewsInto: 
     RelicEffects:
     - Effect: 10
-      Values: 0a000000i
+      Values: 0a0000000f0000001400000019000000i
       SpellIds: []
       WeaponId: 
       Status: 0
@@ -1677,7 +1677,7 @@ MonoBehaviour:
     BrewsInto: 
     RelicEffects:
     - Effect: 14
-      Values: ffffffffi
+      Values: fffffffffffffffffefffffffeffffffi
       SpellIds: []
       WeaponId: 
       Status: 0
@@ -1710,7 +1710,7 @@ MonoBehaviour:
     BrewsInto: 
     RelicEffects:
     - Effect: 8
-      Values: 19000000i
+      Values: 19000000230000002d00000037000000i
       SpellIds:
       - '*'
       WeaponId: 
@@ -1744,7 +1744,7 @@ MonoBehaviour:
     BrewsInto: 
     RelicEffects:
     - Effect: 11
-      Values: 1e000000i
+      Values: 1e0000002d0000003c0000004b000000i
       SpellIds:
       - '*'
       WeaponId: 

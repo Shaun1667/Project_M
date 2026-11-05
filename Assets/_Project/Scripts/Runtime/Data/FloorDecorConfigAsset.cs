@@ -59,6 +59,16 @@ namespace ProjectM.Data
 
         public ShopConfig ToShop() => new ShopConfig(_shopFloor, _shopStock, _shopStockCount, _shopBuyPercent, _shopSellPercent, _shopkeeperVisualId, _shopkeeperHp);
 
+        [Header("작업실 · 마법 제작대 (3-28b — BALANCE 24번)")]
+        [Tooltip("유물 하나 만들기 (에테르)")] [Min(0)] [SerializeField] private int _relicCraftCost = 12;
+        [Tooltip("유물 하나 분해 (에테르, 강화와 무관)")] [Min(0)] [SerializeField] private int _relicDisassembleGain = 6;
+        [Tooltip("강화 비용 — +1, +2, +3 … (길이 = 최대 강화)")] [SerializeField] private int[] _relicUpgradeCosts = { 6, 9, 12 };
+        [Tooltip("작업실 방 안쪽 크기 (최소 · 최대)")] [Min(2)] [SerializeField] private int _workshopMinSize = 3;
+        [Min(2)] [SerializeField] private int _workshopMaxSize = 4;
+
+        public ProjectM.Items.WorkbenchConfig ToWorkbench() =>
+            new ProjectM.Items.WorkbenchConfig(_relicCraftCost, _relicDisassembleGain, _relicUpgradeCosts ?? new int[0], _workshopMinSize, _workshopMaxSize);
+
         public FloorDecorConfig ToConfig() => new FloorDecorConfig(_grassPatchCount, _grassPatchMinSize, _grassPatchMaxSize, _tallGrassPercent,
             _puddleCount, _puddleMinSize, _puddleMaxSize, _doorPercent, _hiddenDoorPercent,
             new SpecialRoomConfig(_specialRoomPercent, WithLab(), _specialRoomMinSize, _specialRoomMaxSize, _vaultItems, _vaultItemCount,

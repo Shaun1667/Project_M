@@ -125,6 +125,8 @@ namespace ProjectM.UI
             _bus.Subscribe<ItemTransmutedEvent>(OnTransmuted);
             _bus.Subscribe<HungerChangedEvent>(OnHungerChanged);
             _bus.Subscribe<GoldChangedEvent>(OnGoldChanged);
+            _bus.Subscribe<EtherChangedEvent>(OnEtherChanged); // 3-28b
+            _bus.Subscribe<WorkbenchUsedEvent>(OnWorkbenchUsed);
             _bus.Subscribe<ProjectM.Dungeon.DoorUnlockedEvent>(OnDoorUnlocked);
             _bus.Subscribe<ProjectM.Dungeon.ItemBoughtEvent>(OnBought);
             _bus.Subscribe<ThrownBrokeEvent>(OnThrownBroke);
@@ -243,7 +245,7 @@ namespace ProjectM.UI
             if (e.Unit != _playerId) return;
             Hp = e.Hp;
             MaxHp = e.MaxHp;
-            AddLog(Text.RelicEquipped(e.ItemId, e.Previous));
+            if (!e.Silent) AddLog(Text.RelicEquipped(e.ItemId, e.Previous));
             Changed?.Invoke();
         }
 
@@ -412,6 +414,21 @@ namespace ProjectM.UI
             Changed?.Invoke();
         }
 
+        /// <summary>가진 에테르 (3-28b — 금화 옆, 0이면 안 보임).</summary>
+        public int Ether { get; private set; }
+
+        private void OnEtherChanged(EtherChangedEvent e)
+        {
+            Ether = e.Ether;
+            Changed?.Invoke();
+        }
+
+        private void OnWorkbenchUsed(WorkbenchUsedEvent e)
+        {
+            AddLog(Text.WorkbenchUsed(e.Action, e.ItemId, e.Upgrade, e.Ether));
+            Changed?.Invoke();
+        }
+
         private void OnGoldChanged(GoldChangedEvent e)
         {
             Gold = e.Gold;
@@ -506,6 +523,8 @@ namespace ProjectM.UI
             _bus.Unsubscribe<ItemTransmutedEvent>(OnTransmuted);
             _bus.Unsubscribe<HungerChangedEvent>(OnHungerChanged);
             _bus.Unsubscribe<GoldChangedEvent>(OnGoldChanged);
+            _bus.Unsubscribe<EtherChangedEvent>(OnEtherChanged);
+            _bus.Unsubscribe<WorkbenchUsedEvent>(OnWorkbenchUsed);
             _bus.Unsubscribe<ProjectM.Dungeon.DoorUnlockedEvent>(OnDoorUnlocked);
             _bus.Unsubscribe<ProjectM.Dungeon.ItemBoughtEvent>(OnBought);
             _bus.Unsubscribe<ThrownBrokeEvent>(OnThrownBroke);

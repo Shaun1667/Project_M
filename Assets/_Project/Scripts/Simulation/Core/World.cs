@@ -279,6 +279,7 @@ namespace ProjectM.Core
                 Traps = CaptureTraps(),
                 Gold = Run.Gold,
                 Mode = Run.Mode, // 27 (3-27)
+                Ether = Run.Ether, // 29 (3-28b)
                 ClassId = Run.ClassId, // 24 (3-21b)
                 FormId = Run.FormId,
                 Talents = new List<TalentPoint>(Run.Talents).ToArray(), // 25 (3-21c)
@@ -383,6 +384,7 @@ namespace ProjectM.Core
             world.Run.Kills = snapshot.Kills;
             world.Run.Gold = snapshot.Gold;
             world.Run.Mode = snapshot.Mode; // 27 (3-27)
+            world.Run.Ether = snapshot.Ether; // 29 (3-28b)
             world.Run.ClassId = snapshot.ClassId; // 24 (3-21b)
             world.Run.FormId = snapshot.FormId;
             world.Run.SetTalents(snapshot.Talents ?? System.Array.Empty<TalentPoint>()); // 25 (3-21c)

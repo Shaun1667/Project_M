@@ -124,6 +124,9 @@ namespace ProjectM.Input
 
         /// <summary>정보 모드 칸 설명 (3-24). 빈 문자열 = 창 닫기. GameRoot가 HudPresenter.SetInfo에 연결.</summary>
         public event System.Action<string> InfoChanged;
+
+        /// <summary>마법 제작대에 부딪혔다 (3-28b). GameRoot가 만들기 · 강화 · 분해 창을 연다. null이면 아무 일 없음.</summary>
+        public System.Action WorkbenchRequested { get; set; }
         public bool IsExamining => _examining;
 
         public bool IsAiming => _aimSpellId != null || !_aimThrow.IsEmpty;
@@ -1167,6 +1170,12 @@ namespace ProjectM.Input
                 if (ProjectM.Dungeon.UnlockCommand.KeySlot(_items, bumper) >= 0)
                     _clock.SubmitPlayerCommand(new ProjectM.Dungeon.UnlockCommand(_world, _items, bumper.Pos + direction, _config.DefaultActionCostTicks));
                 else Hint(HudText.DoorLocked);
+            }
+            else if (WorkbenchRequested != null && PlayerActions.TryGetPlayer(_world, out var crafter) && _world.Map.InBounds(crafter.Pos + direction)
+                && _world.Map.Get(crafter.Pos + direction) == TileType.ArtifactBench) // 3-28b 마법 제작대 — 창은 GameRoot (카드 창, 틱 밖)
+            {
+                CancelPath();
+                WorkbenchRequested();
             }
             else if (PlayerActions.TryGetPlayer(_world, out var brewer) && _world.Map.InBounds(brewer.Pos + direction)
                 && _world.Map.Get(brewer.Pos + direction) == TileType.AlchemyPot) // 3-16c 연금 솥

@@ -136,7 +136,7 @@ namespace ProjectM.Tests
         [Test]
         public void Snapshot_RoundTripsRelics()
         {
-            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.EqualTo(28));
+            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.GreaterThanOrEqualTo(28)); // 정확한 값은 WorkbenchTests (29)
             var (world, player, items) = Start();
             Relics.Equip(world, items, player, Give(world, items, player, "relic_shadow_cloak"));
             var restored = World.Restore(WorldSnapshotCodec.Decode(WorldSnapshotCodec.Encode(world.Capture())), (w, id) => null);

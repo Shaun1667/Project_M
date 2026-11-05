@@ -83,6 +83,7 @@ namespace ProjectM.Editor
         private const string OpenDoorTilePath = VisualsDir + "/OpenDoorTile.asset";
         private const string LockedDoorTilePath = VisualsDir + "/LockedDoorTile.asset";
         private const string AlchemyPotTilePath = VisualsDir + "/AlchemyPotTile.asset";
+        private const string ArtifactBenchTilePath = VisualsDir + "/ArtifactBenchTile.asset"; // 3-28b
         private const string PlayerSpritePath = "Assets/_Project/Art/Greybox/player.png";
         private const string UnitCircleSpritePath = "Assets/_Project/Art/Greybox/unit_circle.png";
         private const string WhiteSquareSpritePath = "Assets/_Project/Art/Greybox/white_square.png";
@@ -338,6 +339,7 @@ namespace ProjectM.Editor
             set.Set(TileType.OpenDoor, EnsureTintTile(OpenDoorTilePath, new Color(0.7f, 0.55f, 0.35f))); // 3-11c: 밝은 갈색
             set.Set(TileType.LockedDoor, EnsureTintTile(LockedDoorTilePath, new Color(0.75f, 0.6f, 0.15f))); // 3-15b: 금빛
             set.Set(TileType.AlchemyPot, EnsureTintTile(AlchemyPotTilePath, new Color(0.55f, 0.3f, 0.75f))); // 3-16c: 보라
+            set.Set(TileType.ArtifactBench, EnsureTintTile(ArtifactBenchTilePath, new Color(0.3f, 0.75f, 0.8f))); // 3-28b 마법 제작대: 청록 (3D 모델 전 그레이박스)
             EditorUtility.SetDirty(set);
             return set;
         }
@@ -1157,6 +1159,12 @@ namespace ProjectM.Editor
             changed |= catalog.AddIfMissing(Relic("relic_mana_spring", "마나 샘 펜던트", TalentEffect.ManaRegenInterval, -1, null));
             changed |= catalog.AddIfMissing(Relic("relic_predator_fang", "포식자의 이빨", TalentEffect.HitManaChance, 25, TalentEffectDef.AllSpells));
             changed |= catalog.AddIfMissing(Relic("relic_shadow_cloak", "그림자 망토", TalentEffect.UnseenDamagePercent, 30, TalentEffectDef.AllSpells));
+            // 3-28b 유물 강화 값 (결정 2026-11-05 — 강화 0 / +1 / +2 / +3, BALANCE 24번)
+            changed |= catalog.FillRelicValues("relic_elemental_crystal", 2, 3, 4, 5);
+            changed |= catalog.FillRelicValues("relic_life_stone", 10, 15, 20, 25);
+            changed |= catalog.FillRelicValues("relic_mana_spring", -1, -1, -2, -2);
+            changed |= catalog.FillRelicValues("relic_predator_fang", 25, 35, 45, 55);
+            changed |= catalog.FillRelicValues("relic_shadow_cloak", 30, 45, 60, 75);
             changed |= catalog.FillWeaponStrength(12); // 3-7b: 요구 힘 (SPD 2티어) — 3-7a 줄에도
             changed |= catalog.FillWeaponSpecials("dirk", 67, 0); // 3-7c: 더크 기습 최소 피해 67%
             changed |= catalog.FillWeaponSpecials("quarterstaff", 0, 2); // 3-7c: 육척봉 방어 0~2

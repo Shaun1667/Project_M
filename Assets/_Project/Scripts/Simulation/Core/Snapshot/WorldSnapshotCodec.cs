@@ -100,6 +100,7 @@ namespace ProjectM.Core
                 WriteTraps(w, snapshot.Traps);
                 w.Write(snapshot.Gold); // 21 (3-15a)
                 w.Write((int)snapshot.Mode); // 27 (3-27)
+                w.Write(snapshot.Ether); // 29 (3-28b)
                 w.Write(snapshot.ClassId ?? string.Empty); // 24 (3-21b)
                 w.Write(snapshot.FormId ?? string.Empty);
                 w.Write(snapshot.Talents.Length); // 25 (3-21c)
@@ -201,6 +202,7 @@ namespace ProjectM.Core
                 s.Traps = ReadTraps(r);
                 s.Gold = r.ReadInt32();
                 s.Mode = (RunMode)r.ReadInt32(); // 27 (3-27)
+                s.Ether = r.ReadInt32(); // 29 (3-28b)
                 var classId = r.ReadString(); // 24 (3-21b)
                 s.ClassId = classId.Length > 0 ? classId : null;
                 var formId = r.ReadString();

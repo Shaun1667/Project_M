@@ -134,6 +134,33 @@ namespace ProjectM.UI
         public string RelicSameKind(string id) => $"{Item(id)}: 같은 유물은 하나만 낄 수 있다";
         public string RelicEquipped(string id, string previous) => previous == null ? $"{Item(id)}을(를) 꼈다" : $"{Item(id)}을(를) 꼈다 ({Item(previous)} → 배낭)";
 
+        // ── 마법 제작대 · 에테르 (3-28b) ──
+        public static string EtherLabel(int ether) => ether > 0 ? $"<color=#B39DDB>에테르 {ether}</color>" : string.Empty;
+        public static string WorkbenchTitle(int ether) => $"마법 제작대 — 에테르 {ether}";
+        public const string WorkbenchHint = "← → 고르기 · Enter/클릭 확정 · Esc 뒤로";
+        public const string WorkbenchCraft = "유물 만들기";
+        public const string WorkbenchUpgrade = "유물 강화";
+        public const string WorkbenchDisassemble = "유물 분해";
+        public static string WorkbenchCraftDetail(int cost) => $"목록에서 골라 만든다\n\n에테르 {cost}";
+        public static string WorkbenchUpgradeDetail(System.Collections.Generic.IReadOnlyList<int> costs) =>
+            $"낀 유물 · 배낭 유물을 강화\n최대 +{costs.Count}\n\n에테르 {string.Join(" / ", costs)}";
+        public static string WorkbenchDisassembleDetail(int gain) => $"배낭의 유물 하나를 없애고\n에테르를 얻는다 (강화는 사라짐)\n\n에테르 +{gain}";
+        public static string EtherCost(int cost) => $"에테르 {cost}";
+        public static string EtherGain(int gain) => $"에테르 +{gain}";
+        public const string RelicWornMark = " (낀 것)";
+        public const string RelicMaxUpgrade = "최대 강화";
+        public const string NoRelics = "강화할 유물이 없다";
+        public const string NoRelicsInBackpack = "배낭에 분해할 유물이 없다";
+        public static string WorkbenchFailed(ProjectM.Items.WorkbenchResult result) =>
+            result == ProjectM.Items.WorkbenchResult.NotEnoughEther ? "에테르가 모자라다"
+            : result == ProjectM.Items.WorkbenchResult.BackpackFull ? "배낭이 가득 찼다"
+            : result == ProjectM.Items.WorkbenchResult.MaxUpgrade ? "이미 최대로 강화했다"
+            : "할 수 없다";
+        public string WorkbenchUsed(ProjectM.Items.WorkbenchAction action, string id, int upgrade, int ether) =>
+            action == ProjectM.Items.WorkbenchAction.Craft ? $"{Item(id)}을(를) 만들었다 (에테르 {ether})"
+            : action == ProjectM.Items.WorkbenchAction.Upgrade ? $"강화: {Item(id)}+{upgrade} (에테르 {ether})"
+            : $"{Item(id)}{(upgrade > 0 ? "+" + upgrade : string.Empty)}을(를) 분해했다 (에테르 {ether})";
+
         /// <summary>유물 효과 한 줄 (3-28a, 데이터 → 글 — 유물마다 글을 따로 두지 않음).</summary>
         public static string RelicEffect(TalentEffectDef e, int points)
         {
@@ -297,6 +324,7 @@ namespace ProjectM.UI
                 case TileType.LockedDoor: return "잠긴 문";
                 case TileType.AlchemyPot: return "연금 솥";
                 case TileType.SealedStairs: return "봉인된 계단";
+                case TileType.ArtifactBench: return "마법 제작대";
                 default: return CellUnknown;
             }
         }

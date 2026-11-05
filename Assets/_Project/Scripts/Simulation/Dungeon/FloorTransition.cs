@@ -31,6 +31,7 @@ namespace ProjectM.Dungeon
         private readonly TerrainDef _water;
         private readonly TrapBook _traps;
         private readonly ShopConfig _shop;
+        private readonly ProjectM.Items.WorkbenchConfig _workbench;
         private readonly ItemBook _items;
         private readonly ZoneBook _zones;
         private readonly TerrainBook _terrains;
@@ -45,8 +46,10 @@ namespace ProjectM.Dungeon
         public FloorTransition(World world, DungeonGenerator generator, int floorCount, UnitDef enemyDef, SpawnConfig spawn,
             Func<World, EntityId, ICommandSource> aiFactory, PlayerVisionSystem vision, UnitDef bossDef = null, LootConfig loot = null,
             FloorDecorConfig decor = null, TerrainDef water = null, TrapBook traps = null, ShopConfig shop = null, ItemBook items = null,
-            ZoneBook zones = null, TerrainBook terrains = null, GhostRecord ghost = null, UnitDef ghostDef = null)
+            ZoneBook zones = null, TerrainBook terrains = null, GhostRecord ghost = null, UnitDef ghostDef = null,
+            ProjectM.Items.WorkbenchConfig workbench = null)
         {
+            _workbench = workbench; // 3-28b: 구역마다 한 층 작업실
             _ghost = ghost; // 3-23b: 있으면 마지막 보스 층(GhostFloor)의 보스 = 지난 회차 플레이어
             _ghostDef = ghostDef;
             _terrains = terrains;
@@ -134,6 +137,8 @@ namespace ProjectM.Dungeon
                 _world.EnterNewFloor(target, floor.Map);
                 if (_decor != null) FloorDecor.Apply(_world, floor, _decor, PuddleOf(target), _traps, _zones == null || _zones.ZoneOf(target).Grass); // 3-11a · 3-12a: 이벤트는 아래 Announce가 맵 · 지형 · 함정을 다시 보낸다
                 Shop.Build(_world, floor, _shop, _items, _world.Rng.Get(RngStream.Decor), new IdleNeutralAi()); // 3-15c: 상점 층이면
+                if (_workbench != null && ProjectM.Items.Workbench.IsWorkshopFloor(_zones, _world.Rng.Seed, target))
+                    ProjectM.Items.Workbench.BuildRoom(_world, floor, _workbench, _world.Rng.Get(RngStream.Decor)); // 3-28b 작업실 (상점 다음)
                 _world.Units.Teleport(player.Id, floor.Start);
                 if (_zones != null)
                 {
@@ -189,6 +194,10 @@ namespace ProjectM.Dungeon
             Announce(world, player, restored: true, includePlayer: true);
             if (!player.Weapon.IsEmpty) world.Events.Publish(new ProjectM.Items.WeaponEquippedEvent(player.Id, player.Weapon, null));
             if (!player.Armor.IsEmpty) world.Events.Publish(new ProjectM.Items.ArmorEquippedEvent(player.Id, player.Armor, null));
+            world.Events.Publish(new ProjectM.Items.GoldChangedEvent(world.Run.Gold, 0)); // 3-28b: HUD 금화 · 에테르 맞춤 (변화 0 = 로그 없음)
+            world.Events.Publish(new ProjectM.Items.EtherChangedEvent(world.Run.Ether, 0));
+            for (int i = 0; i < player.Relics.Length; i++)
+                if (!player.Relics[i].IsEmpty) world.Events.Publish(new ProjectM.Items.RelicEquippedEvent(player.Id, i, player.Relics[i].Id, null, player.Hp, player.MaxHp, silent: true));
         }
 
         private static void Announce(World world, Unit player, bool restored, bool includePlayer)

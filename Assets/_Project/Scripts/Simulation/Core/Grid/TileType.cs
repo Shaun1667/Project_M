@@ -29,5 +29,7 @@ namespace ProjectM.Core
         AlchemyPot = 11,
         /// <summary>봉인된 내려가는 계단 (3-17a 중간 보스 방) — 벽처럼 막고 보스가 죽으면 StairsDown이 된다.</summary>
         SealedStairs = 12,
+        /// <summary>마법 제작대 (3-28b 작업실) — 걸을 수 없음 · 시야는 안 막음. 부딪히면 유물 만들기 · 강화 · 분해 창 (Workbench).</summary>
+        ArtifactBench = 13,
     }
 }

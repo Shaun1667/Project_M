@@ -79,6 +79,8 @@ namespace ProjectM.Core
         public int Gold { get; internal set; }
         /// <summary>이 판의 시계 (3-27 — 판 시작 때 정하고 바꾸지 않음, 스냅샷 v27).</summary>
         public RunMode Mode { get; set; }
+        /// <summary>가진 에테르 (3-28b — 유물 분해로 얻고 만들기 · 강화에 씀, 스냅샷 v29). Workbench로만 바꾼다.</summary>
+        public int Ether { get; internal set; }
         public RunOutcome Outcome { get; internal set; }
         /// <summary>보스 층에 놓인 보스 (없으면 None). 이 유닛이 죽으면 승리.</summary>
         public EntityId BossId { get; internal set; }
