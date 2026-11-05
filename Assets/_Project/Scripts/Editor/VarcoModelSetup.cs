@@ -62,6 +62,21 @@ namespace ProjectM.Editor
             new ModelSpec("Enemy_Slime", "Unit_Slime", 0.8f, 0f),
         };
         private static readonly ModelSpec Boss = new ModelSpec("Boss_SlimeGirl", "Unit_Boss", 1.8f, 0f);
+        /// <summary>
+        /// 3-17 구역 적 · 보스 · 상인 (2026-11-05, ART_ASSETS ★ 1차 = 12-5번 표): Varco 원본 `<Model>.fbx` + 텍스처 `Textures/<Model>_base_color · _normal`.
+        /// Rigged = 사람형 — Mixamo 자동 리깅한 `<Model>_Rigged.fbx`를 Humanoid로, 플레이어와 같은 Idle · Walk 컨트롤러. 아니면 원본(코드 움직임).
+        /// </summary>
+        private static readonly (string VisualId, ModelSpec Spec, bool Rigged)[] ZoneUnits =
+        {
+            // 배율 = 게임 안 키(m) ÷ 모델 키 — Mixamo 결과 키(T자세): 고블린 1.07 · 미라 1.12 · 사막 주술사 1.19 · 파라오 1.08 · 상인 1.05, Varco 원본은 가장 긴 쪽 1 m
+            ("enemy_goblin_shaman", new ModelSpec("Enemy_GoblinShaman", "Unit_GoblinShaman", 0.7f, 0f), true),   // 0.75 m (작은 고블린)
+            ("enemy_scorpion", new ModelSpec("Enemy_Scorpion", "Unit_Scorpion", 0.8f, 0f), false),              // 길이 0.8 m (쥐 · 토끼와 같은 배율)
+            ("enemy_jackal", new ModelSpec("Enemy_Jackal", "Unit_Jackal", 0.8f, 0f), false),
+            ("enemy_mummy", new ModelSpec("Enemy_Mummy", "Unit_Mummy", 1f, 0f), true),                         // 1.1 m (플레이어보다 조금 큼)
+            ("enemy_desert_shaman", new ModelSpec("Enemy_DesertShaman", "Unit_DesertShaman", 0.88f, 0f), true), // 1.05 m
+            ("boss_pharaoh", new ModelSpec("Boss_Pharaoh", "Unit_Pharaoh", 1.7f, 0f), true),                  // 1.85 m (보스 2칸 키, 슬라임 소녀 1.8)
+            ("shopkeeper", new ModelSpec("NPC_Shopkeeper", "Unit_Shopkeeper", 0.9f, 0f), true),               // 0.95 m
+        };
         private static readonly ModelSpec Staff = new ModelSpec("Prop_MageStaff", "", 0.85f, 0f);
         private static readonly ModelSpec Floor = new ModelSpec("Tile_Floor", "Tile_Floor", 1f, 0f);
         private static readonly ModelSpec Wall = new ModelSpec("Tile_Wall", "Tile_Wall", 1f, 0f);
@@ -150,6 +165,14 @@ namespace ProjectM.Editor
             var bossPrefab = BuildPrefab(Boss, null);
             catalog.SetPrefab("boss", bossPrefab);
             catalog.SetPrefab("boss_slime_girl", bossPrefab); // 3-17d 5층 보스 = 슬라임 소녀 모델
+            foreach (var (id, spec, rigged) in ZoneUnits) // 3-17 구역 적 · 보스 · 상인 — 모델이 없으면 그레이박스 그대로
+            {
+                var source = rigged ? new ModelSpec(spec.Model + "_Rigged", spec.Prefab, spec.Scale, spec.Yaw) : spec;
+                if (!EnsureVarcoMaterial(spec.Model, ModelDir + source.Model + ".fbx")) continue;
+                if (rigged) EnsureHumanoid(ModelDir + source.Model + ".fbx", null);
+                var prefab = BuildPrefab(source, rigged ? (System.Action<GameObject>)(model => SetupAnimator(model, controller, idle)) : null);
+                if (prefab != null) catalog.SetPrefab(id, prefab);
+            }
             EditorUtility.SetDirty(catalog);
 
             var floorPrefab = BuildPrefab(Floor, SinkToGround);
@@ -380,6 +403,47 @@ namespace ProjectM.Editor
             importer.sRGBTexture = !normal;
             importer.maxTextureSize = maxSize;
             importer.SaveAndReimport();
+        }
+
+        /// <summary>
+        /// Varco 모델 재질 (2026-11-05): `Materials/<model>_Mat`(URP Lit, 색 · 노멀 = Textures/<model>_base_color · _normal — FBX에 묻힌 그림을 꺼내 둔 것)을
+        /// 만들고 FBX의 묻힌 재질을 모두 그것으로 바꾼다. Varco FBX는 묻힌 이름이 모두 같아(material_0) 이름으로 찾게 두면 섞인다. 이미 같으면 아무것도 안 함.
+        /// FBX나 텍스처가 없으면 false.
+        /// </summary>
+        private static bool EnsureVarcoMaterial(string model, string fbxPath)
+        {
+            if (!(AssetImporter.GetAtPath(fbxPath) is ModelImporter importer)) { Debug.LogWarning("[VarcoModelSetup] 없음: " + fbxPath); return false; }
+            string colorPath = $"{ModelDir}Textures/{model}_base_color.png", normalPath = $"{ModelDir}Textures/{model}_normal.png";
+            EnsureCharacterTexture(colorPath, normal: false);
+            EnsureCharacterTexture(normalPath, normal: true);
+            var color = AssetDatabase.LoadAssetAtPath<Texture2D>(colorPath);
+            if (color == null) { Debug.LogWarning("[VarcoModelSetup] 텍스처 없음: " + colorPath); return false; }
+            var normalMap = AssetDatabase.LoadAssetAtPath<Texture2D>(normalPath);
+
+            string materialPath = $"{ModelDir}Materials/{model}_Mat.mat";
+            var material = AssetDatabase.LoadAssetAtPath<Material>(materialPath);
+            if (material == null)
+            {
+                material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { enableInstancing = true };
+                AssetDatabase.CreateAsset(material, materialPath);
+            }
+            if (material.GetTexture("_BaseMap") != color || material.GetTexture("_BumpMap") != normalMap)
+            {
+                material.SetTexture("_BaseMap", color);
+                material.SetTexture("_BumpMap", normalMap);
+                if (normalMap != null) material.EnableKeyword("_NORMALMAP");
+                EditorUtility.SetDirty(material);
+            }
+
+            bool dirty = false;
+            foreach (var o in AssetDatabase.LoadAllAssetsAtPath(fbxPath))
+            {
+                if (!(o is Material embedded) || embedded == material) continue;
+                importer.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material), embedded.name), material);
+                dirty = true;
+            }
+            if (dirty) importer.SaveAndReimport();
+            return true;
         }
 
         /// <summary>Idle(기본) ↔ Walk 컨트롤러 (bool Moving). 있으면 상태 · 전이만 다시 맞춘다 (GUID 유지).</summary>

@@ -509,3 +509,19 @@ MonoBehaviour:
     BoostRange: 1
     HitCount: 0
     MaxTargets: 0
+  - Id: sia_leap
+    Element: 7
+    Shape: 5
+    Range: 3
+    Damage: 0
+    ManaCost: 2
+    Radius: 0
+    AppliesStatus: 0
+    StatusChancePercent: 0
+    LeavesTerrain: 0
+    DisplayName: "\uB3C4\uC57D"
+    BoostWeaponId: knuckle
+    BoostDamagePercent: 150
+    BoostRange: 1
+    HitCount: 0
+    MaxTargets: 0

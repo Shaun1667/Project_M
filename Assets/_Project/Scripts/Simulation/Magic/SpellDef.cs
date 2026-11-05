@@ -34,6 +34,8 @@ namespace ProjectM.Magic
         Dash = 3,
         /// <summary>여러 대상 (3-21b 다중 발사): 사거리 안 · 조준선이 막히지 않은 적대 유닛을 조준한 유닛 먼저 → 가까운 순으로 MaxTargets명.</summary>
         Multi = 4,
+        /// <summary>뛰어넘기 (3-22a 시아 도약): 사거리 안의 빈 걸을 수 있는 칸으로 시전자가 바로 옮겨 간다 — 사이의 유닛은 넘고 벽은 못 넘음. 맞히는 대상 없음.</summary>
+        Leap = 5,
     }
 
     /// <summary>

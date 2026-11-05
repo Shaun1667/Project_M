@@ -125,6 +125,13 @@ namespace ProjectM.Magic
                 }
                 case SpellShape.Multi:
                     return PreviewMulti(world, targeting, caster, spell, target);
+                case SpellShape.Leap:
+                {
+                    // 3-22a 도약: 조준선(유닛 무시 — 넘어감, 벽에서 멈춤)이 조준 칸까지 닿고, 그 칸이 빈 걸을 수 있는 칸이어야 함. 아니면 빈 경로 = 막힘
+                    if (!map.IsWalkable(target) || world.Units.IsOccupied(target)) return new SpellPreview(empty, empty);
+                    var path = targeting.Trace(map, caster, target, spell.Range, null);
+                    return path.Count > 0 && path[path.Count - 1] == target ? new SpellPreview(path, empty) : new SpellPreview(empty, empty);
+                }
                 default:
                     throw new ArgumentOutOfRangeException(nameof(spell), spell.Shape, "알 수 없는 주문 모양");
             }
@@ -332,10 +339,11 @@ namespace ProjectM.Magic
 
             var preview = SpellCasting.Preview(_world, _targeting, caster.Pos, spell, Target);
             _world.Events.Publish(new SpellCastEvent(caster.Id, spell.Id, spell.Element, Target, preview));
-            if (spell.Shape == SpellShape.Dash) // 3-21b 돌진: 맞히기 전에 멈추는 칸으로 (틱 하나 안 — 지나간 칸은 밟지 않음)
+            if (spell.Shape == SpellShape.Dash || spell.Shape == SpellShape.Leap) // 3-21b 돌진 · 3-22a 도약: 맞히기 전에 멈추는 칸으로 (틱 하나 안 — 지나간 칸은 밟지 않음)
             {
                 var from = caster.Pos;
-                var landing = SpellCasting.DashLanding(from, preview);
+                var landing = spell.Shape == SpellShape.Leap ? (preview.Path.Count > 0 ? preview.Path[preview.Path.Count - 1] : from)
+                    : SpellCasting.DashLanding(from, preview);
                 if (landing != from && !_world.Units.IsOccupied(landing))
                 {
                     _world.Units.Move(caster.Id, landing);

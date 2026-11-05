@@ -19,3 +19,69 @@ MonoBehaviour:
   _puddleCount: 4
   _puddleMinSize: 3
   _puddleMaxSize: 9
+  _doorPercent: 70
+  _hiddenDoorPercent: 15
+  _specialRoomPercent: 70
+  _specialRoomWeights: 03000000020000000200000002000000i
+  _specialRoomMinSize: 3
+  _specialRoomMaxSize: 5
+  _vaultItems:
+  - scroll_upgrade
+  - potion_strength
+  - potion_experience
+  - armor_mail
+  - spear
+  _vaultItemCount: 2
+  _armoryItems:
+  - shortsword
+  - hand_axe
+  - spear
+  - quarterstaff
+  - dirk
+  - sickle
+  - armor_leather
+  - armor_mail
+  - knuckle
+  _armoryItemCount: 2
+  _libraryItems:
+  - scroll_identify
+  - scroll_magic_mapping
+  - scroll_teleportation
+  - scroll_recharging
+  - scroll_mirror_image
+  - scroll_lullaby
+  - scroll_terror
+  - scroll_transmutation
+  _libraryItemCount: 3
+  _gardenItems:
+  - food_bread
+  - food_ration
+  _gardenItemCount: 2
+  _keyItem: key_iron
+  _laboratoryWeight: 2
+  _labItems:
+  - seed_firebloom
+  - seed_icecap
+  - seed_sorrowmoss
+  - seed_sungrass
+  - seed_fadeleaf
+  _labItemCount: 2
+  _shopFloor: 3
+  _shopStock:
+  - potion_healing
+  - potion_frost
+  - scroll_identify
+  - scroll_magic_mapping
+  - scroll_teleportation
+  - scroll_recharging
+  - food_ration
+  - food_bread
+  - armor_leather
+  - shortsword
+  - hand_axe
+  - key_iron
+  _shopStockCount: 6
+  _shopBuyPercent: 100
+  _shopSellPercent: 50
+  _shopkeeperVisualId: shopkeeper
+  _shopkeeperHp: 999

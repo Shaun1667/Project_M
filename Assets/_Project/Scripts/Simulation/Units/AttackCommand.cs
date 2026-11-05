@@ -29,7 +29,14 @@ namespace ProjectM.Units
             if (!_world.Units.TryGet(Target, out var target) || !target.IsAlive) return;
             if (!MeleeWeapon.CanReach(_world, attacker, target.Pos)) return; // 3-7a: 창은 2칸
 
-            bool surprise = MeleeWeapon.IsSurprise(attacker, target); // 3-7c: 못 본 적 = 항상 명중
+            bool surprise = MeleeWeapon.IsSurprise(attacker, target); // 3-7c: 못 본 적 = 항상 명중 (첫 타격 전에 정함 — 타격마다 같음)
+            int hits = attacker.Weapon.HitsPerAttack; // 3-22a 너클: 한 번 공격에 2타 (명중 · 피해 · 방어 따로)
+            for (int h = 0; h < hits && target.IsAlive && attacker.IsAlive; h++) Strike(attacker, target, surprise);
+        }
+
+        /// <summary>타격 하나: 명중 판정 → 피해 굴림 → 방어 → 피해 · 명중 시 효과 · 맞힘 마나.</summary>
+        private void Strike(Unit attacker, Unit target, bool surprise)
+        {
             if (surprise) _world.Events.Publish(new SurpriseAttackEvent(attacker.Id, target.Id));
             else if (!Combat.RollHit(_world, attacker, target)) // 3-7 명중 · 회피 (SPD)
             {

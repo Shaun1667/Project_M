@@ -246,7 +246,7 @@ namespace ProjectM.Tests
         [Test]
         public void Snapshot_RoundTripsTalents()
         {
-            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.EqualTo(25));
+            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.GreaterThanOrEqualTo(25), "3-21c (정확한 값은 SiaTests — 26)");
             var s = Start(4);
             Talents.Spend(s.World, s.Classes, s.Player, "mana_cycle");
             Talents.Spend(s.World, s.Classes, s.Player, "light_mastery");

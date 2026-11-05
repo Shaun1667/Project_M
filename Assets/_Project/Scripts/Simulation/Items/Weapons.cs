@@ -22,10 +22,14 @@ namespace ProjectM.Items
         public int SurpriseMinPercent { get; }
         /// <summary>방어 (3-7c 육척봉 "최대 방어력 +2"). 나누기를 적용하지 않음 (결정 2026-10-19: 0~2).</summary>
         public int Defense { get; }
+        /// <summary>한 번 공격의 타격 수 (3-22a 너클 2 — 명중 · 피해 · 방어를 타격마다 따로). 기본 1.</summary>
+        public int HitsPerAttack { get; }
 
         public WeaponDef(int maxDamage, int upgradeEfficiency, int accuracyPercent, int attackCostTicks, int reach, int strengthRequirement = 0,
-            int surpriseMinPercent = 0, int defense = 0)
+            int surpriseMinPercent = 0, int defense = 0, int hitsPerAttack = 1)
         {
+            if (hitsPerAttack < 1) throw new ArgumentOutOfRangeException(nameof(hitsPerAttack), hitsPerAttack, "타격 수는 1 이상.");
+            HitsPerAttack = hitsPerAttack;
             if (surpriseMinPercent < 0 || surpriseMinPercent > 100) throw new ArgumentOutOfRangeException(nameof(surpriseMinPercent));
             if (defense < 0) throw new ArgumentOutOfRangeException(nameof(defense));
             SurpriseMinPercent = surpriseMinPercent;
@@ -81,7 +85,7 @@ namespace ProjectM.Items
             int max = Math.Max(1, Divide(def.MaxDamage + def.UpgradeEfficiency * upgrade, rules.DamageDivisor));
             int min = Math.Min(max, Math.Max(1, Divide(rules.MinDamageBase + upgrade, rules.DamageDivisor)));
             return new EquippedWeapon(itemId, min, max, def.AccuracyPercent, def.AttackCostTicks, def.Reach,
-                upgrade, StrengthRequirement(def, upgrade), def.SurpriseMinPercent, def.Defense);
+                upgrade, StrengthRequirement(def, upgrade), def.SurpriseMinPercent, def.Defense, def.HitsPerAttack);
         }
 
         /// <summary>

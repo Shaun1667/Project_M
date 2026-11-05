@@ -27,5 +27,6 @@ MonoBehaviour:
     VisualId: hero_black
     Portrait: {fileID: 21300000, guid: 84bbeccd5bccd0c488c067fdd3d4c051, type: 3}
     Illustration: {fileID: 21300000, guid: f57e5cb5a2c6a7b4383bbf278b1cfa9a, type: 3}
-    ClassId: 
-    StartingSpells: []
+    ClassId: sia
+    StartingSpells:
+    - sia_leap

@@ -27,7 +27,16 @@ namespace ProjectM.Data
         [Min(2)] [SerializeField] private int _specialRoomMaxSize = 5;
         [Tooltip("보물 방 아이템 (겹치지 않게 고름)")] [SerializeField] private string[] _vaultItems = { "scroll_upgrade", "potion_strength", "potion_experience", "armor_mail", "spear" };
         [Min(0)] [SerializeField] private int _vaultItemCount = 2;
-        [SerializeField] private string[] _armoryItems = { "shortsword", "hand_axe", "spear", "quarterstaff", "dirk", "sickle", "armor_leather", "armor_mail" };
+        [SerializeField] private string[] _armoryItems = { "shortsword", "hand_axe", "spear", "quarterstaff", "dirk", "sickle", "knuckle", "armor_leather", "armor_mail" };
+
+        /// <summary>에디터 Setup용 (3-22a 너클): 무기고 후보에 없으면 더한다. 더했으면 true.</summary>
+        public bool AddArmoryItemIfMissing(string itemId)
+        {
+            if (System.Array.IndexOf(_armoryItems, itemId) >= 0) return false;
+            var list = new System.Collections.Generic.List<string>(_armoryItems) { itemId };
+            _armoryItems = list.ToArray();
+            return true;
+        }
         [Min(0)] [SerializeField] private int _armoryItemCount = 2;
         [SerializeField] private string[] _libraryItems = { "scroll_identify", "scroll_magic_mapping", "scroll_teleportation", "scroll_recharging", "scroll_mirror_image", "scroll_lullaby", "scroll_terror", "scroll_transmutation" };
         [Min(0)] [SerializeField] private int _libraryItemCount = 3;

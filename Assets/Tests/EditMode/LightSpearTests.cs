@@ -200,7 +200,7 @@ namespace ProjectM.Tests
             Assert.That(lumen.ClassId, Is.EqualTo("lumen"));
             Assert.That(lumen.StartingSpells, Is.EqualTo(new[] { "light_spear_thrust", "light_spear_throw" }));
             var sia = new List<CharacterCatalogAsset.Entry>(characters.Characters).Find(c => c.Id == "hero_black");
-            Assert.That(string.IsNullOrEmpty(sia.ClassId), Is.True, "시아는 직업 없음 (따로 정함)");
+            Assert.That(sia.ClassId, Is.EqualTo("sia"), "3-22a: 시아 직업 (Docs/직업_시아.md)");
         }
     }
 }

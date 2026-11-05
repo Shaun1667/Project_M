@@ -40,6 +40,7 @@
 | 14 | `food_ration` · `food_bread` · `food_mystery_meat` · `food_cooked_meat` · `food_frozen_meat` | 음식 5 | 그레이박스 상자 | 소품 모델 5 (고기 3은 한 모델 + 색 3도 가능) |
 | 15 | `gold` · `key_iron` | 금화 무더기 · 쇠 열쇠 | 그레이박스 상자 | 소품 모델 2 |
 | 16 | `dart` · `javelin` | 던지는 무기 2 | 그레이박스 상자 | 소품 모델 2 (날아가는 모습 = 투사체에 같이 씀) |
+| 16-1 | `knuckle` (3-22a) | 너클 — 손등 쇠 덮개 · 주먹 끼우개 | 그레이박스 상자 · 손에 든 모습 없음 | 소품 모델 1 (바닥) + 손에 끼운 모습(시아 양손 — `VarcoModelSetup.WeaponSpecs`) |
 | 17 | `seed_firebloom/icecap/sorrowmoss/sungrass/fadeleaf` | 씨앗 5 | 그레이박스 상자 | 씨앗 모델 1 + 색 5 |
 | 18 | `fusion_device` | 마법 융합기 | 그레이박스 상자 | 소품 모델 1 |
 | 19 | 식물 5 (심은 것) | 화염꽃 · 얼음버섯 · 독이끼 · 햇볕풀 · 사라짐잎 | 바닥 색 칸 (함정과 같음) | 식물 모델 5 |

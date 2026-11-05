@@ -27,6 +27,7 @@ namespace ProjectM.Data
             [Tooltip("강화 0 요구 힘 (3-7b) — SPD 2티어 12. 강화하면 첫 단계 −1, 그 뒤 2단계마다 −1")] public int StrengthRequirement;
             [Tooltip("기습 최소 피해 상승 % (3-7c) — 더크 67, 나머지 0")] public int SurpriseMinPercent;
             [Tooltip("방어 (3-7c) — 육척봉 2(근접 피해 − 0~2), 나머지 0")] public int Defense;
+            [Tooltip("한 번 공격의 타격 수 (3-22a) — 너클 2, 나머지 0 = 1")] [Min(0)] public int HitsPerAttack;
             [Header("갑옷 (EquipArmor만, 3-10a — SPD)")]
             [Tooltip("티어 1 천 ~ 5 판금. 방어 = 강화 ~ 티어 × (2 + 강화), 나누기는 공통 값. 요구 힘은 위 StrengthRequirement")] public int Tier;
             [Header("힘 물약 · 강화 주문서 (3-7b)")]
@@ -66,7 +67,7 @@ namespace ProjectM.Data
             foreach (var e in _items)
             {
                 var weapon = e.Use == ItemUse.EquipWeapon
-                    ? new WeaponDef(e.MaxDamage, e.UpgradeEfficiency, Mathf.RoundToInt(e.Accuracy * 100f), e.AttackCostTicks, e.Reach, e.StrengthRequirement, e.SurpriseMinPercent, e.Defense)
+                    ? new WeaponDef(e.MaxDamage, e.UpgradeEfficiency, Mathf.RoundToInt(e.Accuracy * 100f), e.AttackCostTicks, e.Reach, e.StrengthRequirement, e.SurpriseMinPercent, e.Defense, Math.Max(1, e.HitsPerAttack))
                     : null;
                 var armor = e.Use == ItemUse.EquipArmor ? new ArmorDef(e.Tier, e.StrengthRequirement) : null;
                 defs.Add(new ItemDef(e.Id, e.Use, e.SpellId, weapon, e.Amount, e.Effect, e.Weight, armor, e.Food, e.Risky, e.FireTransformsTo, e.IceTransformsTo, e.Value,

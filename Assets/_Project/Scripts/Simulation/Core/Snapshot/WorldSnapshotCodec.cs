@@ -338,6 +338,7 @@ namespace ProjectM.Core
                     w.Write(u.Weapon.StrengthRequirement);
                     w.Write(u.Weapon.SurpriseMinPercent); // 15 (3-7c)
                     w.Write(u.Weapon.Defense);
+                    w.Write(u.Weapon.HitsPerAttack); // 26 (3-22a 너클)
                 }
                 w.Write(u.Strength); // 14 (3-7b)
                 // 17 (3-10a): 입은 갑옷
@@ -395,8 +396,8 @@ namespace ProjectM.Core
                 {
                     var weaponId = r.ReadString();
                     int wMin = r.ReadInt32(), wMax = r.ReadInt32(), wAcc = r.ReadInt32(), wCost = r.ReadInt32(), wReach = r.ReadInt32();
-                    int wUpgrade = r.ReadInt32(), wStr = r.ReadInt32(), wSurprise = r.ReadInt32(), wDefense = r.ReadInt32();
-                    weapon = new EquippedWeapon(weaponId, wMin, wMax, wAcc, wCost, wReach, wUpgrade, wStr, wSurprise, wDefense);
+                    int wUpgrade = r.ReadInt32(), wStr = r.ReadInt32(), wSurprise = r.ReadInt32(), wDefense = r.ReadInt32(), wHits = r.ReadInt32();
+                    weapon = new EquippedWeapon(weaponId, wMin, wMax, wAcc, wCost, wReach, wUpgrade, wStr, wSurprise, wDefense, wHits);
                 }
                 int strength = r.ReadInt32();
                 var armor = EquippedArmor.Empty;

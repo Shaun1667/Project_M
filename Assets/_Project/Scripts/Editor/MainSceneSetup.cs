@@ -251,6 +251,7 @@ namespace ProjectM.Editor
             FillZeroInts(lootConfig, ("_weaponsPerRun", 2), ("_upgradeScrollsPerRun", 3), ("_strengthPotionsPerRun", 2), ("_armorsPerRun", 2)); // 3-10a 갑옷 2 // 3-7a 무기 2 · 3-7b 강화 3 · 힘 2 (BALANCE 11번)
             var consumableConfig = LoadOrCreate<ConsumableConfigAsset>(ConsumableConfigPath); // 3-9: 새로 만들면 필드 초기값 = BALANCE 14번
             var floorDecorConfig = LoadOrCreate<FloorDecorConfigAsset>(FloorDecorConfigPath); // 3-11a: 풀 · 물 웅덩이, 새로 만들면 필드 초기값 = BALANCE 16번
+            if (floorDecorConfig.AddArmoryItemIfMissing("knuckle")) EditorUtility.SetDirty(floorDecorConfig); // 3-22a 너클 → 무기고 후보
             var trapCatalog = EnsureTrapCatalog(); // 3-12a
             var hungerConfig = LoadOrCreate<HungerConfigAsset>(HungerConfigPath); // 3-14: 새로 만들면 필드 초기값 = BALANCE 18번
             var zoneCatalog = EnsureZoneCatalog(); // 3-17a: 적 종류 · 구역 표 (BALANCE 20번)
@@ -596,6 +597,11 @@ namespace ProjectM.Editor
             foreach (var id in new[] { "light_spear_thrust", "light_spear_throw", "light_spear_flurry", "light_spear_pierce", "light_spear_charge",
                          "light_spear_lance", "light_spear_volley", "light_spear_throw_plus" })
                 changed |= catalog.SetBoostIfNone(id, "spear", 150, 1);
+            // 3-22a 시아 기본 기술 (Docs/직업_시아.md 2번, BALANCE 22번): 도약 — 무속성 뛰어넘기, 너클을 들면 사거리 +1 (피해 0이라 배율은 의미 없음)
+            changed |= catalog.AddIfMissing(new SpellCatalogAsset.Entry
+                { Id = "sia_leap", Element = Element.Neutral, Shape = SpellShape.Leap, Range = 3, Damage = 0, ManaCost = 2 });
+            changed |= catalog.SetDisplayNameIfEmpty("sia_leap", "도약");
+            changed |= catalog.SetBoostIfNone("sia_leap", "knuckle", 150, 1);
             // 3-12a 함정 효과 주문 (BALANCE 17번): 함정 칸 중심 3×3, 시전자 없음 · 마나 0 · 배우지 않음. 마비 가스는 바람 속성(반응 없음)
             foreach (var (id, name, element, damage, status, chance, terrain) in new[]
             {
@@ -1111,6 +1117,11 @@ namespace ProjectM.Editor
             changed |= catalog.AddIfMissing(Weapon("quarterstaff", "육척봉", 12, 3, 1f, 1, 1));
             changed |= catalog.AddIfMissing(Weapon("dirk", "더크", 12, 3, 1f, 1, 1));
             changed |= catalog.AddIfMissing(Weapon("sickle", "손낫", 20, 3, 0.68f, 1, 1));
+            // 3-22a 너클 (Docs/직업_시아.md S3 — SPD 장갑 크기): 한 번 공격 2타, 한 대 1~2 · 강화당 +1(나누기 전 3) · 요구 힘 10
+            var knuckle = Weapon("knuckle", "너클", 5, 3, 1f, 1, 1);
+            knuckle.StrengthRequirement = 10;
+            knuckle.HitsPerAttack = 2;
+            changed |= catalog.AddIfMissing(knuckle);
             changed |= catalog.FillWeaponStrength(12); // 3-7b: 요구 힘 (SPD 2티어) — 3-7a 줄에도
             changed |= catalog.FillWeaponSpecials("dirk", 67, 0); // 3-7c: 더크 기습 최소 피해 67%
             changed |= catalog.FillWeaponSpecials("quarterstaff", 0, 2); // 3-7c: 육척봉 방어 0~2
@@ -1485,6 +1496,8 @@ namespace ProjectM.Editor
             }
             // 3-21a: 루멘 = 직업 lumen, 빛의 창 공통 기술 2개로 시작 (Docs/직업_루멘.md). 시아는 직업 없음 (따로 정함)
             changed |= catalog.SetClassIfEmpty("hero_blond", "lumen", "light_spear_thrust", "light_spear_throw");
+            // 3-22a: 시아 = 직업 sia, 기본 기술 도약으로 시작 (Docs/직업_시아.md). 형태 · 특성은 3-22b · c
+            changed |= catalog.SetClassIfEmpty("hero_black", "sia", "sia_leap");
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }

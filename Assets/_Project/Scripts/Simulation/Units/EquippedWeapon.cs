@@ -26,10 +26,15 @@ namespace ProjectM.Units
         public int SurpriseMinPercent { get; }
         /// <summary>방어 (3-7c 육척봉 2) — 근접 피해를 0~방어 굴림만큼 줄인다.</summary>
         public int Defense { get; }
+        /// <summary>한 번 공격의 타격 수 (3-22a 너클 2). 맨손 · 옛 값(0)은 1로 본다.</summary>
+        public int HitsPerAttack => _hitsPerAttack < 1 ? 1 : _hitsPerAttack;
+        private readonly int _hitsPerAttack;
 
         public EquippedWeapon(string itemId, int minDamage, int maxDamage, int accuracyPercent, int attackCostTicks, int reach,
-            int upgrade = 0, int strengthRequirement = 0, int surpriseMinPercent = 0, int defense = 0)
+            int upgrade = 0, int strengthRequirement = 0, int surpriseMinPercent = 0, int defense = 0, int hitsPerAttack = 1)
         {
+            if (hitsPerAttack < 1) throw new ArgumentOutOfRangeException(nameof(hitsPerAttack));
+            _hitsPerAttack = hitsPerAttack;
             if (surpriseMinPercent < 0 || surpriseMinPercent > 100) throw new ArgumentOutOfRangeException(nameof(surpriseMinPercent));
             if (defense < 0) throw new ArgumentOutOfRangeException(nameof(defense));
             SurpriseMinPercent = surpriseMinPercent;
@@ -57,7 +62,7 @@ namespace ProjectM.Units
         public bool Equals(EquippedWeapon o) => ItemId == o.ItemId && MinDamage == o.MinDamage && MaxDamage == o.MaxDamage
             && AccuracyPercent == o.AccuracyPercent && AttackCostTicks == o.AttackCostTicks && Reach == o.Reach
             && Upgrade == o.Upgrade && StrengthRequirement == o.StrengthRequirement
-            && SurpriseMinPercent == o.SurpriseMinPercent && Defense == o.Defense;
+            && SurpriseMinPercent == o.SurpriseMinPercent && Defense == o.Defense && HitsPerAttack == o.HitsPerAttack;
         public override bool Equals(object obj) => obj is EquippedWeapon o && Equals(o);
         public override int GetHashCode() => (ItemId?.GetHashCode() ?? 0) ^ (MaxDamage * 397);
         public override string ToString() => IsEmpty ? "(맨손)" : $"{ItemId}+{Upgrade} {MinDamage}~{MaxDamage} 힘 {StrengthRequirement}";

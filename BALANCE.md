@@ -28,6 +28,7 @@
 | 17 | 함정 (3-12a) | `Assets/_Project/Data/Dungeon/TrapCatalog.asset` (`TrapCatalogAsset`) + `SpellCatalog.asset`의 `trap_*` 5줄 | `ProjectM.Dungeon.TrapBook` · `Traps` · `TrapSystem` | 사용 중 (3-12a) |
 | 16 | 층 꾸미기 (풀 · 물 웅덩이) | `Assets/_Project/Data/Dungeon/FloorDecorConfig.asset` (`FloorDecorConfigAsset`) | `ProjectM.Dungeon.FloorDecorConfig` · `FloorDecor` · `GrassTrampleSystem` | 사용 중 (3-11a) |
 | 21 | 직업 — 루멘 빛의 창 (3-21) | `SpellCatalog.asset`의 `light_spear_*` 줄(무기 강화 필드) + `Data/Units/CharacterCatalog.asset`(`ClassId` · `StartingSpells`) + `Data/Units/ClassCatalog.asset`(`ClassCatalogAsset` — 형태, 3-21b) | `ProjectM.Magic.SpellDef` · `SpellModifiers` · `UnitDef.WithExtraStartingSpells` · `ProjectM.Units.ClassBook` · `ClassForms` | 사용 중 (3-21a · b) |
+| 22 | 직업 — 시아 무도가 (3-22) | `SpellCatalog.asset`의 `sia_*` 줄 + `CharacterCatalog.asset` 시아 줄 (+ 3-22b · c `ClassCatalog.asset` 시아 줄) · 너클 = `ItemCatalog.asset` (13번) | 21번과 같음 | 사용 중 (3-22a) |
 | 14 | 물약 · 주문서 (효과 · 식별 · 무작위 배치 · 던지기) | `Assets/_Project/Data/Items/ConsumableConfig.asset` (`ConsumableConfigAsset`) + `ItemCatalog.asset`의 `Effect` · `Weight` (9번) | `ProjectM.Items.ConsumableConfig` · `Consumables` · `Identification` · `Throwing` | 사용 중 (3-9) |
 
 **데이터 구조 규칙 (0-4 결정)**
@@ -447,6 +448,7 @@
 | `quarterstaff` | 육척봉 | **12** | **3** | 1.0 | 1 | 1 | 1 ~ 4 · 방어 `Defense` **2** (3-7c) |
 | `dirk` | 더크 | **12** | **3** | 1.0 | 1 | 1 | 1 ~ 4 · 기습 `SurpriseMinPercent` **67** → 3 ~ 4 (3-7c) |
 | `sickle` | 손낫 | **20** | **3** | **0.68** | 1 | 1 | 1 ~ 7 |
+| `knuckle` (3-22a) | 너클 | **5** | **3** | 1.0 | 1 | 1 | 1 ~ 2 **× 2타** (`HitsPerAttack` **2** — 명중 · 피해 · 방어를 타격마다 따로) · 요구 힘 **10** · +1 1 ~ 3. 시아가 들면 시아 기술 강화 (22번) |
 
 결과: 평균 피해 소검 3.0(맨손 3과 같음) · 손도끼 · 육척봉 · 더크 2.5 · 창 · 손낫 4.0. 근접 적(체력 8)은 소검으로 평균 2.7대. 창은 2틱이라 시간당 피해 2.0 — 대신 한 칸 떨어져 칠 수 있음. 손낫은 명중 10 × 0.68 = 6.8 vs 적 회피 2 → 약 85%.
 요구 힘 `StrengthRequirement` (3-7b): 6종 모두 **12**(SPD 2티어). 강화하면 **첫 강화에 −1, 그 뒤 2단계마다 −1** (사용자 결정 2026-10-19) = 12 − ⌈강화 / 2⌉ → +1 11 · +2 11 · +3 10 · +4 10 · +5 9.
@@ -777,6 +779,24 @@ SPD 규칙 그대로: 방어 굴림 = 강화 ~ 티어 × (2 + 강화) (SPD Armor
 - 결과: 레벨 12에 1단계 4개 중 2개 반(5점), 2단계 2개(6점) 정도 — 모두 찍을 수는 없다(1단계 8점 · 2단계 12점 필요).
 
 검산 (`TalentTests.ProjectAsset_MatchesBalanceTable`).
+
+---
+
+## 22. 직업 — 시아 무도가 (3-22, `Docs/직업_시아.md`)
+
+결정 (2026-11-05, 사용자 — 문서 1번 S1~S7, [제안] 수치 "그대로 진행"). 데이터 = `SpellCatalog.asset` `sia_*` 줄 + `CharacterCatalog.asset` 시아 줄(`ClassId` = `sia`, `StartingSpells`).
+
+**3-22a 기본 기술 (시작부터, 빠른 칸 1)**
+
+| ID | 이름 | 모양 | 사거리 | 피해 | 마나 | 너클 강화 |
+|---|---|---|---|---|---|---|
+| `sia_leap` | 도약 | Leap (뛰어넘기 — 새 모양) | **3** | 0 | **2** | `knuckle` · 150% · **+1** → 사거리 4 |
+
+- 도약: 사거리 안의 빈 걸을 수 있는 칸 · 보이는 칸 · 조준선이 벽에 막히지 않으면(유닛은 넘음) 바로 이동, 행동 1틱. 지나간 칸은 밟지 않음(도착 칸의 함정만).
+- 결과: 마나 10이면 5번 — 3칸 × 5 = 15칸을 5턴에. 걸어서 3칸 = 3턴이므로 한 번에 2턴을 버는 셈, 적 사이를 넘어 포위를 빠져나갈 때 핵심.
+- 너클 2타: 평균 1.5 × 2 = **3** (소검 평균 3과 같음), 요구 힘 10이라 시작 힘으로 벌점 없음. 명중 굴림이 2번이라 빗나감이 고르게 나뉜다.
+
+검산 (`SiaTests.ProjectAssets_MatchBalanceTable`).
 
 ---
 
