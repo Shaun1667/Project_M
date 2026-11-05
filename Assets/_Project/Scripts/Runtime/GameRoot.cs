@@ -434,6 +434,9 @@ namespace ProjectM
             else if (!_runEnded && World != null && keyboard != null && keyboard.tKey.wasPressedThisFrame
                      && _characterSelect != null && !_characterSelect.IsOpen && !_entityPresenter.IsAnimating)
                 OpenTalents(); // 3-21c 특성 창
+            else if (!_runEnded && World != null && _title != null && !titleOpen && keyboard != null && keyboard.hKey.wasPressedThisFrame
+                     && (_characterSelect == null || !_characterSelect.IsOpen) && !_input.Inventory.IsOpen)
+                Defer(_title.OpenControls); // 2026-11-05 H = 조작 안내 (누른 H가 바로 닫지 않게 다음 프레임)
             else if (_realTime != null && !_runEnded && keyboard != null && keyboard.pKey.wasPressedThisFrame)
             {
                 _paused = !_paused; // 3-27 실시간 일시정지
@@ -488,6 +491,7 @@ namespace ProjectM
             _slot = _pendingSlot; // 3-30: 고른 슬롯에 새 판 (그 슬롯의 지난 저장은 버림)
             RunSaveStore.Delete(_slot);
             BeginRun(null, visualId, characterSpells, classId, _pendingMode, seed);
+            if (_title != null) Defer(_title.OpenControls); // 2026-11-05 지스타 시연: 새 판마다 조작 안내 한 번 (확정한 키가 바로 닫지 않게 다음 프레임)
         }
 
         /// <summary>

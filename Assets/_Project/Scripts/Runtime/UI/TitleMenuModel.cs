@@ -12,6 +12,8 @@ namespace ProjectM.UI
         Quit = 2,
         /// <summary>3-33 명예의 전당 (게임 시작 아래).</summary>
         HallOfFame = 3,
+        /// <summary>조작 안내 (2026-11-05 지스타 시연 — 명예의 전당 아래).</summary>
+        Controls = 4,
     }
 
     /// <summary>타이틀 화면 단계 (3-27 · 3-30).</summary>
@@ -30,6 +32,8 @@ namespace ProjectM.UI
         ConfirmDelete = 5,
         /// <summary>3-33 명예의 전당: 클리어 기록 (높은 점수 순).</summary>
         HallOfFame = 6,
+        /// <summary>조작 안내 한 장 (2026-11-05). 타이틀에서 열면 확정 · 아무 키 = 첫 화면, 게임 중(OpenControls)에 열면 닫힘.</summary>
+        Controls = 7,
     }
 
     /// <summary>찬 슬롯 화면의 단추 (3-30).</summary>
@@ -81,6 +85,10 @@ namespace ProjectM.UI
         public RunMode Mode { get; private set; }
         public string SeedText { get; private set; } = string.Empty;
         public bool IsOpen => Screen != TitleScreen.Closed;
+        /// <summary>실시간 모드 잠금 (2026-11-05 지스타 시연 — 턴제만). 켜면 새 게임 화면에서 실시간을 고를 수 없다.</summary>
+        public bool RealTimeLocked { get; set; }
+        /// <summary>조작 안내를 게임 중에 열었는가 (닫으면 타이틀 첫 화면이 아니라 게임으로).</summary>
+        public bool ControlsInGame { get; private set; }
 
         public event Action Changed;
         public event Action<int> ContinueChosen;
@@ -95,10 +103,27 @@ namespace ProjectM.UI
             _items.Clear();
             _items.Add(TitleItem.NewGame);
             _items.Add(TitleItem.HallOfFame); // 3-33 게임 시작 아래
+            _items.Add(TitleItem.Controls); // 2026-11-05 조작 안내
             _items.Add(TitleItem.Quit);
             Selected = 0;
+            ControlsInGame = false;
+            Mode = RealTimeLocked ? RunMode.TurnBased : Mode;
             Screen = TitleScreen.Main;
             Changed?.Invoke();
+        }
+
+        /// <summary>게임 중 조작 안내만 연다 (판 시작 때 한 번 · H). 닫으면(확정 · 뒤로) Closed.</summary>
+        public void OpenControls()
+        {
+            ControlsInGame = true;
+            Screen = TitleScreen.Controls;
+            Changed?.Invoke();
+        }
+
+        private void CloseControls()
+        {
+            if (ControlsInGame) { ControlsInGame = false; Close(); }
+            else Go(TitleScreen.Main);
         }
 
         /// <summary>3-33 명예의 전당 줄을 바꾼다 (순위 순). 화면은 그대로.</summary>
@@ -169,6 +194,7 @@ namespace ProjectM.UI
         public void SetMode(RunMode mode)
         {
             if (Screen != TitleScreen.NewGame || Mode == mode) return;
+            if (mode == RunMode.RealTime && RealTimeLocked) return; // 시연: 턴제만
             Mode = mode;
             Changed?.Invoke();
         }
@@ -199,6 +225,7 @@ namespace ProjectM.UI
                     if (_items.Count == 0) return;
                     if (_items[Selected] == TitleItem.Quit) { QuitChosen?.Invoke(); return; }
                     if (_items[Selected] == TitleItem.HallOfFame) { Go(TitleScreen.HallOfFame); return; }
+                    if (_items[Selected] == TitleItem.Controls) { Go(TitleScreen.Controls); return; }
                     Go(TitleScreen.Slots);
                     return;
                 case TitleScreen.Slots:
@@ -237,6 +264,9 @@ namespace ProjectM.UI
                 case TitleScreen.HallOfFame:
                     Go(TitleScreen.Main); // 3-33: 확정 = 뒤로
                     return;
+                case TitleScreen.Controls:
+                    CloseControls();
+                    return;
                 case TitleScreen.NewGame:
                     int target = CurrentSlot;
                     var mode = Mode;
@@ -257,6 +287,7 @@ namespace ProjectM.UI
                 case TitleScreen.ConfirmDelete: OptionSelected = 0; Go(TitleScreen.SlotDetail); break;
                 case TitleScreen.Slots: Go(TitleScreen.Main); break;
                 case TitleScreen.HallOfFame: Go(TitleScreen.Main); break;
+                case TitleScreen.Controls: CloseControls(); break;
             }
         }
 

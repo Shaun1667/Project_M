@@ -127,7 +127,7 @@ namespace ProjectM.Tests
             };
             var m = new TitleMenuModel();
             m.Open(slots);
-            Assert.That(m.Items, Is.EqualTo(new[] { TitleItem.NewGame, TitleItem.HallOfFame, TitleItem.Quit }), "3-30: 이어하기는 슬롯 화면으로 합침 · 3-33 명예의 전당은 게임 시작 아래");
+            Assert.That(m.Items, Is.EqualTo(new[] { TitleItem.NewGame, TitleItem.HallOfFame, TitleItem.Controls, TitleItem.Quit }), "3-30: 이어하기는 슬롯 화면으로 합침 · 3-33 명예의 전당은 게임 시작 아래 · 2026-11-05 조작 안내");
             m.Confirm();
             Assert.That(m.Screen, Is.EqualTo(TitleScreen.Slots));
 
@@ -176,6 +176,43 @@ namespace ProjectM.Tests
             Assert.That(m.Screen, Is.EqualTo(TitleScreen.Slots));
             m.Back();
             Assert.That(m.Screen, Is.EqualTo(TitleScreen.Main));
+        }
+
+        // 2026-11-05 지스타 시연: 조작 안내 (타이틀에서 = 첫 화면으로 · 게임 중 = 닫힘) · 실시간 잠금
+        [Test]
+        public void TitleMenu_ControlsAndRealTimeLock()
+        {
+            var slots = new[] { new SlotInfo(false, null, null) };
+            var m = new TitleMenuModel { RealTimeLocked = true };
+            m.Open(slots);
+            m.Select(2);
+            Assert.That(m.Items[2], Is.EqualTo(TitleItem.Controls));
+            m.Confirm();
+            Assert.That((m.Screen, m.ControlsInGame), Is.EqualTo((TitleScreen.Controls, false)));
+            m.Confirm();
+            Assert.That(m.Screen, Is.EqualTo(TitleScreen.Main), "타이틀에서 연 안내 = 닫으면 첫 화면");
+            m.Select(2); m.Confirm(); m.Back();
+            Assert.That(m.Screen, Is.EqualTo(TitleScreen.Main), "Esc도 첫 화면");
+
+            m.Close();
+            m.OpenControls();
+            Assert.That((m.Screen, m.ControlsInGame, m.IsOpen), Is.EqualTo((TitleScreen.Controls, true, true)));
+            m.Confirm();
+            Assert.That((m.IsOpen, m.ControlsInGame), Is.EqualTo((false, false)), "게임 중 안내 = 닫으면 게임으로");
+
+            // 실시간 잠금: 새 게임 화면에서 골라도 · 바꿔도 턴제 그대로
+            m.Open(slots);
+            m.Select(0); m.Confirm(); m.Confirm();
+            Assert.That(m.Screen, Is.EqualTo(TitleScreen.NewGame));
+            m.SetMode(RunMode.RealTime);
+            m.ToggleMode();
+            Assert.That(m.Mode, Is.EqualTo(RunMode.TurnBased));
+            RunMode chosen = RunMode.RealTime;
+            m.StartChosen += (s, mode, text) => chosen = mode;
+            m.Confirm();
+            Assert.That(chosen, Is.EqualTo(RunMode.TurnBased));
+            Assert.That(HudText.TitleItemName(TitleItem.Controls), Is.EqualTo("조작 안내"));
+            StringAssert.Contains("잠김", HudText.ModeRealLockedName);
         }
 
         // 판 글자: 모드 이름 · 결과 화면 안내

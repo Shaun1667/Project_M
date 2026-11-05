@@ -25,7 +25,10 @@ namespace ProjectM.UI
         private static readonly Color DangerColor = new Color(0.6f, 0.18f, 0.15f, 1f);
 
         private readonly TitleMenuModel _model = new TitleMenuModel();
-        private RectTransform _mainRoot, _newRoot, _slotsRoot, _detailRoot, _confirmRoot, _hofRoot;
+        private RectTransform _mainRoot, _newRoot, _slotsRoot, _detailRoot, _confirmRoot, _hofRoot, _controlsRoot;
+        private TMP_Text _gameTitle, _subtitle, _realBody;
+        [Tooltip("지스타 시연 (2026-11-05): 켜면 새 게임에서 실시간을 고를 수 없고 '잠김'으로 표시")] [SerializeField] private bool _realTimeLocked = true;
+        private static readonly Color LockedColor = new Color(0.08f, 0.08f, 0.09f, 1f);
         private readonly List<(Image box, TMP_Text label)> _mainItems = new List<(Image, TMP_Text)>();
         private readonly List<(Image box, TMP_Text label)> _slotItems = new List<(Image, TMP_Text)>();
         private readonly List<(Image box, TMP_Text label)> _detailButtons = new List<(Image, TMP_Text)>();
@@ -49,6 +52,7 @@ namespace ProjectM.UI
         private void Awake()
         {
             if (_panel != null) _panel.gameObject.SetActive(false);
+            _model.RealTimeLocked = _realTimeLocked;
             _model.Changed += Redraw;
         }
 
@@ -65,8 +69,32 @@ namespace ProjectM.UI
             Build();
             _panel.gameObject.SetActive(true);
             _panel.SetAsLastSibling();
+            KeepOnTop();
             if (Mouse.current != null) _lastMouse = Mouse.current.position.ReadValue();
             _model.Open(slots);
+        }
+
+        /// <summary>
+        /// 2026-11-05: 게임 중 조작 안내가 같은 캔버스의 HUD 글(나중에 만든 칸)에 덮이지 않게 판을 맨 위에 그린다.
+        /// 중첩 Canvas의 정렬 덮어쓰기는 켜진 뒤에 넣어야 남아서 열 때마다 (꺼진 채 넣으면 풀림).
+        /// </summary>
+        private void KeepOnTop()
+        {
+            var sorting = _panel.GetComponent<Canvas>();
+            if (sorting == null) sorting = _panel.gameObject.AddComponent<Canvas>();
+            sorting.overrideSorting = true;
+            sorting.sortingOrder = 100;
+        }
+
+        /// <summary>게임 중 조작 안내 (판 시작 때 한 번 · H — 2026-11-05). 닫으면 게임으로.</summary>
+        public void OpenControls()
+        {
+            if (_panel == null) return;
+            Build();
+            _panel.gameObject.SetActive(true);
+            _panel.SetAsLastSibling();
+            KeepOnTop();
+            _model.OpenControls();
         }
 
         private void Update()
@@ -74,6 +102,13 @@ namespace ProjectM.UI
             if (!_model.IsOpen) return;
             var keyboard = Keyboard.current;
             var mouse = Mouse.current;
+            if (_model.Screen == TitleScreen.Controls)
+            {
+                bool any = (keyboard != null && keyboard.anyKey.wasPressedThisFrame)
+                    || (mouse != null && (mouse.leftButton.wasPressedThisFrame || mouse.rightButton.wasPressedThisFrame));
+                if (any) _model.Confirm(); // 아무 키 · 클릭 = 닫기
+                return;
+            }
             if (_model.Screen == TitleScreen.NewGame)
             {
                 if (keyboard != null)
@@ -166,6 +201,10 @@ namespace ProjectM.UI
             _detailRoot.gameObject.SetActive(screen == TitleScreen.SlotDetail);
             _confirmRoot.gameObject.SetActive(screen == TitleScreen.ConfirmDelete);
             _hofRoot.gameObject.SetActive(screen == TitleScreen.HallOfFame);
+            bool controls = screen == TitleScreen.Controls;
+            _controlsRoot.gameObject.SetActive(controls);
+            _gameTitle.gameObject.SetActive(!controls);
+            _subtitle.gameObject.SetActive(!controls);
             if (screen == TitleScreen.HallOfFame)
                 _hofBody.text = _model.HallOfFame.Count > 0 ? string.Join("\n", _model.HallOfFame) : HudText.HallOfFameEmpty;
             foreach (var b in _hofButtons) b.box.color = SelectedColor;
@@ -200,12 +239,19 @@ namespace ProjectM.UI
                 _confirmButtons[i].box.color = i == _model.OptionSelected ? (i == 0 ? DangerColor : SelectedColor) : ItemColor;
 
             _turnCard.box.color = _model.Mode == RunMode.TurnBased ? SelectedColor : ItemColor;
-            _realCard.box.color = _model.Mode == RunMode.RealTime ? SelectedColor : ItemColor;
+            _realCard.box.color = _model.RealTimeLocked ? LockedColor : _model.Mode == RunMode.RealTime ? SelectedColor : ItemColor;
+            _realCard.label.text = _model.RealTimeLocked ? HudText.ModeRealLockedName : HudText.ModeRealName; // 시연: 잠김 표시
+            _realCard.label.color = _model.RealTimeLocked ? new Color(0.45f, 0.45f, 0.45f) : Color.white;
+            if (_realBody != null)
+            {
+                _realBody.text = _model.RealTimeLocked ? HudText.ModeRealLockedDesc : HudText.ModeRealDesc;
+                _realBody.color = _model.RealTimeLocked ? new Color(0.5f, 0.5f, 0.5f) : new Color(0.85f, 0.85f, 0.85f);
+            }
             _seedText.text = _model.SeedText.Length > 0
                 ? $"{HudText.SeedLabel}  {_model.SeedText}<color=#FFD54F>_</color>"
                 : $"{HudText.SeedLabel}  <color=#777777>{HudText.SeedPlaceholder}</color><color=#FFD54F>_</color>";
             _hint.text = screen == TitleScreen.NewGame ? HudText.NewGameHint
-                : screen == TitleScreen.HallOfFame ? HudText.HallOfFameHint : screen == TitleScreen.Main ? HudText.TitleHint : screen == TitleScreen.Slots ? HudText.SlotHint : HudText.SlotChoiceHint;
+                : screen == TitleScreen.HallOfFame ? HudText.HallOfFameHint : controls ? HudText.ControlsHint : screen == TitleScreen.Main ? HudText.TitleHint : screen == TitleScreen.Slots ? HudText.SlotHint : HudText.SlotChoiceHint;
         }
 
         private void Build()
@@ -219,13 +265,14 @@ namespace ProjectM.UI
                 bg.raycastTarget = true;
             }
 
-            Text(_panel, HudText.GameTitle, 96, new Vector2(0.5f, 0.84f), new Vector2(1200, 140));
-            Text(_panel, HudText.GameSubtitle, 32, new Vector2(0.5f, 0.75f), new Vector2(1200, 60)).color = new Color(0.75f, 0.75f, 0.8f);
+            _gameTitle = Text(_panel, HudText.GameTitle, 96, new Vector2(0.5f, 0.84f), new Vector2(1200, 140));
+            _subtitle = Text(_panel, HudText.GameSubtitle, 32, new Vector2(0.5f, 0.75f), new Vector2(1200, 60));
+            _subtitle.color = new Color(0.75f, 0.75f, 0.8f);
             _hint = Text(_panel, string.Empty, 24, new Vector2(0.5f, 0.05f), new Vector2(1600, 50));
             _hint.color = new Color(0.65f, 0.65f, 0.65f);
 
             _mainRoot = Group("Main");
-            for (int i = 0; i < 3; i++) // 3-33: 게임 시작 · 명예의 전당 · 종료
+            for (int i = 0; i < 4; i++) // 3-33: 게임 시작 · 명예의 전당 · (2026-11-05) 조작 안내 · 종료
                 _mainItems.Add(Button(_mainRoot, string.Empty, new Vector2(0.5f, 0.5f - i * 0.1f), new Vector2(420, 70), 36));
 
             _slotsRoot = Group("Slots");
@@ -270,7 +317,12 @@ namespace ProjectM.UI
             _newRoot = Group("NewGame");
             Text(_newRoot, HudText.NewGameTitle, 40, new Vector2(0.5f, 0.66f), new Vector2(1200, 60));
             _turnCard = Card(_newRoot, HudText.ModeTurnName, HudText.ModeTurnDesc, new Vector2(0.38f, 0.45f));
-            _realCard = Card(_newRoot, HudText.ModeRealName, HudText.ModeRealDesc, new Vector2(0.62f, 0.45f));
+            _realCard = Card(_newRoot, HudText.ModeRealName, HudText.ModeRealDesc, new Vector2(0.62f, 0.45f), out _realBody);
+
+            _controlsRoot = Group("Controls"); // 2026-11-05 조작 안내 한 장
+            Text(_controlsRoot, HudText.ControlsTitle, 48, new Vector2(0.5f, 0.92f), new Vector2(1200, 70));
+            ControlsColumn(HudText.ControlsLeft, 0.28f);
+            ControlsColumn(HudText.ControlsRight, 0.72f);
             var seed = Button(_newRoot, string.Empty, new Vector2(0.5f, 0.23f), new Vector2(760, 60), 28);
             seed.box.color = SeedBoxColor;
             _seedText = seed.label;
@@ -321,12 +373,30 @@ namespace ProjectM.UI
             return (image, label);
         }
 
-        private (Image box, TMP_Text label) Card(RectTransform parent, string title, string body, Vector2 anchor)
+        private (Image box, TMP_Text label) Card(RectTransform parent, string title, string body, Vector2 anchor) => Card(parent, title, body, anchor, out _);
+
+        private (Image box, TMP_Text label) Card(RectTransform parent, string title, string body, Vector2 anchor, out TMP_Text bodyText)
         {
             var card = Button(parent, string.Empty, anchor, new Vector2(400, 300), 28);
             var titleText = Text((RectTransform)card.box.transform, title, 40, new Vector2(0.5f, 0.85f), new Vector2(380, 60));
-            Text((RectTransform)card.box.transform, body, 24, new Vector2(0.5f, 0.42f), new Vector2(360, 200)).color = new Color(0.85f, 0.85f, 0.85f);
+            bodyText = Text((RectTransform)card.box.transform, body, 24, new Vector2(0.5f, 0.42f), new Vector2(360, 200));
+            bodyText.color = new Color(0.85f, 0.85f, 0.85f);
             return (card.box, titleText);
+        }
+
+        private TMP_Text ControlsColumn(string text, float x)
+        {
+            var column = Button(_controlsRoot, string.Empty, new Vector2(x, 0.47f), new Vector2(820, 760), 24);
+            column.box.color = SeedBoxColor;
+            var t = column.label;
+            t.text = text;
+            t.alignment = TextAlignmentOptions.TopLeft;
+            t.margin = new Vector4(36, 28, 36, 28);
+            t.lineSpacing = 8;
+            t.enableAutoSizing = true; // 글이 넘치면 줄여서 칸 안에
+            t.fontSizeMin = 14;
+            t.fontSizeMax = 26;
+            return t;
         }
     }
 }

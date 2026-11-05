@@ -333,7 +333,50 @@ namespace ProjectM.UI
         public const string DebugTeleportPick = "[디버그] 순간이동할 칸을 누르세요 (Esc · 오른쪽 클릭 = 취소)";
         public const string GameSubtitle = "원소와 시간의 던전";
         public static string TitleItemName(TitleItem item) =>
-            item == TitleItem.Continue ? "이어하기" : item == TitleItem.NewGame ? "게임 시작" : item == TitleItem.HallOfFame ? "명예의 전당" : "종료";
+            item == TitleItem.Continue ? "이어하기" : item == TitleItem.NewGame ? "게임 시작" : item == TitleItem.HallOfFame ? "명예의 전당"
+            : item == TitleItem.Controls ? "조작 안내" : "종료";
+
+        // 조작 안내 (2026-11-05 지스타 시연 — 타이틀 · 판 시작 · H). 키는 PlayerInputController · GameRoot와 맞춘다
+        public const string ControlsTitle = "조작 안내";
+        public const string ControlsHint = "아무 키나 누르거나 클릭하면 닫힙니다 · 게임 중 H로 다시 보기";
+        /// <summary>왼쪽 칸 (이동 · 전투 · 마법).</summary>
+        public const string ControlsLeft =
+            "<color=#FFD54F><b>이동</b></color>\n"
+            + "<b>방향키 · WASD</b>   한 칸 이동\n"
+            + "<b>숫자패드</b>   8방향 (7 9 1 3 = 대각선)\n"
+            + "<b>마우스 클릭</b>   그 칸까지 걸어가기\n"
+            + "<b>Space · 숫자패드 5</b>   한 턴 쉬기\n"
+            + "<b>Enter</b>   계단 위에서 오르내리기\n\n"
+            + "<color=#FFD54F><b>전투</b></color>\n"
+            + "<b>적 쪽으로 이동</b>   근접 공격\n"
+            + "<b>Q · 오른쪽 아래 상자</b>   표시된 적 공격\n"
+            + "<b>Tab</b>   공격할 적 바꾸기\n\n"
+            + "<color=#FFD54F><b>마법</b></color>\n"
+            + "<b>1 ~ 6</b>   빠른 칸 주문 → 조준\n"
+            + "<b>마우스 · 방향키</b>   조준 칸 옮기기\n"
+            + "<b>Space · Enter · 클릭</b>   시전\n"
+            + "<b>같은 숫자 두 번</b>   가까운 적에게 바로 시전\n"
+            + "<b>Esc · 오른쪽 클릭</b>   취소";
+        /// <summary>오른쪽 칸 (아이템 · 살피기 · 화면 · 요령).</summary>
+        public const string ControlsRight =
+            "<color=#FFD54F><b>아이템 · 성장</b></color>\n"
+            + "<b>I · F</b>   배낭 (사용 · 장착 · 던지기 · 빠른 칸 등록)\n"
+            + "<b>걸어 들어가기</b>   바닥 아이템 줍기\n"
+            + "<b>마법 융합기</b>   주문 두 개를 합쳐 한 번에 시전\n"
+            + "<b>T</b>   특성 창\n\n"
+            + "<color=#FFD54F><b>살피기</b></color>\n"
+            + "<b>E</b>   정보 모드 (칸 · 적 설명)\n"
+            + "<b>E 한 번 더 · Z</b>   주변 숨은 함정 · 문 찾기\n\n"
+            + "<color=#FFD54F><b>화면</b></color>\n"
+            + "<b>마우스 휠</b>   확대 · 축소\n"
+            + "<b>끌기</b>   둘러보기\n"
+            + "<b>H</b>   이 안내 다시 보기\n\n"
+            + "<color=#FFD54F><b>요령</b></color>\n"
+            + "젖은 적에게 번개, 독구름에 불 —\n<b>상태 × 속성</b>이 만나면 반응이 일어납니다";
+        /// <summary>HUD 구석 고정 안내.</summary>
+        public const string ControlsCorner = "H 조작 안내";
+        public const string ModeRealLockedName = "실시간  <size=70%>(잠김)</size>";
+        public const string ModeRealLockedDesc = "시연 버전에서는\n턴제만 플레이할 수 있습니다";
 
         // 3-33 명예의 전당
         public const string HallOfFameTitle = "명예의 전당 — 클리어 기록 (높은 점수 순)";

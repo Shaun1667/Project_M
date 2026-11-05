@@ -64,10 +64,34 @@ namespace ProjectM.UI
             Unbind();
             _hint = string.Empty;
             ApplySkin();
+            EnsureControlsCorner();
             _model = new HudModel(_logLines, text);
             _model.Changed += Redraw;
             _model.Bind(bus, player, spellBook, progression, floor);
             Redraw();
+        }
+
+        private TMP_Text _controlsCorner;
+
+        /// <summary>2026-11-05 지스타 시연: 화면 오른쪽 위 구석에 "H 조작 안내" (한 번만 만든다).</summary>
+        private void EnsureControlsCorner()
+        {
+            if (_controlsCorner != null) return;
+            var canvas = _hpLabel != null ? _hpLabel.canvas : GetComponentInParent<Canvas>();
+            if (canvas == null) return;
+            var go = new GameObject("ControlsCorner", typeof(RectTransform), typeof(TextMeshProUGUI));
+            var rect = (RectTransform)go.transform;
+            rect.SetParent(canvas.transform, false);
+            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(1f, 1f);
+            rect.anchoredPosition = new Vector2(-16f, -12f);
+            rect.sizeDelta = new Vector2(300f, 36f);
+            _controlsCorner = go.GetComponent<TextMeshProUGUI>();
+            if (_hpLabel != null) _controlsCorner.font = _hpLabel.font;
+            _controlsCorner.fontSize = 22f;
+            _controlsCorner.alignment = TextAlignmentOptions.Right;
+            _controlsCorner.color = new Color(1f, 1f, 1f, 0.6f);
+            _controlsCorner.raycastTarget = false;
+            _controlsCorner.text = HudText.ControlsCorner;
         }
 
         /// <summary>
