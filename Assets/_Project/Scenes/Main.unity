@@ -3737,7 +3737,7 @@ MonoBehaviour:
   _iconSize: {x: 110, y: 30}
   _quickSlotSize: {x: 230, y: 40}
   _itemIcons: {fileID: 11400000, guid: 481eb5d51281c1848a2a10324a470689, type: 2}
-  _skin: {fileID: 11400000, guid: 252751c2d9975f148addac834dca91ac, type: 2}
+  _skin: {fileID: 0}
 --- !u!114 &2085256666
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3835,7 +3835,7 @@ MonoBehaviour:
   _spacing: 8
   _menuItemSize: {x: 150, y: 40}
   _itemIcons: {fileID: 11400000, guid: 481eb5d51281c1848a2a10324a470689, type: 2}
-  _skin: {fileID: 11400000, guid: 252751c2d9975f148addac834dca91ac, type: 2}
+  _skin: {fileID: 0}
 --- !u!114 &2085256670
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3851,7 +3851,7 @@ MonoBehaviour:
   _panel: {fileID: 1153024588}
   _title: {fileID: 1841486321}
   _body: {fileID: 546779308}
-  _skin: {fileID: 11400000, guid: 252751c2d9975f148addac834dca91ac, type: 2}
+  _skin: {fileID: 0}
 --- !u!114 &2085256671
 MonoBehaviour:
   m_ObjectHideFlags: 0
