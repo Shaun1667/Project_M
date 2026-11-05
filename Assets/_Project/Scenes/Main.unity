@@ -3839,7 +3839,7 @@ MonoBehaviour:
   _menuItemSize: {x: 150, y: 40}
   _itemIcons: {fileID: 11400000, guid: 481eb5d51281c1848a2a10324a470689, type: 2}
   _skin: {fileID: 0}
-  _shopkeeperIllustration: {fileID: 2839623366716666338, guid: 151ed9cbd4555bf4287af73a359bd5be, type: 3}
+  _shopkeeperIllustration: {fileID: 21300000, guid: e943cc7e86ea6c14d8c92d293f39b584, type: 3}
   _shopkeeperHeight: 560
 --- !u!114 &2085256670
 MonoBehaviour:

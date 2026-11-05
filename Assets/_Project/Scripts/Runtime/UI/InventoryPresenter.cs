@@ -22,7 +22,7 @@ namespace ProjectM.UI
         [SerializeField] private Vector2 _menuItemSize = new Vector2(150, 40);
         [Tooltip("아이템 픽셀 그림 (P-3 ⓒ) — 칸 왼쪽에. 비면 글자만")] [SerializeField] private ProjectM.Presentation.ItemVisualCatalog _itemIcons;
         [Tooltip("G-18 UI 그림 (창 · 칸 틀) — 비면 예전 색 칸")] [SerializeField] private UiSkin _skin;
-        [Tooltip("팔기 창 왼쪽에 보이는 상인 일러스트 (2026-11-05 — Art/Pixel/Characters/shopkeeper_illust). 비면 없음")] [SerializeField] private Sprite _shopkeeperIllustration;
+        [Tooltip("팔기 창 왼쪽에 보이는 상인 일러스트 (2026-11-05 — Art/Pixel/Characters/shopkeeper_illust_cut, 배경 지움). 비면 없음")] [SerializeField] private Sprite _shopkeeperIllustration;
         [Tooltip("상인 일러스트 높이 (px)")] [SerializeField] private float _shopkeeperHeight = 560f;
         private Image _shopkeeperImage;
 
@@ -67,33 +67,69 @@ namespace ProjectM.UI
             ShowShopkeeper(false);
         }
 
-        /// <summary>2026-11-05: 팔기 창일 때 창 왼쪽에 상인 일러스트 (패널 밖 — 같은 캔버스, 패널 왼쪽 끝에 맞춤).</summary>
+        private static readonly Color ShopFrameColor = new Color(0.1f, 0.08f, 0.06f, 0.96f);
+        private static readonly Color ShopFrameBorder = new Color(0.62f, 0.48f, 0.22f, 1f);
+        private const float ShopFramePad = 24f, ShopFrameGap = 16f;
+        private RectTransform _shopFrame;
+        private Vector2? _panelHome;
+
+        /// <summary>
+        /// 2026-11-05 사용자 스케치: 팔기 창 = 큰 상점 창 하나 안에 왼쪽 상인(배경 없는 그림) · 오른쪽 팔기 칸. 창 전체를 원래 자리 가운데에 두고
+        /// 팔기 칸(패널)은 그 오른쪽으로 옮겼다가, 닫으면 원래 자리로.
+        /// </summary>
         private void ShowShopkeeper(bool show)
         {
             if (!show)
             {
-                if (_shopkeeperImage != null) _shopkeeperImage.gameObject.SetActive(false);
+                if (_shopFrame != null) _shopFrame.gameObject.SetActive(false);
+                if (_panelHome.HasValue && _panel != null) _panel.anchoredPosition = _panelHome.Value;
                 return;
             }
             if (_shopkeeperIllustration == null || _panel == null) return;
-            if (_shopkeeperImage == null)
+            if (!_panelHome.HasValue) _panelHome = _panel.anchoredPosition;
+            if (_shopFrame == null)
             {
+                var frameGo = new GameObject("ShopFrame", typeof(RectTransform), typeof(Image), typeof(Outline));
+                _shopFrame = (RectTransform)frameGo.transform;
+                _shopFrame.SetParent(_panel.parent, false);
+                var frameImage = frameGo.GetComponent<Image>();
+                frameImage.color = ShopFrameColor;
+                frameImage.raycastTarget = false;
+                var outline = frameGo.GetComponent<Outline>();
+                outline.effectColor = ShopFrameBorder;
+                outline.effectDistance = new Vector2(3f, -3f);
+
                 var go = new GameObject("ShopkeeperIllustration", typeof(RectTransform), typeof(Image));
-                var rect = (RectTransform)go.transform;
-                rect.SetParent(_panel.parent, false);
+                go.transform.SetParent(_shopFrame, false);
                 _shopkeeperImage = go.GetComponent<Image>();
                 _shopkeeperImage.sprite = _shopkeeperIllustration;
                 _shopkeeperImage.preserveAspect = true;
                 _shopkeeperImage.raycastTarget = false;
-                var size = _shopkeeperIllustration.rect.size;
-                rect.sizeDelta = new Vector2(_shopkeeperHeight * size.x / Mathf.Max(1f, size.y), _shopkeeperHeight);
             }
-            var r = (RectTransform)_shopkeeperImage.transform;
-            r.anchorMin = r.anchorMax = _panel.anchorMin;
-            r.pivot = new Vector2(1f, 0.5f); // 오른쪽 끝 = 패널 왼쪽 끝
-            r.anchoredPosition = _panel.anchoredPosition + new Vector2(-_panel.rect.width * _panel.pivot.x - 12f, 0f);
-            _shopkeeperImage.gameObject.SetActive(true);
-            _shopkeeperImage.transform.SetAsLastSibling();
+            var size = _shopkeeperIllustration.rect.size;
+            float illusH = Mathf.Max(_shopkeeperHeight, _panel.rect.height);
+            float illusW = illusH * size.x / Mathf.Max(1f, size.y);
+            float panelW = _panel.rect.width, panelH = _panel.rect.height;
+            float frameW = ShopFramePad * 2 + illusW + ShopFrameGap + panelW;
+            float frameH = ShopFramePad * 2 + Mathf.Max(illusH, panelH);
+            var home = _panelHome.Value;
+
+            _shopFrame.anchorMin = _shopFrame.anchorMax = _panel.anchorMin;
+            _shopFrame.pivot = new Vector2(0.5f, 0.5f);
+            _shopFrame.sizeDelta = new Vector2(frameW, frameH);
+            _shopFrame.anchoredPosition = home;
+
+            var ir = (RectTransform)_shopkeeperImage.transform;
+            ir.anchorMin = ir.anchorMax = new Vector2(0f, 0.5f);
+            ir.pivot = new Vector2(0f, 0.5f);
+            ir.sizeDelta = new Vector2(illusW, illusH);
+            ir.anchoredPosition = new Vector2(ShopFramePad, 0f);
+
+            // 팔기 칸 = 창 오른쪽 (패널 pivot이 가운데라고 보고 가운데 위치를 맞춤)
+            _panel.anchoredPosition = home + new Vector2(frameW / 2f - ShopFramePad - panelW * (1f - _panel.pivot.x), 0f);
+
+            _shopFrame.gameObject.SetActive(true);
+            _shopFrame.SetSiblingIndex(Mathf.Max(0, _panel.GetSiblingIndex())); // 패널 바로 뒤 (패널이 위에 그려짐)
         }
 
         /// <param name="items">설명 줄(3-10b)에 쓰는 아이템 표. null이면 설명 없음.</param>
