@@ -29,6 +29,7 @@ namespace ProjectM.UI
         private TMP_Text _title;
         private TMP_Text _hint;
         private Action<int> _onConfirm;
+        private Action _onCancel;
         private Vector2 _lastMouse;
 
         public bool IsOpen => _model.IsOpen;
@@ -61,11 +62,14 @@ namespace ProjectM.UI
         /// <param name="title">제목 (null = 캐릭터 선택). 3-21b 직업 형태 선택 창도 이 창을 쓴다.</param>
         /// <param name="hint">아래 안내 (null = 캐릭터 선택 안내).</param>
         /// <param name="details">카드 가운데 설명 글 (같은 길이, 그림이 없는 카드용 — 3-21b 형태 설명). null이면 없음.</param>
+        /// <param name="onCancel">Esc로 닫을 수 있게 (3-21c 특성 창). null이면 닫을 수 없음 — 꼭 고른다.</param>
         public void Open(IReadOnlyList<Sprite> portraits, IReadOnlyList<string> names, int initial, Action<int> onConfirm,
-            IReadOnlyList<Sprite> illustrations = null, string title = null, string hint = null, IReadOnlyList<string> details = null)
+            IReadOnlyList<Sprite> illustrations = null, string title = null, string hint = null, IReadOnlyList<string> details = null,
+            Action onCancel = null)
         {
             if (_panel == null) return;
             _onConfirm = onConfirm;
+            _onCancel = onCancel;
             Build(portraits, names, illustrations, details);
             _title.text = title ?? HudText.CharacterSelectTitle;
             _hint.text = hint ?? HudText.CharacterSelectHint;
@@ -89,6 +93,16 @@ namespace ProjectM.UI
             var keyboard = Keyboard.current;
             if (keyboard != null)
             {
+                if (_onCancel != null && keyboard.escapeKey.wasPressedThisFrame) // 3-21c: 닫을 수 있는 창
+                {
+                    var cancel = _onCancel;
+                    _onCancel = null;
+                    _onConfirm = null;
+                    _model.Close();
+                    if (_panel != null) _panel.gameObject.SetActive(false);
+                    cancel();
+                    return;
+                }
                 if (keyboard.leftArrowKey.wasPressedThisFrame || keyboard.aKey.wasPressedThisFrame) _model.Move(-1);
                 else if (keyboard.rightArrowKey.wasPressedThisFrame || keyboard.dKey.wasPressedThisFrame) _model.Move(1);
                 else if (keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame || keyboard.spaceKey.wasPressedThisFrame)

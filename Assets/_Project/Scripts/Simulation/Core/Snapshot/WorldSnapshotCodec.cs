@@ -101,6 +101,12 @@ namespace ProjectM.Core
                 w.Write(snapshot.Gold); // 21 (3-15a)
                 w.Write(snapshot.ClassId ?? string.Empty); // 24 (3-21b)
                 w.Write(snapshot.FormId ?? string.Empty);
+                w.Write(snapshot.Talents.Length); // 25 (3-21c)
+                foreach (var t in snapshot.Talents)
+                {
+                    w.Write(t.TalentId ?? string.Empty);
+                    w.Write(t.Points);
+                }
 
                 w.Flush();
                 return stream.ToArray();
@@ -197,6 +203,12 @@ namespace ProjectM.Core
                 s.ClassId = classId.Length > 0 ? classId : null;
                 var formId = r.ReadString();
                 s.FormId = formId.Length > 0 ? formId : null;
+                s.Talents = new TalentPoint[ReadCount(r)]; // 25 (3-21c)
+                for (int i = 0; i < s.Talents.Length; i++)
+                {
+                    var talentId = r.ReadString();
+                    s.Talents[i] = new TalentPoint(talentId, r.ReadInt32());
+                }
 
                 if (stream.Position != stream.Length)
                     throw new InvalidDataException("스냅샷 끝에 남는 데이터가 있다.");

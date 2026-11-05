@@ -40,6 +40,9 @@ namespace ProjectM.Units
             damage = MeleeWeapon.ApplyDefense(_world, target, damage); // 3-7c: 방어 굴림 (육척봉)
             Combat.ApplyDamage(_world, attacker.Id, target, damage, DamageCause.Attack);
             if (damage > 0) _world.EnemyRules?.OnMeleeHit(_world, attacker, target); // 3-17b: 전갈 중독
+            int manaPercent = Talents.MeleeHitManaPercent(_world, attacker); // 3-21c 창의 기세: 맞으면 % 확률로 마나 +1
+            if (manaPercent > 0 && attacker.IsAlive && _world.Rng.Get(RngStream.Combat).Range(0, 100) < manaPercent)
+                ProjectM.Magic.Mana.Restore(_world, attacker, 1);
         }
     }
 }

@@ -755,6 +755,29 @@ SPD 규칙 그대로: 방어 굴림 = 강화 ~ 티어 × (2 + 강화) (SPD Armor
 
 검산 (`ClassFormTests.ProjectAssets_MatchBalanceTable`).
 
+**3-21c 특성** (`ClassCatalog.asset` 루멘 줄 `Tiers` · `Talents`, SPD식): 레벨업마다 1점 — 1단계 = 레벨 **2~6**(5점, 공통 4개 · 각 최대 **2**), 2단계 = 레벨 **7~12**(6점, 고른 형태 4개 · 각 최대 **3**). 2단계 점수는 형태 전에도 모이고 형태를 고른 뒤 쓴다. 레벨 13 이후는 점수 없음 [미정]. 값은 점수별 누적 값.
+
+| 단계 | ID | 이름 | 효과 (`TalentEffect`) | 1 / 2 / 3점 |
+|---|---|---|---|---|
+| 1 | `light_mastery` | 빛의 숙련 | SpellDamage (빛의 창 8개) | +1 / +2 |
+| 1 | `mana_cycle` | 마나 순환 | SpellKillMana (8개) — 적을 쓰러뜨리면 마나 | +1 / +2 |
+| 1 | `spear_handling` | 창 다루기 | WeaponAccuracy (`spear`) — 근접 명중 | +2 / +4 |
+| 1 | `light_blessing` | 빛의 가호 | MaxHp — 찍을 때 바로 (현재 체력도) | +3 / +6 |
+| 2 근접 | `endless_thrust` | 끝없는 찌르기 | SpellHitCount (연속 찌르기) | +1 / +2 / +3 |
+| 2 근접 | `long_blade` | 긴 창날 | SpellRange (관통 찌르기) | +1 / +2 / +3 |
+| 2 근접 | `dash` | 질주 | SpellRange (돌진) + SpellStatusChance 둔화 | +1 / +2 / +2 · 3점 둔화 100% |
+| 2 근접 | `spear_momentum` | 창의 기세 | HitManaChance (근접 공격 · 근접형 빛의 창 4개) — 맞으면 마나 +1 | 20 / 40 / 60% |
+| 2 원거리 | `light_rain` | 빛의 비 | SpellMaxTargets (다중 발사) | +1 / +2 / +3 |
+| 2 원거리 | `piercing_light` | 꿰뚫는 빛 | SpellDamage (관통 발사) | +1 / +2 / +3 |
+| 2 원거리 | `light_hand` | 가벼운 손 | SpellManaCost −1 + SpellRange (던지기+) | 마나 −1 · 사거리 +0 / +1 / +2 |
+| 2 원거리 | `shadow_hunt` | 그림자 사냥 | UnseenDamagePercent (8개) — 나를 못 본 적 | +25 / +50 / +75% |
+
+- 순서: 특성 더하기 → 창 강화(× 150% 내림). 예: 빛의 숙련 1점 + 창 = (4 + 1) × 1.5 = **7**. 마나는 0 아래로, 사거리 · 횟수 · 대상 수는 1 아래로 안 감.
+- 확률(창의 기세)은 `RngStream.Combat` — 특성이 없으면 굴리지 않아 기존 시드 결과는 그대로.
+- 결과: 레벨 12에 1단계 4개 중 2개 반(5점), 2단계 2개(6점) 정도 — 모두 찍을 수는 없다(1단계 8점 · 2단계 12점 필요).
+
+검산 (`TalentTests.ProjectAsset_MatchesBalanceTable`).
+
 ---
 
 ## 19. 연금술 — `ItemCatalog.asset`의 씨앗 줄 `BrewsInto` + `FloorDecorConfig.asset` 연구실 (3-16c)

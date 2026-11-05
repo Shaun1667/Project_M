@@ -33,3 +33,199 @@ MonoBehaviour:
       ReplaceSpells:
       - From: light_spear_throw
         To: light_spear_throw_plus
+    Tiers:
+    - FirstLevel: 2
+      LastLevel: 6
+    - FirstLevel: 7
+      LastLevel: 12
+    Talents:
+    - Id: light_mastery
+      DisplayName: "\uBE5B\uC758 \uC219\uB828"
+      Description: "\uBE5B\uC758 \uCC3D \uAE30\uC220 \uD53C\uD574 +1 / +2"
+      Tier: 1
+      FormId: 
+      MaxPoints: 2
+      Effects:
+      - Effect: 1
+        Values: 0100000002000000i
+        SpellIds:
+        - light_spear_thrust
+        - light_spear_throw
+        - light_spear_flurry
+        - light_spear_pierce
+        - light_spear_charge
+        - light_spear_lance
+        - light_spear_volley
+        - light_spear_throw_plus
+        WeaponId: 
+        Status: 0
+    - Id: mana_cycle
+      DisplayName: "\uB9C8\uB098 \uC21C\uD658"
+      Description: "\uBE5B\uC758 \uCC3D \uAE30\uC220\uB85C \uC801\uC744 \uC4F0\uB7EC\uB728\uB9AC\uBA74\n\uB9C8\uB098 +1 / +2"
+      Tier: 1
+      FormId: 
+      MaxPoints: 2
+      Effects:
+      - Effect: 7
+        Values: 0100000002000000i
+        SpellIds:
+        - light_spear_thrust
+        - light_spear_throw
+        - light_spear_flurry
+        - light_spear_pierce
+        - light_spear_charge
+        - light_spear_lance
+        - light_spear_volley
+        - light_spear_throw_plus
+        WeaponId: 
+        Status: 0
+    - Id: spear_handling
+      DisplayName: "\uCC3D \uB2E4\uB8E8\uAE30"
+      Description: "\uCC3D\uC744 \uB4E4\uBA74 \uBA85\uC911 +2 / +4"
+      Tier: 1
+      FormId: 
+      MaxPoints: 2
+      Effects:
+      - Effect: 9
+        Values: 0200000004000000i
+        SpellIds: []
+        WeaponId: spear
+        Status: 0
+    - Id: light_blessing
+      DisplayName: "\uBE5B\uC758 \uAC00\uD638"
+      Description: "\uCD5C\uB300 \uCCB4\uB825 +3 / +6"
+      Tier: 1
+      FormId: 
+      MaxPoints: 2
+      Effects:
+      - Effect: 10
+        Values: 0300000006000000i
+        SpellIds: []
+        WeaponId: 
+        Status: 0
+    - Id: endless_thrust
+      DisplayName: "\uB05D\uC5C6\uB294 \uCC0C\uB974\uAE30"
+      Description: "\uC5F0\uC18D \uCC0C\uB974\uAE30 \uD69F\uC218\n+1 / +2 / +3"
+      Tier: 2
+      FormId: melee
+      MaxPoints: 3
+      Effects:
+      - Effect: 3
+        Values: 010000000200000003000000i
+        SpellIds:
+        - light_spear_flurry
+        WeaponId: 
+        Status: 0
+    - Id: long_blade
+      DisplayName: "\uAE34 \uCC3D\uB0A0"
+      Description: "\uAD00\uD1B5 \uCC0C\uB974\uAE30 \uAE38\uC774\n+1 / +2 / +3"
+      Tier: 2
+      FormId: melee
+      MaxPoints: 3
+      Effects:
+      - Effect: 2
+        Values: 010000000200000003000000i
+        SpellIds:
+        - light_spear_pierce
+        WeaponId: 
+        Status: 0
+    - Id: dash
+      DisplayName: "\uC9C8\uC8FC"
+      Description: "\uB3CC\uC9C4 \uAC70\uB9AC +1 / +2,\n3\uC810\uC774\uBA74 \uB9DE\uC740 \uC801 \uB454\uD654"
+      Tier: 2
+      FormId: melee
+      MaxPoints: 3
+      Effects:
+      - Effect: 2
+        Values: 010000000200000002000000i
+        SpellIds:
+        - light_spear_charge
+        WeaponId: 
+        Status: 0
+      - Effect: 6
+        Values: 000000000000000064000000i
+        SpellIds:
+        - light_spear_charge
+        WeaponId: 
+        Status: 2
+    - Id: spear_momentum
+      DisplayName: "\uCC3D\uC758 \uAE30\uC138"
+      Description: "\uADFC\uC811 \uACF5\uACA9 \xB7 \uBE5B\uC758 \uCC3D\uC774 \uB9DE\uC73C\uBA74\n\uB9C8\uB098 +1 \uD655\uB960 20 / 40 / 60%"
+      Tier: 2
+      FormId: melee
+      MaxPoints: 3
+      Effects:
+      - Effect: 8
+        Values: 14000000280000003c000000i
+        SpellIds:
+        - light_spear_thrust
+        - light_spear_flurry
+        - light_spear_pierce
+        - light_spear_charge
+        WeaponId: 
+        Status: 0
+    - Id: light_rain
+      DisplayName: "\uBE5B\uC758 \uBE44"
+      Description: "\uB2E4\uC911 \uBC1C\uC0AC \uB300\uC0C1\n+1 / +2 / +3"
+      Tier: 2
+      FormId: ranged
+      MaxPoints: 3
+      Effects:
+      - Effect: 4
+        Values: 010000000200000003000000i
+        SpellIds:
+        - light_spear_volley
+        WeaponId: 
+        Status: 0
+    - Id: piercing_light
+      DisplayName: "\uAFF0\uB6AB\uB294 \uBE5B"
+      Description: "\uAD00\uD1B5 \uBC1C\uC0AC \uD53C\uD574\n+1 / +2 / +3"
+      Tier: 2
+      FormId: ranged
+      MaxPoints: 3
+      Effects:
+      - Effect: 1
+        Values: 010000000200000003000000i
+        SpellIds:
+        - light_spear_lance
+        WeaponId: 
+        Status: 0
+    - Id: light_hand
+      DisplayName: "\uAC00\uBCBC\uC6B4 \uC190"
+      Description: "\uB358\uC9C0\uAE30 \uB9C8\uB098 2 \u2192 1 (1\uC810),\n\uC0AC\uAC70\uB9AC +1 / +2 (2 \xB7 3\uC810)"
+      Tier: 2
+      FormId: ranged
+      MaxPoints: 3
+      Effects:
+      - Effect: 5
+        Values: ffffffffffffffffffffffffi
+        SpellIds:
+        - light_spear_throw_plus
+        WeaponId: 
+        Status: 0
+      - Effect: 2
+        Values: 000000000100000002000000i
+        SpellIds:
+        - light_spear_throw_plus
+        WeaponId: 
+        Status: 0
+    - Id: shadow_hunt
+      DisplayName: "\uADF8\uB9BC\uC790 \uC0AC\uB0E5"
+      Description: "\uB098\uB97C \uBABB \uBCF8 \uC801\uC5D0\uAC8C \uBE5B\uC758 \uCC3D \uD53C\uD574\n\xD7 1.25 / \xD7 1.5 / \xD7 1.75"
+      Tier: 2
+      FormId: ranged
+      MaxPoints: 3
+      Effects:
+      - Effect: 11
+        Values: 19000000320000004b000000i
+        SpellIds:
+        - light_spear_thrust
+        - light_spear_throw
+        - light_spear_flurry
+        - light_spear_pierce
+        - light_spear_charge
+        - light_spear_lance
+        - light_spear_volley
+        - light_spear_throw_plus
+        WeaponId: 
+        Status: 0

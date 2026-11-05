@@ -82,6 +82,34 @@ namespace ProjectM.Core
         /// <summary>고른 직업 형태 ID (3-21b — 근접형 melee · 원거리형 ranged). null = 아직 안 고름. 스냅샷 v24.</summary>
         public string FormId { get; internal set; }
 
+        // ── 특성 (3-21c): 찍은 점수, 처음 찍은 순서 — 스냅샷 v25 ──
+        private readonly System.Collections.Generic.List<TalentPoint> _talents = new System.Collections.Generic.List<TalentPoint>();
+
+        public System.Collections.Generic.IReadOnlyList<TalentPoint> Talents => _talents;
+
+        public int TalentPoints(string talentId)
+        {
+            foreach (var t in _talents) if (t.TalentId == talentId) return t.Points;
+            return 0;
+        }
+
+        internal void SetTalentPoints(string talentId, int points)
+        {
+            for (int i = 0; i < _talents.Count; i++)
+            {
+                if (_talents[i].TalentId != talentId) continue;
+                _talents[i] = new TalentPoint(talentId, points);
+                return;
+            }
+            _talents.Add(new TalentPoint(talentId, points));
+        }
+
+        internal void SetTalents(System.Collections.Generic.IEnumerable<TalentPoint> talents)
+        {
+            _talents.Clear();
+            _talents.AddRange(talents);
+        }
+
         private readonly System.Collections.Generic.List<PendingFloorItem> _pendingFloorItems = new System.Collections.Generic.List<PendingFloorItem>();
         /// <summary>아직 가 보지 않은 층에 놓을 아이템 (3-5 마법서 배치 계획), 층 → 나눠 준 순서. 처음 가는 층에서 꺼내 놓는다.</summary>
         public System.Collections.Generic.IReadOnlyList<PendingFloorItem> PendingFloorItems => _pendingFloorItems;
@@ -149,6 +177,19 @@ namespace ProjectM.Core
 
     /// <summary>판마다 정한 물약 · 주문서의 겉모습 하나 (3-9 식별): 아이템 ID → 모습 키 (ItemVisualCatalog, 예: potion_crimson). 스냅샷 v16.</summary>
     [System.Serializable]
+    /// <summary>특성 하나에 찍은 점수 (3-21c). 스냅샷 v25에 저장.</summary>
+    public readonly struct TalentPoint
+    {
+        public readonly string TalentId;
+        public readonly int Points;
+
+        public TalentPoint(string talentId, int points)
+        {
+            TalentId = talentId;
+            Points = points;
+        }
+    }
+
     public readonly struct ItemLook
     {
         public readonly string ItemId;

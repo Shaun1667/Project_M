@@ -102,6 +102,11 @@ namespace ProjectM.Core
 
         public void SetEnemyRules(ProjectM.Units.EnemyRules rules) => EnemyRules = rules;
 
+        /// <summary>직업 · 특성 표 (3-21c — 특성 효과 조회용). GameRoot가 넣는다 — 규칙 연결이라 저장하지 않는다 (찍은 점수는 Run.Talents). null이면 특성 없음.</summary>
+        internal ProjectM.Units.ClassBook Classes { get; private set; }
+
+        public void SetClassRules(ProjectM.Units.ClassBook classes) => Classes = classes;
+
         public void SetItemRules(Action<ProjectM.Magic.Element, IReadOnlyList<GridPos>> onCellsHit, Action<Unit> onUnitDied, Action<GridPos> onGrassTrampled = null)
         {
             OnCellsHit = onCellsHit;
@@ -270,6 +275,7 @@ namespace ProjectM.Core
                 Gold = Run.Gold,
                 ClassId = Run.ClassId, // 24 (3-21b)
                 FormId = Run.FormId,
+                Talents = new List<TalentPoint>(Run.Talents).ToArray(), // 25 (3-21c)
             };
         }
 
@@ -371,6 +377,7 @@ namespace ProjectM.Core
             world.Run.Gold = snapshot.Gold;
             world.Run.ClassId = snapshot.ClassId; // 24 (3-21b)
             world.Run.FormId = snapshot.FormId;
+            world.Run.SetTalents(snapshot.Talents ?? System.Array.Empty<TalentPoint>()); // 25 (3-21c)
             world.Run.Outcome = snapshot.Outcome;
             world.Run.BossId = snapshot.BossId;
             world.Run.LastPlayerDamage = snapshot.LastPlayerDamage;

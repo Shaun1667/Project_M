@@ -73,12 +73,23 @@ namespace ProjectM.Magic
         public int HitCount { get; }
         /// <summary>Multi 모양의 최대 대상 수 (3-21b 다중 발사). 다른 모양은 0.</summary>
         public int MaxTargets { get; }
+        /// <summary>이 주문으로 적을 쓰러뜨리면 시전자 마나 + (3-21c 특성 마나 순환 — 데이터 주문은 0, SpellModifiers가 채움).</summary>
+        public int ManaOnKill { get; }
+        /// <summary>맞은 유닛마다 이 % 확률로 시전자 마나 +1 (3-21c 창의 기세).</summary>
+        public int ManaOnHitPercent { get; }
+        /// <summary>시전자를 못 본 적(기습 판정)에게 피해 + % (3-21c 그림자 사냥).</summary>
+        public int UnseenDamagePercent { get; }
 
         public SpellDef(string id, Element element, SpellShape shape, int range, int damage, int manaCost, int radius = 0,
             StatusType appliesStatus = StatusType.None, int statusChancePercent = 100, TerrainEffectType leavesTerrain = TerrainEffectType.None,
             int terrainDurationTicks = 0, bool triggersReactions = true, string boostWeaponId = null, int boostDamagePercent = 100, int boostRange = 0,
-            int hitCount = 1, int maxTargets = 0)
+            int hitCount = 1, int maxTargets = 0, int manaOnKill = 0, int manaOnHitPercent = 0, int unseenDamagePercent = 0)
         {
+            if (manaOnKill < 0 || manaOnHitPercent < 0 || manaOnHitPercent > 100 || unseenDamagePercent < 0)
+                throw new ArgumentOutOfRangeException(nameof(manaOnKill), "처치 마나 · 맞힘 마나 확률(0~100) · 기습 피해 %는 0 이상.");
+            ManaOnKill = manaOnKill;
+            ManaOnHitPercent = manaOnHitPercent;
+            UnseenDamagePercent = unseenDamagePercent;
             if (hitCount < 1) throw new ArgumentOutOfRangeException(nameof(hitCount), hitCount, "맞히는 횟수는 1 이상.");
             if (shape == SpellShape.Multi ? maxTargets < 1 : maxTargets != 0)
                 throw new ArgumentOutOfRangeException(nameof(maxTargets), maxTargets, "여러 대상(Multi)만 대상 수 1 이상, 나머지는 0.");
@@ -113,21 +124,63 @@ namespace ProjectM.Magic
             Radius = radius;
         }
 
-        /// <summary>무기 강화를 적용한 사본 (SpellModifiers 전용) — 같은 ID, 강화 필드는 지워 두 번 적용되지 않게.</summary>
-        internal SpellDef Boosted() => new SpellDef(Id, Element, Shape, Range + BoostRange, (int)((long)Damage * BoostDamagePercent / 100), ManaCost, Radius,
-            AppliesStatus, StatusChancePercent, LeavesTerrain, TerrainDurationTicks, TriggersReactions, hitCount: HitCount, maxTargets: MaxTargets);
+        /// <summary>바꾼 값의 사본 (SpellModifiers 전용) — 같은 ID, 무기 강화 필드는 지워 두 번 적용되지 않게.</summary>
+        internal SpellDef Modified(int range, int damage, int manaCost, int hitCount, int maxTargets, StatusType status, int statusChance,
+            int manaOnKill, int manaOnHitPercent, int unseenDamagePercent) =>
+            new SpellDef(Id, Element, Shape, range, damage, manaCost, Radius, status, statusChance, LeavesTerrain, TerrainDurationTicks, TriggersReactions,
+                hitCount: hitCount, maxTargets: maxTargets, manaOnKill: manaOnKill, manaOnHitPercent: manaOnHitPercent, unseenDamagePercent: unseenDamagePercent);
     }
 
     /// <summary>
     /// 시전자에 따라 바뀌는 주문 값의 한 조회 지점 (3-21a — CLAUDE.md 코딩 규칙 "마법서 · 아이템 효과는 한 조회 지점"):
-    /// 입력 미리보기 · 사거리 표시 · 실제 시전이 모두 이것을 거친다. 지금은 무기 강화(빛의 창 + 창)뿐 — 3-21c 특성도 여기에 더한다.
+    /// 입력 미리보기 · 사거리 표시 · 실제 시전이 모두 이것을 거친다.
+    /// 순서: 특성(3-21c, ProjectM.Units.Talents — 피해 · 사거리 · 횟수 · 대상 수 · 마나 · 상태 · 처치/맞힘 마나 · 기습 피해) 더하기 → 무기 강화(피해 × % 내림 · 사거리 +).
+    /// 바뀐 것이 없으면 같은 객체를 돌려준다.
     /// </summary>
     public static class SpellModifiers
     {
-        public static SpellDef For(ProjectM.Units.Unit caster, SpellDef spell)
+        /// <summary>무기 강화만 (특성 없음 — 세계가 없는 곳 · 테스트).</summary>
+        public static SpellDef For(ProjectM.Units.Unit caster, SpellDef spell) => For(null, caster, spell);
+
+        public static SpellDef For(ProjectM.Core.World world, ProjectM.Units.Unit caster, SpellDef spell)
         {
-            if (spell == null || caster == null || spell.BoostWeaponId == null) return spell;
-            return caster.Weapon.ItemId == spell.BoostWeaponId ? spell.Boosted() : spell; // 맨손 = Empty (ItemId null)
+            if (spell == null || caster == null) return spell;
+            int range = spell.Range, damage = spell.Damage, mana = spell.ManaCost, hits = spell.HitCount, targets = spell.MaxTargets;
+            var status = spell.AppliesStatus;
+            int chance = spell.StatusChancePercent;
+            int killMana = spell.ManaOnKill, hitMana = spell.ManaOnHitPercent, unseen = spell.UnseenDamagePercent;
+            bool changed = false;
+
+            if (world != null)
+            {
+                int T(ProjectM.Units.TalentEffect e) => ProjectM.Units.Talents.ForSpell(world, caster, e, spell.Id);
+                int dDamage = T(ProjectM.Units.TalentEffect.SpellDamage), dRange = T(ProjectM.Units.TalentEffect.SpellRange),
+                    dHits = T(ProjectM.Units.TalentEffect.SpellHitCount), dTargets = T(ProjectM.Units.TalentEffect.SpellMaxTargets),
+                    dMana = T(ProjectM.Units.TalentEffect.SpellManaCost), dKill = T(ProjectM.Units.TalentEffect.SpellKillMana),
+                    dHitMana = T(ProjectM.Units.TalentEffect.HitManaChance), dUnseen = T(ProjectM.Units.TalentEffect.UnseenDamagePercent);
+                var (tStatus, tChance) = ProjectM.Units.Talents.SpellStatus(world, caster, spell.Id);
+                if (dDamage != 0 || dRange != 0 || dHits != 0 || dMana != 0 || dKill != 0 || dHitMana != 0 || dUnseen != 0 || tStatus != StatusType.None
+                    || (dTargets != 0 && spell.Shape == SpellShape.Multi))
+                {
+                    changed = true;
+                    damage = Math.Max(0, damage + dDamage);
+                    range = Math.Max(1, range + dRange);
+                    hits = Math.Max(1, hits + dHits);
+                    if (spell.Shape == SpellShape.Multi) targets = Math.Max(1, targets + dTargets);
+                    mana = Math.Max(0, mana + dMana);
+                    killMana += dKill;
+                    hitMana = Math.Min(100, hitMana + dHitMana);
+                    unseen += dUnseen;
+                    if (tStatus != StatusType.None && status == StatusType.None) { status = tStatus; chance = tChance; }
+                }
+            }
+            if (spell.BoostWeaponId != null && caster.Weapon.ItemId == spell.BoostWeaponId) // 맨손 = Empty (ItemId null)
+            {
+                changed = true;
+                range += spell.BoostRange;
+                damage = (int)((long)damage * spell.BoostDamagePercent / 100);
+            }
+            return changed ? spell.Modified(range, damage, mana, hits, targets, status, chance, killMana, hitMana, unseen) : spell;
         }
     }
 

@@ -597,13 +597,14 @@ namespace ProjectM.Input
                 Hint(HudText.CastBlockReason(CastBlock.UnknownSpell));
                 return;
             }
+            spell = SpellModifiers.For(_world, player, spell); // 3-21a 무기 강화 · 3-21c 특성 — 마나 · 사거리도 시전과 같은 값
             if (player.Mana < spell.ManaCost)
             {
                 Hint(Text.NotEnoughMana(slot, spell.Id, player.Mana, spell.ManaCost));
                 return;
             }
 
-            BeginAim(player, spellId, null, slot, SpellModifiers.For(player, spell).Range); // 3-21a 무기 강화 사거리
+            BeginAim(player, spellId, null, slot, spell.Range);
         }
 
         /// <summary>
@@ -783,7 +784,7 @@ namespace ProjectM.Input
         private SpellDef AimSpell()
         {
             if (_aimSpellId == null || !_spells.TryGet(_aimSpellId, out var first)) return null;
-            if (_aimFusionSecond == null) return PlayerActions.TryGetPlayer(_world, out var player) ? SpellModifiers.For(player, first) : first; // 3-21a
+            if (_aimFusionSecond == null) return PlayerActions.TryGetPlayer(_world, out var player) ? SpellModifiers.For(_world, player, first) : first; // 3-21a
             return _spells.TryGet(_aimFusionSecond, out var second) ? _fusions.Build(first, second) : null;
         }
 

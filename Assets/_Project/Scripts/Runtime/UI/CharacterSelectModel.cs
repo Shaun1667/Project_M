@@ -51,5 +51,13 @@ namespace ProjectM.UI
             Changed?.Invoke();
             Confirmed?.Invoke(Selected);
         }
+
+        /// <summary>고르지 않고 닫는다 (3-21c 특성 창 Esc). Confirmed를 부르지 않는다.</summary>
+        public void Close()
+        {
+            if (!IsOpen) return;
+            IsOpen = false;
+            Changed?.Invoke();
+        }
     }
 }

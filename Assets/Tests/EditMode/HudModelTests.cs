@@ -215,6 +215,20 @@ namespace ProjectM.Tests
             Assert.That(hud.Log, Is.EqualTo(new[] { "근접형 — 창술을 골랐다 — 새 기술: 연속 찌르기, 돌진", "ranged을(를) 골랐다" }), "이름이 없으면 ID (한글이 아니면 을(를))");
         }
 
+        // 3-21c: 특성을 찍으면 "특성: 빛의 가호 1/2" · 체력 막대도 새 최대 체력
+        [Test]
+        public void TalentSpent_LogsAndUpdatesHp()
+        {
+            var s = Start();
+            var hud = new HudModel(8, new HudText { TalentNames = new Dictionary<string, string> { { "light_blessing", "빛의 가호" } } });
+            hud.Bind(s.World.Events, s.Player, s.Book);
+            s.World.Events.Publish(new ProjectM.Units.TalentSpentEvent(s.Player.Id, "light_blessing", 1, 2, 23, 23));
+            s.World.Events.Publish(new ProjectM.Units.TalentSpentEvent(s.Player.Id, "light_rain", 1, 3, 23, 23));
+            s.World.Events.Flush();
+            Assert.That(hud.Log, Is.EqualTo(new[] { "특성: 빛의 가호 1/2", "특성: light_rain 1/3" }));
+            Assert.That((hud.Hp, hud.MaxHp), Is.EqualTo((23, 23)));
+        }
+
         // 3-2a: 빠른 칸을 바꾸면 HUD 칸 · 비용이 따라 바뀐다 (3-1 장착 칸 테스트를 옮김)
         [Test]
         public void QuickSlotsChange_UpdatesSlotsAndCosts()

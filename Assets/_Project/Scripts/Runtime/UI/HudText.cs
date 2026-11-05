@@ -297,6 +297,22 @@ namespace ProjectM.UI
         public const string FormSelectTitle = "빛의 창 — 형태를 고르세요";
         public const string FormSelectHint = "← → 고르기 · Enter/클릭 확정 (한 번만 고를 수 있음)";
 
+        // 3-21c 특성 창 · 로그
+        public static string TalentSelectTitle(int tier, int unspent) => $"특성 — {tier}단계 (남은 점수 {unspent})";
+        public const string TalentSelectHint = "← → 고르기 · Enter/클릭 1점 찍기 · Esc 닫기";
+        public const string NoTalentPoints = "특성 점수가 없다 (레벨이 오르면 1점)";
+        public const string TalentMaxed = "그 특성은 이미 최대 점수다";
+        public static string TalentPointsReady(int points) => $"특성 점수 {points}점 — T로 찍기";
+
+        /// <summary>특성 ID → 표시 이름 (ClassCatalog, 3-21c). 없으면 ID.</summary>
+        public IReadOnlyDictionary<string, string> TalentNames { get; set; }
+
+        public string TalentSpent(string talentId, int points, int maxPoints)
+        {
+            string name = TalentNames != null && talentId != null && TalentNames.TryGetValue(talentId, out var n) ? n : talentId;
+            return $"특성: {name} {points}/{maxPoints}";
+        }
+
         /// <summary>형태 ID → 표시 이름 (ClassCatalog, 3-21b). 없으면 ID.</summary>
         public IReadOnlyDictionary<string, string> FormNames { get; set; }
 

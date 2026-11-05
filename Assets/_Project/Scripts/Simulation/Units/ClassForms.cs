@@ -31,9 +31,23 @@ namespace ProjectM.Units
         public string Id { get; }
         public int ChooseAtFloor { get; }
         public IReadOnlyList<ClassFormDef> Forms { get; }
+        /// <summary>특성 단계별 점수 레벨 범위 (3-21c, Tiers[단계 − 1]). 비면 특성 없음.</summary>
+        public IReadOnlyList<TalentTier> Tiers { get; }
+        /// <summary>특성 (표 순서 = 특성 창 순서). 2단계 특성은 FormId가 Forms 중 하나.</summary>
+        public IReadOnlyList<TalentDef> Talents { get; }
 
-        public ClassDef(string id, int chooseAtFloor, IReadOnlyList<ClassFormDef> forms)
+        public ClassDef(string id, int chooseAtFloor, IReadOnlyList<ClassFormDef> forms,
+            IReadOnlyList<TalentTier> tiers = null, IReadOnlyList<TalentDef> talents = null)
         {
+            Tiers = tiers ?? Array.Empty<TalentTier>();
+            Talents = talents ?? Array.Empty<TalentDef>();
+            var talentIds = new HashSet<string>();
+            foreach (var t in Talents)
+            {
+                if (t == null || !talentIds.Add(t.Id)) throw new ArgumentException("특성이 비었거나 ID가 겹친다.", nameof(talents));
+                if (t.Tier > Tiers.Count) throw new ArgumentException($"특성 {t.Id}의 단계 {t.Tier}에 점수 레벨 범위가 없다.", nameof(talents));
+                if (t.FormId != null && !Exists(forms, t.FormId)) throw new ArgumentException($"특성 {t.Id}의 형태 {t.FormId}가 없다.", nameof(talents));
+            }
             if (string.IsNullOrEmpty(id)) throw new ArgumentException("직업 ID가 비어 있다.", nameof(id));
             if (chooseAtFloor < 1) throw new ArgumentOutOfRangeException(nameof(chooseAtFloor));
             if (forms == null || forms.Count == 0) throw new ArgumentException("형태가 없다.", nameof(forms));
@@ -49,6 +63,19 @@ namespace ProjectM.Units
         {
             foreach (var f in Forms) if (f.Id == formId) return f;
             return null;
+        }
+
+        public TalentDef TalentOf(string talentId)
+        {
+            foreach (var t in Talents) if (t.Id == talentId) return t;
+            return null;
+        }
+
+        private static bool Exists(IReadOnlyList<ClassFormDef> forms, string formId)
+        {
+            if (forms == null) return false;
+            foreach (var f in forms) if (f != null && f.Id == formId) return true;
+            return false;
         }
     }
 
@@ -96,6 +123,7 @@ namespace ProjectM.Units
             if (world == null) throw new ArgumentNullException(nameof(world));
             world.Run.ClassId = string.IsNullOrEmpty(classId) ? null : classId;
             world.Run.FormId = null;
+            world.Run.SetTalents(Array.Empty<TalentPoint>()); // 3-21c
         }
 
         /// <summary>지금 형태를 고를 수 있는지: 직업이 표에 있고 · 아직 안 골랐고 · 선택 층 이상이고 · 선택 층의 보스가 쓰러졌는지(봉인 계단이 열림).</summary>

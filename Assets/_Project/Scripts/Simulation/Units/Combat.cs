@@ -42,7 +42,8 @@ namespace ProjectM.Units
             int evasion = world.Scheduler.CanAct(target.Id) ? target.Evasion : 0;
             if (evasion <= 0) return true;
             var rng = world.Rng.Get(RngStream.Combat);
-            float accuracyRoll = rng.NextFloat() * attacker.Accuracy * AccuracyPercent(attacker) / 100f * MeleeWeapon.StrengthAccuracyFactor(attacker);
+            int accuracy = attacker.Accuracy + Talents.AccuracyBonus(world, attacker); // 3-21c 창 다루기
+            float accuracyRoll = rng.NextFloat() * accuracy * AccuracyPercent(attacker) / 100f * MeleeWeapon.StrengthAccuracyFactor(attacker);
             float evasionRoll = rng.NextFloat() * evasion * ProjectM.Items.Armors.EvasionFactor(target); // 3-10a: 갑옷 힘 모자람 1당 ÷ 1.5
             return accuracyRoll >= evasionRoll;
         }

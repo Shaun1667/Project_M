@@ -146,7 +146,7 @@ namespace ProjectM.Tests
         [Test]
         public void Snapshot_RoundTripsClassAndForm()
         {
-            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.EqualTo(24));
+            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.GreaterThanOrEqualTo(24), "3-21b (정확한 값은 TalentTests — 25)");
             var s = Start();
             ClassForms.Choose(s.World, Classes(), s.Book, s.Player, "melee");
             var restored = World.Restore(WorldSnapshotCodec.Decode(WorldSnapshotCodec.Encode(s.World.Capture())), (w, id) => null);

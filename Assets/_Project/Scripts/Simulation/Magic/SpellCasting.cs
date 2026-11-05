@@ -191,7 +191,7 @@ namespace ProjectM.Magic
             if (caster == null || spellId == null) return CastBlock.EmptySlot;
             if (!caster.HasSpell(spellId)) return CastBlock.NotOwned;
             if (!book.TryGet(spellId, out spell)) return CastBlock.UnknownSpell;
-            spell = SpellModifiers.For(caster, spell); // 3-21a: 무기 강화 — 시전과 같은 값
+            spell = SpellModifiers.For(world, caster, spell); // 3-21a 무기 강화 · 3-21c 특성 — 시전과 같은 값
             return CheckDef(world, targeting, sight, caster, spell, target, out preview);
         }
 
@@ -234,10 +234,23 @@ namespace ProjectM.Magic
             {
                 if (world.Units.TryGetAt(cell, out var unit) && unit.IsAlive) victims.Add(unit);
             }
+            world.Units.TryGet(casterId, out var caster); // 함정(시전자 없음)이면 null
             if (spell.Damage > 0) // 피해 0 주문(3-2 물)은 "피해 0" 이벤트를 내지 않는다
                 foreach (var victim in victims)
+                {
+                    // 3-21c 그림자 사냥: 시전자를 못 본 적에게 피해 + % (근접 기습과 같은 판정, 맞히기 전에 본다)
+                    int damage = spell.Damage;
+                    if (spell.UnseenDamagePercent > 0 && caster != null && MeleeWeapon.IsSurprise(caster, victim))
+                        damage = (int)((long)damage * (100 + spell.UnseenDamagePercent) / 100);
                     for (int h = 0; h < spell.HitCount && victim.IsAlive; h++) // 3-21b 연속 찌르기: 한 대상 여러 번
-                        Combat.ApplyDamage(world, casterId, victim, spell.Damage, DamageCause.Spell(spell.Id));
+                        Combat.ApplyDamage(world, casterId, victim, damage, DamageCause.Spell(spell.Id));
+                    if (caster == null || !caster.IsAlive) continue;
+                    // 3-21c 마나 순환 · 창의 기세 (특성 — SpellModifiers가 채운 값, 데이터 주문은 0)
+                    if (spell.ManaOnKill > 0 && !victim.IsAlive && Factions.AreHostile(caster.Faction, victim.Faction))
+                        Mana.Restore(world, caster, spell.ManaOnKill);
+                    if (spell.ManaOnHitPercent > 0 && world.Rng.Get(RngStream.Combat).Range(0, 100) < spell.ManaOnHitPercent)
+                        Mana.Restore(world, caster, 1);
+                }
 
             // 반응 (3-1): 맞은 유닛의 기존 상태 · 주문이 닿은 칸의 지형 × 주문 속성
             var cells = CastSpellCommand.TerrainCells(spell, preview);
@@ -314,7 +327,7 @@ namespace ProjectM.Magic
             if (!_world.Units.TryGet(context.Actor, out var caster) || !caster.IsAlive) return;
             var spell = _spell;
             if (spell == null && !_book.TryGet(SpellId, out spell)) return;
-            spell = SpellModifiers.For(caster, spell); // 3-21a: 무기 강화 (미리보기와 같은 값)
+            spell = SpellModifiers.For(_world, caster, spell); // 3-21a 무기 강화 · 3-21c 특성 (미리보기와 같은 값)
             if (!Mana.TrySpend(_world, caster, spell.ManaCost)) return;
 
             var preview = SpellCasting.Preview(_world, _targeting, caster.Pos, spell, Target);

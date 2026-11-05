@@ -103,6 +103,7 @@ namespace ProjectM.UI
             _bus.Subscribe<ItemPickupFailedEvent>(OnPickupFailed);
             _bus.Subscribe<SpellLearnedEvent>(OnSpellLearned);
             _bus.Subscribe<ProjectM.Units.ClassFormChosenEvent>(OnFormChosen); // 3-21b
+            _bus.Subscribe<ProjectM.Units.TalentSpentEvent>(OnTalentSpent); // 3-21c
             _bus.Subscribe<EntityMovedEvent>(OnMoved);
             _bus.Subscribe<AttackMissedEvent>(OnMissed);
             _bus.Subscribe<ExpGainedEvent>(OnExpGained);
@@ -157,6 +158,16 @@ namespace ProjectM.UI
             if (key == _lastPickupFail) return; // 서 있는 동안 틱마다 오므로 한 번만
             _lastPickupFail = key;
             AddLog(Text.PickupFull(e.ItemId));
+            Changed?.Invoke();
+        }
+
+        // 3-21c: "특성: 빛의 가호 1/2" · 최대 체력 특성이면 막대도
+        private void OnTalentSpent(ProjectM.Units.TalentSpentEvent e)
+        {
+            if (e.Unit != _playerId) return;
+            Hp = e.Hp;
+            MaxHp = e.MaxHp;
+            AddLog(Text.TalentSpent(e.TalentId, e.Points, e.MaxPoints));
             Changed?.Invoke();
         }
 
@@ -454,6 +465,7 @@ namespace ProjectM.UI
             _bus.Unsubscribe<ItemPickupFailedEvent>(OnPickupFailed);
             _bus.Unsubscribe<SpellLearnedEvent>(OnSpellLearned);
             _bus.Unsubscribe<ProjectM.Units.ClassFormChosenEvent>(OnFormChosen);
+            _bus.Unsubscribe<ProjectM.Units.TalentSpentEvent>(OnTalentSpent);
             _bus.Unsubscribe<EntityMovedEvent>(OnMoved);
             _bus.Unsubscribe<AttackMissedEvent>(OnMissed);
             _bus.Unsubscribe<ExpGainedEvent>(OnExpGained);

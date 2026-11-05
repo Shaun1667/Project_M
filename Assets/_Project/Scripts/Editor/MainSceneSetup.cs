@@ -1431,6 +1431,36 @@ namespace ProjectM.Editor
                     },
                 },
             });
+            // 3-21c 특성 (Docs/직업_루멘.md 4번, BALANCE 21번) — SPD식: 1단계 레벨 2~6 · 2단계 7~12
+            var all = new List<string> { "light_spear_thrust", "light_spear_throw", "light_spear_flurry", "light_spear_pierce", "light_spear_charge",
+                "light_spear_lance", "light_spear_volley", "light_spear_throw_plus" };
+            ClassCatalogAsset.TalentEffectEntry Fx(ProjectM.Units.TalentEffect effect, int[] values, List<string> spells = null, string weapon = null, StatusType status = StatusType.None) =>
+                new ClassCatalogAsset.TalentEffectEntry { Effect = effect, Values = new List<int>(values), SpellIds = spells ?? new List<string>(), WeaponId = weapon, Status = status };
+            ClassCatalogAsset.Talent T(string id, string name, string desc, int tier, string form, int max, params ClassCatalogAsset.TalentEffectEntry[] effects) =>
+                new ClassCatalogAsset.Talent { Id = id, DisplayName = name, Description = desc, Tier = tier, FormId = form, MaxPoints = max, Effects = new List<ClassCatalogAsset.TalentEffectEntry>(effects) };
+            List<string> L(params string[] ids) => new List<string>(ids);
+            changed |= catalog.SetTalentsIfEmpty("lumen",
+                new List<ClassCatalogAsset.Tier> { new ClassCatalogAsset.Tier { FirstLevel = 2, LastLevel = 6 }, new ClassCatalogAsset.Tier { FirstLevel = 7, LastLevel = 12 } },
+                new List<ClassCatalogAsset.Talent>
+                {
+                    T("light_mastery", "빛의 숙련", "빛의 창 기술 피해 +1 / +2", 1, null, 2, Fx(ProjectM.Units.TalentEffect.SpellDamage, new[] { 1, 2 }, all)),
+                    T("mana_cycle", "마나 순환", "빛의 창 기술로 적을 쓰러뜨리면\n마나 +1 / +2", 1, null, 2, Fx(ProjectM.Units.TalentEffect.SpellKillMana, new[] { 1, 2 }, all)),
+                    T("spear_handling", "창 다루기", "창을 들면 명중 +2 / +4", 1, null, 2, Fx(ProjectM.Units.TalentEffect.WeaponAccuracy, new[] { 2, 4 }, weapon: "spear")),
+                    T("light_blessing", "빛의 가호", "최대 체력 +3 / +6", 1, null, 2, Fx(ProjectM.Units.TalentEffect.MaxHp, new[] { 3, 6 })),
+                    T("endless_thrust", "끝없는 찌르기", "연속 찌르기 횟수\n+1 / +2 / +3", 2, "melee", 3, Fx(ProjectM.Units.TalentEffect.SpellHitCount, new[] { 1, 2, 3 }, L("light_spear_flurry"))),
+                    T("long_blade", "긴 창날", "관통 찌르기 길이\n+1 / +2 / +3", 2, "melee", 3, Fx(ProjectM.Units.TalentEffect.SpellRange, new[] { 1, 2, 3 }, L("light_spear_pierce"))),
+                    T("dash", "질주", "돌진 거리 +1 / +2,\n3점이면 맞은 적 둔화", 2, "melee", 3,
+                        Fx(ProjectM.Units.TalentEffect.SpellRange, new[] { 1, 2, 2 }, L("light_spear_charge")),
+                        Fx(ProjectM.Units.TalentEffect.SpellStatusChance, new[] { 0, 0, 100 }, L("light_spear_charge"), status: StatusType.Slow)),
+                    T("spear_momentum", "창의 기세", "근접 공격 · 빛의 창이 맞으면\n마나 +1 확률 20 / 40 / 60%", 2, "melee", 3,
+                        Fx(ProjectM.Units.TalentEffect.HitManaChance, new[] { 20, 40, 60 }, L("light_spear_thrust", "light_spear_flurry", "light_spear_pierce", "light_spear_charge"))),
+                    T("light_rain", "빛의 비", "다중 발사 대상\n+1 / +2 / +3", 2, "ranged", 3, Fx(ProjectM.Units.TalentEffect.SpellMaxTargets, new[] { 1, 2, 3 }, L("light_spear_volley"))),
+                    T("piercing_light", "꿰뚫는 빛", "관통 발사 피해\n+1 / +2 / +3", 2, "ranged", 3, Fx(ProjectM.Units.TalentEffect.SpellDamage, new[] { 1, 2, 3 }, L("light_spear_lance"))),
+                    T("light_hand", "가벼운 손", "던지기 마나 2 → 1 (1점),\n사거리 +1 / +2 (2 · 3점)", 2, "ranged", 3,
+                        Fx(ProjectM.Units.TalentEffect.SpellManaCost, new[] { -1, -1, -1 }, L("light_spear_throw_plus")),
+                        Fx(ProjectM.Units.TalentEffect.SpellRange, new[] { 0, 1, 2 }, L("light_spear_throw_plus"))),
+                    T("shadow_hunt", "그림자 사냥", "나를 못 본 적에게 빛의 창 피해\n× 1.25 / × 1.5 / × 1.75", 2, "ranged", 3, Fx(ProjectM.Units.TalentEffect.UnseenDamagePercent, new[] { 25, 50, 75 }, all)),
+                });
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }

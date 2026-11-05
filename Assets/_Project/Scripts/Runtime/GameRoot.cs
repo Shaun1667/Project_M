@@ -129,6 +129,7 @@ namespace ProjectM
             }
             _hudText = new HudText(_spellCatalog.DisplayNames(), _reactionCatalog.DisplayNames(), _itemCatalog.DisplayNames(), _fusionCatalog.DisplayNames());
             _hudText.FormNames = FormNames(); // 3-21b
+            _hudText.TalentNames = _classCatalog != null ? _classCatalog.TalentNames() : null; // 3-21c
             _input.Text = _hudText;
             _input.HintChanged += _hud.SetHint;
             // 2026-10-20: 이동 · 공격 · 주문 연출이 끝날 때까지 다음 행동(= 다음 틱)을 받지 않는다
@@ -181,6 +182,9 @@ namespace ProjectM
             var keyboard = Keyboard.current;
             if (_runEnded && keyboard != null && keyboard.rKey.wasPressedThisFrame && (_characterSelect == null || !_characterSelect.IsOpen))
                 BeginCharacterSelect();
+            else if (!_runEnded && World != null && keyboard != null && keyboard.tKey.wasPressedThisFrame
+                     && _characterSelect != null && !_characterSelect.IsOpen && !_entityPresenter.IsAnimating)
+                OpenTalents(); // 3-21c 특성 창
         }
 
         /// <param name="visualId">고른 캐릭터의 모습 ID (null이면 Player.asset 그대로).</param>
@@ -199,6 +203,7 @@ namespace ProjectM
                 World.Events.Unsubscribe<UnitDiedEvent>(OnUnitDied);
                 World.Events.Unsubscribe<RunEndedEvent>(OnRunEnded);
                 World.Events.Unsubscribe<StairsUnsealedEvent>(OnStairsUnsealed); // 3-21b
+                World.Events.Unsubscribe<LevelUpEvent>(OnLevelUp); // 3-21c
             }
             _result.Hide();
 
@@ -270,6 +275,8 @@ namespace ProjectM
             World.Events.Subscribe<UnitDiedEvent>(OnUnitDied);
             World.Events.Subscribe<RunEndedEvent>(OnRunEnded);
             World.Events.Subscribe<StairsUnsealedEvent>(OnStairsUnsealed); // 3-21b: 선택 층 보스 처치 → 형태 선택
+            World.Events.Subscribe<LevelUpEvent>(OnLevelUp); // 3-21c: 특성 점수 안내
+            World.SetClassRules(Classes); // 3-21c: 특성 효과 조회 (규칙 연결 — 저장 안 함)
 
             World.Events.Publish(new MapLoadedEvent(World.Map));
             if (decor != null) FloorDecor.Apply(World, Floor, decor, water, traps); // 3-11a · 3-12a: MapLoaded 뒤에 (화면이 지우지 않게), 적 배치 전
@@ -390,6 +397,59 @@ namespace ProjectM
                 ClassForms.Choose(World, Classes, Spells, _player, entry.Forms[index].Id);
                 World.Events.Flush();
             }, title: HudText.FormSelectTitle, hint: HudText.FormSelectHint, details: details);
+        }
+
+        /// <summary>남은 특성 점수 (모든 단계 — 2단계는 형태를 고른 뒤에만 셈).</summary>
+        private int UnspentTalents()
+        {
+            if (Classes == null || _player == null) return 0;
+            int total = Talents.Unspent(World, Classes, _player, 1);
+            if (World.Run.FormId != null) total += Talents.Unspent(World, Classes, _player, 2);
+            return total;
+        }
+
+        private void OnLevelUp(LevelUpEvent e)
+        {
+            if (e.Unit != _playerId) return;
+            int points = UnspentTalents();
+            if (points > 0) _hud.SetHint(HudText.TalentPointsReady(points));
+        }
+
+        /// <summary>
+        /// 3-21c 특성 창 (T): 점수가 남은 가장 낮은 단계의 찍을 수 있는 특성을 카드로 (캐릭터 선택 창을 같이 씀, Esc 닫기).
+        /// 고르면 1점(틱 밖 — Talents.Spend) 뒤 이벤트를 비우고, 점수가 남았으면 다시 연다.
+        /// </summary>
+        private void OpenTalents()
+        {
+            if (Classes == null || _player == null || !_classCatalog.TryGetClass(World.Run.ClassId, out var entry) || entry.Talents == null) return;
+            int tier = Talents.Unspent(World, Classes, _player, 1) > 0 ? 1
+                : World.Run.FormId != null && Talents.Unspent(World, Classes, _player, 2) > 0 ? 2 : 0;
+            if (tier == 0)
+            {
+                _hud.SetHint(HudText.NoTalentPoints);
+                return;
+            }
+            var ids = new System.Collections.Generic.List<string>();
+            var names = new System.Collections.Generic.List<string>();
+            var details = new System.Collections.Generic.List<string>();
+            foreach (var t in entry.Talents)
+            {
+                if (t.Tier != tier || (!string.IsNullOrEmpty(t.FormId) && t.FormId != World.Run.FormId)) continue;
+                ids.Add(t.Id);
+                names.Add($"{(string.IsNullOrEmpty(t.DisplayName) ? t.Id : t.DisplayName)}  {World.Run.TalentPoints(t.Id)}/{t.MaxPoints}");
+                details.Add(t.Description);
+            }
+            if (ids.Count == 0) return;
+            var world = World;
+            _characterSelect.Open(null, names, 0, index =>
+            {
+                if (World != world || _player == null) return;
+                var result = Talents.Spend(World, Classes, _player, ids[index]);
+                World.Events.Flush();
+                if (result == SpendTalentResult.Maxed) _hud.SetHint(HudText.TalentMaxed);
+                if (UnspentTalents() > 0) OpenTalents();
+            }, title: HudText.TalentSelectTitle(tier, Talents.Unspent(World, Classes, _player, tier)), hint: HudText.TalentSelectHint,
+               details: details, onCancel: () => { });
         }
 
         /// <summary>판이 끝남 (3-4b): 입력을 멈추고 결과 화면. R로 새 판.</summary>
