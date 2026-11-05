@@ -415,26 +415,26 @@ Varco는 모든 모델을 **가장 긴 쪽 1 m**로 보내므로 크기는 프�
 | `shopkeeper` | NPC_Shopkeeper | Unit_Shopkeeper | 0.9 | 약 0.95 m | 6,000 | Mixamo | — |
 | `enemy_frost_bat` | Enemy_FrostBat | Unit_FrostBat | 0.6 | 날개 폭 0.6 m | 5,000 | 없음 (코드 움직임) | — |
 | `enemy_snow_wolf` | Enemy_SnowWolf | Unit_SnowWolf | 0.85 | 길이 0.85 m | 5,000 | 없음 | — |
-| `enemy_ice_golem` | Enemy_IceGolem | Unit_IceGolem | 1.2 | 약 1.2 m | 6,000 | Mixamo 실패 → 원본 | — |
+| `enemy_ice_golem` | Enemy_IceGolem | Unit_IceGolem | 1.2 | 약 1.2 m | 6,000 | Blender (`Tools/blender_rig_from_joints.py`) | — |
 | `enemy_frost_shaman` | Enemy_FrostShaman | Unit_FrostShaman | 0.9 | 약 1.0 m | 6,000 | Mixamo | — |
-| `boss_ice_witch` | Boss_IceWitch | Unit_IceWitch | 1.8 | 약 1.8 m | 12,000 | Mixamo 실패 → 원본 | — |
+| `boss_ice_witch` | Boss_IceWitch | Unit_IceWitch | 1.8 | 약 1.8 m | 12,000 | Blender (`Tools/blender_rig_from_joints.py`) | — |
 | `enemy_fire_salamander` | Enemy_FireSalamander | Unit_FireSalamander | 0.9 | 길이 0.9 m | 5,000 | 없음 | — |
 | `enemy_flame_imp` | Enemy_FlameImp | Unit_FlameImp | 0.65 | 약 0.7 m | 6,000 | Mixamo | — |
-| `enemy_magma_golem` | Enemy_MagmaGolem | Unit_MagmaGolem | 1.25 | 약 1.2 m | 6,000 | 시도 안 함 (골렘 실패와 같은 모양) → 원본 | — |
+| `enemy_magma_golem` | Enemy_MagmaGolem | Unit_MagmaGolem | 1.25 | 약 1.2 m | 6,000 | Blender (`Tools/blender_rig_from_joints.py`) | — |
 | `enemy_fire_shaman` | Enemy_FireShaman | Unit_FireShaman | 0.9 | 약 1.0 m | 6,000 | Mixamo | — |
-| `boss_lava_lord` | Boss_LavaLord | Unit_LavaLord | 1.9 | 약 1.9 m | 12,000 | 시도 안 함 → 원본 | — |
-| `enemy_clockwork_soldier` | Enemy_ClockworkSoldier | Unit_ClockworkSoldier | 0.95 | 약 0.95 m | 6,000 | Mixamo 실패 → 원본 | — |
-| `enemy_time_afterimage` | Enemy_TimeAfterimage | Unit_TimeAfterimage | 1.0 | 약 1.0 m | 6,000 | Mixamo 실패 → 원본 | — |
-| `enemy_temple_guardian` | Enemy_TempleGuardian | Unit_TempleGuardian | 1.3 | 약 1.3 m | 6,000 | 시도 안 함 → 원본 | — |
+| `boss_lava_lord` | Boss_LavaLord | Unit_LavaLord | 1.9 | 약 1.9 m | 12,000 | Blender (`Tools/blender_rig_from_joints.py`) | — |
+| `enemy_clockwork_soldier` | Enemy_ClockworkSoldier | Unit_ClockworkSoldier | 0.95 | 약 0.95 m | 6,000 | Blender (`Tools/blender_rig_from_joints.py`) | — |
+| `enemy_time_afterimage` | Enemy_TimeAfterimage | Unit_TimeAfterimage | 1.0 | 약 1.0 m | 6,000 | Blender (`Tools/blender_rig_from_joints.py`) | — |
+| `enemy_temple_guardian` | Enemy_TempleGuardian | Unit_TempleGuardian | 1.3 | 약 1.3 m | 6,000 | Blender (`Tools/blender_rig_from_joints.py`) | — |
 | `enemy_time_priest` | Enemy_TimePriest | Unit_TimePriest | 1.0 | 약 1.1 m | 6,000 | Mixamo | — |
-| `boss_time_guardian` | Boss_TimeGuardian | Unit_TimeGuardian | 1.9 | 약 1.9 m | 12,000 | 시도 안 함 → 원본 | — |
+| `boss_time_guardian` | Boss_TimeGuardian | Unit_TimeGuardian | 1.9 | 약 1.9 m | 12,000 | Blender (`Tools/blender_rig_from_joints.py`) | — |
 
 - **결정 (2026-11-05, 사용자)**: 사람형 리깅은 **Mixamo**(사람형만 — 네발 · 전갈은 리깅 없이 코드 움직임). 무기 · 지팡이 등 **든 물건은 몸과 따로 만들어 Unity에서 손 뼈에 붙인다**(`AttachStaff` — 높이 1 m 소품, 원점 = 아래 끝, 손이 길이 40% 지점). 그래서 고블린 · 사막 주술사 · 파라오는 지팡이 없는 몸으로 다시 생성.
 - **상점 주인 다시 디자인 (2026-11-05, 사용자)**: 통통한 안경 쓴 여성 강아지 수인(체형은 처음 안의 절반 정도로 · 더 귀엽게). 원본 2D 일러스트 `Art/Pixel/Characters/shopkeeper_illust.png`(루멘 · 시아 화풍, 빛 효과 없음) → 3D용 A자세 그림 → 3D.
 - 전갈 · 자칼 FBX는 원점을 발밑으로(`pivotToBottom`) 받는다 — 처음 받은 것은 원점이 가운데라 바닥에 반쯤 묻혔다.
 - Mixamo 자동 리깅 실패 (`Unknown error while generating motion`)는 턱 마커가 가슴에 놓였을 때 — 턱을 입 바로 아래에 두고, 몸이 대칭선 밖으로 치우치면 Use Symmetry를 끄고 양쪽을 따로 놓으면 됐다.
 - Varco 플로우 `MoaDungeon`(f679a6c8) y 105600 ~ 117000에 프롬프트 → 이미지 → 3D 노드. 포인트 약 5,900.
-- 3~5구역 15종 (2026-11-05, 사용자 요청): Varco 플로우 `MoaDungeon` y 159600 ~ 168400 (그림 2장씩 1,500 + 3D 3,000 포인트). 텍스처는 FBX에 묻힌 `base_color` · `normal`을 Blender로 꺼내 `Textures/<모델>_…`로 (Unity `ExtractTextures`는 확인 창이 떠서 MCP에서 막힘). 표의 '리깅' 칸이 Mixamo가 아닌 사람형은 `ZoneUnits` 줄이 rigged = true라서 `<모델>_Rigged.fbx`를 넣고 Varco Models를 다시 돌리면 그대로 바뀐다.
+- 3~5구역 15종 (2026-11-05, 사용자 요청): Varco 플로우 `MoaDungeon` y 159600 ~ 168400 (그림 2장씩 1,500 + 3D 3,000 포인트). 텍스처는 FBX에 묻힌 `base_color` · `normal`을 Blender로 꺼내 `Textures/<모델>_…`로 (Unity `ExtractTextures`는 확인 창이 떠서 MCP에서 막힘). Mixamo가 실패한 사람형 8종은 Blender로 리깅 — 정면 렌더(`Tools/blender_front_render.py`)에서 관절 픽셀을 찍어(`Tools/blender_rig_joints.json`) Mixamo 이름 25뼈를 세우고 뼈 선분까지 거리로 무게(가까운 3뼈, 1/d^4)를 칠함(`Tools/blender_rig_from_joints.py`) → Unity Humanoid · Idle · Walk 그대로.
 - Mixamo 자동 리깅 (2026-11-05): **팔꿈치 표시는 실제 팔꿈치에** — 어깨에 두면 `Unknown error while generating motion`으로 실패했다(얼음 마녀 · 화염 주술사에서 확인, 화염 주술사는 팔꿈치로 옮기자 성공). 가는 로브형(주술사 · 사제 · 임프)은 성공, 큰 치마(마녀) · 갑옷 덩어리(골렘 · 시계병) · 덩굴 가장자리(잔상)는 손가락 없는 뼈대로도 실패.
 - 확인 못 한 것: 게임 화면(고각도 카메라)에서의 크기 · 걷기 모습, 고블린 Idle이 비틀어져 보이는지.
 
