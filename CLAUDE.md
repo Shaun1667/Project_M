@@ -18,6 +18,7 @@
 | `README.md` | 문서 지도 · 빠른 시작 | 사용 중 |
 | `Docs/Source/마법시스템_기획서_v0.3.md` | 원본 기획서 (보존용, 고치지 않음 — 기준은 GDD.md) | 보존 |
 | `Docs/Source/claude_all_type_genre.md` | 장르 무관 협업 가이드 (방법론) | 보존 |
+| `Docs/MY_DEV_GUIDE.md` | 내 표준 작업 방식 (이 프로젝트 방식을 정리 — 새 프로젝트에 이 파일 하나로 시작) | 사용 중 (2026-11-06~) |
 | `REACTIONS.md` | 상태/지형 × 속성 반응 규칙 — 구현 기준 (원본: `Docs/Source/반응규칙_요청표_1.md`) | 사용 중 (3-1~) |
 | `TIME_MAGIC.md` | 시간 마법 상세 설계 | Phase 8 착수 전 작성 |
 | `Docs/ART_ASSETS.md` | 3D 그래픽 에셋 목록 (Varco) · 규격 · 우선순위 | 사용 중 (G-) |
