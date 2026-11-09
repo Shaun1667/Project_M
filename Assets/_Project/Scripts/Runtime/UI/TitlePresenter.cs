@@ -27,7 +27,7 @@ namespace ProjectM.UI
         private readonly TitleMenuModel _model = new TitleMenuModel();
         private RectTransform _mainRoot, _newRoot, _slotsRoot, _detailRoot, _confirmRoot, _hofRoot, _controlsRoot;
         private TMP_Text _gameTitle, _subtitle, _realBody;
-        [Tooltip("지스타 시연 (2026-11-05): 켜면 새 게임에서 실시간을 고를 수 없고 '잠김'으로 표시")] [SerializeField] private bool _realTimeLocked = true;
+        [Tooltip("시연 빌드용: 켜면 새 게임에서 실시간을 고를 수 없고 '잠김'으로 표시 (일반 버전은 끔, 2026-11-09)")] [SerializeField] private bool _realTimeLocked;
         private static readonly Color LockedColor = new Color(0.08f, 0.08f, 0.09f, 1f);
         private readonly List<(Image box, TMP_Text label)> _mainItems = new List<(Image, TMP_Text)>();
         private readonly List<(Image box, TMP_Text label)> _slotItems = new List<(Image, TMP_Text)>();
