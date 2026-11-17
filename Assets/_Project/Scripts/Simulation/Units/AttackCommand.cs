@@ -14,6 +14,9 @@ namespace ProjectM.Units
 
         public EntityId Target { get; }
         public int CostTicks { get; }
+        /// <summary>이 공격에서 치는 횟수 (3-39 공격 지연 — 사이 2 · 시미터 1~2). 타격 수(너클 2)는 한 번 칠 때마다.</summary>
+        public int Swings { get; }
+        private readonly int _creditAfter; // −1 = 지연 몫을 건드리지 않음
 
         public AttackCommand(World world, EntityId target, int costTicks)
         {
@@ -21,16 +24,27 @@ namespace ProjectM.Units
             _world = world ?? throw new ArgumentNullException(nameof(world));
             Target = target;
             CostTicks = costTicks;
+            Swings = 1;
+            _creditAfter = -1;
+        }
+
+        /// <summary>무기 공격 계획대로 (3-39, MeleeWeapon.PlanAttack — 플레이어).</summary>
+        public AttackCommand(World world, EntityId target, MeleeWeapon.AttackPlan plan) : this(world, target, plan.Ticks)
+        {
+            if (plan.Swings < 1) throw new ArgumentOutOfRangeException(nameof(plan), plan.Swings, "치는 횟수는 1 이상.");
+            Swings = plan.Swings;
+            _creditAfter = plan.CreditAfter;
         }
 
         public void Execute(in TickContext context)
         {
             if (!_world.Units.TryGet(context.Actor, out var attacker) || !attacker.IsAlive) return;
+            if (_creditAfter >= 0) attacker.AttackCredit = _creditAfter; // 3-39: 시간은 이미 썼다 (대상이 사라져도)
             if (!_world.Units.TryGet(Target, out var target) || !target.IsAlive) return;
             if (!MeleeWeapon.CanReach(_world, attacker, target.Pos)) return; // 3-7a: 창은 2칸
 
             bool surprise = MeleeWeapon.IsSurprise(attacker, target); // 3-7c: 못 본 적 = 항상 명중 (첫 타격 전에 정함 — 타격마다 같음)
-            int hits = attacker.Weapon.HitsPerAttack; // 3-22a 너클: 한 번 공격에 2타 (명중 · 피해 · 방어 따로)
+            int hits = attacker.Weapon.HitsPerAttack * Swings; // 3-22a 너클: 한 번 공격에 2타 (명중 · 피해 · 방어 따로) · 3-39 지연 무기: 친 횟수만큼
             bool landed = false;
             for (int h = 0; h < hits && target.IsAlive && attacker.IsAlive; h++) landed |= Strike(attacker, target, surprise);
             // 3-22c 빠른 손: 맞혔으면 % 확률로 한 번 더 (추가 타격은 다시 굴리지 않음). 특성이 없으면 난수를 쓰지 않는다

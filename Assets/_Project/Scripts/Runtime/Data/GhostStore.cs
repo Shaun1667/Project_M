@@ -43,7 +43,7 @@ namespace ProjectM.Data
             public int Level, MaxHp, AttackDamage, SightRange, MaxMana, Accuracy, Evasion, Strength;
             public bool HasWeapon;
             public string WeaponId;
-            public int WeaponMin, WeaponMax, WeaponAccuracy, WeaponCost, WeaponReach, WeaponUpgrade, WeaponStrength, WeaponSurprise, WeaponDefense, WeaponHits;
+            public int WeaponMin, WeaponMax, WeaponAccuracy, WeaponCost, WeaponReach, WeaponUpgrade, WeaponStrength, WeaponSurprise, WeaponDefense, WeaponHits, WeaponDelay; // WeaponDelay 3-39 (옛 기록 0 = 지연 없음)
             public bool HasArmor;
             public string ArmorId;
             public int ArmorTier, ArmorUpgrade, ArmorStrength, ArmorMin, ArmorMax, ArmorPenalty, ArmorDivisor;
@@ -62,7 +62,7 @@ namespace ProjectM.Data
                 var w = r.Weapon;
                 d.HasWeapon = true; d.WeaponId = w.ItemId; d.WeaponMin = w.MinDamage; d.WeaponMax = w.MaxDamage; d.WeaponAccuracy = w.AccuracyPercent;
                 d.WeaponCost = w.AttackCostTicks; d.WeaponReach = w.Reach; d.WeaponUpgrade = w.Upgrade; d.WeaponStrength = w.StrengthRequirement;
-                d.WeaponSurprise = w.SurpriseMinPercent; d.WeaponDefense = w.Defense; d.WeaponHits = w.HitsPerAttack;
+                d.WeaponSurprise = w.SurpriseMinPercent; d.WeaponDefense = w.Defense; d.WeaponHits = w.HitsPerAttack; d.WeaponDelay = w.AttackDelayPercent;
             }
             if (!r.Armor.IsEmpty)
             {
@@ -88,7 +88,7 @@ namespace ProjectM.Data
             if (d.Version != FormatVersion) throw new InvalidDataException($"지원하지 않는 기록 버전 {d.Version}");
             var weapon = d.HasWeapon
                 ? new EquippedWeapon(d.WeaponId, d.WeaponMin, d.WeaponMax, d.WeaponAccuracy, d.WeaponCost, d.WeaponReach, d.WeaponUpgrade, d.WeaponStrength,
-                    d.WeaponSurprise, d.WeaponDefense, Math.Max(1, d.WeaponHits))
+                    d.WeaponSurprise, d.WeaponDefense, Math.Max(1, d.WeaponHits), Math.Max(0, d.WeaponDelay))
                 : EquippedWeapon.Empty;
             var armor = d.HasArmor
                 ? new EquippedArmor(d.ArmorId, d.ArmorTier, d.ArmorUpgrade, d.ArmorStrength, d.ArmorMin, d.ArmorMax, d.ArmorPenalty, d.ArmorDivisor)

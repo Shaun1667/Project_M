@@ -48,6 +48,8 @@ namespace ProjectM.Units
         public int AccelActions { get; internal set; }
         public int AccelUsed { get; internal set; }
         public int StopActions { get; internal set; }
+        /// <summary>공격 지연 남은 시간 % (3-39, 스냅샷 v31) — 지연 무기(사이 · 시미터 · 글레이브)의 남은 몫. MeleeWeapon.PlanAttack → AttackCommand로만 바꾼다.</summary>
+        public int AttackCredit { get; internal set; }
         /// <summary>허기 (3-14 — 플레이어만 오름, HungerSystem). 0 = 배부름.</summary>
         public int Hunger { get; internal set; }
 

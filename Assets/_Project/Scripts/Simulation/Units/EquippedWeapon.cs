@@ -16,7 +16,7 @@ namespace ProjectM.Units
         public int AccuracyPercent { get; }
         /// <summary>공격 한 번의 행동 비용 (틱) — 창 2.</summary>
         public int AttackCostTicks { get; }
-        /// <summary>공격 거리 (칸, 체비셰프) — 창 2. 2칸은 직선 · 대각선이고 사이 칸이 비어 있어야 한다.</summary>
+        /// <summary>공격 거리 (칸, 체비셰프) — 창 2 · 채찍 3. 2칸 이상은 직선 · 대각선이고 사이 칸이 비어 있어야 한다.</summary>
         public int Reach { get; }
         /// <summary>강화 단계 (3-7b) — 내려놓으면 인벤토리 칸에 같이 남는다.</summary>
         public int Upgrade { get; }
@@ -29,12 +29,19 @@ namespace ProjectM.Units
         /// <summary>한 번 공격의 타격 수 (3-22a 너클 2). 맨손 · 옛 값(0)은 1로 본다.</summary>
         public int HitsPerAttack => _hitsPerAttack < 1 ? 1 : _hitsPerAttack;
         private readonly int _hitsPerAttack;
+        /// <summary>SPD 공격 지연 % (3-39 — 사이 50 · 시미터 80 · 글레이브 150). 0 = 안 씀(AttackCostTicks 그대로). 계산은 MeleeWeapon.PlanAttack.</summary>
+        public int AttackDelayPercent { get; }
+
+        /// <summary>가장 긴 공격 거리 (3-39 채찍 3).</summary>
+        public const int MaxReach = 3;
 
         public EquippedWeapon(string itemId, int minDamage, int maxDamage, int accuracyPercent, int attackCostTicks, int reach,
-            int upgrade = 0, int strengthRequirement = 0, int surpriseMinPercent = 0, int defense = 0, int hitsPerAttack = 1)
+            int upgrade = 0, int strengthRequirement = 0, int surpriseMinPercent = 0, int defense = 0, int hitsPerAttack = 1, int attackDelayPercent = 0)
         {
             if (hitsPerAttack < 1) throw new ArgumentOutOfRangeException(nameof(hitsPerAttack));
             _hitsPerAttack = hitsPerAttack;
+            if (attackDelayPercent < 0) throw new ArgumentOutOfRangeException(nameof(attackDelayPercent));
+            AttackDelayPercent = attackDelayPercent;
             if (surpriseMinPercent < 0 || surpriseMinPercent > 100) throw new ArgumentOutOfRangeException(nameof(surpriseMinPercent));
             if (defense < 0) throw new ArgumentOutOfRangeException(nameof(defense));
             SurpriseMinPercent = surpriseMinPercent;
@@ -47,7 +54,7 @@ namespace ProjectM.Units
             if (minDamage < 0 || maxDamage < minDamage) throw new ArgumentOutOfRangeException(nameof(maxDamage), $"피해 {minDamage}~{maxDamage}");
             if (accuracyPercent < 1) throw new ArgumentOutOfRangeException(nameof(accuracyPercent));
             if (attackCostTicks < 1) throw new ArgumentOutOfRangeException(nameof(attackCostTicks));
-            if (reach < 1 || reach > 2) throw new ArgumentOutOfRangeException(nameof(reach), reach, "공격 거리는 1 또는 2.");
+            if (reach < 1 || reach > MaxReach) throw new ArgumentOutOfRangeException(nameof(reach), reach, "공격 거리는 1 ~ 3.");
             ItemId = itemId;
             MinDamage = minDamage;
             MaxDamage = maxDamage;
@@ -62,7 +69,8 @@ namespace ProjectM.Units
         public bool Equals(EquippedWeapon o) => ItemId == o.ItemId && MinDamage == o.MinDamage && MaxDamage == o.MaxDamage
             && AccuracyPercent == o.AccuracyPercent && AttackCostTicks == o.AttackCostTicks && Reach == o.Reach
             && Upgrade == o.Upgrade && StrengthRequirement == o.StrengthRequirement
-            && SurpriseMinPercent == o.SurpriseMinPercent && Defense == o.Defense && HitsPerAttack == o.HitsPerAttack;
+            && SurpriseMinPercent == o.SurpriseMinPercent && Defense == o.Defense && HitsPerAttack == o.HitsPerAttack
+            && AttackDelayPercent == o.AttackDelayPercent;
         public override bool Equals(object obj) => obj is EquippedWeapon o && Equals(o);
         public override int GetHashCode() => (ItemId?.GetHashCode() ?? 0) ^ (MaxDamage * 397);
         public override string ToString() => IsEmpty ? "(맨손)" : $"{ItemId}+{Upgrade} {MinDamage}~{MaxDamage} 힘 {StrengthRequirement}";

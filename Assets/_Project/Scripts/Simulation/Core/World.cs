@@ -328,7 +328,7 @@ namespace ProjectM.Core
                 seen.HasValue, seen?.X ?? 0, seen?.Y ?? 0, u.MaxMana, u.Mana, (InventoryRef[])u.InventorySlots.Clone(), (InventoryRef[])u.QuickSlots.Clone(),
                 u.PreviousPos, u.WanderTarget, u.Statuses.ConvertAll(s => new UnitStatusState(s.Type, s.Remaining)).ToArray(),
                 u.Accuracy, u.Evasion, u.ExpReward, u.ExpMaxLevel, u.Level, u.Exp, u.Weapon, u.Strength, u.Armor, u.Hunger,
-                u.ChargeTarget, u.Summoned, (InventoryRef[])u.Relics.Clone(), u.TimeFrozenTicks, u.AccelTicks, u.AccelActions, u.AccelUsed, u.StopActions);
+                u.ChargeTarget, u.Summoned, (InventoryRef[])u.Relics.Clone(), u.TimeFrozenTicks, u.AccelTicks, u.AccelActions, u.AccelUsed, u.StopActions, u.AttackCredit);
         }
 
         private static Unit ToUnit(UnitState u)
@@ -347,6 +347,7 @@ namespace ProjectM.Core
             unit.AccelActions = u.AccelActions;
             unit.AccelUsed = u.AccelUsed;
             unit.StopActions = u.StopActions;
+            unit.AttackCredit = u.AttackCredit; // 31 (3-39)
             return unit;
         }
 

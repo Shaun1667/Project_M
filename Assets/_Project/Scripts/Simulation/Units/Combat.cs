@@ -118,24 +118,62 @@ namespace ProjectM.Units
             return deficit == 0 ? 1f : (float)System.Math.Pow(1.5, -deficit);
         }
 
-        /// <summary>공격 한 번의 비용 (틱): 무기 값, 맨손이면 defaultCost.</summary>
-        public static int AttackCost(Unit attacker, int defaultCost) => attacker.Weapon.IsEmpty ? defaultCost : attacker.Weapon.AttackCostTicks;
+        /// <summary>공격 한 번의 비용 (틱): 무기 값, 맨손이면 defaultCost. 지연 무기(3-39)는 PlanAttack을 쓴다.</summary>
+        public static int AttackCost(Unit attacker, int defaultCost) => PlanAttack(attacker, defaultCost).Ticks;
+
+        /// <summary>공격 한 번의 계획 (3-39): 쓰는 틱 · 치는 횟수 · 끝난 뒤 남는 지연 몫(%).</summary>
+        public readonly struct AttackPlan
+        {
+            public readonly int Ticks, Swings, CreditAfter;
+
+            public AttackPlan(int ticks, int swings, int creditAfter)
+            {
+                Ticks = ticks;
+                Swings = swings;
+                CreditAfter = creditAfter;
+            }
+        }
 
         /// <summary>
-        /// target 칸을 칠 수 있는지: 1칸 = 이동과 같은 모서리 규칙. 2칸(공격 거리 2 무기) = 직선 · 대각선만, 사이 칸이 비어 있고(벽 · 유닛 없음)
-        /// 두 걸음 모두 모서리 규칙을 통과할 때 (결정 2026-10-19, SPD).
+        /// 공격 한 번에 쓰는 시간 (3-39, SPD 공격 지연 — 결정 2026-11-17 "새 규칙 추가"). 지연이 없는 무기 · 맨손은 (비용 틱, 1번, 몫 그대로).
+        /// 지연 d%: 한 칸 = 100%. 쓸 틱 = 최소 1, 남은 몫으로 한 번도 못 치면 모자란 만큼 더 → 그 시간(몫 + 100 × 틱) 안에서 d마다 한 번씩 치고 남는 몫을 넘긴다.
+        /// 사이 50 = 1틱에 2번, 시미터 80 = 1틱에 1 · 1 · 1 · 2번(평균 1.25), 글레이브 150 = 2틱 · 1틱 번갈아(평균 1.5). 난수를 쓰지 않는다.
+        /// </summary>
+        public static AttackPlan PlanAttack(Unit attacker, int defaultCost)
+        {
+            var w = attacker.Weapon;
+            if (w.IsEmpty) return new AttackPlan(defaultCost, 1, attacker.AttackCredit);
+            if (w.AttackDelayPercent <= 0) return new AttackPlan(w.AttackCostTicks, 1, attacker.AttackCredit);
+            int delay = w.AttackDelayPercent;
+            int credit = System.Math.Max(0, System.Math.Min(attacker.AttackCredit, delay - 1)); // 다른 무기에서 남은 몫이 커도 한 번 몫 안으로
+            int ticks = System.Math.Max(1, (delay - credit + 99) / 100);
+            int budget = credit + 100 * ticks;
+            int swings = budget / delay;
+            return new AttackPlan(ticks, swings, budget - swings * delay);
+        }
+
+        /// <summary>
+        /// target 칸을 칠 수 있는지: 1칸 = 이동과 같은 모서리 규칙. 2칸 이상(창 2 · 채찍 3, 3-39) = 직선 · 대각선만, 사이 칸이 모두 비어 있고(벽 · 유닛 없음)
+        /// 모든 걸음이 모서리 규칙을 통과할 때 (결정 2026-10-19, SPD).
         /// </summary>
         public static bool CanReach(World world, Unit attacker, GridPos target)
         {
             int distance = GridMovement.Chebyshev(attacker.Pos, target);
             if (distance == 1) return GridMovement.CanStep(world.Map, attacker.Pos, target);
             int reach = attacker.Weapon.IsEmpty ? 1 : attacker.Weapon.Reach;
-            if (distance != 2 || reach < 2) return false;
+            if (distance < 2 || distance > reach) return false;
             int dx = target.X - attacker.Pos.X, dy = target.Y - attacker.Pos.Y;
-            if (dx % 2 != 0 || dy % 2 != 0) return false; // (2, 1) 같은 칸은 사이 칸이 정해지지 않음
-            var middle = new GridPos(attacker.Pos.X + dx / 2, attacker.Pos.Y + dy / 2);
-            return GridMovement.CanStep(world.Map, attacker.Pos, middle) && GridMovement.CanStep(world.Map, middle, target)
-                && !world.Units.IsOccupied(middle);
+            if (dx != 0 && dy != 0 && System.Math.Abs(dx) != System.Math.Abs(dy)) return false; // (2, 1) 같은 칸은 사이 칸이 정해지지 않음
+            int sx = System.Math.Sign(dx), sy = System.Math.Sign(dy);
+            var from = attacker.Pos;
+            for (int step = 1; step <= distance; step++)
+            {
+                var next = new GridPos(attacker.Pos.X + sx * step, attacker.Pos.Y + sy * step);
+                if (!GridMovement.CanStep(world.Map, from, next)) return false;
+                if (step < distance && world.Units.IsOccupied(next)) return false;
+                from = next;
+            }
+            return true;
         }
     }
 

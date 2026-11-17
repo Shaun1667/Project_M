@@ -191,7 +191,7 @@ namespace ProjectM.Tests
         [Test]
         public void Snapshot_RoundTripsTimeState()
         {
-            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.EqualTo(30));
+            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.GreaterThanOrEqualTo(30), "3-28c (정확한 값은 WeaponTierTests — 31)");
             var (world, player, _, clock) = Start();
             Wear(world, player, "relic_accelerator");
             TimeRelics.Activate(world, Items, player, "relic_accelerator");

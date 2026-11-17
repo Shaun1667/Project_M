@@ -30,7 +30,7 @@ namespace ProjectM.Units
             if (world.Units.TryGetAt(to, out var occupant))
             {
                 if (!Factions.AreHostile(occupant.Faction, player.Faction) || !occupant.IsAlive) return false; // 3-13b: 아군(분신)은 막힘
-                command = new AttackCommand(world, occupant.Id, MeleeWeapon.AttackCost(player, config.DefaultActionCostTicks));
+                command = new AttackCommand(world, occupant.Id, MeleeWeapon.PlanAttack(player, config.DefaultActionCostTicks));
                 return true;
             }
 
@@ -50,7 +50,7 @@ namespace ProjectM.Units
             if (player == null || !player.IsAlive) return false;
             if (!world.Units.TryGetAt(target, out var occupant) || !Factions.AreHostile(occupant.Faction, player.Faction) || !occupant.IsAlive) return false;
             if (!MeleeWeapon.CanReach(world, player, target)) return false;
-            command = new AttackCommand(world, occupant.Id, MeleeWeapon.AttackCost(player, config.DefaultActionCostTicks));
+            command = new AttackCommand(world, occupant.Id, MeleeWeapon.PlanAttack(player, config.DefaultActionCostTicks));
             return true;
         }
 

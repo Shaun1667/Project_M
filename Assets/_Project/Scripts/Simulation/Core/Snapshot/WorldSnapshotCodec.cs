@@ -355,6 +355,7 @@ namespace ProjectM.Core
                     w.Write(u.Weapon.SurpriseMinPercent); // 15 (3-7c)
                     w.Write(u.Weapon.Defense);
                     w.Write(u.Weapon.HitsPerAttack); // 26 (3-22a 너클)
+                    w.Write(u.Weapon.AttackDelayPercent); // 31 (3-39)
                 }
                 w.Write(u.Strength); // 14 (3-7b)
                 // 17 (3-10a): 입은 갑옷
@@ -379,6 +380,7 @@ namespace ProjectM.Core
                 w.Write(u.AccelActions);
                 w.Write(u.AccelUsed);
                 w.Write(u.StopActions);
+                w.Write(u.AttackCredit); // 31 (3-39)
             }
         }
 
@@ -418,8 +420,8 @@ namespace ProjectM.Core
                 {
                     var weaponId = r.ReadString();
                     int wMin = r.ReadInt32(), wMax = r.ReadInt32(), wAcc = r.ReadInt32(), wCost = r.ReadInt32(), wReach = r.ReadInt32();
-                    int wUpgrade = r.ReadInt32(), wStr = r.ReadInt32(), wSurprise = r.ReadInt32(), wDefense = r.ReadInt32(), wHits = r.ReadInt32();
-                    weapon = new EquippedWeapon(weaponId, wMin, wMax, wAcc, wCost, wReach, wUpgrade, wStr, wSurprise, wDefense, wHits);
+                    int wUpgrade = r.ReadInt32(), wStr = r.ReadInt32(), wSurprise = r.ReadInt32(), wDefense = r.ReadInt32(), wHits = r.ReadInt32(), wDelay = r.ReadInt32();
+                    weapon = new EquippedWeapon(weaponId, wMin, wMax, wAcc, wCost, wReach, wUpgrade, wStr, wSurprise, wDefense, wHits, wDelay);
                 }
                 int strength = r.ReadInt32();
                 var armor = EquippedArmor.Empty;
@@ -435,9 +437,10 @@ namespace ProjectM.Core
                 bool summoned = r.ReadBoolean();
                 var relics = ReadRefs(r); // 28 (3-28a)
                 int frozen = r.ReadInt32(), accelTicks = r.ReadInt32(), accelActions = r.ReadInt32(), accelUsed = r.ReadInt32(), stopActions = r.ReadInt32(); // 30 (3-28c)
+                int attackCredit = r.ReadInt32(); // 31 (3-39)
                 units[i] = new UnitState(id, faction, visualId, maxHp, attackDamage, sightRange, x, y, hp, hasLastSeen, lastSeenX, lastSeenY,
                     maxMana, mana, inventory, quick, previousPos, wanderTarget, statuses, accuracy, evasion, expReward, expMaxLevel, level, exp, weapon, strength, armor, hunger,
-                    chargeTarget, summoned, relics, frozen, accelTicks, accelActions, accelUsed, stopActions);
+                    chargeTarget, summoned, relics, frozen, accelTicks, accelActions, accelUsed, stopActions, attackCredit);
             }
             return units;
         }

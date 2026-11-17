@@ -24,12 +24,23 @@ namespace ProjectM.Items
         public int Defense { get; }
         /// <summary>한 번 공격의 타격 수 (3-22a 너클 2 — 명중 · 피해 · 방어를 타격마다 따로). 기본 1.</summary>
         public int HitsPerAttack { get; }
+        /// <summary>SPD 티어 (3-39 — 1 너클 · 2 소검 ~ 5 대검). 최소 피해 기본 = 티어 (0 = 공통 WeaponRules.MinDamageBase).</summary>
+        public int Tier { get; }
+        /// <summary>
+        /// SPD 공격 지연 % (3-39 — 사이 · 건틀릿 50 · 시미터 80 · 글레이브 150). 0 = 쓰지 않음(AttackCostTicks 그대로).
+        /// 쓰면 공격 한 번이 이만큼의 시간 — 1틱 안에 여러 번 치거나(50 = 2번) 2틱을 쓰기도 한다 (MeleeWeapon.PlanAttack · Unit.AttackCredit).
+        /// </summary>
+        public int AttackDelayPercent { get; }
 
         public WeaponDef(int maxDamage, int upgradeEfficiency, int accuracyPercent, int attackCostTicks, int reach, int strengthRequirement = 0,
-            int surpriseMinPercent = 0, int defense = 0, int hitsPerAttack = 1)
+            int surpriseMinPercent = 0, int defense = 0, int hitsPerAttack = 1, int tier = 0, int attackDelayPercent = 0)
         {
             if (hitsPerAttack < 1) throw new ArgumentOutOfRangeException(nameof(hitsPerAttack), hitsPerAttack, "타격 수는 1 이상.");
             HitsPerAttack = hitsPerAttack;
+            if (tier < 0) throw new ArgumentOutOfRangeException(nameof(tier));
+            if (attackDelayPercent < 0 || (attackDelayPercent > 0 && attackDelayPercent < 10)) throw new ArgumentOutOfRangeException(nameof(attackDelayPercent), attackDelayPercent, "공격 지연은 0(안 씀) 또는 10% 이상.");
+            Tier = tier;
+            AttackDelayPercent = attackDelayPercent;
             if (surpriseMinPercent < 0 || surpriseMinPercent > 100) throw new ArgumentOutOfRangeException(nameof(surpriseMinPercent));
             if (defense < 0) throw new ArgumentOutOfRangeException(nameof(defense));
             SurpriseMinPercent = surpriseMinPercent;
@@ -40,7 +51,7 @@ namespace ProjectM.Items
             if (upgradeEfficiency < 0) throw new ArgumentOutOfRangeException(nameof(upgradeEfficiency));
             if (accuracyPercent < 1) throw new ArgumentOutOfRangeException(nameof(accuracyPercent), accuracyPercent, "명중 배수(%)는 1 이상.");
             if (attackCostTicks < 1) throw new ArgumentOutOfRangeException(nameof(attackCostTicks));
-            if (reach < 1 || reach > 2) throw new ArgumentOutOfRangeException(nameof(reach), reach, "공격 거리는 1 또는 2.");
+            if (reach < 1 || reach > EquippedWeapon.MaxReach) throw new ArgumentOutOfRangeException(nameof(reach), reach, "공격 거리는 1 ~ 3 (3 = 채찍).");
             MaxDamage = maxDamage;
             UpgradeEfficiency = upgradeEfficiency;
             AccuracyPercent = accuracyPercent;
@@ -83,9 +94,10 @@ namespace ProjectM.Items
             if (rules == null) throw new ArgumentNullException(nameof(rules));
             if (upgrade < 0) throw new ArgumentOutOfRangeException(nameof(upgrade));
             int max = Math.Max(1, Divide(def.MaxDamage + def.UpgradeEfficiency * upgrade, rules.DamageDivisor));
-            int min = Math.Min(max, Math.Max(1, Divide(rules.MinDamageBase + upgrade, rules.DamageDivisor)));
+            int minBase = def.Tier > 0 ? def.Tier : rules.MinDamageBase; // 3-39: SPD 최소 = 티어 + 강화
+            int min = Math.Min(max, Math.Max(1, Divide(minBase + upgrade, rules.DamageDivisor)));
             return new EquippedWeapon(itemId, min, max, def.AccuracyPercent, def.AttackCostTicks, def.Reach,
-                upgrade, StrengthRequirement(def, upgrade), def.SurpriseMinPercent, def.Defense, def.HitsPerAttack);
+                upgrade, StrengthRequirement(def, upgrade), def.SurpriseMinPercent, def.Defense, def.HitsPerAttack, def.AttackDelayPercent);
         }
 
         /// <summary>

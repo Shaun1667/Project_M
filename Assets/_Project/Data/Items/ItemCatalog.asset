@@ -212,7 +212,7 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
-    Tier: 0
+    Tier: 2
     Amount: 0
     Effect: 0
     Weight: 0
@@ -243,7 +243,7 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
-    Tier: 0
+    Tier: 2
     Amount: 0
     Effect: 0
     Weight: 0
@@ -274,7 +274,7 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
-    Tier: 0
+    Tier: 2
     Amount: 0
     Effect: 0
     Weight: 0
@@ -305,7 +305,7 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 2
     HitsPerAttack: 0
-    Tier: 0
+    Tier: 2
     Amount: 0
     Effect: 0
     Weight: 0
@@ -336,7 +336,7 @@ MonoBehaviour:
     SurpriseMinPercent: 67
     Defense: 0
     HitsPerAttack: 0
-    Tier: 0
+    Tier: 2
     Amount: 0
     Effect: 0
     Weight: 0
@@ -367,7 +367,7 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
-    Tier: 0
+    Tier: 2
     Amount: 0
     Effect: 0
     Weight: 0
@@ -1700,7 +1700,7 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 2
-    Tier: 0
+    Tier: 1
     Amount: 0
     Effect: 0
     Weight: 0
@@ -1709,6 +1709,646 @@ MonoBehaviour:
     FireTransformsTo: 
     IceTransformsTo: 
     Value: 60
+    ThrowMinDamage: 0
+    ThrowMaxDamage: 0
+    BreakPercent: 0
+    PlantTrap: 0
+    BrewsInto: 
+    RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
+  - Id: sword
+    DisplayName: "\uAC80"
+    Use: 3
+    SpellId: 
+    MaxDamage: 20
+    UpgradeEfficiency: 4
+    Accuracy: 1
+    AttackCostTicks: 1
+    Reach: 1
+    StrengthRequirement: 14
+    SurpriseMinPercent: 0
+    Defense: 0
+    HitsPerAttack: 0
+    AttackDelay: 0
+    Tier: 3
+    Amount: 0
+    Effect: 0
+    Weight: 0
+    Food: 0
+    Risky: 0
+    FireTransformsTo: 
+    IceTransformsTo: 
+    Value: 90
+    ThrowMinDamage: 0
+    ThrowMaxDamage: 0
+    BreakPercent: 0
+    PlantTrap: 0
+    BrewsInto: 
+    RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
+  - Id: mace
+    DisplayName: "\uCCA0\uD1F4"
+    Use: 3
+    SpellId: 
+    MaxDamage: 16
+    UpgradeEfficiency: 4
+    Accuracy: 1.28
+    AttackCostTicks: 1
+    Reach: 1
+    StrengthRequirement: 14
+    SurpriseMinPercent: 0
+    Defense: 0
+    HitsPerAttack: 0
+    AttackDelay: 0
+    Tier: 3
+    Amount: 0
+    Effect: 0
+    Weight: 0
+    Food: 0
+    Risky: 0
+    FireTransformsTo: 
+    IceTransformsTo: 
+    Value: 90
+    ThrowMinDamage: 0
+    ThrowMaxDamage: 0
+    BreakPercent: 0
+    PlantTrap: 0
+    BrewsInto: 
+    RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
+  - Id: scimitar
+    DisplayName: "\uC2DC\uBBF8\uD130"
+    Use: 3
+    SpellId: 
+    MaxDamage: 16
+    UpgradeEfficiency: 4
+    Accuracy: 1
+    AttackCostTicks: 1
+    Reach: 1
+    StrengthRequirement: 14
+    SurpriseMinPercent: 0
+    Defense: 0
+    HitsPerAttack: 0
+    AttackDelay: 0.8
+    Tier: 3
+    Amount: 0
+    Effect: 0
+    Weight: 0
+    Food: 0
+    Risky: 0
+    FireTransformsTo: 
+    IceTransformsTo: 
+    Value: 90
+    ThrowMinDamage: 0
+    ThrowMaxDamage: 0
+    BreakPercent: 0
+    PlantTrap: 0
+    BrewsInto: 
+    RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
+  - Id: round_shield
+    DisplayName: "\uC6D0\uD615 \uBC29\uD328"
+    Use: 3
+    SpellId: 
+    MaxDamage: 12
+    UpgradeEfficiency: 3
+    Accuracy: 1
+    AttackCostTicks: 1
+    Reach: 1
+    StrengthRequirement: 14
+    SurpriseMinPercent: 0
+    Defense: 4
+    HitsPerAttack: 0
+    AttackDelay: 0
+    Tier: 3
+    Amount: 0
+    Effect: 0
+    Weight: 0
+    Food: 0
+    Risky: 0
+    FireTransformsTo: 
+    IceTransformsTo: 
+    Value: 90
+    ThrowMinDamage: 0
+    ThrowMaxDamage: 0
+    BreakPercent: 0
+    PlantTrap: 0
+    BrewsInto: 
+    RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
+  - Id: sai
+    DisplayName: "\uC0AC\uC774"
+    Use: 3
+    SpellId: 
+    MaxDamage: 10
+    UpgradeEfficiency: 2
+    Accuracy: 1
+    AttackCostTicks: 1
+    Reach: 1
+    StrengthRequirement: 14
+    SurpriseMinPercent: 0
+    Defense: 0
+    HitsPerAttack: 0
+    AttackDelay: 0.5
+    Tier: 3
+    Amount: 0
+    Effect: 0
+    Weight: 0
+    Food: 0
+    Risky: 0
+    FireTransformsTo: 
+    IceTransformsTo: 
+    Value: 90
+    ThrowMinDamage: 0
+    ThrowMaxDamage: 0
+    BreakPercent: 0
+    PlantTrap: 0
+    BrewsInto: 
+    RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
+  - Id: whip
+    DisplayName: "\uCC44\uCC0D"
+    Use: 3
+    SpellId: 
+    MaxDamage: 12
+    UpgradeEfficiency: 3
+    Accuracy: 1
+    AttackCostTicks: 1
+    Reach: 3
+    StrengthRequirement: 14
+    SurpriseMinPercent: 0
+    Defense: 0
+    HitsPerAttack: 0
+    AttackDelay: 0
+    Tier: 3
+    Amount: 0
+    Effect: 0
+    Weight: 0
+    Food: 0
+    Risky: 0
+    FireTransformsTo: 
+    IceTransformsTo: 
+    Value: 90
+    ThrowMinDamage: 0
+    ThrowMaxDamage: 0
+    BreakPercent: 0
+    PlantTrap: 0
+    BrewsInto: 
+    RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
+  - Id: longsword
+    DisplayName: "\uC7A5\uAC80"
+    Use: 3
+    SpellId: 
+    MaxDamage: 25
+    UpgradeEfficiency: 5
+    Accuracy: 1
+    AttackCostTicks: 1
+    Reach: 1
+    StrengthRequirement: 16
+    SurpriseMinPercent: 0
+    Defense: 0
+    HitsPerAttack: 0
+    AttackDelay: 0
+    Tier: 4
+    Amount: 0
+    Effect: 0
+    Weight: 0
+    Food: 0
+    Risky: 0
+    FireTransformsTo: 
+    IceTransformsTo: 
+    Value: 120
+    ThrowMinDamage: 0
+    ThrowMaxDamage: 0
+    BreakPercent: 0
+    PlantTrap: 0
+    BrewsInto: 
+    RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
+  - Id: battle_axe
+    DisplayName: "\uC804\uD22C \uB3C4\uB07C"
+    Use: 3
+    SpellId: 
+    MaxDamage: 20
+    UpgradeEfficiency: 5
+    Accuracy: 1.24
+    AttackCostTicks: 1
+    Reach: 1
+    StrengthRequirement: 16
+    SurpriseMinPercent: 0
+    Defense: 0
+    HitsPerAttack: 0
+    AttackDelay: 0
+    Tier: 4
+    Amount: 0
+    Effect: 0
+    Weight: 0
+    Food: 0
+    Risky: 0
+    FireTransformsTo: 
+    IceTransformsTo: 
+    Value: 120
+    ThrowMinDamage: 0
+    ThrowMaxDamage: 0
+    BreakPercent: 0
+    PlantTrap: 0
+    BrewsInto: 
+    RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
+  - Id: flail
+    DisplayName: "\uD50C\uB808\uC77C"
+    Use: 3
+    SpellId: 
+    MaxDamage: 35
+    UpgradeEfficiency: 8
+    Accuracy: 0.8
+    AttackCostTicks: 1
+    Reach: 1
+    StrengthRequirement: 16
+    SurpriseMinPercent: 0
+    Defense: 0
+    HitsPerAttack: 0
+    AttackDelay: 0
+    Tier: 4
+    Amount: 0
+    Effect: 0
+    Weight: 0
+    Food: 0
+    Risky: 0
+    FireTransformsTo: 
+    IceTransformsTo: 
+    Value: 120
+    ThrowMinDamage: 0
+    ThrowMaxDamage: 0
+    BreakPercent: 0
+    PlantTrap: 0
+    BrewsInto: 
+    RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
+  - Id: runic_blade
+    DisplayName: "\uB8EC \uAC80"
+    Use: 3
+    SpellId: 
+    MaxDamage: 20
+    UpgradeEfficiency: 6
+    Accuracy: 1
+    AttackCostTicks: 1
+    Reach: 1
+    StrengthRequirement: 16
+    SurpriseMinPercent: 0
+    Defense: 0
+    HitsPerAttack: 0
+    AttackDelay: 0
+    Tier: 4
+    Amount: 0
+    Effect: 0
+    Weight: 0
+    Food: 0
+    Risky: 0
+    FireTransformsTo: 
+    IceTransformsTo: 
+    Value: 120
+    ThrowMinDamage: 0
+    ThrowMaxDamage: 0
+    BreakPercent: 0
+    PlantTrap: 0
+    BrewsInto: 
+    RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
+  - Id: assassins_blade
+    DisplayName: "\uC554\uC0B4\uC790\uC758 \uAC80"
+    Use: 3
+    SpellId: 
+    MaxDamage: 20
+    UpgradeEfficiency: 5
+    Accuracy: 1
+    AttackCostTicks: 1
+    Reach: 1
+    StrengthRequirement: 16
+    SurpriseMinPercent: 50
+    Defense: 0
+    HitsPerAttack: 0
+    AttackDelay: 0
+    Tier: 4
+    Amount: 0
+    Effect: 0
+    Weight: 0
+    Food: 0
+    Risky: 0
+    FireTransformsTo: 
+    IceTransformsTo: 
+    Value: 120
+    ThrowMinDamage: 0
+    ThrowMaxDamage: 0
+    BreakPercent: 0
+    PlantTrap: 0
+    BrewsInto: 
+    RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
+  - Id: crossbow
+    DisplayName: "\uC11D\uAD81"
+    Use: 3
+    SpellId: 
+    MaxDamage: 20
+    UpgradeEfficiency: 5
+    Accuracy: 1
+    AttackCostTicks: 1
+    Reach: 1
+    StrengthRequirement: 16
+    SurpriseMinPercent: 0
+    Defense: 0
+    HitsPerAttack: 0
+    AttackDelay: 0
+    Tier: 4
+    Amount: 0
+    Effect: 0
+    Weight: 0
+    Food: 0
+    Risky: 0
+    FireTransformsTo: 
+    IceTransformsTo: 
+    Value: 120
+    ThrowMinDamage: 0
+    ThrowMaxDamage: 0
+    BreakPercent: 0
+    PlantTrap: 0
+    BrewsInto: 
+    RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
+  - Id: katana
+    DisplayName: "\uCE74\uD0C0\uB098"
+    Use: 3
+    SpellId: 
+    MaxDamage: 20
+    UpgradeEfficiency: 5
+    Accuracy: 1
+    AttackCostTicks: 1
+    Reach: 1
+    StrengthRequirement: 16
+    SurpriseMinPercent: 0
+    Defense: 0
+    HitsPerAttack: 0
+    AttackDelay: 0
+    Tier: 4
+    Amount: 0
+    Effect: 0
+    Weight: 0
+    Food: 0
+    Risky: 0
+    FireTransformsTo: 
+    IceTransformsTo: 
+    Value: 120
+    ThrowMinDamage: 0
+    ThrowMaxDamage: 0
+    BreakPercent: 0
+    PlantTrap: 0
+    BrewsInto: 
+    RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
+  - Id: greatsword
+    DisplayName: "\uB300\uAC80"
+    Use: 3
+    SpellId: 
+    MaxDamage: 30
+    UpgradeEfficiency: 6
+    Accuracy: 1
+    AttackCostTicks: 1
+    Reach: 1
+    StrengthRequirement: 18
+    SurpriseMinPercent: 0
+    Defense: 0
+    HitsPerAttack: 0
+    AttackDelay: 0
+    Tier: 5
+    Amount: 0
+    Effect: 0
+    Weight: 0
+    Food: 0
+    Risky: 0
+    FireTransformsTo: 
+    IceTransformsTo: 
+    Value: 150
+    ThrowMinDamage: 0
+    ThrowMaxDamage: 0
+    BreakPercent: 0
+    PlantTrap: 0
+    BrewsInto: 
+    RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
+  - Id: war_hammer
+    DisplayName: "\uC804\uC7C1 \uB9DD\uCE58"
+    Use: 3
+    SpellId: 
+    MaxDamage: 24
+    UpgradeEfficiency: 6
+    Accuracy: 1.2
+    AttackCostTicks: 1
+    Reach: 1
+    StrengthRequirement: 18
+    SurpriseMinPercent: 0
+    Defense: 0
+    HitsPerAttack: 0
+    AttackDelay: 0
+    Tier: 5
+    Amount: 0
+    Effect: 0
+    Weight: 0
+    Food: 0
+    Risky: 0
+    FireTransformsTo: 
+    IceTransformsTo: 
+    Value: 150
+    ThrowMinDamage: 0
+    ThrowMaxDamage: 0
+    BreakPercent: 0
+    PlantTrap: 0
+    BrewsInto: 
+    RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
+  - Id: glaive
+    DisplayName: "\uAE00\uB808\uC774\uBE0C"
+    Use: 3
+    SpellId: 
+    MaxDamage: 40
+    UpgradeEfficiency: 8
+    Accuracy: 1
+    AttackCostTicks: 1
+    Reach: 2
+    StrengthRequirement: 18
+    SurpriseMinPercent: 0
+    Defense: 0
+    HitsPerAttack: 0
+    AttackDelay: 1.5
+    Tier: 5
+    Amount: 0
+    Effect: 0
+    Weight: 0
+    Food: 0
+    Risky: 0
+    FireTransformsTo: 
+    IceTransformsTo: 
+    Value: 150
+    ThrowMinDamage: 0
+    ThrowMaxDamage: 0
+    BreakPercent: 0
+    PlantTrap: 0
+    BrewsInto: 
+    RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
+  - Id: greataxe
+    DisplayName: "\uB300\uD615 \uB3C4\uB07C"
+    Use: 3
+    SpellId: 
+    MaxDamage: 45
+    UpgradeEfficiency: 6
+    Accuracy: 1
+    AttackCostTicks: 1
+    Reach: 1
+    StrengthRequirement: 20
+    SurpriseMinPercent: 0
+    Defense: 0
+    HitsPerAttack: 0
+    AttackDelay: 0
+    Tier: 5
+    Amount: 0
+    Effect: 0
+    Weight: 0
+    Food: 0
+    Risky: 0
+    FireTransformsTo: 
+    IceTransformsTo: 
+    Value: 150
+    ThrowMinDamage: 0
+    ThrowMaxDamage: 0
+    BreakPercent: 0
+    PlantTrap: 0
+    BrewsInto: 
+    RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
+  - Id: greatshield
+    DisplayName: "\uB300\uD615 \uBC29\uD328"
+    Use: 3
+    SpellId: 
+    MaxDamage: 18
+    UpgradeEfficiency: 5
+    Accuracy: 1
+    AttackCostTicks: 1
+    Reach: 1
+    StrengthRequirement: 18
+    SurpriseMinPercent: 0
+    Defense: 6
+    HitsPerAttack: 0
+    AttackDelay: 0
+    Tier: 5
+    Amount: 0
+    Effect: 0
+    Weight: 0
+    Food: 0
+    Risky: 0
+    FireTransformsTo: 
+    IceTransformsTo: 
+    Value: 150
+    ThrowMinDamage: 0
+    ThrowMaxDamage: 0
+    BreakPercent: 0
+    PlantTrap: 0
+    BrewsInto: 
+    RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
+  - Id: gauntlet
+    DisplayName: "\uAC74\uD2C0\uB9BF"
+    Use: 3
+    SpellId: 
+    MaxDamage: 15
+    UpgradeEfficiency: 3
+    Accuracy: 1
+    AttackCostTicks: 1
+    Reach: 1
+    StrengthRequirement: 18
+    SurpriseMinPercent: 0
+    Defense: 0
+    HitsPerAttack: 0
+    AttackDelay: 0.5
+    Tier: 5
+    Amount: 0
+    Effect: 0
+    Weight: 0
+    Food: 0
+    Risky: 0
+    FireTransformsTo: 
+    IceTransformsTo: 
+    Value: 150
+    ThrowMinDamage: 0
+    ThrowMaxDamage: 0
+    BreakPercent: 0
+    PlantTrap: 0
+    BrewsInto: 
+    RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
+  - Id: war_scythe
+    DisplayName: "\uC804\uC7C1 \uB0AB"
+    Use: 3
+    SpellId: 
+    MaxDamage: 40
+    UpgradeEfficiency: 8
+    Accuracy: 0.8
+    AttackCostTicks: 1
+    Reach: 1
+    StrengthRequirement: 18
+    SurpriseMinPercent: 0
+    Defense: 0
+    HitsPerAttack: 0
+    AttackDelay: 0
+    Tier: 5
+    Amount: 0
+    Effect: 0
+    Weight: 0
+    Food: 0
+    Risky: 0
+    FireTransformsTo: 
+    IceTransformsTo: 
+    Value: 150
     ThrowMinDamage: 0
     ThrowMaxDamage: 0
     BreakPercent: 0
