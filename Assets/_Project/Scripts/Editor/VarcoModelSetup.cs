@@ -140,9 +140,10 @@ namespace ProjectM.Editor
             ("greatshield", "Prop_Weapon_Greatshield", 0.70f, 0.50f, 15f),
             ("gauntlet", "Prop_Weapon_Gauntlet", 0.25f, 0.30f, 0f),
             ("war_scythe", "Prop_Weapon_WarScythe", 1.15f, 0.30f, 70f),
-            // 3-40 0티어 시작 무기 (루멘 단창 · 시아 붕대 — 붕대는 주먹을 감싼 모양이라 세워 손 가운데)
+            // 3-40 0티어 시작 무기 (루멘 단창 · 시아 붕대). 붕대 = 주먹을 감싼 껍데기 — 손 크기(약 9 cm)로, 주먹 끝이 손가락 쪽(아래 180°)을 보고
+            // 손목 뼈에서 손 쪽으로 반 손만큼 내려 손을 덮게 (2026-11-17 사용자 "붕대가 너무 커 손 크기에 맞게")
             ("short_spear", "Prop_Weapon_ShortSpear", 0.75f, 0.30f, 70f),
-            ("bandage", "Prop_Weapon_Bandage", 0.20f, 0.40f, 0f),
+            ("bandage", "Prop_Weapon_Bandage", 0.09f, 0.05f, 180f),
         };
 
         /// <summary>지팡이를 쥐는 높이 (지팡이 길이에 대한 비율) — 손이 이 지점에 오게 붙인다.</summary>
