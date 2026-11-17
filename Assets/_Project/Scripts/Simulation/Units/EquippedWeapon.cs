@@ -32,16 +32,21 @@ namespace ProjectM.Units
         /// <summary>SPD 공격 지연 % (3-39 — 사이 50 · 시미터 80 · 글레이브 150). 0 = 안 씀(AttackCostTicks 그대로). 계산은 MeleeWeapon.PlanAttack.</summary>
         public int AttackDelayPercent { get; }
 
+        /// <summary>무기 계열 (3-40 — 단창 spear · 붕대 knuckle). 직업 기술 강화 · 숙련 특성이 이것으로 맞춘다. 따로 없으면 아이템 ID.</summary>
+        public string Family => _family ?? ItemId;
+        private readonly string _family;
+
         /// <summary>가장 긴 공격 거리 (3-39 채찍 3).</summary>
         public const int MaxReach = 3;
 
         public EquippedWeapon(string itemId, int minDamage, int maxDamage, int accuracyPercent, int attackCostTicks, int reach,
-            int upgrade = 0, int strengthRequirement = 0, int surpriseMinPercent = 0, int defense = 0, int hitsPerAttack = 1, int attackDelayPercent = 0)
+            int upgrade = 0, int strengthRequirement = 0, int surpriseMinPercent = 0, int defense = 0, int hitsPerAttack = 1, int attackDelayPercent = 0, string family = null)
         {
             if (hitsPerAttack < 1) throw new ArgumentOutOfRangeException(nameof(hitsPerAttack));
             _hitsPerAttack = hitsPerAttack;
             if (attackDelayPercent < 0) throw new ArgumentOutOfRangeException(nameof(attackDelayPercent));
             AttackDelayPercent = attackDelayPercent;
+            _family = string.IsNullOrEmpty(family) || family == itemId ? null : family;
             if (surpriseMinPercent < 0 || surpriseMinPercent > 100) throw new ArgumentOutOfRangeException(nameof(surpriseMinPercent));
             if (defense < 0) throw new ArgumentOutOfRangeException(nameof(defense));
             SurpriseMinPercent = surpriseMinPercent;
@@ -70,7 +75,7 @@ namespace ProjectM.Units
             && AccuracyPercent == o.AccuracyPercent && AttackCostTicks == o.AttackCostTicks && Reach == o.Reach
             && Upgrade == o.Upgrade && StrengthRequirement == o.StrengthRequirement
             && SurpriseMinPercent == o.SurpriseMinPercent && Defense == o.Defense && HitsPerAttack == o.HitsPerAttack
-            && AttackDelayPercent == o.AttackDelayPercent;
+            && AttackDelayPercent == o.AttackDelayPercent && Family == o.Family;
         public override bool Equals(object obj) => obj is EquippedWeapon o && Equals(o);
         public override int GetHashCode() => (ItemId?.GetHashCode() ?? 0) ^ (MaxDamage * 397);
         public override string ToString() => IsEmpty ? "(맨손)" : $"{ItemId}+{Upgrade} {MinDamage}~{MaxDamage} 힘 {StrengthRequirement}";

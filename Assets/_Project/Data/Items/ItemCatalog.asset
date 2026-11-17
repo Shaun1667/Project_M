@@ -1687,6 +1687,72 @@ MonoBehaviour:
     TimeKind: 0
     TimeGauge: 
     TimePower: 
+  - Id: short_spear
+    DisplayName: "\uB2E8\uCC3D"
+    Use: 3
+    SpellId: 
+    MaxDamage: 12
+    UpgradeEfficiency: 2
+    Accuracy: 1
+    AttackCostTicks: 1
+    Reach: 1
+    StrengthRequirement: 10
+    SurpriseMinPercent: 0
+    Defense: 0
+    HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: spear
+    Tier: 0
+    Amount: 0
+    Effect: 0
+    Weight: 0
+    Food: 0
+    Risky: 0
+    FireTransformsTo: 
+    IceTransformsTo: 
+    Value: 30
+    ThrowMinDamage: 0
+    ThrowMaxDamage: 0
+    BreakPercent: 0
+    PlantTrap: 0
+    BrewsInto: 
+    RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
+  - Id: bandage
+    DisplayName: "\uBD95\uB300"
+    Use: 3
+    SpellId: 
+    MaxDamage: 6
+    UpgradeEfficiency: 2
+    Accuracy: 1
+    AttackCostTicks: 1
+    Reach: 1
+    StrengthRequirement: 10
+    SurpriseMinPercent: 0
+    Defense: 0
+    HitsPerAttack: 2
+    AttackDelay: 0
+    WeaponFamily: knuckle
+    Tier: 0
+    Amount: 0
+    Effect: 0
+    Weight: 0
+    Food: 0
+    Risky: 0
+    FireTransformsTo: 
+    IceTransformsTo: 
+    Value: 30
+    ThrowMinDamage: 0
+    ThrowMaxDamage: 0
+    BreakPercent: 0
+    PlantTrap: 0
+    BrewsInto: 
+    RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   - Id: knuckle
     DisplayName: "\uB108\uD074"
     Use: 3

@@ -501,6 +501,19 @@ SPD 수치 그대로(나누기 전) + 위 공통 나누기 3. 결정: 배치는 
 
 검산 (`WeaponTierTests` — 데이터 표 · 최소 피해 = 티어 · 사이 · 시미터 · 글레이브 시간 · 채찍 3칸 · 저장 v31).
 
+### 13-2. 0티어 시작 무기 (3-40, 결정 2026-11-17 — 사용자 "루멘은 단창, 시아는 붕대를 가지고 시작")
+
+결정: 수치 = **맨손 수준**(맨손 고정 3과 평균이 비슷 — 선택지: 맨손 수준(추천) · 단창 2칸 · 더 약하게) · **같은 계열로 적용**(단창 = 창 · 붕대 = 너클 — 직업 기술 강화 · 숙련 특성이 그대로 걸림. 선택지: 같은 계열(추천) · 적용 안 함 · 절반만).
+- 시작 무기는 `CharacterCatalog.asset` 줄 `StartingWeapon` → 판 시작에 `Weapons.Wield`(차례 · 인벤토리 안 씀). 판마다 무작위 무기 배치 후보에도 들어감.
+- 계열 `WeaponFamily` → `EquippedWeapon.Family`(스냅샷 v32): `SpellDef` 기술 강화(`BoostWeaponId`) · `Talents` 숙련 명중(`WeaponAccuracy`)이 아이템 ID 대신 계열로 맞춘다. 비면 자기 ID.
+
+| ID | 이름 | 계열 | 최대 | 강화 효율 | 거리 | 타격 | 요구 힘 | 값 | 게임 피해 (+0) |
+|---|---|---|---|---|---|---|---|---|---|
+| `short_spear` | 단창 | `spear` | **12** | 2 | 1 | 1 | 10 | 30 | 1 ~ 4 (평균 2.5) |
+| `bandage` | 붕대 | `knuckle` | **6** | 2 | 1 | **2** | 10 | 30 | 1 ~ 2 × 2타 (평균 3) |
+
+검산 (`WeaponTierTests.Wield_EquipsWithoutTurn_FamilyFollowsData` · `Snapshot_KeepsWeaponFamily` · `ProjectAssets_Tier0StartingWeapons`).
+
 ---
 
 ## 14. 물약 · 주문서 — `Data/Items/ConsumableConfig.asset` + `ItemCatalog.asset` (3-9)

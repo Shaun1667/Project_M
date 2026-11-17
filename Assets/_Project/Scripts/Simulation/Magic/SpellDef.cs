@@ -187,7 +187,7 @@ namespace ProjectM.Magic
                     if (tStatus != StatusType.None && status == StatusType.None) { status = tStatus; chance = tChance; }
                 }
             }
-            if (spell.BoostWeaponId != null && caster.Weapon.ItemId == spell.BoostWeaponId) // 맨손 = Empty (ItemId null)
+            if (spell.BoostWeaponId != null && !caster.Weapon.IsEmpty && caster.Weapon.Family == spell.BoostWeaponId) // 맨손 = Empty · 3-40 계열(단창 = 창)
             {
                 changed = true;
                 range += spell.BoostRange;

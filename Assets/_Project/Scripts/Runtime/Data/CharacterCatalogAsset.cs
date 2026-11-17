@@ -23,6 +23,21 @@ namespace ProjectM.Data
             [Header("직업 (3-21a)")]
             [Tooltip("직업 ID (루멘 = lumen — Docs/직업_루멘.md). 비면 직업 없음")] public string ClassId;
             [Tooltip("이 캐릭터만 시작할 때 아는 주문 (SpellCatalog) — Player.asset 시작 주문 앞에 붙음 = 빠른 칸 앞쪽부터")] public List<string> StartingSpells;
+            [Tooltip("들고 시작하는 무기 (ItemCatalog, 3-40 — 루멘 short_spear · 시아 bandage). 비면 맨손")] public string StartingWeapon;
+        }
+
+        /// <summary>에디터 Setup용 (3-40): 시작 무기가 비어 있으면 채운다 (사용자가 고친 값은 그대로). 바뀌었으면 true.</summary>
+        public bool SetStartingWeaponIfEmpty(string id, string weaponId)
+        {
+            for (int i = 0; i < _characters.Count; i++)
+            {
+                if (_characters[i].Id != id || !string.IsNullOrEmpty(_characters[i].StartingWeapon)) continue;
+                var e = _characters[i];
+                e.StartingWeapon = weaponId;
+                _characters[i] = e;
+                return true;
+            }
+            return false;
         }
 
         /// <summary>에디터 Setup용 (3-21a): 직업이 비어 있으면 직업 · 시작 주문을 채운다 (사용자가 고친 값은 그대로).</summary>

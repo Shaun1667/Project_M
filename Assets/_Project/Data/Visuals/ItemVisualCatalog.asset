@@ -418,4 +418,14 @@ MonoBehaviour:
     Upright: 0
     Icon: {fileID: 0}
     Icon3D: {fileID: 0}
+  - ItemId: short_spear
+    Prefab: {fileID: 6263036448506832602, guid: 6c77ef7586153e749824d27c962f6464, type: 3}
+    Upright: 0
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 0}
+  - ItemId: bandage
+    Prefab: {fileID: 5686446403640348372, guid: c3d8ffbff60abc546a8fa9dc468b82ae, type: 3}
+    Upright: 0
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 0}
   _use3DIcons: 1

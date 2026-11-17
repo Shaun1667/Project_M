@@ -1611,6 +1611,9 @@ namespace ProjectM.Editor
             changed |= catalog.SetClassIfEmpty("hero_blond", "lumen", "light_spear_thrust", "light_spear_throw");
             // 3-22a: 시아 = 직업 sia, 기본 기술 도약으로 시작 (Docs/직업_시아.md). 형태 · 특성은 3-22b · c
             changed |= catalog.SetClassIfEmpty("hero_black", "sia", "sia_leap");
+            // 3-40: 0티어 시작 무기 — 루멘 단창(창 계열) · 시아 붕대(너클 계열)
+            changed |= catalog.SetStartingWeaponIfEmpty("hero_blond", "short_spear");
+            changed |= catalog.SetStartingWeaponIfEmpty("hero_black", "bandage");
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }

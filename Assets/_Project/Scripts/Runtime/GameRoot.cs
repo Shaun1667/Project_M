@@ -418,7 +418,7 @@ namespace ProjectM
             {
                 _characterIndex = index;
                 _characterName = string.IsNullOrEmpty(list[index].DisplayName) ? list[index].Id : list[index].DisplayName; // 3-23b 기록 이름
-                StartNewRun(list[index].VisualId, list[index].StartingSpells, list[index].ClassId); // 3-21a: 루멘 = 빛의 창 기술 2개 · 3-21b 직업
+                StartNewRun(list[index].VisualId, list[index].StartingSpells, list[index].ClassId, list[index].StartingWeapon); // 3-21a: 루멘 = 빛의 창 기술 2개 · 3-21b 직업 · 3-40 시작 무기
             }, illustrations, onCancel: _title != null ? () => Defer(OpenTitle) : (System.Action)null); // 3-27 Esc = 타이틀로
         }
 
@@ -490,13 +490,14 @@ namespace ProjectM
         /// <param name="visualId">고른 캐릭터의 모습 ID (null이면 Player.asset 그대로).</param>
         /// <param name="characterSpells">고른 캐릭터(직업)의 시작 주문 (3-21a). null이면 없음.</param>
         /// <param name="classId">고른 캐릭터의 직업 ID (3-21b — RunState.ClassId). null이면 직업 없음.</param>
-        private void StartNewRun(string visualId, System.Collections.Generic.IReadOnlyList<string> characterSpells = null, string classId = null)
+        /// <param name="startingWeapon">고른 캐릭터가 들고 시작하는 무기 (3-40 — 루멘 단창 · 시아 붕대). null이면 맨손.</param>
+        private void StartNewRun(string visualId, System.Collections.Generic.IReadOnlyList<string> characterSpells = null, string classId = null, string startingWeapon = null)
         {
             // 3-27: 시드 = 타이틀 입력 칸 → 인스펙터 고정 시드 → 지금 시각
             ulong seed = _pendingSeed ?? (_fixedSeed != 0 ? (ulong)_fixedSeed : (ulong)System.DateTime.UtcNow.Ticks);
             _slot = _pendingSlot; // 3-30: 고른 슬롯에 새 판 (그 슬롯의 지난 저장은 버림)
             RunSaveStore.Delete(_slot);
-            BeginRun(null, visualId, characterSpells, classId, _pendingMode, seed);
+            BeginRun(null, visualId, characterSpells, classId, _pendingMode, seed, startingWeapon: startingWeapon);
             if (_title != null) Defer(_title.OpenControls); // 2026-11-05 지스타 시연: 새 판마다 조작 안내 한 번 (확정한 키가 바로 닫지 않게 다음 프레임)
         }
 
@@ -505,7 +506,7 @@ namespace ProjectM
         /// 규칙 연결(시스템 · 적 · 아이템 · 직업 규칙 · 계단 · 입력)은 두 경우 같은 코드.
         /// </summary>
         private void BeginRun(WorldSnapshot snapshot, string visualId, System.Collections.Generic.IReadOnlyList<string> characterSpells, string classId,
-            RunMode mode, ulong seed, System.Action<World> afterRestore = null)
+            RunMode mode, ulong seed, System.Action<World> afterRestore = null, string startingWeapon = null)
         {
             _history.Clear(); // 3-28c: 새 판 · 이어하기 · 되돌리기 — 기록은 이 World 기준으로 다시
             if (afterRestore == null) _demoCleared = false; // 3-37: 새 판 · 이어하기마다 시연 완료 창 다시 (타임머신 되돌리기는 그대로)
@@ -671,7 +672,7 @@ namespace ProjectM
             }
             else
             {
-                player = SpawnNewRun(visualId, characterSpells, classId, decor, water, traps, zones, kindRng, spawn, enemyDef, enemyAi, hunger, loot, dungeonConfig, consumableConfigForRun);
+                player = SpawnNewRun(visualId, characterSpells, classId, decor, water, traps, zones, kindRng, spawn, enemyDef, enemyAi, hunger, loot, dungeonConfig, consumableConfigForRun, startingWeapon);
             }
             vision.Refresh(); // 첫 시야 — 이후는 매 틱 ⑥ 단계에서
 
@@ -725,7 +726,8 @@ namespace ProjectM
         /// <summary>새 판 (3-27 이전 StartNewRun 그대로): 1층 꾸미기 → 플레이어 · 적 → 직업 · 갑옷 · 식량 → 배치 계획 · 1층 아이템. 플레이어를 돌려준다.</summary>
         private Unit SpawnNewRun(string visualId, System.Collections.Generic.IReadOnlyList<string> characterSpells, string classId,
             FloorDecorConfig decor, TerrainDef water, TrapBook traps, ProjectM.Dungeon.ZoneBook zones, IRng kindRng, SpawnConfig spawn, UnitDef enemyDef,
-            ICommandSource enemyAi, HungerConfig hunger, LootConfig loot, DungeonGenConfig dungeonConfig, ConsumableConfig consumableConfig)
+            ICommandSource enemyAi, HungerConfig hunger, LootConfig loot, DungeonGenConfig dungeonConfig, ConsumableConfig consumableConfig,
+            string startingWeapon = null)
         {
             World.Events.Publish(new MapLoadedEvent(World.Map));
             if (decor != null) FloorDecor.Apply(World, Floor, decor, water, traps); // 3-11a · 3-12a: MapLoaded 뒤에 (화면이 지우지 않게), 적 배치 전
@@ -750,6 +752,8 @@ namespace ProjectM
             var startingArmor = playerDef.StartingArmor;
             if (startingArmor != null && !Armors.Wear(World, Items, player, startingArmor)) // 3-10a: 천 갑옷을 입고 시작 (SPD)
                 Debug.LogWarning($"[GameRoot] 시작 갑옷 '{startingArmor}'가 ItemCatalog에 없다.", this);
+            if (!string.IsNullOrEmpty(startingWeapon) && !Weapons.Wield(World, Items, player, startingWeapon)) // 3-40: 루멘 단창 · 시아 붕대를 들고 시작
+                Debug.LogWarning($"[GameRoot] 시작 무기 '{startingWeapon}'가 ItemCatalog에 없다.", this);
             if (hunger?.StartingFood != null && Items.TryGet(hunger.StartingFood, out _))
                 Inventory.TryAdd(World, Spells, Items, player, InventoryRef.Item(hunger.StartingFood)); // 3-14: 식량 1개로 시작 (SPD)
             var startKit = StartingKit.Roll(World, playerDef); // 2026-11-05 지스타 시연: 시작 배낭 (Player.asset — 융합기 · 물 마법서 · 치유 물약 + 무작위 마법서 하나)

@@ -195,13 +195,75 @@ namespace ProjectM.Tests
             Attack(s, dummy); // 2틱, 몫 50 남음
             Assert.That(s.Player.AttackCredit, Is.EqualTo(50));
 
-            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.EqualTo(31), "3-39 무기 공격 지연 · 유닛 지연 몫");
+            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.GreaterThanOrEqualTo(31), "3-39 무기 공격 지연 · 유닛 지연 몫 (정확한 값은 아래 3-40 — 32)");
             var bytes = WorldSnapshotCodec.Encode(s.World.Capture());
             var restored = WorldSnapshotCodec.Decode(bytes);
             var unit = System.Array.Find(restored.Units, u => u.Id == s.Player.Id);
             Assert.That(unit.AttackCredit, Is.EqualTo(50));
             Assert.That(unit.Weapon.AttackDelayPercent, Is.EqualTo(150));
             Assert.That(unit.Weapon.Reach, Is.EqualTo(2));
+        }
+
+        // ── 3-40 0티어 시작 무기 · 계열 ──
+
+        private static ItemBook Tier0Book() => new ItemBook(new[]
+        {
+            new ItemDef("short_spear", ItemUse.EquipWeapon, weapon: new WeaponDef(12, 2, 100, 1, 1, 10, family: "spear")),
+            new ItemDef("bandage", ItemUse.EquipWeapon, weapon: new WeaponDef(6, 2, 100, 1, 1, 10, hitsPerAttack: 2, family: "knuckle")),
+            new ItemDef("spear", ItemUse.EquipWeapon, weapon: new WeaponDef(20, 4, 100, 2, 2, 12)),
+        }, Rules);
+
+        [Test]
+        public void Wield_EquipsWithoutTurn_FamilyFollowsData()
+        {
+            var s = Start();
+            s.Items = Tier0Book();
+            var equipped = new List<WeaponEquippedEvent>();
+            s.World.Events.Subscribe<WeaponEquippedEvent>(equipped.Add);
+            long before = s.World.Scheduler.CurrentTick;
+            Assert.That(Weapons.Wield(s.World, s.Items, s.Player, "short_spear"), Is.True);
+            s.World.Events.Flush();
+            Assert.That(s.World.Scheduler.CurrentTick, Is.EqualTo(before), "판 시작 장착 — 차례를 쓰지 않음");
+            Assert.That((s.Player.Weapon.ItemId, s.Player.Weapon.Family), Is.EqualTo(("short_spear", "spear")));
+            Assert.That((s.Player.Weapon.MinDamage, s.Player.Weapon.MaxDamage), Is.EqualTo((1, 4)), "BALANCE 13-2 단창 +0");
+            Assert.That(equipped, Has.Count.EqualTo(1), "손에 든 모습이 켜지도록 장착 이벤트");
+
+            Assert.That(Weapons.Wield(s.World, s.Items, s.Player, "bandage"), Is.True);
+            Assert.That((s.Player.Weapon.Family, s.Player.Weapon.HitsPerAttack, s.Player.Weapon.MaxDamage), Is.EqualTo(("knuckle", 2, 2)));
+            Assert.That(Weapons.Wield(s.World, s.Items, s.Player, "spear"), Is.True);
+            Assert.That(s.Player.Weapon.Family, Is.EqualTo("spear"), "계열이 없으면 자기 ID");
+            Assert.That(Weapons.Wield(s.World, s.Items, s.Player, "no_such_weapon"), Is.False);
+        }
+
+        [Test]
+        public void Snapshot_KeepsWeaponFamily()
+        {
+            var s = Start();
+            s.Items = Tier0Book();
+            Weapons.Wield(s.World, s.Items, s.Player, "bandage");
+            s.World.Events.Flush();
+            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.EqualTo(32), "3-40 무기 계열");
+            var restored = WorldSnapshotCodec.Decode(WorldSnapshotCodec.Encode(s.World.Capture()));
+            var unit = System.Array.Find(restored.Units, u => u.Id == s.Player.Id);
+            Assert.That((unit.Weapon.ItemId, unit.Weapon.Family), Is.EqualTo(("bandage", "knuckle")));
+        }
+
+        [Test]
+        public void ProjectAssets_Tier0StartingWeapons()
+        {
+            var book = AssetDatabase.LoadAssetAtPath<ItemCatalogAsset>("Assets/_Project/Data/Items/ItemCatalog.asset").ToBook();
+            Assert.That(book.TryGet("short_spear", out var spear) && book.TryGet("bandage", out var wraps), Is.True);
+            book.TryGet("bandage", out var bandage);
+            Assert.That((spear.Weapon.Tier, spear.Weapon.MaxDamage, spear.Weapon.UpgradeEfficiency, spear.Weapon.Reach, spear.Weapon.StrengthRequirement, spear.Weapon.Family),
+                Is.EqualTo((0, 12, 2, 1, 10, "spear")));
+            Assert.That((bandage.Weapon.Tier, bandage.Weapon.MaxDamage, bandage.Weapon.HitsPerAttack, bandage.Weapon.StrengthRequirement, bandage.Weapon.Family),
+                Is.EqualTo((0, 6, 2, 10, "knuckle")));
+
+            var characters = AssetDatabase.LoadAssetAtPath<CharacterCatalogAsset>("Assets/_Project/Data/Units/CharacterCatalog.asset");
+            var starts = new Dictionary<string, string>();
+            foreach (var c in characters.Characters) starts[c.Id] = c.StartingWeapon;
+            Assert.That(starts["hero_blond"], Is.EqualTo("short_spear"), "루멘 = 단창");
+            Assert.That(starts["hero_black"], Is.EqualTo("bandage"), "시아 = 붕대");
         }
 
         // ── 프로젝트 데이터 = BALANCE 13번 ──

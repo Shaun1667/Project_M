@@ -238,7 +238,7 @@ namespace ProjectM.Units
 
         /// <summary>근접 명중 보너스 (든 무기가 WeaponId인 효과만).</summary>
         public static int AccuracyBonus(World world, Unit attacker) =>
-            attacker == null || attacker.Weapon.IsEmpty ? 0 : Sum(world, attacker, TalentEffect.WeaponAccuracy, e => e.WeaponId == attacker.Weapon.ItemId);
+            attacker == null || attacker.Weapon.IsEmpty ? 0 : Sum(world, attacker, TalentEffect.WeaponAccuracy, e => e.WeaponId == attacker.Weapon.Family); // 3-40: 계열로 (단창 = 창 · 붕대 = 너클)
 
         /// <summary>근접 공격이 맞았을 때 마나 +1 확률 % (대상 주문 없이 적은 HitManaChance 줄).</summary>
         public static int MeleeHitManaPercent(World world, Unit attacker) =>

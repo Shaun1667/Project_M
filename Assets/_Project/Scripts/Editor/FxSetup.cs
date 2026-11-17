@@ -194,6 +194,8 @@ namespace ProjectM.Editor
             new Row("item.greatshield", Hovl + "Sparks/Sparks flashing yellow", 0.35f, Steel, 1f, 0f, 0.25f),
             new Row("item.gauntlet", Hovl + "Sparks/Sparks flashing yellow", 0.35f, Steel, 1f, 0f, 0.25f),
             new Row("item.war_scythe", Hovl + "Sparks/Sparks flashing yellow", 0.35f, Steel, 1f, 0f, 0.25f),
+            new Row("item.short_spear", Hovl + "Sparks/Sparks flashing yellow", 0.35f, Steel, 1f, 0f, 0.25f), // 3-40
+            new Row("item.bandage", Hovl + "Sparks/Sparks flashing yellow", 0.35f, Steel, 1f, 0f, 0.25f),
             // 3-7b 힘 물약 · 강화 주문서: 모델이 없어 책 상자(색 = 틴트) + 반짝임
             new Row("item.potion_strength", Hovl + "Sparks/Sparks flashing yellow", 0.35f, PotionRed, 1f, 0f, 0.25f),
             new Row("item.scroll_upgrade", Hovl + "Sparks/Sparks flashing yellow", 0.35f, ScrollGold, 1f, 0f, 0.25f),

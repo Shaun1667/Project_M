@@ -22,6 +22,7 @@ MonoBehaviour:
     StartingSpells:
     - light_spear_thrust
     - light_spear_throw
+    StartingWeapon: short_spear
   - Id: hero_black
     DisplayName: "\uC2DC\uC544"
     VisualId: hero_black
@@ -30,3 +31,4 @@ MonoBehaviour:
     ClassId: sia
     StartingSpells:
     - sia_leap
+    StartingWeapon: bandage

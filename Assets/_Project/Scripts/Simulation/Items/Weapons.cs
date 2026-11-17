@@ -31,10 +31,16 @@ namespace ProjectM.Items
         /// 쓰면 공격 한 번이 이만큼의 시간 — 1틱 안에 여러 번 치거나(50 = 2번) 2틱을 쓰기도 한다 (MeleeWeapon.PlanAttack · Unit.AttackCredit).
         /// </summary>
         public int AttackDelayPercent { get; }
+        /// <summary>
+        /// 무기 계열 (3-40 — 단창 = spear · 붕대 = knuckle). 직업 기술 강화(SpellDef.BoostWeaponId) · 숙련 특성(TalentEffect.WeaponAccuracy)이
+        /// 아이템 ID 대신 이 값으로 맞춘다. null = 자기 아이템 ID.
+        /// </summary>
+        public string Family { get; }
 
         public WeaponDef(int maxDamage, int upgradeEfficiency, int accuracyPercent, int attackCostTicks, int reach, int strengthRequirement = 0,
-            int surpriseMinPercent = 0, int defense = 0, int hitsPerAttack = 1, int tier = 0, int attackDelayPercent = 0)
+            int surpriseMinPercent = 0, int defense = 0, int hitsPerAttack = 1, int tier = 0, int attackDelayPercent = 0, string family = null)
         {
+            Family = string.IsNullOrEmpty(family) ? null : family;
             if (hitsPerAttack < 1) throw new ArgumentOutOfRangeException(nameof(hitsPerAttack), hitsPerAttack, "타격 수는 1 이상.");
             HitsPerAttack = hitsPerAttack;
             if (tier < 0) throw new ArgumentOutOfRangeException(nameof(tier));
@@ -97,7 +103,7 @@ namespace ProjectM.Items
             int minBase = def.Tier > 0 ? def.Tier : rules.MinDamageBase; // 3-39: SPD 최소 = 티어 + 강화
             int min = Math.Min(max, Math.Max(1, Divide(minBase + upgrade, rules.DamageDivisor)));
             return new EquippedWeapon(itemId, min, max, def.AccuracyPercent, def.AttackCostTicks, def.Reach,
-                upgrade, StrengthRequirement(def, upgrade), def.SurpriseMinPercent, def.Defense, def.HitsPerAttack, def.AttackDelayPercent);
+                upgrade, StrengthRequirement(def, upgrade), def.SurpriseMinPercent, def.Defense, def.HitsPerAttack, def.AttackDelayPercent, def.Family);
         }
 
         /// <summary>
@@ -124,6 +130,22 @@ namespace ProjectM.Items
             if (!previous.IsEmpty) Inventory.TryAdd(world, null, items, unit, InventoryRef.Item(previous.ItemId, previous.Upgrade)); // 3-7b: 강화 단계와 함께
             unit.Weapon = Resolve(itemId, def, items.WeaponRules, upgrade);
             world.Events.Publish(new WeaponEquippedEvent(unit.Id, unit.Weapon, previous.ItemId));
+            return true;
+        }
+
+        /// <summary>
+        /// 시작 무기를 든다 (3-40 — 루멘 단창 · 시아 붕대, CharacterCatalog StartingWeapon). 틱 · 인벤토리를 쓰지 않는다 (Armors.Wear와 같음).
+        /// ItemCatalog에 그 무기가 없으면 false.
+        /// </summary>
+        public static bool Wield(World world, ItemBook items, Unit unit, string itemId, int upgrade = 0)
+        {
+            if (world == null) throw new ArgumentNullException(nameof(world));
+            if (items == null) throw new ArgumentNullException(nameof(items));
+            if (unit == null) throw new ArgumentNullException(nameof(unit));
+            if (string.IsNullOrEmpty(itemId) || !items.TryGet(itemId, out var item) || item.Use != ItemUse.EquipWeapon) return false;
+            var previous = unit.Weapon.ItemId;
+            unit.Weapon = Resolve(itemId, item.Weapon, items.WeaponRules, upgrade);
+            world.Events.Publish(new WeaponEquippedEvent(unit.Id, unit.Weapon, previous));
             return true;
         }
 
