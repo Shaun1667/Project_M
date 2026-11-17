@@ -601,7 +601,7 @@ Varco는 모든 모델을 **가장 긴 쪽 1 m**로 보내므로 크기는 프�
 | `gauntlet` (3-39) | Prop_Weapon_Gauntlet | Weapon_Gauntlet | 0.25 | 0.30 | 앞 0° |
 | `war_scythe` (3-39) | Prop_Weapon_WarScythe | Weapon_WarScythe | 1.15 | 0.30 | 앞 70° |
 | `short_spear` (3-40) | Prop_Weapon_ShortSpear | Weapon_ShortSpear | 0.75 | 0.30 | 앞 70° |
-| `bandage` (3-40) | Prop_Weapon_Bandage | Weapon_Bandage | 0.09 | 0.05 | 아래 180° (손 크기 — 2026-11-17 줄임, 주먹 끝이 손가락 쪽) |
+| `bandage` (3-40) | Prop_Weapon_Bandage | Weapon_Bandage | 0.09 | 0.05 | **손에 안 붙임** (2026-11-17 사용자 — 시아 모델이 이미 손에 감고 있음, `VarcoModelSetup.NoHeldModel`) · 바닥 모습만 |
 
 값은 `VarcoModelSetup.WeaponSpecs`와 같다. 3-39 무기 20종(2026-11-17)은 Varco 그림(nano-banana-pro, 3:4) → 3D(1,500 삼각형 · 1024 텍스처)로 만들고 원본 그림은 `Docs/무기_원본_3티어/`, FBX 받기 · 묻힌 텍스처 꺼내기는 `Tools/varco_fbx_extract.py`. 방패는 덜 기울여(15°), 건틀릿은 세워(0°) 든다. 모두 칼처럼 앞으로 눕혀 든다 (사용자 요청 2026-10-19 — 창 · 육척봉도 세우지 않음). 바닥 모습 = `ItemVisualCatalog`(아이템 ID → 프리팹), 손 = 플레이어 프리팹 오른손 아래 `Weapon_<아이템 ID>`(꺼 둠 — 들면 `EntityPresenter.ShowHeld`가 켜고 `Staff`를 숨김). 반짝임 = FxCatalog `item.<아이템 ID>`(은빛).
 

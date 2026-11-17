@@ -146,6 +146,9 @@ namespace ProjectM.Editor
             ("bandage", "Prop_Weapon_Bandage", 0.09f, 0.05f, 180f),
         };
 
+        /// <summary>손에 붙이지 않는 무기 (바닥 모습만) — 붕대는 시아 모델이 이미 손에 감고 있어 따로 보이지 않게 (2026-11-17 사용자 "붕대는 아이템 보이지 않게").</summary>
+        private static readonly string[] NoHeldModel = { "bandage" };
+
         /// <summary>지팡이를 쥐는 높이 (지팡이 길이에 대한 비율) — 손이 이 지점에 오게 붙인다.</summary>
         private const float StaffGripRatio = 0.4f;
         private const string StaffHandBone = "RightHand";
@@ -855,6 +858,7 @@ namespace ProjectM.Editor
             var upright = sheep.transform.parent; // 프리팹 루트 (Y-up)
             foreach (var spec in WeaponSpecs)
             {
+                if (System.Array.IndexOf(NoHeldModel, spec.ItemId) >= 0) continue; // 3-40: 손에 안 보이는 무기
                 var model = LoadModel(spec.Model);
                 if (model == null) continue;
                 EnsureWeaponMaterial(spec.Model); // 3-39: 묻힌 재질(모든 Varco FBX가 material_0)을 <모델>_Mat으로

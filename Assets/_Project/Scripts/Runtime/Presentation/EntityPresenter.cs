@@ -362,9 +362,9 @@ namespace ProjectM.Presentation
                 if (t.name == HeldStaffName) staff = t;
                 else if (t.name.StartsWith(HeldWeaponPrefix)) { held.Add(t); if (t.name == wanted) weapon = t; }
             }
-            if (itemId != null && weapon == null) return;
+            // 3-40: 손 모습이 없는 무기(붕대 — 손에 감는 것이라 모델의 손 그대로)는 들던 무기를 모두 숨긴다 (앞 무기가 남아 보이지 않게)
             foreach (var t in held) t.gameObject.SetActive(t == weapon);
-            if (staff != null) staff.gameObject.SetActive(weapon == null);
+            if (staff != null) staff.gameObject.SetActive(itemId == null);
         }
 
         /// <summary>지금 손에 보이는 무기 아이템 ID (테스트용), 지팡이 · 맨손이면 null.</summary>

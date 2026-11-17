@@ -980,7 +980,8 @@
   - 결정 (2026-11-17): 수치 = **맨손 수준**(단창 1~4 · 붕대 1~2 × 2타, 요구 힘 10 — 선택지: 맨손 수준(추천) · 단창 2칸 · 더 약하게) · 직업 기술 강화 · 숙련 특성 = **같은 계열로 적용**(단창 = 창 · 붕대 = 너클 — 선택지: 같은 계열(추천) · 적용 안 함 · 절반만)
   - 구현: `ItemCatalog` `short_spear` · `bandage`(`WeaponFamily` spear · knuckle) · `WeaponDef.Family` → `EquippedWeapon.Family`(스냅샷 v32, 유령 기록 `WeaponFamily`) — `SpellDef` 기술 강화 · `Talents` 숙련 명중이 계열로 맞춤. `CharacterCatalog` `StartingWeapon`(루멘 short_spear · 시아 bandage, Setup `SetStartingWeaponIfEmpty`) → `GameRoot.BeginRun` 새 판에서 `Weapons.Wield`(차례 · 인벤토리 안 씀). 수치 BALANCE 13-2, 직업 문서 2곳
   - 3D: Varco 단창 · 붕대(주먹을 감싼 붕대 껍데기) → `WeaponSpecs` 2줄(단창 0.75 m · 붕대 0.20 m 세워 듦) · 바닥 반짝임 2줄
-  - 확인 못 한 것: 붕대를 손에 감은 모습(오른손 하나에만 붙음 — 너클처럼 양손 아님), 루멘 · 시아 판 시작 화면. 테스트 3개 작성, 실행 안 함
+  - 붕대 손 모습 (2026-11-17 사용자 "붕대가 너무 커" → "붕대는 아이템 보이지 않게"): 손에 붙이지 않음(`VarcoModelSetup.NoHeldModel` — 시아 모델이 이미 손에 감고 있음), 바닥 모습만. 손 모습이 없는 무기를 들면 `EntityPresenter.ShowHeld`가 들던 무기를 모두 숨김(앞 무기가 남아 보이던 문제)
+  - 확인 못 한 것: 루멘 · 시아 판 시작 화면. 테스트 3개 작성, 실행 안 함
 - [x] **문서. 내 표준 작업 가이드** (2026-11-06 사용자 "지금까지 작업한 방식에 적합한 MD파일 하나 만들어줘 — 그거 하나로 프로젝트 진행할 수 있는거로") — `Docs/MY_DEV_GUIDE.md`(친구 가이드 `Docs/Source/claude_all_type_genre.md`에서 출발해 이 프로젝트 방식으로: 시작하는 법 · 협업 약속 · 문서 체계 · 로드맵 · 사이클 · 질문 · 보고 · 코드 원칙 · 직접 확인 · 안전 규칙 · AI 에셋 · 환경 · 시연 체크리스트 · 템플릿 7종), CLAUDE.md 참조 문서 표에 한 줄. 커밋 9de90f3 (브랜치 `phase3-devguide`)
 - [~] **G-5. 3D로 되돌리기** (2026-10-28) — 플레이 확인 대기
   - 결정 (2026-10-28, 사용자): 그래픽 기준 = **실시간 3D**(Phase G)로 되돌림, Phase P 중단. 2D 코드 · 그림은 지우지 않고 남겨 둠(추천안) — `Pixel2D = true` + Setup이면 다시 2D. 맨 위 진행 요약 "최신 (2026-10-28)" 참고
