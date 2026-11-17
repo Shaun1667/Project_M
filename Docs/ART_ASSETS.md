@@ -580,8 +580,28 @@ Varco는 모든 모델을 **가장 긴 쪽 1 m**로 보내므로 크기는 프�
 | `quarterstaff` | Prop_Weapon_Quarterstaff | Weapon_Quarterstaff | 1.00 | 0.30 | 앞 70° |
 | `dirk` | Prop_Weapon_Dirk | Weapon_Dirk | 0.25 | 0.15 | 앞 70° |
 | `sickle` | Prop_Weapon_Sickle | Weapon_Sickle | 0.30 | 0.15 | 앞 70° |
+| `sword` (3-39) | Prop_Weapon_Sword | Weapon_Sword | 0.55 | 0.12 | 앞 70° |
+| `mace` (3-39) | Prop_Weapon_Mace | Weapon_Mace | 0.45 | 0.20 | 앞 70° |
+| `scimitar` (3-39) | Prop_Weapon_Scimitar | Weapon_Scimitar | 0.50 | 0.12 | 앞 70° |
+| `round_shield` (3-39) | Prop_Weapon_RoundShield | Weapon_RoundShield | 0.45 | 0.50 | 앞 15° |
+| `sai` (3-39) | Prop_Weapon_Sai | Weapon_Sai | 0.32 | 0.15 | 앞 70° |
+| `whip` (3-39) | Prop_Weapon_Whip | Weapon_Whip | 0.60 | 0.10 | 앞 70° |
+| `longsword` (3-39) | Prop_Weapon_Longsword | Weapon_Longsword | 0.70 | 0.12 | 앞 70° |
+| `battle_axe` (3-39) | Prop_Weapon_BattleAxe | Weapon_BattleAxe | 0.60 | 0.20 | 앞 70° |
+| `flail` (3-39) | Prop_Weapon_Flail | Weapon_Flail | 0.55 | 0.15 | 앞 70° |
+| `runic_blade` (3-39) | Prop_Weapon_RunicBlade | Weapon_RunicBlade | 0.60 | 0.12 | 앞 70° |
+| `assassins_blade` (3-39) | Prop_Weapon_AssassinsBlade | Weapon_AssassinsBlade | 0.38 | 0.15 | 앞 70° |
+| `crossbow` (3-39) | Prop_Weapon_Crossbow | Weapon_Crossbow | 0.45 | 0.30 | 앞 70° |
+| `katana` (3-39) | Prop_Weapon_Katana | Weapon_Katana | 0.70 | 0.15 | 앞 70° |
+| `greatsword` (3-39) | Prop_Weapon_Greatsword | Weapon_Greatsword | 0.90 | 0.12 | 앞 70° |
+| `war_hammer` (3-39) | Prop_Weapon_WarHammer | Weapon_WarHammer | 0.80 | 0.25 | 앞 70° |
+| `glaive` (3-39) | Prop_Weapon_Glaive | Weapon_Glaive | 1.20 | 0.30 | 앞 70° |
+| `greataxe` (3-39) | Prop_Weapon_Greataxe | Weapon_Greataxe | 0.95 | 0.25 | 앞 70° |
+| `greatshield` (3-39) | Prop_Weapon_Greatshield | Weapon_Greatshield | 0.70 | 0.50 | 앞 15° |
+| `gauntlet` (3-39) | Prop_Weapon_Gauntlet | Weapon_Gauntlet | 0.25 | 0.30 | 앞 0° |
+| `war_scythe` (3-39) | Prop_Weapon_WarScythe | Weapon_WarScythe | 1.15 | 0.30 | 앞 70° |
 
-값은 `VarcoModelSetup.WeaponSpecs`와 같다. 모두 칼처럼 앞으로 눕혀 든다 (사용자 요청 2026-10-19 — 창 · 육척봉도 세우지 않음). 바닥 모습 = `ItemVisualCatalog`(아이템 ID → 프리팹), 손 = 플레이어 프리팹 오른손 아래 `Weapon_<아이템 ID>`(꺼 둠 — 들면 `EntityPresenter.ShowHeld`가 켜고 `Staff`를 숨김). 반짝임 = FxCatalog `item.<아이템 ID>`(은빛).
+값은 `VarcoModelSetup.WeaponSpecs`와 같다. 3-39 무기 20종(2026-11-17)은 Varco 그림(nano-banana-pro, 3:4) → 3D(1,500 삼각형 · 1024 텍스처)로 만들고 원본 그림은 `Docs/무기_원본_3티어/`, FBX 받기 · 묻힌 텍스처 꺼내기는 `Tools/varco_fbx_extract.py`. 방패는 덜 기울여(15°), 건틀릿은 세워(0°) 든다. 모두 칼처럼 앞으로 눕혀 든다 (사용자 요청 2026-10-19 — 창 · 육척봉도 세우지 않음). 바닥 모습 = `ItemVisualCatalog`(아이템 ID → 프리팹), 손 = 플레이어 프리팹 오른손 아래 `Weapon_<아이템 ID>`(꺼 둠 — 들면 `EntityPresenter.ShowHeld`가 켜고 `Staff`를 숨김). 반짝임 = FxCatalog `item.<아이템 ID>`(은빛).
 
 ### 12-1. 애니메이션 (G-2c, 2026-10-19)
 

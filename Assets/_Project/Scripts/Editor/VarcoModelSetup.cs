@@ -119,6 +119,27 @@ namespace ProjectM.Editor
             ("quarterstaff", "Prop_Weapon_Quarterstaff", 1.00f, 0.30f, 70f),
             ("dirk", "Prop_Weapon_Dirk", 0.25f, 0.15f, 70f),
             ("sickle", "Prop_Weapon_Sickle", 0.30f, 0.15f, 70f),
+            // 3-39 SPD 3~5티어 (2026-11-17 — Varco 원본 그림 Docs/무기_원본_3티어). 방패는 세워 들고(덜 기울임), 건틀릿은 손 가운데
+            ("sword", "Prop_Weapon_Sword", 0.55f, 0.12f, 70f),
+            ("mace", "Prop_Weapon_Mace", 0.45f, 0.20f, 70f),
+            ("scimitar", "Prop_Weapon_Scimitar", 0.50f, 0.12f, 70f),
+            ("round_shield", "Prop_Weapon_RoundShield", 0.45f, 0.50f, 15f),
+            ("sai", "Prop_Weapon_Sai", 0.32f, 0.15f, 70f),
+            ("whip", "Prop_Weapon_Whip", 0.60f, 0.10f, 70f),
+            ("longsword", "Prop_Weapon_Longsword", 0.70f, 0.12f, 70f),
+            ("battle_axe", "Prop_Weapon_BattleAxe", 0.60f, 0.20f, 70f),
+            ("flail", "Prop_Weapon_Flail", 0.55f, 0.15f, 70f),
+            ("runic_blade", "Prop_Weapon_RunicBlade", 0.60f, 0.12f, 70f),
+            ("assassins_blade", "Prop_Weapon_AssassinsBlade", 0.38f, 0.15f, 70f),
+            ("crossbow", "Prop_Weapon_Crossbow", 0.45f, 0.30f, 70f),
+            ("katana", "Prop_Weapon_Katana", 0.70f, 0.15f, 70f),
+            ("greatsword", "Prop_Weapon_Greatsword", 0.90f, 0.12f, 70f),
+            ("war_hammer", "Prop_Weapon_WarHammer", 0.80f, 0.25f, 70f),
+            ("glaive", "Prop_Weapon_Glaive", 1.20f, 0.30f, 70f),
+            ("greataxe", "Prop_Weapon_Greataxe", 0.95f, 0.25f, 70f),
+            ("greatshield", "Prop_Weapon_Greatshield", 0.70f, 0.50f, 15f),
+            ("gauntlet", "Prop_Weapon_Gauntlet", 0.25f, 0.30f, 0f),
+            ("war_scythe", "Prop_Weapon_WarScythe", 1.15f, 0.30f, 70f),
         };
 
         /// <summary>지팡이를 쥐는 높이 (지팡이 길이에 대한 비율) — 손이 이 지점에 오게 붙인다.</summary>
@@ -832,6 +853,7 @@ namespace ProjectM.Editor
             {
                 var model = LoadModel(spec.Model);
                 if (model == null) continue;
+                EnsureWeaponMaterial(spec.Model); // 3-39: 묻힌 재질(모든 Varco FBX가 material_0)을 <모델>_Mat으로
                 var weapon = (GameObject)PrefabUtility.InstantiatePrefab(model);
                 weapon.name = EntityPresenter.HeldWeaponPrefix + spec.ItemId;
                 StripColliders(weapon);
@@ -915,6 +937,18 @@ namespace ProjectM.Editor
         }
 
         /// <summary>
+        /// 무기 재질 (3-39): `<모델>_Mat`이 아직 없는 무기만 EnsureVarcoMaterial로 만든다 — 3-7a 무기 6종은 따로 맞춘 재질 · 512 텍스처를 그대로 둔다
+        /// (EnsureVarcoMaterial은 텍스처 최대 크기를 캐릭터 값으로 바꾸므로). FBX가 없으면 아무것도 안 함.
+        /// </summary>
+        private static void EnsureWeaponMaterial(string model)
+        {
+            string fbxPath = ModelDir + model + ".fbx";
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(fbxPath) == null) return;
+            if (AssetDatabase.LoadAssetAtPath<Material>($"{ModelDir}Materials/{model}_Mat.mat") != null) return;
+            EnsureVarcoMaterial(model, fbxPath);
+        }
+
+        /// <summary>
         /// 바닥에 놓을 무기 프리팹 (3-7a): Prefabs/Varco/Weapon_&lt;모델&gt; — 세운 모습, 원점 가운데, 길이 = 표 값. ItemVisualCatalog에 연결.
         /// </summary>
         private static void BuildWeaponPrefabs()
@@ -927,6 +961,7 @@ namespace ProjectM.Editor
             }
             foreach (var spec in WeaponSpecs)
             {
+                EnsureWeaponMaterial(spec.Model); // 3-39
                 var prefab = BuildPrefab(new ModelSpec(spec.Model, "Weapon_" + spec.Model.Replace("Prop_Weapon_", ""), spec.Length, 0f), null);
                 if (prefab != null) catalog.Set(spec.ItemId, prefab);
             }

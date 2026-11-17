@@ -1355,3 +1355,223 @@ MonoBehaviour:
     Fps: 0
     PixelCells: 0
     PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: item.sword
+    Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+    Scale: 0.35
+    Tint: {r: 0.85, g: 0.88, b: 0.95, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0.25
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: item.mace
+    Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+    Scale: 0.35
+    Tint: {r: 0.85, g: 0.88, b: 0.95, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0.25
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: item.scimitar
+    Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+    Scale: 0.35
+    Tint: {r: 0.85, g: 0.88, b: 0.95, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0.25
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: item.round_shield
+    Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+    Scale: 0.35
+    Tint: {r: 0.85, g: 0.88, b: 0.95, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0.25
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: item.sai
+    Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+    Scale: 0.35
+    Tint: {r: 0.85, g: 0.88, b: 0.95, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0.25
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: item.whip
+    Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+    Scale: 0.35
+    Tint: {r: 0.85, g: 0.88, b: 0.95, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0.25
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: item.longsword
+    Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+    Scale: 0.35
+    Tint: {r: 0.85, g: 0.88, b: 0.95, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0.25
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: item.battle_axe
+    Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+    Scale: 0.35
+    Tint: {r: 0.85, g: 0.88, b: 0.95, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0.25
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: item.flail
+    Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+    Scale: 0.35
+    Tint: {r: 0.85, g: 0.88, b: 0.95, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0.25
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: item.runic_blade
+    Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+    Scale: 0.35
+    Tint: {r: 0.85, g: 0.88, b: 0.95, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0.25
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: item.assassins_blade
+    Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+    Scale: 0.35
+    Tint: {r: 0.85, g: 0.88, b: 0.95, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0.25
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: item.crossbow
+    Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+    Scale: 0.35
+    Tint: {r: 0.85, g: 0.88, b: 0.95, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0.25
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: item.katana
+    Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+    Scale: 0.35
+    Tint: {r: 0.85, g: 0.88, b: 0.95, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0.25
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: item.greatsword
+    Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+    Scale: 0.35
+    Tint: {r: 0.85, g: 0.88, b: 0.95, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0.25
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: item.war_hammer
+    Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+    Scale: 0.35
+    Tint: {r: 0.85, g: 0.88, b: 0.95, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0.25
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: item.glaive
+    Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+    Scale: 0.35
+    Tint: {r: 0.85, g: 0.88, b: 0.95, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0.25
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: item.greataxe
+    Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+    Scale: 0.35
+    Tint: {r: 0.85, g: 0.88, b: 0.95, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0.25
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: item.greatshield
+    Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+    Scale: 0.35
+    Tint: {r: 0.85, g: 0.88, b: 0.95, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0.25
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: item.gauntlet
+    Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+    Scale: 0.35
+    Tint: {r: 0.85, g: 0.88, b: 0.95, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0.25
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}
+  - Key: item.war_scythe
+    Prefab: {fileID: 9193915884290050384, guid: 44a5acc7be8b9294ab3e52ef93fa09df, type: 3}
+    Scale: 0.35
+    Tint: {r: 0.85, g: 0.88, b: 0.95, a: 1}
+    Speed: 1
+    Lifetime: 0
+    Height: 0.25
+    Frames: []
+    Fps: 0
+    PixelCells: 0
+    PixelTint: {r: 0, g: 0, b: 0, a: 0}

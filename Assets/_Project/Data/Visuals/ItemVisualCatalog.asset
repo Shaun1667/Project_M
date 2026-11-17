@@ -318,4 +318,104 @@ MonoBehaviour:
     Upright: 1
     Icon: {fileID: 0}
     Icon3D: {fileID: -6973632885279942985, guid: 27c2d216e76a65e4fba7f930c53ca383, type: 3}
+  - ItemId: sword
+    Prefab: {fileID: 5583403576752130697, guid: 565ef73ddc47f054b9f5ee60f5f56d8c, type: 3}
+    Upright: 0
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 0}
+  - ItemId: mace
+    Prefab: {fileID: 1567742946274649540, guid: b949d9294e3814b468a55568b932ad30, type: 3}
+    Upright: 0
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 0}
+  - ItemId: scimitar
+    Prefab: {fileID: 3147640572006962532, guid: d522ae0174a50e74981a76da4e1b20d3, type: 3}
+    Upright: 0
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 0}
+  - ItemId: round_shield
+    Prefab: {fileID: 2340544464425908494, guid: 2f2676d6984318f45859b0006d3f3973, type: 3}
+    Upright: 0
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 0}
+  - ItemId: sai
+    Prefab: {fileID: 4132096552340675548, guid: cc1b345570ebf3a4e97c2442d4d70e20, type: 3}
+    Upright: 0
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 0}
+  - ItemId: whip
+    Prefab: {fileID: 2987607947067276597, guid: 37f9826edac106843aa00c07b0771a8a, type: 3}
+    Upright: 0
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 0}
+  - ItemId: longsword
+    Prefab: {fileID: 9099272173760956061, guid: 8d31525c6d4bc5f44aec1f7962f7de39, type: 3}
+    Upright: 0
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 0}
+  - ItemId: battle_axe
+    Prefab: {fileID: 6913867801362848706, guid: 61466b222c9036a4bb6d1e233567bfd8, type: 3}
+    Upright: 0
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 0}
+  - ItemId: flail
+    Prefab: {fileID: 8971124764575516974, guid: f58a5bcc38ff11141b5786f5e3d1b44f, type: 3}
+    Upright: 0
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 0}
+  - ItemId: runic_blade
+    Prefab: {fileID: 3152662301331110885, guid: 06120bb59d635f54895d80d18e532576, type: 3}
+    Upright: 0
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 0}
+  - ItemId: assassins_blade
+    Prefab: {fileID: 3801149872906623449, guid: 84839601c5b70bd45b54b9157f1a5533, type: 3}
+    Upright: 0
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 0}
+  - ItemId: crossbow
+    Prefab: {fileID: 991472181504973529, guid: b3f02731ca640bd4985e808d979083f8, type: 3}
+    Upright: 0
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 0}
+  - ItemId: katana
+    Prefab: {fileID: 5982992685842718732, guid: c0ac4ac1b49f9fa4c8300da282b028b9, type: 3}
+    Upright: 0
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 0}
+  - ItemId: greatsword
+    Prefab: {fileID: 7071338696949961279, guid: d0baf507d2465a045b036330ea72531c, type: 3}
+    Upright: 0
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 0}
+  - ItemId: war_hammer
+    Prefab: {fileID: 5813063283451617726, guid: 805518a31c6c93c4785d501d1186e70f, type: 3}
+    Upright: 0
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 0}
+  - ItemId: glaive
+    Prefab: {fileID: 3865911832389875593, guid: 1ab3e83e99198f64693041884a633da4, type: 3}
+    Upright: 0
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 0}
+  - ItemId: greataxe
+    Prefab: {fileID: 6932823489400428332, guid: a6b2393c89775fe43a8c377273b9d088, type: 3}
+    Upright: 0
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 0}
+  - ItemId: greatshield
+    Prefab: {fileID: 6725333097879004683, guid: 4a542c6f3f85de84aaa557e16303cc64, type: 3}
+    Upright: 0
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 0}
+  - ItemId: gauntlet
+    Prefab: {fileID: 6085581748116514548, guid: f555ff1ea87547d4885f9b52a3acb083, type: 3}
+    Upright: 0
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 0}
+  - ItemId: war_scythe
+    Prefab: {fileID: 1282099082518142832, guid: a52390d15708f1d4d84fa53873ffb373, type: 3}
+    Upright: 0
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 0}
   _use3DIcons: 1
