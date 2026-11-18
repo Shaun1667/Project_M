@@ -76,6 +76,11 @@ namespace ProjectM.Data
         [Min(0)] [SerializeField] private int _toxicGoldMaxBase = 60;
         [Min(0)] [SerializeField] private int _toxicGoldMaxPerFloor = 20;
 
+        [Header("보물 창고 (3-44, SPD Treasury — BALANCE 16번)")]
+        [Tooltip("보물 창고 무게 (같은 척도) — 잠긴 문 · 금화만, 금액은 독가스 방 금화 값")] [Min(0)] [SerializeField] private int _treasuryWeight = 2;
+        [Tooltip("금화 더미 수 최소 · 최대")] [Min(0)] [SerializeField] private int _treasuryPilesMin = 4;
+        [Min(0)] [SerializeField] private int _treasuryPilesMax = 6;
+
         [Header("상점 (3-15c — BALANCE 16번)")]
         [Tooltip("상점이 있는 첫 층")] [Min(1)] [SerializeField] private int _shopFloor = 3;
         [Tooltip("상점이 더 있는 층 (2026-11-05 사용자 — 구역 시작층 6 · 11 · 16 · 21층)")] [SerializeField] private int[] _moreShopFloors = { 6, 11, 16, 21 };
@@ -108,17 +113,19 @@ namespace ProjectM.Data
             new SpecialRoomConfig(_specialRoomPercent, WithLab(), _specialRoomMinSize, _specialRoomMaxSize, _vaultItems, _vaultItemCount,
                 _armoryItems, _armoryItemCount, _libraryItems, _libraryItemCount, _gardenItems, _gardenItemCount, _keyItem, _labItems, _labItemCount,
                 _storageItems, _storageItemMin, _storageItemMax, _storageFireItem, _magicalFireItem,
-                _toxicGasItem, _toxicGoldPilesMin, _toxicGoldPilesMax, _toxicGoldMinBase, _toxicGoldMinPerFloor, _toxicGoldMaxBase, _toxicGoldMaxPerFloor));
+                _toxicGasItem, _toxicGoldPilesMin, _toxicGoldPilesMax, _toxicGoldMinBase, _toxicGoldMinPerFloor, _toxicGoldMaxBase, _toxicGoldMaxPerFloor,
+                _treasuryPilesMin, _treasuryPilesMax));
 
-        /// <summary>보물 · 무기고 · 도서관 · 정원 무게 + 연구실 무게(3-16c) + 창고 무게(3-41) + 마법 불 무게(3-42) + 독가스 무게(3-43) — 예전 에셋의 4칸 배열을 그대로 쓰려고 따로 둠.</summary>
+        /// <summary>보물 · 무기고 · 도서관 · 정원 무게 + 연구실 무게(3-16c) + 창고 무게(3-41) + 마법 불 무게(3-42) + 독가스 무게(3-43) + 보물 창고 무게(3-44) — 예전 에셋의 4칸 배열을 그대로 쓰려고 따로 둠.</summary>
         private int[] WithLab()
         {
-            var w = new int[8];
+            var w = new int[9];
             for (int i = 0; i < 4 && i < _specialRoomWeights.Length; i++) w[i] = _specialRoomWeights[i];
             w[4] = _laboratoryWeight;
             w[5] = _storageWeight;
             w[6] = _magicalFireWeight;
             w[7] = _toxicGasWeight;
+            w[8] = _treasuryWeight;
             return w;
         }
     }

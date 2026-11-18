@@ -22,11 +22,11 @@ namespace ProjectM.Tests
 
         private static SpecialRoomConfig Only(SpecialRoomType type)
         {
-            var w = new int[8];
+            var w = new int[9];
             w[(int)type - 1] = 1;
             return new SpecialRoomConfig(100, w, 3, 5, new[] { "scroll_upgrade" }, 1, new[] { "a" }, 1, new[] { "b" }, 1, new[] { "c" }, 1, "key_iron", new[] { "seed_x" }, 2,
                 new[] { "potion_x", "scroll_y" }, 3, 4, "potion_liquid_flame", "potion_frost",
-                "potion_purity", 2, 3, 30, 10, 60, 20);
+                "potion_purity", 2, 3, 30, 10, 60, 20, 4, 6);
         }
 
         private static (World World, DungeonFloor Floor, SpecialRooms.Result Room) Carve(ulong seed, SpecialRoomType type)
@@ -285,6 +285,42 @@ namespace ProjectM.Tests
             Assert.That(carved, Is.GreaterThan(0));
         }
 
+        // 3-44 보물 창고: 잠긴 문, 금화 더미 4~6개(층 금액)만, 방 밖에 열쇠 하나
+        [Test]
+        public void Treasury_LockedDoor_GoldOnly_KeyOutside()
+        {
+            int carved = 0;
+            for (ulong seed = 1; seed <= 20; seed++)
+            {
+                var (world, floor, room) = Carve(seed, SpecialRoomType.Treasury);
+                if (room == null) continue;
+                carved++;
+                var map = world.Map;
+                Assert.That(room.Type, Is.EqualTo(SpecialRoomType.Treasury));
+                Assert.That(map.Get(room.Entrance), Is.EqualTo(TileType.LockedDoor), $"시드 {seed}");
+                int piles = 0;
+                foreach (var c in room.Cells)
+                    foreach (var item in world.FloorItems.ItemsAt(c))
+                    {
+                        Assert.That(item.ItemId, Is.EqualTo(Loot.GoldItemId), $"시드 {seed}: 금화만");
+                        Assert.That(item.Quantity, Is.InRange(30 + 10 * world.Floor, 60 + 20 * world.Floor));
+                        piles++;
+                    }
+                Assert.That(piles, Is.InRange(4, System.Math.Min(6, room.Cells.Count)), $"시드 {seed}");
+                var cells = new System.Collections.Generic.HashSet<GridPos>(room.Cells);
+                int keys = 0;
+                for (int y = 0; y < map.Height; y++)
+                    for (int x = 0; x < map.Width; x++)
+                    {
+                        var p = new GridPos(x, y);
+                        if (cells.Contains(p)) continue;
+                        foreach (var item in world.FloorItems.ItemsAt(p)) if (item.ItemId == "key_iron") keys++;
+                    }
+                Assert.That(keys, Is.EqualTo(1), $"시드 {seed}");
+            }
+            Assert.That(carved, Is.GreaterThan(0));
+        }
+
         // 검산: FloorDecorConfig 특수 방 값 = BALANCE.md 16번, 목록의 아이템은 ItemCatalog에 있다
         [Test]
         public void ProjectAsset_MatchesBalanceTable()
@@ -292,7 +328,8 @@ namespace ProjectM.Tests
             var c = AssetDatabase.LoadAssetAtPath<FloorDecorConfigAsset>("Assets/_Project/Data/Dungeon/FloorDecorConfig.asset").ToConfig().SpecialRooms;
             Assert.That((c.RoomPercent, c.MinSize, c.MaxSize, c.VaultItemCount, c.ArmoryItemCount, c.LibraryItemCount, c.GardenItemCount, c.KeyItem),
                 Is.EqualTo((70, 3, 5, 2, 2, 3, 2, "key_iron")));
-            Assert.That(c.Weights, Is.EqualTo(new[] { 3, 2, 2, 2, 2, 2, 2, 2 }), "3-16c 연구실 2 · 3-41 창고 2 · 3-42 마법 불 2 · 3-43 독가스 2");
+            Assert.That(c.Weights, Is.EqualTo(new[] { 3, 2, 2, 2, 2, 2, 2, 2, 2 }), "3-16c 연구실 2 · 3-41 창고 2 · 3-42 마법 불 2 · 3-43 독가스 2 · 3-44 보물 창고 2");
+            Assert.That((c.TreasuryPilesMin, c.TreasuryPilesMax), Is.EqualTo((4, 6)));
             Assert.That((c.ToxicGasItem, c.ToxicGoldPilesMin, c.ToxicGoldPilesMax, c.ToxicGoldMinBase, c.ToxicGoldMinPerFloor, c.ToxicGoldMaxBase, c.ToxicGoldMaxPerFloor),
                 Is.EqualTo(("potion_purity", 2, 3, 30, 10, 60, 20)));
             Assert.That(c.MagicalFireItem, Is.EqualTo("potion_frost"));

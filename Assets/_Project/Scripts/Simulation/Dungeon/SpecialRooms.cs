@@ -25,6 +25,8 @@ namespace ProjectM.Dungeon
         MagicalFire = 7,
         /// <summary>독가스 방 (3-43, SPD Toxic Gas): 방 전체 영구 독구름 · 금화 더미 2~3개 + 물건 하나(보물 방 목록). 정화 물약 · 번개(가스 폭발)로 없앰. 같은 층 방 밖에 정화 물약 하나 보장.</summary>
         ToxicGas = 8,
+        /// <summary>보물 창고 (3-44, SPD Treasury): 잠긴 문 · 금화 더미 4~6개(층 금액). 열쇠는 같은 층 방 밖.</summary>
+        Treasury = 9,
     }
 
     /// <summary>특수 방 수치 · 아이템 목록 (3-15b). 값은 FloorDecorConfigAsset에서 — 기준은 BALANCE.md 16번.</summary>
@@ -32,7 +34,7 @@ namespace ProjectM.Dungeon
     {
         /// <summary>층마다 특수 방이 생길 확률 (%) — 생기면 하나.</summary>
         public int RoomPercent { get; }
-        /// <summary>종류 무게 (보물 방 · 무기고 · 도서관 · 정원 · 연구실 · 창고 · 마법 불 · 독가스 순 — 모자란 뒤쪽은 0).</summary>
+        /// <summary>종류 무게 (보물 방 · 무기고 · 도서관 · 정원 · 연구실 · 창고 · 마법 불 · 독가스 · 보물 창고 순 — 모자란 뒤쪽은 0).</summary>
         public IReadOnlyList<int> Weights { get; }
         /// <summary>방 안쪽 크기 (정사각 한 변 최소 ~ 최대).</summary>
         public int MinSize { get; }
@@ -66,6 +68,9 @@ namespace ProjectM.Dungeon
         public int ToxicGoldMinPerFloor { get; }
         public int ToxicGoldMaxBase { get; }
         public int ToxicGoldMaxPerFloor { get; }
+        /// <summary>보물 창고 (3-44): 금화 더미 수 최소 ~ 최대 — 금액은 독가스 방과 같은 식(ToxicGold*Base · PerFloor).</summary>
+        public int TreasuryPilesMin { get; }
+        public int TreasuryPilesMax { get; }
 
         public SpecialRoomConfig(int roomPercent, IReadOnlyList<int> weights, int minSize, int maxSize,
             IReadOnlyList<string> vaultItems, int vaultItemCount, IReadOnlyList<string> armoryItems, int armoryItemCount,
@@ -74,7 +79,8 @@ namespace ProjectM.Dungeon
             IReadOnlyList<string> storageItems = null, int storageItemMin = 0, int storageItemMax = 0, string storageFireItem = null,
             string magicalFireItem = null,
             string toxicGasItem = null, int toxicGoldPilesMin = 0, int toxicGoldPilesMax = 0,
-            int toxicGoldMinBase = 0, int toxicGoldMinPerFloor = 0, int toxicGoldMaxBase = 0, int toxicGoldMaxPerFloor = 0)
+            int toxicGoldMinBase = 0, int toxicGoldMinPerFloor = 0, int toxicGoldMaxBase = 0, int toxicGoldMaxPerFloor = 0,
+            int treasuryPilesMin = 0, int treasuryPilesMax = 0)
         {
             StorageItems = storageItems ?? Array.Empty<string>();
             StorageItemMin = Math.Max(0, storageItemMin);
@@ -88,10 +94,12 @@ namespace ProjectM.Dungeon
             ToxicGoldMinPerFloor = Math.Max(0, toxicGoldMinPerFloor);
             ToxicGoldMaxBase = Math.Max(ToxicGoldMinBase, toxicGoldMaxBase);
             ToxicGoldMaxPerFloor = Math.Max(ToxicGoldMinPerFloor, toxicGoldMaxPerFloor);
+            TreasuryPilesMin = Math.Max(0, treasuryPilesMin);
+            TreasuryPilesMax = Math.Max(TreasuryPilesMin, treasuryPilesMax);
             LabItems = labItems ?? Array.Empty<string>();
             LabItemCount = Math.Max(0, labItemCount);
             if (roomPercent < 0 || roomPercent > 100) throw new ArgumentOutOfRangeException(nameof(roomPercent));
-            if (weights == null || weights.Count < 4 || weights.Count > 8) throw new ArgumentException("종류 무게는 4 ~ 8개 (보물 · 무기고 · 도서관 · 정원 · 연구실 · 창고 · 마법 불 · 독가스)", nameof(weights));
+            if (weights == null || weights.Count < 4 || weights.Count > 9) throw new ArgumentException("종류 무게는 4 ~ 9개 (보물 · 무기고 · 도서관 · 정원 · 연구실 · 창고 · 마법 불 · 독가스 · 보물 창고)", nameof(weights));
             if (minSize < 2 || maxSize < minSize) throw new ArgumentOutOfRangeException(nameof(maxSize), "2 ≤ 최소 ≤ 최대");
             RoomPercent = roomPercent;
             Weights = weights;
@@ -167,9 +175,9 @@ namespace ProjectM.Dungeon
             return null;
         }
 
-        /// <summary>입구 칸: 보물 방 = 잠긴 문, 창고 = 바리케이드 (3-41), 나머지 = 닫힌 문.</summary>
+        /// <summary>입구 칸: 보물 방 · 보물 창고(3-44) = 잠긴 문, 창고 = 바리케이드 (3-41), 나머지 = 닫힌 문.</summary>
         private static TileType EntranceTile(SpecialRoomType type) =>
-            type == SpecialRoomType.Vault ? TileType.LockedDoor : type == SpecialRoomType.Storage ? TileType.Barricade : TileType.Door;
+            type == SpecialRoomType.Vault || type == SpecialRoomType.Treasury ? TileType.LockedDoor : type == SpecialRoomType.Storage ? TileType.Barricade : TileType.Door;
 
         private static SpecialRoomType PickType(SpecialRoomConfig config, IRng rng)
         {
@@ -215,7 +223,8 @@ namespace ProjectM.Dungeon
                 case SpecialRoomType.Library: pool = config.LibraryItems; count = config.LibraryItemCount; break;
                 case SpecialRoomType.Laboratory: pool = config.LabItems; count = config.LabItemCount; break;
                 case SpecialRoomType.MagicalFire:
-                case SpecialRoomType.ToxicGas: pool = config.VaultItems; count = 1; break; // 3-42: 보물 방 목록에서 하나
+                case SpecialRoomType.ToxicGas: pool = config.VaultItems; count = 1; break;
+                case SpecialRoomType.Treasury: pool = Array.Empty<string>(); count = 0; break; // 3-44: 금화만 // 3-42: 보물 방 목록에서 하나
                 case SpecialRoomType.Storage: pool = config.StorageItems; count = config.StorageItemMin + rng.Range(0, config.StorageItemMax - config.StorageItemMin + 1); break;
                 default: pool = config.GardenItems; count = config.GardenItemCount; break;
             }
@@ -233,7 +242,7 @@ namespace ProjectM.Dungeon
             if (type == SpecialRoomType.ToxicGas) // 3-43: 방 전체 영구 독구름 · 금화 더미 먼저
             {
                 foreach (var c in cells) TerrainEffects.Place(world, c, TerrainEffectType.PoisonCloud, TerrainLayer.Permanent);
-                PlaceToxicGold(world, config, rng, spots);
+                PlaceGold(world, config, rng, spots, config.ToxicGoldPilesMin, config.ToxicGoldPilesMax, keepOne: true);
             }
             var choices = new List<string>(pool);
             for (int i = 0; i < count && spots.Count > 0 && choices.Count > 0; i++)
@@ -246,19 +255,20 @@ namespace ProjectM.Dungeon
                 if (type != SpecialRoomType.Garden && type != SpecialRoomType.Laboratory && type != SpecialRoomType.Storage) choices.RemoveAt(k); // 음식 · 씨앗 · 창고 소모품은 겹쳐도 됨
             }
 
-            if (type == SpecialRoomType.Vault && config.KeyItem != null) PlaceOutside(world, floor, config.KeyItem, rng, new HashSet<GridPos>(cells));
+            if ((type == SpecialRoomType.Vault || type == SpecialRoomType.Treasury) && config.KeyItem != null) PlaceOutside(world, floor, config.KeyItem, rng, new HashSet<GridPos>(cells));
             if (type == SpecialRoomType.Storage && config.StorageFireItem != null) PlaceOutside(world, floor, config.StorageFireItem, rng, new HashSet<GridPos>(cells)); // 3-41: 불을 못 써도 열 수 있게
+            if (type == SpecialRoomType.Treasury) PlaceGold(world, config, rng, spots, config.TreasuryPilesMin, config.TreasuryPilesMax, keepOne: false);
             if (type == SpecialRoomType.ToxicGas && config.ToxicGasItem != null) PlaceOutside(world, floor, config.ToxicGasItem, rng, new HashSet<GridPos>(cells)); // 3-43: 번개가 없어도 없앨 수 있게
             if (type == SpecialRoomType.MagicalFire && config.MagicalFireItem != null) PlaceOutside(world, floor, config.MagicalFireItem, rng, new HashSet<GridPos>(cells)); // 3-42: 얼음을 못 써도 끌 수 있게
         }
 
-        /// <summary>독가스 방 금화 (3-43): 더미 수 최소 ~ 최대, 금액 = 기본 + 층마다 × 층 (최소 ~ 최대). 놓은 칸은 spots에서 뺀다.</summary>
-        private static void PlaceToxicGold(World world, SpecialRoomConfig config, IRng rng, List<GridPos> spots)
+        /// <summary>특수 방 금화 (3-43 독가스 방 · 3-44 보물 창고): 더미 수 최소 ~ 최대, 금액 = 기본 + 층마다 × 층 (최소 ~ 최대). 놓은 칸은 spots에서 뺀다. keepOne = 물건 자리 한 칸을 남김.</summary>
+        private static void PlaceGold(World world, SpecialRoomConfig config, IRng rng, List<GridPos> spots, int pilesMin, int pilesMax, bool keepOne)
         {
-            int piles = config.ToxicGoldPilesMin + rng.Range(0, config.ToxicGoldPilesMax - config.ToxicGoldPilesMin + 1);
+            int piles = pilesMin + rng.Range(0, pilesMax - pilesMin + 1);
             int min = config.ToxicGoldMinBase + config.ToxicGoldMinPerFloor * world.Floor;
             int max = Math.Max(min, config.ToxicGoldMaxBase + config.ToxicGoldMaxPerFloor * world.Floor);
-            for (int i = 0; i < piles && spots.Count > 1 && min > 0; i++) // 물건 자리 한 칸은 남긴다
+            for (int i = 0; i < piles && spots.Count > (keepOne ? 1 : 0) && min > 0; i++)
             {
                 int s = rng.Range(0, spots.Count);
                 world.FloorItems.Add(spots[s], ProjectM.Items.Loot.GoldItemId, rng.Range(min, max + 1));
