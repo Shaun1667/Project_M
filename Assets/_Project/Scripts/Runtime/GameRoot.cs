@@ -666,6 +666,8 @@ namespace ProjectM
                     ? GhostBoss.ToUnitDef(_ghost, _zoneCatalog.GhostHpPercent, _zoneCatalog.GhostExpReward, _zoneCatalog.GhostExpMaxLevel) : null, // 3-23b 그림자 보스
                 _workbench); // 3-28b 작업실
             _stairs = stairs; // 디버그 다음 층
+            World.SetChasmRules(new ProjectM.Dungeon.ChasmRules(_floorDecorConfig != null ? _floorDecorConfig.ToChasm() : new ProjectM.Dungeon.ChasmConfig(12, 25),
+                stairs.CanFallFrom)); // 3-51 구덩이: 다음 층이 보스 · 제단이 아니면 떨어짐 (첫 층 꾸미기 전에)
 
             if (_pixelMap != null) _pixelMap.Bind(World.Events); // P-3a 2D 맵 — 3D 맵은 묶지 않음
             else _tilemapPresenter.Bind(World.Events, World.Floor); // G-15: 구역 타일 세트 (이어하기 = 저장된 층)

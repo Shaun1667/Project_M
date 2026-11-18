@@ -139,6 +139,16 @@ namespace ProjectM.Tests
             Assert.That(s.Hud.Log, Is.EqualTo(new[] { "물 밖으로 나온 피라냐가 숨이 막힌다" }));
         }
 
+        // 3-51 약한 바닥: 구덩이로 떨어짐
+        [Test]
+        public void Fell_Logs()
+        {
+            var s = Start();
+            s.World.Events.Publish(new ProjectM.Dungeon.FellEvent(7, 4));
+            s.World.Events.Flush();
+            Assert.That(s.Hud.Log, Is.EqualTo(new[] { "구덩이 아래로 떨어졌다! (피해 7)" }));
+        }
+
         // 3-47 지하 묘지: 관을 열면 (지킴이가 깨면 덧붙임)
         [Test]
         public void TombOpened_Logs()

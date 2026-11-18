@@ -265,6 +265,7 @@ namespace ProjectM.Editor
             if (HasModels(BarricadeModel)) tiles.SetModule(TileType.Barricade, BuildBarricadePrefab(floorPrefab)); // 3-41 창고 바리케이드 (모델이 없으면 그레이박스 색 칸)
             if (HasModels(WellModel)) SetWellModules(tiles, floorPrefab, "Tile_"); // 3-46 마법 우물
             if (HasModels(TombModel, OpenTombModel)) SetTombModules(tiles, floorPrefab, "Tile_"); // 3-47 지하 묘지 관
+            tiles.SetModule(TileType.Chasm, BuildChasmPrefab("Tile_Chasm")); // 3-51 구덩이 (모델 없음 — 코드로)
             tiles.SetModule(TileType.Wall, BuildPrefab(Wall, null));
             tiles.SetModule(TileType.StairsDown, BuildPrefab(StairsDown, FillCellSunk)); // G-20: 테두리 = 바닥 높이 (원본은 0.39 m 솟아 있었음)
             tiles.SetModule(TileType.StairsUp, BuildPrefab(StairsUp, FillCellFootprint));
@@ -392,6 +393,7 @@ namespace ProjectM.Editor
                 if (HasModels(BarricadeModel)) set.SetModule(TileType.Barricade, BuildBarricadePrefab(floor, prefix + "Barricade"));
                 if (HasModels(WellModel)) SetWellModules(set, floor, prefix);
                 if (HasModels(TombModel, OpenTombModel)) SetTombModules(set, floor, prefix);
+                set.SetModule(TileType.Chasm, BuildChasmPrefab(prefix + "Chasm")); // 3-51
             }
             EditorUtility.SetDirty(set);
             tiles.SetZoneSet(firstFloor, lastFloor, set);
@@ -513,6 +515,38 @@ namespace ProjectM.Editor
         /// <summary>3-41 창고 바리케이드: 바닥 + 판자 바리케이드(너비 BarricadeWidth — 칸을 가로질러 막음, 방향은 TilemapPresenter가 문처럼 옆 벽을 보고 돌림).</summary>
         private static GameObject BuildBarricadePrefab(GameObject floor, string name = "Tile_Barricade") =>
             SaveTilePrefab(floor, name, root => AddFitted(root, BarricadeModel, "Barricade", new Vector3(BarricadeWidth, 0f, 0f)));
+
+        /// <summary>
+        /// 3-51 구덩이 (결정 2026-11-18 — 코드로 만든 어두운 구멍): 바닥 판 없이 칸을 덮는 검은 판(바닥보다 조금 아래)과
+        /// 안쪽으로 갈수록 어두운 테두리 4장(구멍 벽처럼 비스듬히). 재질은 Mat_Chasm_Void · Mat_Chasm_Rim.
+        /// </summary>
+        private static GameObject BuildChasmPrefab(string name) =>
+            SaveTilePrefab(null, name, root =>
+            {
+                var voidMat = EnsureGreyboxMaterial($"{PrefabDir}/Mat_Chasm_Void.mat", new Color(0.02f, 0.02f, 0.03f));
+                var rimMat = EnsureGreyboxMaterial($"{PrefabDir}/Mat_Chasm_Rim.mat", new Color(0.18f, 0.16f, 0.15f));
+                var hole = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                Object.DestroyImmediate(hole.GetComponent<Collider>());
+                hole.name = "Void";
+                hole.transform.SetParent(root, false);
+                hole.transform.localPosition = new Vector3(0f, -0.06f, 0f);
+                hole.transform.localScale = new Vector3(1f, 0.02f, 1f);
+                hole.GetComponent<Renderer>().sharedMaterial = voidMat;
+                for (int side = 0; side < 4; side++) // 가장자리: 바닥 높이에서 구멍 안쪽으로 기울어진 얇은 판
+                {
+                    var rim = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    Object.DestroyImmediate(rim.GetComponent<Collider>());
+                    rim.name = "Rim";
+                    var pivot = new GameObject("RimPivot").transform;
+                    pivot.SetParent(root, false);
+                    pivot.localRotation = Quaternion.Euler(0f, side * 90f, 0f);
+                    rim.transform.SetParent(pivot, false);
+                    rim.transform.localPosition = new Vector3(0f, -0.03f, 0.47f);
+                    rim.transform.localRotation = Quaternion.Euler(-35f, 0f, 0f);
+                    rim.transform.localScale = new Vector3(1f, 0.01f, 0.08f);
+                    rim.GetComponent<Renderer>().sharedMaterial = rimMat;
+                }
+            });
 
         /// <summary>3-47 관 · 빈 관 모듈을 세트에 넣는다.</summary>
         private static void SetTombModules(TileVisualSet set, GameObject floor, string prefix)

@@ -88,6 +88,7 @@ namespace ProjectM.Editor
         private const string WellAwarenessTilePath = VisualsDir + "/WellAwarenessTile.asset";
         private const string EmptyWellTilePath = VisualsDir + "/EmptyWellTile.asset";
         private const string TombTilePath = VisualsDir + "/TombTile.asset"; // 3-47
+        private const string ChasmTilePath = VisualsDir + "/ChasmTile.asset"; // 3-51
         private const string OpenTombTilePath = VisualsDir + "/OpenTombTile.asset";
         private const string BarricadeTilePath = VisualsDir + "/BarricadeTile.asset"; // 3-41
         private const string PlayerSpritePath = "Assets/_Project/Art/Greybox/player.png";
@@ -348,6 +349,7 @@ namespace ProjectM.Editor
             set.Set(TileType.EmptyWell, EnsureTintTile(EmptyWellTilePath, new Color(0.45f, 0.45f, 0.45f))); // 마른 우물: 회색
             set.Set(TileType.Tomb, EnsureTintTile(TombTilePath, new Color(0.35f, 0.33f, 0.4f))); // 3-47 관: 짙은 돌색
             set.Set(TileType.OpenTomb, EnsureTintTile(OpenTombTilePath, new Color(0.25f, 0.24f, 0.28f))); // 빈 관
+            set.Set(TileType.Chasm, EnsureTintTile(ChasmTilePath, new Color(0.03f, 0.03f, 0.05f))); // 3-51 구덩이: 거의 검정
             EditorUtility.SetDirty(set);
             return set;
         }

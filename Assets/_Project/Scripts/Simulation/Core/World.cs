@@ -132,6 +132,9 @@ namespace ProjectM.Core
         /// <summary>3-50 피라냐 연못: 피라냐 수치 · 기본 수치 · AI (규칙 연결 — 저장 안 함).</summary>
         internal ProjectM.Dungeon.PoolRules PoolRules { get; private set; }
         public void SetPoolRules(ProjectM.Dungeon.PoolRules rules) => PoolRules = rules;
+        /// <summary>3-51 구덩이: 추락 수치 · 떨어질 수 있는 층 (규칙 연결 — 저장 안 함).</summary>
+        internal ProjectM.Dungeon.ChasmRules ChasmRules { get; private set; }
+        public void SetChasmRules(ProjectM.Dungeon.ChasmRules rules) => ChasmRules = rules;
 
         /// <summary>디버그 무적 (2026-11-05): 켜면 플레이어 진영이 피해를 받지 않는다 (Combat.ApplyDamage). 개발 도구라 저장하지 않는다 — 새 판 · 불러오기 때 GameRoot가 다시 넣는다.</summary>
         public bool DebugInvulnerable { get; set; }

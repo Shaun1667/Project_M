@@ -83,11 +83,11 @@ namespace ProjectM.Core
         {
             if (!InBounds(pos)) return true;
             var type = _cells[IndexOf(pos)];
-            return (!IsWalkableType(type) && type != TileType.AlchemyPot && type != TileType.ArtifactBench && !IsWellType(type) && type != TileType.Tomb && type != TileType.OpenTomb) || type == TileType.TallGrass || type == TileType.Door; // 3-16c 솥은 낮아 안 가림
+            return (!IsWalkableType(type) && type != TileType.AlchemyPot && type != TileType.ArtifactBench && !IsWellType(type) && type != TileType.Tomb && type != TileType.OpenTomb && type != TileType.Chasm) || type == TileType.TallGrass || type == TileType.Door; // 3-16c 솥은 낮아 안 가림
         }
 
         /// <summary>주문 · 투척 경로를 막는 칸인지: 벽 · 빈칸 · 맵 밖. 높은 풀 · 닫힌 문은 시야만 가리고 막지 않는다 (3-11a · 3-11c, SPD).</summary>
-        public bool BlocksProjectile(GridPos pos) => !InBounds(pos) || !IsWalkableType(_cells[IndexOf(pos)]);
+        public bool BlocksProjectile(GridPos pos) => !InBounds(pos) || !IsWalkableType(_cells[IndexOf(pos)]) && _cells[IndexOf(pos)] != TileType.Chasm; // 3-51 구덩이 위로는 날아감
 
         /// <summary>맵 가장자리 한 줄인지.</summary>
         public bool IsBorder(GridPos pos) => pos.X == 0 || pos.Y == 0 || pos.X == Width - 1 || pos.Y == Height - 1;

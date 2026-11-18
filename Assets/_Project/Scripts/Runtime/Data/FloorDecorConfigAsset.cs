@@ -132,6 +132,14 @@ namespace ProjectM.Data
 
         public PoolConfig ToPool() => new PoolConfig(_poolPiranhaId, _poolPiranhaCount, _poolPiranhaPercentPerFloor);
 
+        [Header("약한 바닥 · 구덩이 (3-51, SPD Weak Floor — BALANCE 16번)")]
+        [Tooltip("약한 바닥 무게 (같은 척도) — 발판 한 줄 · 구덩이 · 돌기둥에 보물 방 목록 1개. 다음 층이 보스 층이면 안 생김")] [Min(0)] [SerializeField] private int _weakFloorWeight = 2;
+        [Tooltip("약한 바닥이 생긴 층의 방 밖에 놓는 아이템 (부양 = 구덩이 위를 떠서 건넘)")] [SerializeField] private string _weakFloorItem = "potion_levitation";
+        [Tooltip("추락 피해 = 최대 체력 × 최소 % ~ 최대 %")] [Min(0)] [SerializeField] private int _fallDamageMinPercent = 12;
+        [Min(0)] [SerializeField] private int _fallDamageMaxPercent = 25;
+
+        public ChasmConfig ToChasm() => new ChasmConfig(_fallDamageMinPercent, _fallDamageMaxPercent);
+
         [Header("상점 (3-15c — BALANCE 16번)")]
         [Tooltip("상점이 있는 첫 층")] [Min(1)] [SerializeField] private int _shopFloor = 3;
         [Tooltip("상점이 더 있는 층 (2026-11-05 사용자 — 구역 시작층 6 · 11 · 16 · 21층)")] [SerializeField] private int[] _moreShopFloors = { 6, 11, 16, 21 };
@@ -165,12 +173,12 @@ namespace ProjectM.Data
                 _armoryItems, _armoryItemCount, _libraryItems, _libraryItemCount, _gardenItems, _gardenItemCount, _keyItem, _labItems, _labItemCount,
                 _storageItems, _storageItemMin, _storageItemMax, _storageFireItem, _magicalFireItem,
                 _toxicGasItem, _toxicGoldPilesMin, _toxicGoldPilesMax, _toxicGoldMinBase, _toxicGoldMinPerFloor, _toxicGoldMaxBase, _toxicGoldMaxPerFloor,
-                _treasuryPilesMin, _treasuryPilesMax, _trapRoomTypes, _trapRoomItem, _wellTypes));
+                _treasuryPilesMin, _treasuryPilesMax, _trapRoomTypes, _trapRoomItem, _wellTypes, _weakFloorItem));
 
-        /// <summary>보물 · 무기고 · 도서관 · 정원 무게 + 연구실 무게(3-16c) + 창고 무게(3-41) + 마법 불 무게(3-42) + 독가스 무게(3-43) + 보물 창고 무게(3-44) + 함정 방 무게(3-45) + 마법 우물 무게(3-46) + 지하 묘지 무게(3-47) + 석상 무게(3-48) + 감시탑 무게(3-49) + 피라냐 연못 무게(3-50) — 예전 에셋의 4칸 배열을 그대로 쓰려고 따로 둠.</summary>
+        /// <summary>보물 · 무기고 · 도서관 · 정원 무게 + 연구실 무게(3-16c) + 창고 무게(3-41) + 마법 불 무게(3-42) + 독가스 무게(3-43) + 보물 창고 무게(3-44) + 함정 방 무게(3-45) + 마법 우물 무게(3-46) + 지하 묘지 무게(3-47) + 석상 무게(3-48) + 감시탑 무게(3-49) + 피라냐 연못 무게(3-50) + 약한 바닥 무게(3-51) — 예전 에셋의 4칸 배열을 그대로 쓰려고 따로 둠.</summary>
         private int[] WithLab()
         {
-            var w = new int[15];
+            var w = new int[16];
             for (int i = 0; i < 4 && i < _specialRoomWeights.Length; i++) w[i] = _specialRoomWeights[i];
             w[4] = _laboratoryWeight;
             w[5] = _storageWeight;
@@ -183,6 +191,7 @@ namespace ProjectM.Data
             w[12] = _statueWeight;
             w[13] = _sentryWeight;
             w[14] = _poolWeight;
+            w[15] = _weakFloorWeight;
             return w;
         }
     }

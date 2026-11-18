@@ -104,7 +104,26 @@ namespace ProjectM.Dungeon
             return true;
         }
 
-        private void Change(Unit player, int target, int delta)
+        /// <summary>3-51 구덩이: 이 층에서 아래층으로 떨어질 수 있는지 — 마지막 층이 아니고 다음 층이 보스 · 제단 층이 아님 (ChasmRules가 부름).</summary>
+        public bool CanFallFrom(int floor) => floor < _floorCount && BossOf(floor + 1) == null && (_zones == null || !_zones.IsAltarFloor(floor + 1));
+
+        /// <summary>
+        /// 3-51 구덩이로 떨어진다 (틱 밖 — 입력이 부름): 한 층 아래 아무 빈 맨땅에 내려서고 추락 피해(Chasms.FallDamage)를 입는다.
+        /// 떨어질 수 없는 층(Chasms.CanFall)이거나 입력이 남아 있으면 false.
+        /// </summary>
+        public bool TryFall()
+        {
+            if (_world.PlayerInput.HasCommand || !Chasms.CanFall(_world)) return false;
+            if (!PlayerActions.TryGetPlayer(_world, out var player) || !player.IsAlive) return false;
+            int target = _world.Floor + 1;
+            Change(player, target, 1, fall: true);
+            int damage = Chasms.FallDamage(_world, player);
+            if (damage > 0) Combat.ApplyDamage(_world, player.Id, player, damage, DamageCause.Fall);
+            _world.Events.Publish(new FellEvent(damage, target));
+            return true;
+        }
+
+        private void Change(Unit player, int target, int delta, bool fall = false)
         {
             int from = _world.Floor;
             _world.StoreCurrentFloor(player.Id);
@@ -118,7 +137,7 @@ namespace ProjectM.Dungeon
                 var map = GridMap.FromCells(stored.MapWidth, stored.MapHeight, stored.Cells);
                 var occupied = new HashSet<GridPos>();
                 foreach (var u in stored.Units) occupied.Add(new GridPos(u.X, u.Y));
-                var arrival = NearestFree(map, map.Find(arrivalTile) ?? FirstWalkable(map), occupied);
+                var arrival = (fall ? Chasms.PickLanding(_world, map, occupied) : null) ?? NearestFree(map, map.Find(arrivalTile) ?? FirstWalkable(map), occupied); // 3-51 추락: 아무 빈 맨땅
                 _world.Units.Teleport(player.Id, arrival);
                 _world.RestoreStoredFloor(target, _aiFactory);
             }
@@ -159,6 +178,13 @@ namespace ProjectM.Dungeon
                 }
                 else FloorPopulator.PopulateEnemies(_world, floor.Start, _enemyDef, _spawn, _aiFactory(_world, EntityId.None));
                 newFloorStart = floor.Start;
+                if (fall) // 3-51 추락: 계단이 아니라 아무 빈 맨땅에 (적 배치는 계단 기준 그대로)
+                {
+                    var occupied = new HashSet<GridPos>();
+                    foreach (var u in _world.Units.ToSortedList()) if (u.Id != player.Id) occupied.Add(u.Pos);
+                    var landing = Chasms.PickLanding(_world, _world.Map, occupied);
+                    if (landing.HasValue) _world.Units.Teleport(player.Id, landing.Value);
+                }
             }
 
             Announce(player, restored: stored != null);

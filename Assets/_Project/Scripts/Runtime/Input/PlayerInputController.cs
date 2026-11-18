@@ -280,6 +280,19 @@ namespace ProjectM.Input
             }
         }
 
+        /// <summary>3-51 구덩이로 떨어진다 (틱 밖 — 계단처럼). 못 떨어지는 층이면 false.</summary>
+        private bool TryFall()
+        {
+            _chasmWarned = null;
+            if (_stairs == null || !_stairs.TryFall()) return false;
+            CancelPath();
+            _world.Events.Flush();
+            return true;
+        }
+
+        /// <summary>3-51: 마지막으로 경고한 구덩이 칸 — 같은 칸으로 한 번 더 가면 뛰어내린다 (입력 쪽 확인일 뿐이라 저장하지 않음).</summary>
+        private GridPos? _chasmWarned;
+
         private bool TryUseStairs()
         {
             if (_stairs == null || !_stairs.TryUse()) return false;
@@ -329,6 +342,7 @@ namespace ProjectM.Input
                 HandleWheel(mouse); // 확대 축소만 — 누르고 있는 키는 연출이 끝난 다음 프레임에 이어서 읽힌다
                 return;
             }
+            if (ProjectM.Dungeon.Chasms.ShouldFall(_world, _spells.Statuses) && TryFall()) return; // 3-51: 부양이 끝난 채 구덩이 위 — 떨어짐 (틱 밖)
             if (_inventory.IsOpen)
             {
                 _pressing = _dragging = false;
@@ -1257,6 +1271,26 @@ namespace ProjectM.Input
 
         private void Step(GridPos direction)
         {
+            if (PlayerActions.TryGetPlayer(_world, out var hoverer) && _world.Map.InBounds(hoverer.Pos + direction)
+                && (_world.Map.Get(hoverer.Pos + direction) == TileType.Chasm || _world.Map.Get(hoverer.Pos) == TileType.Chasm)
+                && !_world.Units.IsOccupied(hoverer.Pos + direction)) // 3-51 구덩이: 떠서 지나가거나 · 경고 → 뛰어내림
+            {
+                var to = hoverer.Pos + direction;
+                if (ProjectM.Dungeon.Chasms.IsLevitating(_spells.Statuses, hoverer))
+                {
+                    _chasmWarned = null;
+                    _clock.SubmitPlayerCommand(new ProjectM.Dungeon.HoverCommand(_world, _spells.Statuses, to, _config.DefaultActionCostTicks));
+                    return;
+                }
+                if (_world.Map.Get(to) == TileType.Chasm)
+                {
+                    if (!ProjectM.Dungeon.Chasms.CanFall(_world)) { Hint(HudText.ChasmBlocked); return; }
+                    if (_chasmWarned == to) TryFall();
+                    else { _chasmWarned = to; CancelPath(); Hint(HudText.ChasmWarn); }
+                    return;
+                }
+            }
+            _chasmWarned = null;
             if (PlayerActions.TryStep(_world, _config, direction, out var command, _spells.Statuses)) // 3-13a 신속: 두 칸
                 _clock.SubmitPlayerCommand(command);
             else if (PlayerActions.TryGetPlayer(_world, out var bumper) && _world.Map.InBounds(bumper.Pos + direction)

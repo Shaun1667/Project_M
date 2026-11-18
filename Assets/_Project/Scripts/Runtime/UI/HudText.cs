@@ -284,6 +284,9 @@ namespace ProjectM.UI
         public const string TombGuardians = "원혼이 깨어났다!";
         public const string StatueAwoken = "석상이 살아 움직인다!"; // 3-48
         public const string Stranded = "물 밖으로 나온 피라냐가 숨이 막힌다"; // 3-50
+        public const string ChasmWarn = "구덩이다 — 한 번 더 가면 뛰어내린다"; // 3-51
+        public const string ChasmBlocked = "구덩이가 너무 깊어 내려갈 수 없다"; // 3-51 다음 층이 보스 층
+        public static string Fell(int damage) => $"구덩이 아래로 떨어졌다! (피해 {damage})"; // 3-51
         public const string WellHealthDrunk = "치유의 우물을 마셨다 — 몸이 회복된다";
         public const string WellAwarenessDrunk = "지식의 우물을 마셨다 — 배낭의 물건과 이 층이 보인다";
 
@@ -488,6 +491,7 @@ namespace ProjectM.UI
                 case TileType.EmptyWell: return "마른 우물";
                 case TileType.Tomb: return "돌 관 — 부딪혀 열면 무언가 있다"; // 3-47
                 case TileType.OpenTomb: return "빈 관";
+                case TileType.Chasm: return "구덩이 — 뛰어들면 아래층 (부양이면 떠서 건넘)"; // 3-51
                 default: return CellUnknown;
             }
         }
@@ -768,6 +772,7 @@ namespace ProjectM.UI
                 case DamageKind.Terrain: return Terrain(cause.Terrain);
                 case DamageKind.Item: return KnownItem(cause.Id);
                 case DamageKind.Hunger: return "굶주림";
+                case DamageKind.Fall: return "추락"; // 3-51
                 default: return "알 수 없음";
             }
         }
