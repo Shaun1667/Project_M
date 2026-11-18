@@ -6,7 +6,7 @@
 
 ## 진행 요약 (2026-11-06 기준 — 새 세션은 여기부터 읽는다)
 
-**최신 (2026-11-18): 특수 방 추가 시작 — 브랜치 `phase3-special-rooms`. SPD에 있고 없는 방을 순서대로: ① 창고(3-41, 끝 · 플레이 확인 대기) → ② 마법 불 방 → ③ 독가스 방 → ④ 보물 창고 → ⑤ 함정 방 → ⑥ 마법 우물.**
+**최신 (2026-11-18): 특수 방 추가 시작 — 브랜치 `phase3-special-rooms`. SPD에 있고 없는 방을 순서대로: ① 창고(3-41, 끝 · 플레이 확인 대기) → ② 마법 불 방(3-42, 끝 · 플레이 확인 대기) → ③ 독가스 방 → ④ 보물 창고 → ⑤ 함정 방 → ⑥ 마법 우물.**
 
 **이전 (2026-11-17): `main3`(지스타 빌드 `4b29b7f`에서 갈라짐 — 다음 시연 준비) → 작업 브랜치 `phase3-weapon-tiers`. 3-39 SPD 3~5티어 무기 20종(데이터 · 공격 지연 · 채찍 3칸 · Varco 모델) · 3-40 0티어 시작 무기(루멘 단창 · 시아 붕대, 창 · 너클 계열) 끝, 테스트 작성 · 실행 안 함 · 플레이 확인 대기.**
 
@@ -989,6 +989,10 @@
   - 구현: 칸 종류 `TileType.Barricade`(14 — 걸을 수 없음 · 시야 · 투사체를 막음, `IsFlammableType`) · 특수 방 `SpecialRoomType.Storage`(6, 무게 2 — `FloorDecorConfig` `_storageWeight` · `_storageItems` · `_storageItemMin/Max` · `_storageFireItem`). 불 주문을 바리케이드에 겨누면 닿음(`GridMap.IsSpellCatcherType` · `SpellCasting.AppendCatcher` — 화살 · 광선 끝, 범위 주문은 범위 안 바리케이드 포함) → 반응 `barricade_ignite`(바닥 + 화염 지대 3틱), 옆 화염 지대로도 탐(`FireSpreadSystem` 그대로). 특수 방 아이템을 겉모습(`Identification.VisualOf`)으로 놓음 — 도서관 주문서가 정체를 드러내던 것도 함께 고침
   - 화면: Varco 바리케이드 모델 `Prop_Barricade`(판자 + X자) → `Tile_Barricade`(구역마다), 문처럼 옆 벽을 보고 돌림(`TilemapPresenter`), 그레이박스 색 칸 · 칸 이름 "나무 바리케이드 — 불로 태울 수 있다"
   - 확인: 컴파일 0 · 설정 값 읽기. 테스트 3개(`SpecialRoomTests.Storage_*` · `Barricade_BurnsFromAdjacentFire` · `Spell_AimedAtBarricade_HitsIt`) 작성, 실행 안 함. 확인 못 한 것: 실제 층에서 창고 · 바리케이드 모습, 타는 연출
+- [x] **3-42. 특수 방 ② 마법 불 방 (SPD Magical Fire)** (2026-11-18 사용자 "다음 방으로", 브랜치 `phase3-special-rooms`) — 플레이 확인 대기
+  - 결정 (2026-11-18): 불 모양 = **방을 가로지르는 불 벽**(선택지: 불 벽(추천) · 보상 둘레 고리) · 끄는 법 = **얼음 · 물 · 냉기 물약**(선택지: 셋 다(추천) · 얼음 · 냉기만) · 보상 = **좋은 물건 1개**(선택지: 1개(추천) · 2개 · 소모품 3~4개) · 보장 = **방 밖에 냉기 물약 1개**(선택지: 보장(추천) · 없음)
+  - 구현: `SpecialRoomType.MagicalFire`(7, 무게 2 — `FloorDecorConfig` `_magicalFireWeight` · `_magicalFireItem`), 불 벽 `SpecialRooms.PlaceFireWall`(입구에서 깊이 한 변/2부터 1줄 · 한 변 5 이상 2줄, 영구 화염 지대), 보상은 보물 방 목록에서 1개를 불 뒤 칸에. 끄기는 새 코드 없음(얼음 `extinguish` 반응 · 물 `FireSpreadSystem` · 냉기 물약). 그림도 기존 화염 지대 그대로
+  - 확인: 테스트 2개(`SpecialRoomTests.MagicalFire_FireWallAcrossRoom_PrizeBehind_FrostOutside` · `MagicalFire_PermanentFire_OutByWaterOnly`) + 검산 무게 7칸 작성, 실행 안 함. 확인 못 한 것: 실제 층에서 불 벽 모습 · 얼음으로 끄는 연출
 - [x] **문서. 내 표준 작업 가이드** (2026-11-06 사용자 "지금까지 작업한 방식에 적합한 MD파일 하나 만들어줘 — 그거 하나로 프로젝트 진행할 수 있는거로") — `Docs/MY_DEV_GUIDE.md`(친구 가이드 `Docs/Source/claude_all_type_genre.md`에서 출발해 이 프로젝트 방식으로: 시작하는 법 · 협업 약속 · 문서 체계 · 로드맵 · 사이클 · 질문 · 보고 · 코드 원칙 · 직접 확인 · 안전 규칙 · AI 에셋 · 환경 · 시연 체크리스트 · 템플릿 7종), CLAUDE.md 참조 문서 표에 한 줄. 커밋 9de90f3 (브랜치 `phase3-devguide`)
 - [~] **G-5. 3D로 되돌리기** (2026-10-28) — 플레이 확인 대기
   - 결정 (2026-10-28, 사용자): 그래픽 기준 = **실시간 3D**(Phase G)로 되돌림, Phase P 중단. 2D 코드 · 그림은 지우지 않고 남겨 둠(추천안) — `Pixel2D = true` + Setup이면 다시 2D. 맨 위 진행 요약 "최신 (2026-10-28)" 참고

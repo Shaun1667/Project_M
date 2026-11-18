@@ -62,6 +62,10 @@ namespace ProjectM.Data
         [Min(0)] [SerializeField] private int _storageItemMax = 4;
         [Tooltip("창고가 생긴 층의 방 밖에 놓는 불 아이템 (불을 못 쓰는 판도 열 수 있게, SPD)")] [SerializeField] private string _storageFireItem = "potion_liquid_flame";
 
+        [Header("마법 불 방 (3-42, SPD Magical Fire — BALANCE 16번)")]
+        [Tooltip("마법 불 방 무게 (같은 척도) — 보상은 보물 방 목록에서 하나")] [Min(0)] [SerializeField] private int _magicalFireWeight = 2;
+        [Tooltip("마법 불 방이 생긴 층의 방 밖에 놓는 불 끄는 아이템 (얼음을 못 쓰는 판도 끌 수 있게)")] [SerializeField] private string _magicalFireItem = "potion_frost";
+
         [Header("상점 (3-15c — BALANCE 16번)")]
         [Tooltip("상점이 있는 첫 층")] [Min(1)] [SerializeField] private int _shopFloor = 3;
         [Tooltip("상점이 더 있는 층 (2026-11-05 사용자 — 구역 시작층 6 · 11 · 16 · 21층)")] [SerializeField] private int[] _moreShopFloors = { 6, 11, 16, 21 };
@@ -93,15 +97,16 @@ namespace ProjectM.Data
             _puddleCount, _puddleMinSize, _puddleMaxSize, _doorPercent, _hiddenDoorPercent,
             new SpecialRoomConfig(_specialRoomPercent, WithLab(), _specialRoomMinSize, _specialRoomMaxSize, _vaultItems, _vaultItemCount,
                 _armoryItems, _armoryItemCount, _libraryItems, _libraryItemCount, _gardenItems, _gardenItemCount, _keyItem, _labItems, _labItemCount,
-                _storageItems, _storageItemMin, _storageItemMax, _storageFireItem));
+                _storageItems, _storageItemMin, _storageItemMax, _storageFireItem, _magicalFireItem));
 
-        /// <summary>보물 · 무기고 · 도서관 · 정원 무게 + 연구실 무게(3-16c) + 창고 무게(3-41) — 예전 에셋의 4칸 배열을 그대로 쓰려고 따로 둠.</summary>
+        /// <summary>보물 · 무기고 · 도서관 · 정원 무게 + 연구실 무게(3-16c) + 창고 무게(3-41) + 마법 불 무게(3-42) — 예전 에셋의 4칸 배열을 그대로 쓰려고 따로 둠.</summary>
         private int[] WithLab()
         {
-            var w = new int[6];
+            var w = new int[7];
             for (int i = 0; i < 4 && i < _specialRoomWeights.Length; i++) w[i] = _specialRoomWeights[i];
             w[4] = _laboratoryWeight;
             w[5] = _storageWeight;
+            w[6] = _magicalFireWeight;
             return w;
         }
     }

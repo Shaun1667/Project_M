@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using ProjectM.Core;
+using ProjectM.Status;
 
 namespace ProjectM.Dungeon
 {
@@ -20,6 +21,8 @@ namespace ProjectM.Dungeon
         Laboratory = 5,
         /// <summary>창고 (3-41, SPD Storage): 입구 = 바리케이드(불로만 열림) · 물약 · 주문서. 같은 층 방 밖에 불꽃 물약 하나 보장.</summary>
         Storage = 6,
+        /// <summary>마법 불 방 (3-42, SPD Magical Fire): 방을 가로지르는 꺼지지 않는 불 벽 · 그 뒤에 좋은 물건 하나(보물 방 목록). 얼음 · 물 · 냉기 물약으로 끔. 같은 층 방 밖에 냉기 물약 하나 보장.</summary>
+        MagicalFire = 7,
     }
 
     /// <summary>특수 방 수치 · 아이템 목록 (3-15b). 값은 FloorDecorConfigAsset에서 — 기준은 BALANCE.md 16번.</summary>
@@ -27,7 +30,7 @@ namespace ProjectM.Dungeon
     {
         /// <summary>층마다 특수 방이 생길 확률 (%) — 생기면 하나.</summary>
         public int RoomPercent { get; }
-        /// <summary>종류 무게 (보물 방 · 무기고 · 도서관 · 정원 · 연구실 · 창고 순 — 모자란 뒤쪽은 0).</summary>
+        /// <summary>종류 무게 (보물 방 · 무기고 · 도서관 · 정원 · 연구실 · 창고 · 마법 불 순 — 모자란 뒤쪽은 0).</summary>
         public IReadOnlyList<int> Weights { get; }
         /// <summary>방 안쪽 크기 (정사각 한 변 최소 ~ 최대).</summary>
         public int MinSize { get; }
@@ -51,21 +54,25 @@ namespace ProjectM.Dungeon
         public int StorageItemMin { get; }
         public int StorageItemMax { get; }
         public string StorageFireItem { get; }
+        /// <summary>마법 불 방 (3-42): 방 밖에 보장하는 불 끄는 아이템.</summary>
+        public string MagicalFireItem { get; }
 
         public SpecialRoomConfig(int roomPercent, IReadOnlyList<int> weights, int minSize, int maxSize,
             IReadOnlyList<string> vaultItems, int vaultItemCount, IReadOnlyList<string> armoryItems, int armoryItemCount,
             IReadOnlyList<string> libraryItems, int libraryItemCount, IReadOnlyList<string> gardenItems, int gardenItemCount, string keyItem,
             IReadOnlyList<string> labItems = null, int labItemCount = 0,
-            IReadOnlyList<string> storageItems = null, int storageItemMin = 0, int storageItemMax = 0, string storageFireItem = null)
+            IReadOnlyList<string> storageItems = null, int storageItemMin = 0, int storageItemMax = 0, string storageFireItem = null,
+            string magicalFireItem = null)
         {
             StorageItems = storageItems ?? Array.Empty<string>();
             StorageItemMin = Math.Max(0, storageItemMin);
             StorageItemMax = Math.Max(StorageItemMin, storageItemMax);
             StorageFireItem = string.IsNullOrEmpty(storageFireItem) ? null : storageFireItem;
+            MagicalFireItem = string.IsNullOrEmpty(magicalFireItem) ? null : magicalFireItem;
             LabItems = labItems ?? Array.Empty<string>();
             LabItemCount = Math.Max(0, labItemCount);
             if (roomPercent < 0 || roomPercent > 100) throw new ArgumentOutOfRangeException(nameof(roomPercent));
-            if (weights == null || weights.Count < 4 || weights.Count > 6) throw new ArgumentException("종류 무게는 4 ~ 6개 (보물 · 무기고 · 도서관 · 정원 · 연구실 · 창고)", nameof(weights));
+            if (weights == null || weights.Count < 4 || weights.Count > 7) throw new ArgumentException("종류 무게는 4 ~ 7개 (보물 · 무기고 · 도서관 · 정원 · 연구실 · 창고 · 마법 불)", nameof(weights));
             if (minSize < 2 || maxSize < minSize) throw new ArgumentOutOfRangeException(nameof(maxSize), "2 ≤ 최소 ≤ 최대");
             RoomPercent = roomPercent;
             Weights = weights;
@@ -188,6 +195,7 @@ namespace ProjectM.Dungeon
                 case SpecialRoomType.Armory: pool = config.ArmoryItems; count = config.ArmoryItemCount; break;
                 case SpecialRoomType.Library: pool = config.LibraryItems; count = config.LibraryItemCount; break;
                 case SpecialRoomType.Laboratory: pool = config.LabItems; count = config.LabItemCount; break;
+                case SpecialRoomType.MagicalFire: pool = config.VaultItems; count = 1; break; // 3-42: 보물 방 목록에서 하나
                 case SpecialRoomType.Storage: pool = config.StorageItems; count = config.StorageItemMin + rng.Range(0, config.StorageItemMax - config.StorageItemMin + 1); break;
                 default: pool = config.GardenItems; count = config.GardenItemCount; break;
             }
@@ -201,6 +209,7 @@ namespace ProjectM.Dungeon
                 world.SetTile(center, TileType.AlchemyPot);
                 spots.Remove(center);
             }
+            if (type == SpecialRoomType.MagicalFire) spots = PlaceFireWall(world, cells);
             var choices = new List<string>(pool);
             for (int i = 0; i < count && spots.Count > 0 && choices.Count > 0; i++)
             {
@@ -214,6 +223,27 @@ namespace ProjectM.Dungeon
 
             if (type == SpecialRoomType.Vault && config.KeyItem != null) PlaceOutside(world, floor, config.KeyItem, rng, new HashSet<GridPos>(cells));
             if (type == SpecialRoomType.Storage && config.StorageFireItem != null) PlaceOutside(world, floor, config.StorageFireItem, rng, new HashSet<GridPos>(cells)); // 3-41: 불을 못 써도 열 수 있게
+            if (type == SpecialRoomType.MagicalFire && config.MagicalFireItem != null) PlaceOutside(world, floor, config.MagicalFireItem, rng, new HashSet<GridPos>(cells)); // 3-42: 얼음을 못 써도 끌 수 있게
+        }
+
+        /// <summary>
+        /// 마법 불 벽 (3-42): 방 칸은 입구에서 깊이 순(한 줄 = size칸, CarveEmpty 순서). 깊이 size/2부터 한 줄(한 변 5 이상이면 두 줄)을
+        /// 영구 화염 지대로 — 방 너비 전체를 막는다. 깊이 1 이상이라 입구 문과 붙지 않아 문이 타지 않는다. 돌려주는 칸 = 불 뒤 칸 (보상 자리).
+        /// </summary>
+        public static List<GridPos> PlaceFireWall(World world, List<GridPos> cells)
+        {
+            int size = (int)Math.Round(Math.Sqrt(cells.Count));
+            int start = size / 2;
+            int thickness = size >= 5 ? 2 : 1;
+            var behind = new List<GridPos>();
+            for (int a = 0; a < size; a++)
+                for (int b = 0; b < size; b++)
+                {
+                    var c = cells[a * size + b];
+                    if (a >= start && a < start + thickness) TerrainEffects.Place(world, c, TerrainEffectType.FireZone, TerrainLayer.Permanent);
+                    else if (a >= start + thickness) behind.Add(c);
+                }
+            return behind;
         }
 
         /// <summary>열쇠 · 창고 불 아이템: 방 밖 맨땅, 시작 칸에서 3칸 이상, 아이템 없는 칸 (y → x 순 목록에서).</summary>
