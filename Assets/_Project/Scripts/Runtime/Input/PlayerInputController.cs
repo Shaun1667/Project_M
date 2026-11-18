@@ -1281,6 +1281,13 @@ namespace ProjectM.Input
                 if (seeds < Alchemy.SeedsPerBrew) Hint(HudText.NotEnoughSeeds);
                 else _inventory.OpenForBrew(e => IsBrewSeed(brewer, e), brewer.InventorySlots, 0);
             }
+            else if (PlayerActions.TryGetPlayer(_world, out var opener) && _world.Map.InBounds(opener.Pos + direction)
+                && (_world.Map.Get(opener.Pos + direction) == TileType.Tomb || _world.Map.Get(opener.Pos + direction) == TileType.OpenTomb)) // 3-47 지하 묘지: 부딪히면 관을 엶
+            {
+                var tomb = opener.Pos + direction;
+                if (_world.Map.Get(tomb) == TileType.OpenTomb) Hint(HudText.TombEmpty);
+                else _clock.SubmitPlayerCommand(new ProjectM.Dungeon.OpenTombCommand(_world, tomb, _config.DefaultActionCostTicks));
+            }
             else if (PlayerActions.TryGetPlayer(_world, out var drinker) && _world.Map.InBounds(drinker.Pos + direction)
                 && GridMap.IsWellType(_world.Map.Get(drinker.Pos + direction))) // 3-46 마법 우물: 부딪히면 마심
             {

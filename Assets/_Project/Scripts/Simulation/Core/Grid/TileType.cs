@@ -39,5 +39,9 @@ namespace ProjectM.Core
         WellAwareness = 16,
         /// <summary>마른 우물 (3-46) — 걸을 수 없음 · 시야는 안 막음. 효과 없음.</summary>
         EmptyWell = 17,
+        /// <summary>관 (3-47 지하 묘지, SPD Crypt) — 걸을 수 없음 · 시야는 안 막음. 부딪히면 엶: 갑옷 + 지킴이(원혼) → 빈 관.</summary>
+        Tomb = 18,
+        /// <summary>빈 관 (3-47) — 걸을 수 없음 · 시야는 안 막음. 효과 없음.</summary>
+        OpenTomb = 19,
     }
 }

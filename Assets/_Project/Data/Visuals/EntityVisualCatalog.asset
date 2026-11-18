@@ -373,3 +373,14 @@ MonoBehaviour:
     WalkBack: []
     WalkSide: []
     PixelVariants: []
+  - Id: enemy_wraith
+    Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
+    Tint: {r: 0.45, g: 0.75, b: 0.75, a: 1}
+    Prefab: {fileID: 5969540622973334167, guid: 654e2be5fb0994e4a9b60b6bf57788d4, type: 3}
+    Height: 0.9
+    Variants: []
+    PixelIdle: {fileID: 0}
+    WalkFront: []
+    WalkBack: []
+    WalkSide: []
+    PixelVariants: []

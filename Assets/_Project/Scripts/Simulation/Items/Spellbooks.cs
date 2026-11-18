@@ -97,9 +97,12 @@ namespace ProjectM.Items
         public readonly int Quantity;
         /// <summary>가격표 (3-15c 상점 물건 — 주우면 금화가 빠짐). 0 = 공짜.</summary>
         public readonly int Price;
+        /// <summary>강화 단계 (3-47 지하 묘지 갑옷 — 주우면 InventoryRef.Upgrade). 0 = 강화 없음.</summary>
+        public readonly int Upgrade;
 
-        public FloorItem(GridPos pos, string itemId, int quantity = 1, int price = 0)
+        public FloorItem(GridPos pos, string itemId, int quantity = 1, int price = 0, int upgrade = 0)
         {
+            Upgrade = Math.Max(0, upgrade);
             Pos = pos;
             ItemId = itemId;
             Quantity = Math.Max(1, quantity);
@@ -118,12 +121,12 @@ namespace ProjectM.Items
         public int Count => _items.Count;
         public IReadOnlyList<FloorItem> All => _items;
 
-        public void Add(GridPos pos, string itemId, int quantity = 1, int price = 0)
+        public void Add(GridPos pos, string itemId, int quantity = 1, int price = 0, int upgrade = 0)
         {
             if (string.IsNullOrEmpty(itemId)) throw new ArgumentException("아이템 ID가 비어 있다.", nameof(itemId));
             int index = _items.Count;
             while (index > 0 && Compare(_items[index - 1].Pos, pos) > 0) index--;
-            _items.Insert(index, new FloorItem(pos, itemId, quantity, price));
+            _items.Insert(index, new FloorItem(pos, itemId, quantity, price, upgrade));
         }
 
         /// <summary>그 칸의 아이템들 (놓은 순서, 개수 포함 — 3-15a).</summary>
@@ -605,7 +608,7 @@ namespace ProjectM.Items
                     world.Events.Publish(new ProjectM.Dungeon.PurchaseFailedEvent(id, floorItem.Price));
                     continue;
                 }
-                var entry = Inventory.IsStackable(items, InventoryRef.Item(id)) ? InventoryRef.Item(id).WithCount(floorItem.Quantity) : InventoryRef.Item(id); // 3-16a 다트 묶음
+                var entry = Inventory.IsStackable(items, InventoryRef.Item(id)) ? InventoryRef.Item(id).WithCount(floorItem.Quantity) : InventoryRef.Item(id, floorItem.Upgrade); // 3-16a 다트 묶음 · 3-47 강화된 갑옷
                 if (Inventory.TryAdd(world, null, items, player, entry) < 0)
                 {
                     world.Events.Publish(new ItemPickupFailedEvent(player.Id, player.Pos, id));

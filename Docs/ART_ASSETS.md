@@ -427,6 +427,7 @@ Varco는 모든 모델을 **가장 긴 쪽 1 m**로 보내므로 크기는 프�
 | `enemy_time_afterimage` | Enemy_TimeAfterimage | Unit_TimeAfterimage | 1.0 | 약 1.0 m | 6,000 | Blender (`Tools/blender_rig_from_joints.py`) | — |
 | `enemy_temple_guardian` | Enemy_TempleGuardian | Unit_TempleGuardian | 1.3 | 약 1.3 m | 6,000 | Blender (`Tools/blender_rig_from_joints.py`) | — |
 | `enemy_time_priest` | Enemy_TimePriest | Unit_TimePriest | 1.0 | 약 1.1 m | 6,000 | Mixamo | — |
+| `enemy_wraith` | Enemy_Wraith | Unit_Wraith | 0.95 | 약 0.9 m | 3,000 | — (떠 있는 유령, 코드 움직임) | 3-47 지하 묘지 지킴이, 원본 그림 `Docs/특수방_원본/wraith.png` |
 | `boss_time_guardian` | Boss_TimeGuardian | Unit_TimeGuardian | 1.9 | 약 1.9 m | 12,000 | Blender (`Tools/blender_rig_from_joints.py`) | — |
 
 - **결정 (2026-11-05, 사용자)**: 사람형 리깅은 **Mixamo**(사람형만 — 네발 · 전갈은 리깅 없이 코드 움직임). 무기 · 지팡이 등 **든 물건은 몸과 따로 만들어 Unity에서 손 뼈에 붙인다**(`AttachStaff` — 높이 1 m 소품, 원점 = 아래 끝, 손이 길이 40% 지점). 그래서 고블린 · 사막 주술사 · 파라오는 지팡이 없는 몸으로 다시 생성.
@@ -470,6 +471,7 @@ Varco는 모든 모델을 **가장 긴 쪽 1 m**로 보내므로 크기는 프�
 | 높은 풀 `TallGrass` | Tile_TallGrass | 바닥 + 풀 덤불(키 0.55 m — 0.15 m보다 높아 시야를 가림) |
 | 연금 솥 `AlchemyPot` | Tile_AlchemyPot | 바닥 + 솥(너비 0.7 m) |
 | 마법 우물 `WellHealth` · `WellAwareness` · `EmptyWell` (3-46) | Tile_WellHealth · Tile_WellAwareness · Tile_EmptyWell (구역마다 `Tile_<구역>_…`) | 바닥 + 돌 우물 `Prop_Well`(너비 0.85 m) + 물 원판(우물 너비 × 0.66, 높이 × 0.95 — 치유 = 붉은 빛 `Mat_Well_F2404C`, 지식 = 푸른 빛 `Mat_Well_408CFF`, 마른 우물 = 없음). 원본 그림 `Docs/특수방_원본/well.png`, 렌더 `_well_tile.png` |
+| 관 `Tomb` · 빈 관 `OpenTomb` (3-47) | Tile_Tomb · Tile_OpenTomb (구역마다 `Tile_<구역>_…`) | 바닥 + 돌 관 `Prop_Tomb` / 뚜껑이 열린 관 `Prop_TombOpen`(긴 쪽 0.95 m). 원본 그림 `Docs/특수방_원본/tomb.png · tomb_open.png`, 렌더 `_crypt_tile.png` |
 
 - **결정 (2026-11-05, 사용자)**: 문은 SPD처럼 **양쪽으로 여는 여닫이 양문**(미닫이 아님). 칸 종류가 바뀔 때 프리팹이 바뀌어 열고 닫는 애니메이션은 없음.
 - Varco 문틀 모델은 정면 그림에서 깊이를 잘못 추정해 **십자 아치**(가로 = 깊이 1 m)로 나와 버리고, 벽 모델로 짰다 — 옆 벽과 돌 질감이 이어진다.

@@ -689,6 +689,30 @@ MonoBehaviour:
     SummonId: enemy_time_afterimage
     SummonCount: 3
     SummonAtHpPercent: 50
+  - Id: enemy_wraith
+    DisplayName: "\uC6D0\uD63C"
+    MaxHp: 6
+    AttackDamage: 2
+    SightRange: 8
+    Accuracy: 8
+    Evasion: 6
+    ExpReward: 4
+    ExpMaxLevel: 30
+    MoveSteps: 0
+    MoveCostTicks: 0
+    HitStatus: 0
+    HitStatusPercent: 0
+    HurtTerrain: 0
+    SpellId: 
+    MaxMana: 0
+    KeepDistance: 0
+    DamagePercents: []
+    ChargeSpellId: 
+    ChargePercent: 0
+    TeleportPercent: 0
+    SummonId: 
+    SummonCount: 0
+    SummonAtHpPercent: 0
   _zones:
   - Name: "\uC232 \uC18D \uB3D9\uAD74"
     FirstFloor: 1
@@ -794,3 +818,9 @@ MonoBehaviour:
   _ghostHpPercent: 300
   _ghostExpReward: 50
   _ghostExpMaxLevel: 30
+  _hofClearBonus: 10000
+  _hofPerKill: 20
+  _hofPerLevel: 300
+  _hofTurnBudget: 20000
+  _hofPerTurnSaved: 1
+  _hofMaxEntries: 20

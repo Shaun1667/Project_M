@@ -117,6 +117,11 @@ namespace ProjectM.Core
 
         public void SetShopRules(ProjectM.Dungeon.ShopRules rules) => ShopRules = rules;
 
+        /// <summary>지하 묘지 규칙 (3-47 — 관을 열 때 갑옷 · 지킴이). GameRoot가 넣는다 — 규칙 연결이라 저장하지 않는다. null이면 관은 비어 있다.</summary>
+        internal ProjectM.Dungeon.CryptRules CryptRules { get; private set; }
+
+        public void SetCryptRules(ProjectM.Dungeon.CryptRules rules) => CryptRules = rules;
+
         /// <summary>디버그 무적 (2026-11-05): 켜면 플레이어 진영이 피해를 받지 않는다 (Combat.ApplyDamage). 개발 도구라 저장하지 않는다 — 새 판 · 불러오기 때 GameRoot가 다시 넣는다.</summary>
         public bool DebugInvulnerable { get; set; }
 
@@ -308,7 +313,7 @@ namespace ProjectM.Core
         {
             var items = new FloorItemState[FloorItems.Count];
             for (int i = 0; i < items.Length; i++)
-                items[i] = new FloorItemState(FloorItems.All[i].Pos.X, FloorItems.All[i].Pos.Y, FloorItems.All[i].ItemId, FloorItems.All[i].Quantity, FloorItems.All[i].Price);
+                items[i] = new FloorItemState(FloorItems.All[i].Pos.X, FloorItems.All[i].Pos.Y, FloorItems.All[i].ItemId, FloorItems.All[i].Quantity, FloorItems.All[i].Price, FloorItems.All[i].Upgrade);
             return items;
         }
 
@@ -364,7 +369,7 @@ namespace ProjectM.Core
             foreach (var u in units)
                 world.Units.Add(ToUnit(u));
             foreach (var item in floorItems ?? Array.Empty<FloorItemState>())
-                world.FloorItems.Add(new GridPos(item.X, item.Y), item.ItemId, item.Quantity, item.Price);
+                world.FloorItems.Add(new GridPos(item.X, item.Y), item.ItemId, item.Quantity, item.Price, item.Upgrade);
             foreach (var t in traps ?? Array.Empty<TrapCellState>())
                 world.Traps.Set(world.Traps.PosOf(t.CellIndex), new TrapInstance(t.Type, t.Hidden));
         }

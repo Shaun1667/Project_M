@@ -279,6 +279,9 @@ namespace ProjectM.UI
         public const string DoorLocked = "잠겨 있다 — 열쇠가 필요하다";
         public const string DoorUnlocked = "열쇠로 문을 열었다";
         public const string WellEmpty = "우물이 말라 있다"; // 3-46
+        public const string TombEmpty = "빈 관이다"; // 3-47
+        public const string TombOpened = "관을 열었다";
+        public const string TombGuardians = "원혼이 깨어났다!";
         public const string WellHealthDrunk = "치유의 우물을 마셨다 — 몸이 회복된다";
         public const string WellAwarenessDrunk = "지식의 우물을 마셨다 — 배낭의 물건과 이 층이 보인다";
 
@@ -481,6 +484,8 @@ namespace ProjectM.UI
                 case TileType.WellHealth: return "치유의 우물 — 부딪혀 마시면 체력이 가득 찬다"; // 3-46
                 case TileType.WellAwareness: return "지식의 우물 — 부딪혀 마시면 물건을 알아보고 층 지도를 얻는다";
                 case TileType.EmptyWell: return "마른 우물";
+                case TileType.Tomb: return "돌 관 — 부딪혀 열면 무언가 있다"; // 3-47
+                case TileType.OpenTomb: return "빈 관";
                 default: return CellUnknown;
             }
         }

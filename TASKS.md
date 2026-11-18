@@ -6,7 +6,7 @@
 
 ## 진행 요약 (2026-11-06 기준 — 새 세션은 여기부터 읽는다)
 
-**최신 (2026-11-18): 특수 방 추가 시작 — 브랜치 `phase3-special-rooms`. SPD에 있고 없는 방을 순서대로: ① 창고(3-41, 끝 · 플레이 확인 대기) → ② 마법 불 방(3-42, 끝 · 플레이 확인 대기) → ③ 독가스 방(3-43, 끝 · 플레이 확인 대기) → ④ 보물 창고(3-44, 끝 · 플레이 확인 대기) → ⑤ 함정 방(3-45, 끝 · 플레이 확인 대기) → ⑥ 마법 우물(3-46, 끝 · 플레이 확인 대기). 여섯 방 모두 넣음 — 다음 작업: 미정(플레이 확인 뒤 사용자와 정함).**
+**최신 (2026-11-18): 특수 방 추가 시작 — 브랜치 `phase3-special-rooms`. SPD에 있고 없는 방을 순서대로: ① 창고(3-41, 끝 · 플레이 확인 대기) → ② 마법 불 방(3-42, 끝 · 플레이 확인 대기) → ③ 독가스 방(3-43, 끝 · 플레이 확인 대기) → ④ 보물 창고(3-44, 끝 · 플레이 확인 대기) → ⑤ 함정 방(3-45, 끝 · 플레이 확인 대기) → ⑥ 마법 우물(3-46, 끝 · 플레이 확인 대기). 여섯 방 모두 넣음(main3에 병합 · 푸시 2026-11-18). 이어서 남은 SPD 방(묘지 → 석상 · 감시탑 · 룬석 · 수정 · 연못 · 약한 바닥 중 사용자가 고름): ⑦ 지하 묘지(3-47, 브랜치 `phase3-crypt`, 끝 · 플레이 확인 대기).**
 
 **이전 (2026-11-17): `main3`(지스타 빌드 `4b29b7f`에서 갈라짐 — 다음 시연 준비) → 작업 브랜치 `phase3-weapon-tiers`. 3-39 SPD 3~5티어 무기 20종(데이터 · 공격 지연 · 채찍 3칸 · Varco 모델) · 3-40 0티어 시작 무기(루멘 단창 · 시아 붕대, 창 · 너클 계열) 끝, 테스트 작성 · 실행 안 함 · 플레이 확인 대기.**
 
@@ -1010,6 +1010,11 @@
   - 구현: 칸 종류 `TileType.WellHealth`(15) · `WellAwareness`(16) · `EmptyWell`(17) — 걸을 수 없음 · 시야는 안 막음(`GridMap.IsWellType`). 특수 방 `SpecialRoomType.MagicWell`(11, 무게 2 — `_magicWellWeight` · `_wellTypes`), 가운데 칸에 우물. 마시기 = 부딪힘(`PlayerInputController`) → `DrinkWellCommand`(차례 1) → `Consumables.DrinkWell`(치유 = 치유 물약과 같은 `HealFully` · 지식 = 배낭 식별 + 층 지도 + `Searching.RevealAll`) → 마른 우물, `WellDrunkEvent` → HUD 로그. 칸 이름 · 마른 우물 안내는 `HudText`
   - 화면: Varco `Prop_Well`(돌 우물) → `Tile_WellHealth/WellAwareness/EmptyWell`(구역마다), 물 원판 색(치유 붉은 · 지식 푸른 · 마른 우물 없음), 그레이박스 색 칸, 2D는 바닥
   - 확인: 컴파일 0 · 설정 값 읽기 · 프리팹 렌더(`Docs/특수방_원본/_well_tile.png`). 테스트 4개(`SpecialRoomTests.MagicWell_*` 3 · `HudModelTests.WellDrunk_LogsByKind`) + 검산 무게 11칸 작성, 실행 안 함. 확인 못 한 것: 실제 층에서 우물 · 마시는 동작(클릭으로 옆 우물을 누를 때도 마시는지)
+- [x] **3-47. 특수 방 ⑦ 지하 묘지 (SPD Crypt)** (2026-11-18 사용자 "다음 특수방 남은 건?" → 석상 · 연못 · 묘지 · 룬석 · 감시탑 · 약한 바닥 · 수정 방 목록 → "2번 지하묘지부터", 브랜치 `phase3-crypt` — main3 위) — 플레이 확인 대기
+  - 결정 (2026-11-18): 지킴이 = **새 적 원혼 + Varco 모델**(선택지: 원혼(추천) · 구역 적 재사용) · 수 = **2마리**(선택지: 2(추천) · 1 · 깊이 1~3) · 보상 = **강화된 갑옷 1개**(선택지: 강화 갑옷(추천) · 보물 방 목록 · 유물) · 여는 법 = **잠긴 문 + 관에 부딪히면 열림**(선택지: 잠긴 문(추천) · 보통 문)
+  - 구현: 칸 종류 `TileType.Tomb`(18) · `OpenTomb`(19 — 걸을 수 없음 · 시야는 안 막음). 특수 방 `SpecialRoomType.Crypt`(12, 무게 2 — 잠긴 문 · 가운데 관 · 방 밖 열쇠). 관 열기 = 부딪힘 → `OpenTombCommand`(차례 1) → `Crypts.Open`(그 층 티어 갑옷 + 강화를 연 사람 발밑에, 관 둘레에 원혼 2 — 세기 `UnitDef.Scaled`, 연 사람을 앎) → `TombOpenedEvent` 로그. 규칙 연결 `World.SetCryptRules`(`CryptRules` — GameRoot.BeginRun, 저장 안 함), 수치 `FloorDecorConfig` 지하 묘지 칸(`ToCrypt`). 적 줄 `enemy_wraith`(구역 목록 밖). **바닥 아이템 강화** `FloorItem.Upgrade`(주우면 `InventoryRef.Upgrade`, 스냅샷 v33 — 이전 저장 무효)
+  - 화면: Varco `Enemy_Wraith` → `Unit_Wraith`(리깅 없음) · `Prop_Tomb` / `Prop_TombOpen` → `Tile_Tomb` / `Tile_OpenTomb`(구역마다), 그레이박스 색 칸, 칸 이름 · 로그 `HudText`
+  - 확인: 컴파일 0 · Setup 메뉴(Main Scene · Varco Models) · 설정 · 적 줄 읽기 · 프리팹 렌더(`Docs/특수방_원본/_crypt_tile.png`). 테스트 7개(`CryptTests` 6 · `HudModelTests.TombOpened_Logs`) + 검산 무게 12칸 작성, 실행 안 함. 확인 못 한 것: 실제 층에서 묘지 · 원혼 움직임, 줍기 로그에 강화(+n)가 안 붙음(배낭에는 보임)
 - [x] **문서. 내 표준 작업 가이드** (2026-11-06 사용자 "지금까지 작업한 방식에 적합한 MD파일 하나 만들어줘 — 그거 하나로 프로젝트 진행할 수 있는거로") — `Docs/MY_DEV_GUIDE.md`(친구 가이드 `Docs/Source/claude_all_type_genre.md`에서 출발해 이 프로젝트 방식으로: 시작하는 법 · 협업 약속 · 문서 체계 · 로드맵 · 사이클 · 질문 · 보고 · 코드 원칙 · 직접 확인 · 안전 규칙 · AI 에셋 · 환경 · 시연 체크리스트 · 템플릿 7종), CLAUDE.md 참조 문서 표에 한 줄. 커밋 9de90f3 (브랜치 `phase3-devguide`)
 - [~] **G-5. 3D로 되돌리기** (2026-10-28) — 플레이 확인 대기
   - 결정 (2026-10-28, 사용자): 그래픽 기준 = **실시간 3D**(Phase G)로 되돌림, Phase P 중단. 2D 코드 · 그림은 지우지 않고 남겨 둠(추천안) — `Pixel2D = true` + Setup이면 다시 2D. 맨 위 진행 요약 "최신 (2026-10-28)" 참고

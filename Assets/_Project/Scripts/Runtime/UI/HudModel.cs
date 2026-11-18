@@ -144,6 +144,7 @@ namespace ProjectM.UI
             _bus.Subscribe<WorkbenchUsedEvent>(OnWorkbenchUsed);
             _bus.Subscribe<ProjectM.Dungeon.DoorUnlockedEvent>(OnDoorUnlocked);
             _bus.Subscribe<WellDrunkEvent>(OnWellDrunk); // 3-46
+            _bus.Subscribe<ProjectM.Dungeon.TombOpenedEvent>(OnTombOpened); // 3-47
             _bus.Subscribe<ProjectM.Dungeon.ItemBoughtEvent>(OnBought);
             _bus.Subscribe<ThrownBrokeEvent>(OnThrownBroke);
             _bus.Subscribe<ProjectM.Dungeon.StairsUnsealedEvent>(OnStairsUnsealed);
@@ -445,6 +446,11 @@ namespace ProjectM.UI
             Changed?.Invoke();
         }
 
+        private void OnTombOpened(ProjectM.Dungeon.TombOpenedEvent e)
+        {
+            AddLog(e.Guardians > 0 ? HudText.TombOpened + " — " + HudText.TombGuardians : HudText.TombOpened);
+        }
+
         private void OnWellDrunk(WellDrunkEvent e)
         {
             AddLog(e.Kind == TileType.WellHealth ? HudText.WellHealthDrunk : HudText.WellAwarenessDrunk);
@@ -572,6 +578,7 @@ namespace ProjectM.UI
             _bus.Unsubscribe<WorkbenchUsedEvent>(OnWorkbenchUsed);
             _bus.Unsubscribe<ProjectM.Dungeon.DoorUnlockedEvent>(OnDoorUnlocked);
             _bus.Unsubscribe<WellDrunkEvent>(OnWellDrunk);
+            _bus.Unsubscribe<ProjectM.Dungeon.TombOpenedEvent>(OnTombOpened);
             _bus.Unsubscribe<ProjectM.Dungeon.ItemBoughtEvent>(OnBought);
             _bus.Unsubscribe<ThrownBrokeEvent>(OnThrownBroke);
             _bus.Unsubscribe<ProjectM.Dungeon.StairsUnsealedEvent>(OnStairsUnsealed);

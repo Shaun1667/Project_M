@@ -119,6 +119,18 @@ namespace ProjectM.Tests
             Assert.That(s.Hud.Log, Is.EqualTo(new[] { "치유의 우물을 마셨다 — 몸이 회복된다", "지식의 우물을 마셨다 — 배낭의 물건과 이 층이 보인다" }));
         }
 
+        // 3-47 지하 묘지: 관을 열면 (지킴이가 깨면 덧붙임)
+        [Test]
+        public void TombOpened_Logs()
+        {
+            var s = Start();
+            var bus = s.World.Events;
+            bus.Publish(new ProjectM.Dungeon.TombOpenedEvent(new GridPos(2, 2), "armor_cloth", 1, 2));
+            bus.Publish(new ProjectM.Dungeon.TombOpenedEvent(new GridPos(2, 2), null, 0, 0));
+            bus.Flush();
+            Assert.That(s.Hud.Log, Is.EqualTo(new[] { "관을 열었다 — 원혼이 깨어났다!", "관을 열었다" }));
+        }
+
         [Test]
         public void StrengthChanged_LogsUpOrDown()
         {

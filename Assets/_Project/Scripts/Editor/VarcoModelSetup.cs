@@ -98,6 +98,7 @@ namespace ProjectM.Editor
             ("enemy_temple_guardian", new ModelSpec("Enemy_TempleGuardian", "Unit_TempleGuardian", 1.3f, 0f), true, null), // 1.3 m (돌 수호상)
             ("enemy_time_priest", new ModelSpec("Enemy_TimePriest", "Unit_TimePriest", 1f, 0f), true, null),
             ("boss_time_guardian", new ModelSpec("Boss_TimeGuardian", "Unit_TimeGuardian", 1.9f, 0f), true, null), // 1.9 m
+            ("enemy_wraith", new ModelSpec("Enemy_Wraith", "Unit_Wraith", 0.95f, 0f), false, null),             // 3-47 원혼 0.95 m (떠 있는 유령 — 리깅 없음)
         };
         private static readonly ModelSpec Staff = new ModelSpec("Prop_MageStaff", "", 0.85f, 0f);
         private static readonly ModelSpec Floor = new ModelSpec("Tile_Floor", "Tile_Floor", 1f, 0f);
@@ -259,6 +260,7 @@ namespace ProjectM.Editor
             tiles.SetModule(TileType.AlchemyPot, varcoTiles ? BuildModelPotPrefab(floorPrefab) : BuildPotPrefab(floorPrefab)); // 3-16c 연금 솥
             if (HasModels(BarricadeModel)) tiles.SetModule(TileType.Barricade, BuildBarricadePrefab(floorPrefab)); // 3-41 창고 바리케이드 (모델이 없으면 그레이박스 색 칸)
             if (HasModels(WellModel)) SetWellModules(tiles, floorPrefab, "Tile_"); // 3-46 마법 우물
+            if (HasModels(TombModel, OpenTombModel)) SetTombModules(tiles, floorPrefab, "Tile_"); // 3-47 지하 묘지 관
             tiles.SetModule(TileType.Wall, BuildPrefab(Wall, null));
             tiles.SetModule(TileType.StairsDown, BuildPrefab(StairsDown, FillCellSunk)); // G-20: 테두리 = 바닥 높이 (원본은 0.39 m 솟아 있었음)
             tiles.SetModule(TileType.StairsUp, BuildPrefab(StairsUp, FillCellFootprint));
@@ -385,6 +387,7 @@ namespace ProjectM.Editor
                 set.SetModule(TileType.AlchemyPot, BuildModelPotPrefab(floor, prefix + "AlchemyPot"));
                 if (HasModels(BarricadeModel)) set.SetModule(TileType.Barricade, BuildBarricadePrefab(floor, prefix + "Barricade"));
                 if (HasModels(WellModel)) SetWellModules(set, floor, prefix);
+                if (HasModels(TombModel, OpenTombModel)) SetTombModules(set, floor, prefix);
             }
             EditorUtility.SetDirty(set);
             tiles.SetZoneSet(firstFloor, lastFloor, set);
@@ -414,6 +417,10 @@ namespace ProjectM.Editor
         private const float WellWidth = 0.85f;
         private const float WellWaterDiameter = 0.66f; // 우물 너비에 대한 비율
         private const float WellWaterHeight = 0.95f; // 우물 높이에 대한 비율
+        // 3-47 지하 묘지 관 (닫힘 · 열림 — 긴 쪽 TombLength, 방향은 TilemapPresenter 기본 0)
+        private const string TombModel = "Prop_Tomb";
+        private const string OpenTombModel = "Prop_TombOpen";
+        private const float TombLength = 0.95f;
 
         private static bool HasModels(params string[] models)
         {
@@ -502,6 +509,22 @@ namespace ProjectM.Editor
         /// <summary>3-41 창고 바리케이드: 바닥 + 판자 바리케이드(너비 BarricadeWidth — 칸을 가로질러 막음, 방향은 TilemapPresenter가 문처럼 옆 벽을 보고 돌림).</summary>
         private static GameObject BuildBarricadePrefab(GameObject floor, string name = "Tile_Barricade") =>
             SaveTilePrefab(floor, name, root => AddFitted(root, BarricadeModel, "Barricade", new Vector3(BarricadeWidth, 0f, 0f)));
+
+        /// <summary>3-47 관 · 빈 관 모듈을 세트에 넣는다.</summary>
+        private static void SetTombModules(TileVisualSet set, GameObject floor, string prefix)
+        {
+            set.SetModule(TileType.Tomb, SaveTilePrefab(floor, prefix + "Tomb", root => AddFittedLongest(root, TombModel, "Tomb", TombLength)));
+            set.SetModule(TileType.OpenTomb, SaveTilePrefab(floor, prefix + "OpenTomb", root => AddFittedLongest(root, OpenTombModel, "Tomb", TombLength)));
+        }
+
+        /// <summary>가로(X) · 깊이(Z) 중 긴 쪽이 length가 되게 맞춘다 (3-47 관 — 모델 방향을 모를 때).</summary>
+        private static Transform AddFittedLongest(Transform parent, string model, string name, float length)
+        {
+            var fit = AddFitted(parent, model, name, new Vector3(length, 0f, 0f));
+            var b = RendererBounds(fit.gameObject);
+            if (b.size.z > b.size.x) fit.localScale *= length / b.size.z; // 긴 쪽이 깊이면 다시 줄임
+            return fit;
+        }
 
         /// <summary>3-46 마법 우물 세 칸 종류(치유 = 붉은 물 · 지식 = 푸른 물 · 마른 우물 = 물 없음)를 세트에 넣는다.</summary>
         private static void SetWellModules(TileVisualSet set, GameObject floor, string prefix)

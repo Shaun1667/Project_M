@@ -91,6 +91,19 @@ namespace ProjectM.Data
         [Tooltip("마법 우물 방 무게 (같은 척도)")] [Min(0)] [SerializeField] private int _magicWellWeight = 2;
         [Tooltip("우물 종류 (방마다 하나 — 같은 종류를 여러 번 넣으면 무게)")] [SerializeField] private ProjectM.Core.TileType[] _wellTypes = { ProjectM.Core.TileType.WellHealth, ProjectM.Core.TileType.WellAwareness };
 
+        [Header("지하 묘지 (3-47, SPD Crypt — BALANCE 16번)")]
+        [Tooltip("지하 묘지 무게 (같은 척도) — 잠긴 문 · 가운데 관")] [Min(0)] [SerializeField] private int _cryptWeight = 2;
+        [Tooltip("관을 열면 깨어나는 지킴이 (ZoneCatalog 적 표 ID)")] [SerializeField] private string _cryptGuardianId = "enemy_wraith";
+        [Tooltip("지킴이 수")] [Min(0)] [SerializeField] private int _cryptGuardianCount = 2;
+        [Tooltip("지킴이 세기 % = 100 + 이 값 × (층 − 1)")] [Min(0)] [SerializeField] private int _cryptGuardianPercentPerFloor = 8;
+        [Tooltip("보상 갑옷 — 낮은 티어부터, _cryptFloorsPerArmor 층마다 한 단계")] [SerializeField] private string[] _cryptArmors = { "armor_cloth", "armor_leather", "armor_mail", "armor_scale", "armor_plate" };
+        [Min(1)] [SerializeField] private int _cryptFloorsPerArmor = 5;
+        [Tooltip("보상 갑옷 강화 최소 · 최대")] [Min(0)] [SerializeField] private int _cryptUpgradeMin = 1;
+        [Min(0)] [SerializeField] private int _cryptUpgradeMax = 2;
+
+        public CryptConfig ToCrypt() => new CryptConfig(_cryptGuardianId, _cryptGuardianCount, _cryptGuardianPercentPerFloor, _cryptArmors, _cryptFloorsPerArmor,
+            _cryptUpgradeMin, _cryptUpgradeMax);
+
         [Header("상점 (3-15c — BALANCE 16번)")]
         [Tooltip("상점이 있는 첫 층")] [Min(1)] [SerializeField] private int _shopFloor = 3;
         [Tooltip("상점이 더 있는 층 (2026-11-05 사용자 — 구역 시작층 6 · 11 · 16 · 21층)")] [SerializeField] private int[] _moreShopFloors = { 6, 11, 16, 21 };
@@ -126,10 +139,10 @@ namespace ProjectM.Data
                 _toxicGasItem, _toxicGoldPilesMin, _toxicGoldPilesMax, _toxicGoldMinBase, _toxicGoldMinPerFloor, _toxicGoldMaxBase, _toxicGoldMaxPerFloor,
                 _treasuryPilesMin, _treasuryPilesMax, _trapRoomTypes, _trapRoomItem, _wellTypes));
 
-        /// <summary>보물 · 무기고 · 도서관 · 정원 무게 + 연구실 무게(3-16c) + 창고 무게(3-41) + 마법 불 무게(3-42) + 독가스 무게(3-43) + 보물 창고 무게(3-44) + 함정 방 무게(3-45) + 마법 우물 무게(3-46) — 예전 에셋의 4칸 배열을 그대로 쓰려고 따로 둠.</summary>
+        /// <summary>보물 · 무기고 · 도서관 · 정원 무게 + 연구실 무게(3-16c) + 창고 무게(3-41) + 마법 불 무게(3-42) + 독가스 무게(3-43) + 보물 창고 무게(3-44) + 함정 방 무게(3-45) + 마법 우물 무게(3-46) + 지하 묘지 무게(3-47) — 예전 에셋의 4칸 배열을 그대로 쓰려고 따로 둠.</summary>
         private int[] WithLab()
         {
-            var w = new int[11];
+            var w = new int[12];
             for (int i = 0; i < 4 && i < _specialRoomWeights.Length; i++) w[i] = _specialRoomWeights[i];
             w[4] = _laboratoryWeight;
             w[5] = _storageWeight;
@@ -138,6 +151,7 @@ namespace ProjectM.Data
             w[8] = _treasuryWeight;
             w[9] = _trapRoomWeight;
             w[10] = _magicWellWeight;
+            w[11] = _cryptWeight;
             return w;
         }
     }

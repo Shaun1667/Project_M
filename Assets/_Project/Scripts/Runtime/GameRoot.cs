@@ -614,6 +614,16 @@ namespace ProjectM
             var kindRng = World.Rng.Get(RngStream.EnemyKind);
             if (enemiesBook != null) World.SetEnemyRules(new EnemyRules(enemiesBook, Spells, Statuses, Terrains));
             if (keeperAi != null) World.SetShopRules(new ShopRules(shopConfig, zones, keeperAi, Items)); // 3-29 화난 상인
+            if (_floorDecorConfig != null && _zoneCatalog != null) // 3-47 지하 묘지: 관을 열면 갑옷 + 지킴이
+            {
+                var crypt = _floorDecorConfig.ToCrypt();
+                if (_zoneCatalog.TryGetEnemy(crypt.GuardianId, out var cryptGuardian))
+                {
+                    EnsureAi(World);
+                    World.SetCryptRules(new ProjectM.Dungeon.CryptRules(crypt, ZoneCatalogAsset.ToDef(cryptGuardian), enemyAi));
+                }
+                else Debug.LogWarning($"[GameRoot] 지하 묘지 지킴이 '{crypt.GuardianId}'가 적 표에 없다 — 관은 비어 있다", this);
+            }
             _unitVisuals.Clear();
             _enemyNames = _zoneCatalog != null ? _zoneCatalog.DisplayNames() : new System.Collections.Generic.Dictionary<string, string>();
             if (_ghost != null) _enemyNames[_ghost.VisualId] = _ghost.DisplayName; // 3-23b "루멘의 그림자 #12"

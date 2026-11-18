@@ -87,6 +87,8 @@ namespace ProjectM.Editor
         private const string WellHealthTilePath = VisualsDir + "/WellHealthTile.asset"; // 3-46
         private const string WellAwarenessTilePath = VisualsDir + "/WellAwarenessTile.asset";
         private const string EmptyWellTilePath = VisualsDir + "/EmptyWellTile.asset";
+        private const string TombTilePath = VisualsDir + "/TombTile.asset"; // 3-47
+        private const string OpenTombTilePath = VisualsDir + "/OpenTombTile.asset";
         private const string BarricadeTilePath = VisualsDir + "/BarricadeTile.asset"; // 3-41
         private const string PlayerSpritePath = "Assets/_Project/Art/Greybox/player.png";
         private const string UnitCircleSpritePath = "Assets/_Project/Art/Greybox/unit_circle.png";
@@ -344,6 +346,8 @@ namespace ProjectM.Editor
             set.Set(TileType.WellHealth, EnsureTintTile(WellHealthTilePath, new Color(0.85f, 0.3f, 0.35f))); // 3-46 치유의 우물: 붉은
             set.Set(TileType.WellAwareness, EnsureTintTile(WellAwarenessTilePath, new Color(0.3f, 0.5f, 0.95f))); // 지식의 우물: 푸른
             set.Set(TileType.EmptyWell, EnsureTintTile(EmptyWellTilePath, new Color(0.45f, 0.45f, 0.45f))); // 마른 우물: 회색
+            set.Set(TileType.Tomb, EnsureTintTile(TombTilePath, new Color(0.35f, 0.33f, 0.4f))); // 3-47 관: 짙은 돌색
+            set.Set(TileType.OpenTomb, EnsureTintTile(OpenTombTilePath, new Color(0.25f, 0.24f, 0.28f))); // 빈 관
             EditorUtility.SetDirty(set);
             return set;
         }
@@ -480,6 +484,7 @@ namespace ProjectM.Editor
                 ("enemy_temple_guardian", new Color(0.65f, 0.65f, 0.6f), 1.2f),
                 ("enemy_time_priest", new Color(0.55f, 0.3f, 0.85f), 1f),
                 ("boss_time_guardian", new Color(0.85f, 0.75f, 0.35f), 1.8f),
+                ("enemy_wraith", new Color(0.45f, 0.75f, 0.75f), 0.9f), // 3-47 지하 묘지 지킴이
             })
                 catalog.Set(id, AssetDatabase.LoadAssetAtPath<Sprite>(UnitCircleSpritePath), color, height);
             // 3-4b 임시 보스: 짙은 자주색, 두 배 키 (판정은 1칸)
@@ -798,6 +803,8 @@ namespace ProjectM.Editor
             timeGuardian.ChargeSpellId = "boss_time_collapse"; timeGuardian.ChargePercent = 35; timeGuardian.TeleportPercent = 40;
             timeGuardian.SummonId = "enemy_time_afterimage"; timeGuardian.SummonCount = 3; timeGuardian.SummonAtHpPercent = 50;
             foreach (var row in new[] { clockwork, afterimage, guardian, timePriest, timeGuardian }) changed |= catalog.AddIfMissing(row);
+            // 3-47 지하 묘지 지킴이 (구역 적 목록에는 없음 — 관을 열 때만, 세기는 층마다 FloorDecorConfig _cryptGuardianPercentPerFloor, BALANCE 16번)
+            changed |= catalog.AddIfMissing(E("enemy_wraith", "원혼", 6, 2, 8, 8, 6, 4, 30));
             ZoneCatalogAsset.Zone Z(string name, int first, int last, int percent, string boss, params (string id, int weight)[] enemies)
             {
                 var rows = new System.Collections.Generic.List<ZoneCatalogAsset.ZoneEnemyRow>();
