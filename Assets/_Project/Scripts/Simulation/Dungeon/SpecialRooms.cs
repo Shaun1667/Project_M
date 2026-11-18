@@ -18,6 +18,8 @@ namespace ProjectM.Dungeon
         Garden = 4,
         /// <summary>연구실 (3-16c): 가운데 연금 솥 · 씨앗.</summary>
         Laboratory = 5,
+        /// <summary>창고 (3-41, SPD Storage): 입구 = 바리케이드(불로만 열림) · 물약 · 주문서. 같은 층 방 밖에 불꽃 물약 하나 보장.</summary>
+        Storage = 6,
     }
 
     /// <summary>특수 방 수치 · 아이템 목록 (3-15b). 값은 FloorDecorConfigAsset에서 — 기준은 BALANCE.md 16번.</summary>
@@ -25,7 +27,7 @@ namespace ProjectM.Dungeon
     {
         /// <summary>층마다 특수 방이 생길 확률 (%) — 생기면 하나.</summary>
         public int RoomPercent { get; }
-        /// <summary>종류 무게 (보물 방 · 무기고 · 도서관 · 정원 · 연구실 순 — 4개면 연구실 0).</summary>
+        /// <summary>종류 무게 (보물 방 · 무기고 · 도서관 · 정원 · 연구실 · 창고 순 — 모자란 뒤쪽은 0).</summary>
         public IReadOnlyList<int> Weights { get; }
         /// <summary>방 안쪽 크기 (정사각 한 변 최소 ~ 최대).</summary>
         public int MinSize { get; }
@@ -44,16 +46,26 @@ namespace ProjectM.Dungeon
         public int LabItemCount { get; }
         /// <summary>보물 방 열쇠 아이템 ID.</summary>
         public string KeyItem { get; }
+        /// <summary>창고 (3-41): 아이템 목록(같은 ID를 여러 번 넣어 무게) · 개수 최소 ~ 최대 · 방 밖에 보장하는 불 아이템.</summary>
+        public IReadOnlyList<string> StorageItems { get; }
+        public int StorageItemMin { get; }
+        public int StorageItemMax { get; }
+        public string StorageFireItem { get; }
 
         public SpecialRoomConfig(int roomPercent, IReadOnlyList<int> weights, int minSize, int maxSize,
             IReadOnlyList<string> vaultItems, int vaultItemCount, IReadOnlyList<string> armoryItems, int armoryItemCount,
             IReadOnlyList<string> libraryItems, int libraryItemCount, IReadOnlyList<string> gardenItems, int gardenItemCount, string keyItem,
-            IReadOnlyList<string> labItems = null, int labItemCount = 0)
+            IReadOnlyList<string> labItems = null, int labItemCount = 0,
+            IReadOnlyList<string> storageItems = null, int storageItemMin = 0, int storageItemMax = 0, string storageFireItem = null)
         {
+            StorageItems = storageItems ?? Array.Empty<string>();
+            StorageItemMin = Math.Max(0, storageItemMin);
+            StorageItemMax = Math.Max(StorageItemMin, storageItemMax);
+            StorageFireItem = string.IsNullOrEmpty(storageFireItem) ? null : storageFireItem;
             LabItems = labItems ?? Array.Empty<string>();
             LabItemCount = Math.Max(0, labItemCount);
             if (roomPercent < 0 || roomPercent > 100) throw new ArgumentOutOfRangeException(nameof(roomPercent));
-            if (weights == null || (weights.Count != 4 && weights.Count != 5)) throw new ArgumentException("종류 무게는 4 · 5개 (보물 · 무기고 · 도서관 · 정원 · 연구실)", nameof(weights));
+            if (weights == null || weights.Count < 4 || weights.Count > 6) throw new ArgumentException("종류 무게는 4 ~ 6개 (보물 · 무기고 · 도서관 · 정원 · 연구실 · 창고)", nameof(weights));
             if (minSize < 2 || maxSize < minSize) throw new ArgumentOutOfRangeException(nameof(maxSize), "2 ≤ 최소 ≤ 최대");
             RoomPercent = roomPercent;
             Weights = weights;
@@ -93,7 +105,7 @@ namespace ProjectM.Dungeon
         {
             if (config == null || rng.Range(0, 100) >= config.RoomPercent) return null;
             var type = PickType(config, rng);
-            var room = CarveEmpty(world, floor, rng, config.MinSize, config.MaxSize, type == SpecialRoomType.Vault ? TileType.LockedDoor : TileType.Door);
+            var room = CarveEmpty(world, floor, rng, config.MinSize, config.MaxSize, EntranceTile(type));
             if (room == null) return null;
             room.Type = type;
             Furnish(world, floor, config, rng, type, room.Cells, room.Entrance);
@@ -128,6 +140,10 @@ namespace ProjectM.Dungeon
             }
             return null;
         }
+
+        /// <summary>입구 칸: 보물 방 = 잠긴 문, 창고 = 바리케이드 (3-41), 나머지 = 닫힌 문.</summary>
+        private static TileType EntranceTile(SpecialRoomType type) =>
+            type == SpecialRoomType.Vault ? TileType.LockedDoor : type == SpecialRoomType.Storage ? TileType.Barricade : TileType.Door;
 
         private static SpecialRoomType PickType(SpecialRoomConfig config, IRng rng)
         {
@@ -172,6 +188,7 @@ namespace ProjectM.Dungeon
                 case SpecialRoomType.Armory: pool = config.ArmoryItems; count = config.ArmoryItemCount; break;
                 case SpecialRoomType.Library: pool = config.LibraryItems; count = config.LibraryItemCount; break;
                 case SpecialRoomType.Laboratory: pool = config.LabItems; count = config.LabItemCount; break;
+                case SpecialRoomType.Storage: pool = config.StorageItems; count = config.StorageItemMin + rng.Range(0, config.StorageItemMax - config.StorageItemMin + 1); break;
                 default: pool = config.GardenItems; count = config.GardenItemCount; break;
             }
             if (type == SpecialRoomType.Garden)
@@ -190,16 +207,17 @@ namespace ProjectM.Dungeon
                 int s = rng.Range(0, spots.Count);
                 int k = rng.Range(0, choices.Count);
                 world.FloorItems.Add(spots[s], choices[k]);
-                world.Events.Publish(new ProjectM.Items.FloorItemPlacedEvent(spots[s], choices[k], choices[k]));
+                world.Events.Publish(new ProjectM.Items.FloorItemPlacedEvent(spots[s], choices[k], ProjectM.Items.Identification.VisualOf(world, choices[k]))); // 3-41: 물약 · 주문서는 겉모습으로 (정체 숨김)
                 spots.RemoveAt(s);
-                if (type != SpecialRoomType.Garden && type != SpecialRoomType.Laboratory) choices.RemoveAt(k); // 음식 · 씨앗은 겹쳐도 됨
+                if (type != SpecialRoomType.Garden && type != SpecialRoomType.Laboratory && type != SpecialRoomType.Storage) choices.RemoveAt(k); // 음식 · 씨앗 · 창고 소모품은 겹쳐도 됨
             }
 
-            if (type == SpecialRoomType.Vault && config.KeyItem != null) PlaceKey(world, floor, config.KeyItem, rng, new HashSet<GridPos>(cells));
+            if (type == SpecialRoomType.Vault && config.KeyItem != null) PlaceOutside(world, floor, config.KeyItem, rng, new HashSet<GridPos>(cells));
+            if (type == SpecialRoomType.Storage && config.StorageFireItem != null) PlaceOutside(world, floor, config.StorageFireItem, rng, new HashSet<GridPos>(cells)); // 3-41: 불을 못 써도 열 수 있게
         }
 
-        /// <summary>열쇠: 방 밖 맨땅, 시작 칸에서 3칸 이상, 아이템 없는 칸 (y → x 순 목록에서).</summary>
-        private static void PlaceKey(World world, DungeonFloor floor, string keyItem, IRng rng, HashSet<GridPos> room)
+        /// <summary>열쇠 · 창고 불 아이템: 방 밖 맨땅, 시작 칸에서 3칸 이상, 아이템 없는 칸 (y → x 순 목록에서).</summary>
+        private static void PlaceOutside(World world, DungeonFloor floor, string keyItem, IRng rng, HashSet<GridPos> room)
         {
             var map = world.Map;
             var candidates = new List<GridPos>();
@@ -213,7 +231,7 @@ namespace ProjectM.Dungeon
             if (candidates.Count == 0) return;
             var at = candidates[rng.Range(0, candidates.Count)];
             world.FloorItems.Add(at, keyItem);
-            world.Events.Publish(new ProjectM.Items.FloorItemPlacedEvent(at, keyItem, keyItem));
+            world.Events.Publish(new ProjectM.Items.FloorItemPlacedEvent(at, keyItem, ProjectM.Items.Identification.VisualOf(world, keyItem)));
         }
     }
 

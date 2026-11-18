@@ -4,6 +4,7 @@ using ProjectM.Data;
 using ProjectM.Dungeon;
 using ProjectM.Items;
 using ProjectM.Magic;
+using ProjectM.Status;
 using ProjectM.Units;
 using UnityEditor;
 
@@ -21,9 +22,10 @@ namespace ProjectM.Tests
 
         private static SpecialRoomConfig Only(SpecialRoomType type)
         {
-            var w = new int[5];
+            var w = new int[6];
             w[(int)type - 1] = 1;
-            return new SpecialRoomConfig(100, w, 3, 5, new[] { "scroll_upgrade" }, 1, new[] { "a" }, 1, new[] { "b" }, 1, new[] { "c" }, 1, "key_iron", new[] { "seed_x" }, 2);
+            return new SpecialRoomConfig(100, w, 3, 5, new[] { "scroll_upgrade" }, 1, new[] { "a" }, 1, new[] { "b" }, 1, new[] { "c" }, 1, "key_iron", new[] { "seed_x" }, 2,
+                new[] { "potion_x", "scroll_y" }, 3, 4, "potion_liquid_flame");
         }
 
         private static (World World, DungeonFloor Floor, SpecialRooms.Result Room) Carve(ulong seed, SpecialRoomType type)
@@ -110,6 +112,76 @@ namespace ProjectM.Tests
             Assert.That(UnlockCommand.KeySlot(Items, player), Is.EqualTo(-1), "열쇠를 씀");
         }
 
+        // 3-41 창고: 입구 = 바리케이드(걸을 수 없음 · 시야를 가림 · 불에 탐), 안에 소모품 3~4개(겹쳐도 됨), 방 밖에 불꽃 물약 하나
+        [Test]
+        public void Storage_BarricadeEntrance_ConsumablesInside_FireItemOutside()
+        {
+            int carved = 0;
+            for (ulong seed = 1; seed <= 20; seed++)
+            {
+                var (world, floor, room) = Carve(seed, SpecialRoomType.Storage);
+                if (room == null) continue;
+                carved++;
+                var map = world.Map;
+                Assert.That(room.Type, Is.EqualTo(SpecialRoomType.Storage));
+                Assert.That(map.Get(room.Entrance), Is.EqualTo(TileType.Barricade), $"시드 {seed}");
+                Assert.That(map.IsWalkable(room.Entrance), Is.False);
+                Assert.That(map.BlocksSight(room.Entrance), Is.True);
+                Assert.That(map.BlocksProjectile(room.Entrance), Is.True, "던진 것은 앞에 떨어진다");
+                Assert.That(GridMap.IsFlammableType(TileType.Barricade), Is.True);
+                int inside = 0;
+                foreach (var c in room.Cells) inside += world.FloorItems.ItemsAt(c).Count;
+                Assert.That(inside, Is.InRange(3, 4), $"시드 {seed}");
+                var cells = new System.Collections.Generic.HashSet<GridPos>(room.Cells);
+                int fireOutside = 0;
+                for (int y = 0; y < map.Height; y++)
+                    for (int x = 0; x < map.Width; x++)
+                    {
+                        var p = new GridPos(x, y);
+                        if (cells.Contains(p)) continue;
+                        foreach (var item in world.FloorItems.ItemsAt(p)) if (item.ItemId == "potion_liquid_flame") fireOutside++;
+                    }
+                Assert.That(fireOutside, Is.EqualTo(1), $"시드 {seed} — 불을 못 써도 열 수 있게");
+            }
+            Assert.That(carved, Is.GreaterThan(0));
+        }
+
+        // 3-41: 바리케이드 옆에 화염 지대가 있으면 번져 타서 바닥이 된다 (불꽃 물약을 앞에 던진 경우)
+        [Test]
+        public void Barricade_BurnsFromAdjacentFire()
+        {
+            var map = GridMovementTests.Parse("#######", "#.....#", "#######");
+            map.Set(new GridPos(4, 1), TileType.Barricade);
+            var world = new World(map, 3UL);
+            world.InstallCoreSystems(new ShadowcastSightRule(), Magic, SpellTests.BalanceStatuses(), SpellTests.BalanceTerrains(), fireSpread: new FireSpreadConfig(3, 8));
+            UnitSpawner.SpawnPlayer(world, new UnitDef("player", 20, 3, 8, 10), new GridPos(1, 1), Magic.QuickSlotCount);
+            var clock = new TurnClock(world.Scheduler, world.PlayerInput);
+            world.Events.Flush();
+            TerrainEffects.Place(world, new GridPos(3, 1), TerrainEffectType.FireZone, 3);
+            clock.SubmitPlayerCommand(PlayerActions.Wait(StepConfig));
+            world.Events.Flush();
+            Assert.That(world.Map.Get(new GridPos(4, 1)), Is.EqualTo(TileType.Floor));
+            Assert.That(world.Terrain.Has(new GridPos(4, 1), TerrainEffectType.FireZone), Is.True);
+        }
+
+        // 3-41: 바리케이드를 겨눈 화살 주문은 그 칸에 닿는다 (칸 반응 칸 = 바리케이드), 불 × 바리케이드 반응이 있다
+        [Test]
+        public void Spell_AimedAtBarricade_HitsIt()
+        {
+            var map = GridMovementTests.Parse("#######", "#.....#", "#######");
+            map.Set(new GridPos(4, 1), TileType.Barricade);
+            var world = new World(map, 3UL);
+            var bolt = new SpellDef("fire_basic", Element.Fire, SpellShape.Bolt, 6, 5, 3);
+            var preview = SpellCasting.Preview(world, new BresenhamTargetingRule(), new GridPos(1, 1), bolt, new GridPos(4, 1));
+            Assert.That(preview.Path[preview.Path.Count - 1], Is.EqualTo(new GridPos(4, 1)));
+            Assert.That(CastSpellCommand.TerrainCells(bolt, preview), Is.EqualTo(new[] { new GridPos(4, 1) }));
+            var past = SpellCasting.Preview(world, new BresenhamTargetingRule(), new GridPos(1, 1), bolt, new GridPos(5, 1));
+            Assert.That(past.Path, Has.No.Member(new GridPos(4, 1)), "너머를 겨누면 앞에서 멈춘다");
+            var reactions = ReactionTests.BalanceReactions(SpellTests.BalanceStatuses());
+            Assert.That(reactions.FindTile(TileType.Barricade, Element.Fire), Is.Not.Null);
+            Assert.That(reactions.FindTile(TileType.Barricade, Element.Ice), Is.Null, "불로만");
+        }
+
         // 검산: FloorDecorConfig 특수 방 값 = BALANCE.md 16번, 목록의 아이템은 ItemCatalog에 있다
         [Test]
         public void ProjectAsset_MatchesBalanceTable()
@@ -117,10 +189,11 @@ namespace ProjectM.Tests
             var c = AssetDatabase.LoadAssetAtPath<FloorDecorConfigAsset>("Assets/_Project/Data/Dungeon/FloorDecorConfig.asset").ToConfig().SpecialRooms;
             Assert.That((c.RoomPercent, c.MinSize, c.MaxSize, c.VaultItemCount, c.ArmoryItemCount, c.LibraryItemCount, c.GardenItemCount, c.KeyItem),
                 Is.EqualTo((70, 3, 5, 2, 2, 3, 2, "key_iron")));
-            Assert.That(c.Weights, Is.EqualTo(new[] { 3, 2, 2, 2, 2 }), "3-16c 연구실 2");
+            Assert.That(c.Weights, Is.EqualTo(new[] { 3, 2, 2, 2, 2, 2 }), "3-16c 연구실 2 · 3-41 창고 2");
+            Assert.That((c.StorageItemMin, c.StorageItemMax, c.StorageFireItem), Is.EqualTo((3, 4, "potion_liquid_flame")));
             Assert.That(c.LabItemCount, Is.EqualTo(2));
             var items = AssetDatabase.LoadAssetAtPath<ItemCatalogAsset>("Assets/_Project/Data/Items/ItemCatalog.asset").ToBook();
-            foreach (var list in new[] { c.VaultItems, c.ArmoryItems, c.LibraryItems, c.GardenItems, c.LabItems })
+            foreach (var list in new[] { c.VaultItems, c.ArmoryItems, c.LibraryItems, c.GardenItems, c.LabItems, c.StorageItems })
                 foreach (var id in list) Assert.That(items.TryGet(id, out _), Is.True, id);
             Assert.That(items.TryGet("key_iron", out var key) && key.Use == ItemUse.Key, Is.True);
         }

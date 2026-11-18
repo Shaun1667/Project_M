@@ -46,6 +46,21 @@ namespace ProjectM.Data
         [Tooltip("연구실 무게 (3-16c)")] [Min(0)] [SerializeField] private int _laboratoryWeight = 2;
         [SerializeField] private string[] _labItems = { "seed_firebloom", "seed_icecap", "seed_sorrowmoss", "seed_sungrass", "seed_fadeleaf" };
         [Min(0)] [SerializeField] private int _labItemCount = 2;
+        [Header("창고 (3-41, SPD Storage — BALANCE 16번)")]
+        [Tooltip("창고 무게 (보물 3 · 무기고 · 도서관 · 정원 · 연구실 2와 같은 척도)")] [Min(0)] [SerializeField] private int _storageWeight = 2;
+        [Tooltip("창고 아이템 — 같은 ID를 여러 번 넣으면 그만큼 자주 (SPD 물약 · 주문서 무게). 겹쳐도 됨")]
+        [SerializeField] private string[] _storageItems =
+        {
+            "potion_healing", "potion_healing", "potion_healing", "potion_purity", "potion_purity",
+            "potion_toxic_gas", "potion_toxic_gas", "potion_toxic_gas", "potion_liquid_flame", "potion_liquid_flame", "potion_liquid_flame",
+            "potion_frost", "potion_frost", "potion_frost", "potion_paralytic_gas", "potion_paralytic_gas",
+            "potion_haste", "potion_invisibility", "potion_levitation", "potion_mind_vision", "potion_mind_vision",
+            "scroll_identify", "scroll_identify", "scroll_identify", "scroll_magic_mapping", "scroll_teleportation", "scroll_recharging",
+            "scroll_rage", "scroll_retribution", "scroll_mirror_image", "scroll_mirror_image", "scroll_terror", "scroll_lullaby", "scroll_transmutation",
+        };
+        [Tooltip("창고 아이템 개수 최소 · 최대")] [Min(0)] [SerializeField] private int _storageItemMin = 3;
+        [Min(0)] [SerializeField] private int _storageItemMax = 4;
+        [Tooltip("창고가 생긴 층의 방 밖에 놓는 불 아이템 (불을 못 쓰는 판도 열 수 있게, SPD)")] [SerializeField] private string _storageFireItem = "potion_liquid_flame";
 
         [Header("상점 (3-15c — BALANCE 16번)")]
         [Tooltip("상점이 있는 첫 층")] [Min(1)] [SerializeField] private int _shopFloor = 3;
@@ -77,14 +92,16 @@ namespace ProjectM.Data
         public FloorDecorConfig ToConfig() => new FloorDecorConfig(_grassPatchCount, _grassPatchMinSize, _grassPatchMaxSize, _tallGrassPercent,
             _puddleCount, _puddleMinSize, _puddleMaxSize, _doorPercent, _hiddenDoorPercent,
             new SpecialRoomConfig(_specialRoomPercent, WithLab(), _specialRoomMinSize, _specialRoomMaxSize, _vaultItems, _vaultItemCount,
-                _armoryItems, _armoryItemCount, _libraryItems, _libraryItemCount, _gardenItems, _gardenItemCount, _keyItem, _labItems, _labItemCount));
+                _armoryItems, _armoryItemCount, _libraryItems, _libraryItemCount, _gardenItems, _gardenItemCount, _keyItem, _labItems, _labItemCount,
+                _storageItems, _storageItemMin, _storageItemMax, _storageFireItem));
 
-        /// <summary>보물 · 무기고 · 도서관 · 정원 무게 + 연구실 무게 (3-16c — 예전 에셋의 4칸 배열을 그대로 쓰려고 따로 둠).</summary>
+        /// <summary>보물 · 무기고 · 도서관 · 정원 무게 + 연구실 무게(3-16c) + 창고 무게(3-41) — 예전 에셋의 4칸 배열을 그대로 쓰려고 따로 둠.</summary>
         private int[] WithLab()
         {
-            var w = new int[5];
+            var w = new int[6];
             for (int i = 0; i < 4 && i < _specialRoomWeights.Length; i++) w[i] = _specialRoomWeights[i];
             w[4] = _laboratoryWeight;
+            w[5] = _storageWeight;
             return w;
         }
     }

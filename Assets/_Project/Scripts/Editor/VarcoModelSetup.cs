@@ -257,6 +257,7 @@ namespace ProjectM.Editor
             tiles.SetModule(TileType.LockedDoor, varcoTiles ? BuildDoubleDoorPrefab(floorPrefab, "Tile_LockedDoor", DoorLeafLockedModel, open: false)
                 : AssetDatabase.LoadAssetAtPath<GameObject>($"{PrefabDir}/Tile_Door.prefab")); // 3-15b 잠긴 문 = 자물쇠 문짝
             tiles.SetModule(TileType.AlchemyPot, varcoTiles ? BuildModelPotPrefab(floorPrefab) : BuildPotPrefab(floorPrefab)); // 3-16c 연금 솥
+            if (HasModels(BarricadeModel)) tiles.SetModule(TileType.Barricade, BuildBarricadePrefab(floorPrefab)); // 3-41 창고 바리케이드 (모델이 없으면 그레이박스 색 칸)
             tiles.SetModule(TileType.Wall, BuildPrefab(Wall, null));
             tiles.SetModule(TileType.StairsDown, BuildPrefab(StairsDown, FillCellSunk)); // G-20: 테두리 = 바닥 높이 (원본은 0.39 m 솟아 있었음)
             tiles.SetModule(TileType.StairsUp, BuildPrefab(StairsUp, FillCellFootprint));
@@ -381,6 +382,7 @@ namespace ProjectM.Editor
                 set.SetModule(TileType.OpenDoor, BuildDoubleDoorPrefab(floor, prefix + "OpenDoor", DoorLeafModel, open: true, wallSpec.Model));
                 set.SetModule(TileType.LockedDoor, BuildDoubleDoorPrefab(floor, prefix + "LockedDoor", DoorLeafLockedModel, open: false, wallSpec.Model));
                 set.SetModule(TileType.AlchemyPot, BuildModelPotPrefab(floor, prefix + "AlchemyPot"));
+                if (HasModels(BarricadeModel)) set.SetModule(TileType.Barricade, BuildBarricadePrefab(floor, prefix + "Barricade"));
             }
             EditorUtility.SetDirty(set);
             tiles.SetZoneSet(firstFloor, lastFloor, set);
@@ -403,6 +405,8 @@ namespace ProjectM.Editor
         private const float DoorOpeningWidth = 0.64f;
         private const float DoorLeafHeightRatio = 0.86f;
         private const float CauldronWidth = 0.7f;
+        private const string BarricadeModel = "Prop_Barricade";
+        private const float BarricadeWidth = 0.95f;
 
         private static bool HasModels(params string[] models)
         {
@@ -487,6 +491,10 @@ namespace ProjectM.Editor
                     if (open) hinge.localRotation = Quaternion.Euler(0f, side < 0 ? -90f : 90f, 0f);
                 }
             });
+
+        /// <summary>3-41 창고 바리케이드: 바닥 + 판자 바리케이드(너비 BarricadeWidth — 칸을 가로질러 막음, 방향은 TilemapPresenter가 문처럼 옆 벽을 보고 돌림).</summary>
+        private static GameObject BuildBarricadePrefab(GameObject floor, string name = "Tile_Barricade") =>
+            SaveTilePrefab(floor, name, root => AddFitted(root, BarricadeModel, "Barricade", new Vector3(BarricadeWidth, 0f, 0f)));
 
         /// <summary>연금 솥: 바닥 + 솥(너비 CauldronWidth).</summary>
         private static GameObject BuildModelPotPrefab(GameObject floor, string name = "Tile_AlchemyPot") =>

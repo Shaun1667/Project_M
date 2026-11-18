@@ -69,6 +69,17 @@ namespace ProjectM.Magic
             return new SpellPreview(path, area);
         }
 
+        /// <summary>
+        /// 3-41: 겨눈 칸이 주문이 맞힐 수 있는 막힌 칸(바리케이드)이고 경로 끝(없으면 시전자)과 붙어 있으면 그 칸을 경로 끝에 붙인다 —
+        /// 주문이 바리케이드에 닿아 칸 반응(불 → 탐)이 일어나게. 유닛은 없는 칸이라 피해는 없다.
+        /// </summary>
+        private static void AppendCatcher(GridMap map, GridPos caster, GridPos target, List<GridPos> path)
+        {
+            if (!map.InBounds(target) || !GridMap.IsSpellCatcherType(map.Get(target))) return;
+            var last = path.Count > 0 ? path[path.Count - 1] : caster;
+            if (last != target && GridMovement.Chebyshev(last, target) == 1) path.Add(target);
+        }
+
         /// <summary>caster에서 target을 조준했을 때의 경로와 맞는 칸.</summary>
         public static SpellPreview Preview(World world, ITargetingRule targeting, GridPos caster, SpellDef spell, GridPos target)
         {
@@ -84,6 +95,7 @@ namespace ProjectM.Magic
                 case SpellShape.Bolt:
                 {
                     var path = targeting.Trace(map, caster, target, spell.Range, world.Units.IsOccupied);
+                    AppendCatcher(map, caster, target, path);
                     var hit = new List<GridPos>();
                     if (path.Count > 0 && world.Units.IsOccupied(path[path.Count - 1])) hit.Add(path[path.Count - 1]);
                     return new SpellPreview(path, hit);
@@ -96,6 +108,7 @@ namespace ProjectM.Magic
                     int k = (spell.Range + steps - 1) / steps;
                     var end = new GridPos(caster.X + dx * k, caster.Y + dy * k);
                     var path = targeting.Trace(map, caster, end, spell.Range, null);
+                    AppendCatcher(map, caster, target, path);
                     var hit = new List<GridPos>();
                     foreach (var p in path)
                         if (world.Units.IsOccupied(p)) hit.Add(p);
@@ -111,7 +124,7 @@ namespace ProjectM.Magic
                         for (int x = center.X - spell.Radius; x <= center.X + spell.Radius; x++)
                         {
                             var p = new GridPos(x, y);
-                            if (map.IsWalkable(p)) area.Add(p);
+                            if (map.IsWalkable(p) || map.InBounds(p) && GridMap.IsSpellCatcherType(map.Get(p))) area.Add(p); // 3-41: 범위 안 바리케이드도 탄다
                         }
                     return new SpellPreview(path, area);
                 }

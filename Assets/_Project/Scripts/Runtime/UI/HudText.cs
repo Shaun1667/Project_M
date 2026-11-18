@@ -474,6 +474,7 @@ namespace ProjectM.UI
                 case TileType.AlchemyPot: return "연금 솥";
                 case TileType.SealedStairs: return "봉인된 계단";
                 case TileType.ArtifactBench: return "마법 제작대";
+                case TileType.Barricade: return "나무 바리케이드 — 불로 태울 수 있다"; // 3-41 창고 입구
                 default: return CellUnknown;
             }
         }

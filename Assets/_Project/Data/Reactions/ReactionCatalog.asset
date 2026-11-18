@@ -614,3 +614,29 @@ MonoBehaviour:
     Tile: 8
     TransformTileTo: 1
     PlaceTerrain: 1
+  - Id: barricade_ignite
+    DisplayName: "\uBC14\uB9AC\uCF00\uC774\uB4DC\uAC00 \uBD88\uD0C4\uB2E4"
+    Group: barricade_ignite
+    Trigger: 2
+    Status: 0
+    Terrain: 0
+    Element: 0
+    Priority: 0
+    ExtraDamage: 0
+    ConsumeTrigger: 0
+    ExplosionRadius: 0
+    ExplosionDamage: 0
+    ExplosionDamageFromRemaining: 0
+    ExplosionStatus: 0
+    ExplosionStatusChancePercent: 100
+    TransformTerrainTo: 0
+    TransformDurationTicks: 3
+    TargetStatus: 0
+    TargetStatusChancePercent: 0
+    Spread: 0
+    SpreadRange: 0
+    SpreadMaxTargets: 0
+    SpreadDamagePercent: 0
+    Tile: 14
+    TransformTileTo: 1
+    PlaceTerrain: 1

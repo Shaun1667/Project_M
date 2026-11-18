@@ -84,6 +84,7 @@ namespace ProjectM.Editor
         private const string LockedDoorTilePath = VisualsDir + "/LockedDoorTile.asset";
         private const string AlchemyPotTilePath = VisualsDir + "/AlchemyPotTile.asset";
         private const string ArtifactBenchTilePath = VisualsDir + "/ArtifactBenchTile.asset"; // 3-28b
+        private const string BarricadeTilePath = VisualsDir + "/BarricadeTile.asset"; // 3-41
         private const string PlayerSpritePath = "Assets/_Project/Art/Greybox/player.png";
         private const string UnitCircleSpritePath = "Assets/_Project/Art/Greybox/unit_circle.png";
         private const string WhiteSquareSpritePath = "Assets/_Project/Art/Greybox/white_square.png";
@@ -336,6 +337,7 @@ namespace ProjectM.Editor
             set.Set(TileType.LockedDoor, EnsureTintTile(LockedDoorTilePath, new Color(0.75f, 0.6f, 0.15f))); // 3-15b: 금빛
             set.Set(TileType.AlchemyPot, EnsureTintTile(AlchemyPotTilePath, new Color(0.55f, 0.3f, 0.75f))); // 3-16c: 보라
             set.Set(TileType.ArtifactBench, EnsureTintTile(ArtifactBenchTilePath, new Color(0.3f, 0.75f, 0.8f))); // 3-28b 마법 제작대: 청록 (3D 모델 전 그레이박스)
+            set.Set(TileType.Barricade, EnsureTintTile(BarricadeTilePath, new Color(0.55f, 0.38f, 0.2f))); // 3-41 창고 바리케이드: 나무 갈색
             EditorUtility.SetDirty(set);
             return set;
         }
@@ -1001,6 +1003,13 @@ namespace ProjectM.Editor
                     Element = Element.Fire, Priority = 0, TransformTileTo = TileType.Floor, PlaceTerrain = TerrainEffectType.FireZone,
                     TransformDurationTicks = 3, ExplosionStatusChancePercent = 100,
                 });
+            // 3-41: 창고 바리케이드 점화 (바리케이드 × 불 → 바닥 + 화염 지대 3틱). 옆 화염 지대로 타는 것은 FireSpreadSystem (탈 칸)
+            changed |= catalog.AddIfMissing(new ReactionCatalogAsset.Entry
+            {
+                Id = "barricade_ignite", DisplayName = "바리케이드가 불탄다", Group = "barricade_ignite", Trigger = ReactionTrigger.Tile, Tile = TileType.Barricade,
+                Element = Element.Fire, Priority = 0, TransformTileTo = TileType.Floor, PlaceTerrain = TerrainEffectType.FireZone,
+                TransformDurationTicks = 3, ExplosionStatusChancePercent = 100,
+            });
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }

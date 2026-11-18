@@ -31,5 +31,7 @@ namespace ProjectM.Core
         SealedStairs = 12,
         /// <summary>마법 제작대 (3-28b 작업실) — 걸을 수 없음 · 시야는 안 막음. 부딪히면 유물 만들기 · 강화 · 분해 창 (Workbench).</summary>
         ArtifactBench = 13,
+        /// <summary>바리케이드 (3-41 창고 입구, SPD) — 걸을 수 없음 · 시야 · 투사체를 막음. 불에 탄다(불 주문을 맞히거나 옆 화염 지대 → 바닥 + 화염 지대).</summary>
+        Barricade = 14,
     }
 }

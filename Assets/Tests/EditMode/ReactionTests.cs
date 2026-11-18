@@ -76,6 +76,8 @@ namespace ProjectM.Tests
                 group: "door_ignite", transformDurationTicks: 3, tile: TileType.Door, transformTileTo: TileType.Floor, placeTerrain: TerrainEffectType.FireZone),
             new ReactionDef("opendoor_ignite", ReactionTrigger.Tile, StatusType.None, TerrainEffectType.None, Element.Fire, 0,
                 group: "door_ignite", transformDurationTicks: 3, tile: TileType.OpenDoor, transformTileTo: TileType.Floor, placeTerrain: TerrainEffectType.FireZone),
+            new ReactionDef("barricade_ignite", ReactionTrigger.Tile, StatusType.None, TerrainEffectType.None, Element.Fire, 0,
+                group: "barricade_ignite", transformDurationTicks: 3, tile: TileType.Barricade, transformTileTo: TileType.Floor, placeTerrain: TerrainEffectType.FireZone), // 3-41 창고
         }, new ReactionConfig(4, 3, 5), statuses);
 
         // 주문 자체는 상태 · 지형 없이 (반응만 보려고). 상태 · 지형 규칙은 BALANCE 값
