@@ -66,6 +66,16 @@ namespace ProjectM.Data
         [Tooltip("마법 불 방 무게 (같은 척도) — 보상은 보물 방 목록에서 하나")] [Min(0)] [SerializeField] private int _magicalFireWeight = 2;
         [Tooltip("마법 불 방이 생긴 층의 방 밖에 놓는 불 끄는 아이템 (얼음을 못 쓰는 판도 끌 수 있게)")] [SerializeField] private string _magicalFireItem = "potion_frost";
 
+        [Header("독가스 방 (3-43, SPD Toxic Gas — BALANCE 16번)")]
+        [Tooltip("독가스 방 무게 (같은 척도) — 물건은 보물 방 목록에서 하나")] [Min(0)] [SerializeField] private int _toxicGasWeight = 2;
+        [Tooltip("독가스 방이 생긴 층의 방 밖에 놓는 가스 없애는 아이템")] [SerializeField] private string _toxicGasItem = "potion_purity";
+        [Tooltip("금화 더미 수 최소 · 최대")] [Min(0)] [SerializeField] private int _toxicGoldPilesMin = 2;
+        [Min(0)] [SerializeField] private int _toxicGoldPilesMax = 3;
+        [Tooltip("더미 금액 = 기본 + 층마다 × 층 (최소 · 최대) — 층 금화(LootConfig)와 같은 값")] [Min(0)] [SerializeField] private int _toxicGoldMinBase = 30;
+        [Min(0)] [SerializeField] private int _toxicGoldMinPerFloor = 10;
+        [Min(0)] [SerializeField] private int _toxicGoldMaxBase = 60;
+        [Min(0)] [SerializeField] private int _toxicGoldMaxPerFloor = 20;
+
         [Header("상점 (3-15c — BALANCE 16번)")]
         [Tooltip("상점이 있는 첫 층")] [Min(1)] [SerializeField] private int _shopFloor = 3;
         [Tooltip("상점이 더 있는 층 (2026-11-05 사용자 — 구역 시작층 6 · 11 · 16 · 21층)")] [SerializeField] private int[] _moreShopFloors = { 6, 11, 16, 21 };
@@ -97,16 +107,18 @@ namespace ProjectM.Data
             _puddleCount, _puddleMinSize, _puddleMaxSize, _doorPercent, _hiddenDoorPercent,
             new SpecialRoomConfig(_specialRoomPercent, WithLab(), _specialRoomMinSize, _specialRoomMaxSize, _vaultItems, _vaultItemCount,
                 _armoryItems, _armoryItemCount, _libraryItems, _libraryItemCount, _gardenItems, _gardenItemCount, _keyItem, _labItems, _labItemCount,
-                _storageItems, _storageItemMin, _storageItemMax, _storageFireItem, _magicalFireItem));
+                _storageItems, _storageItemMin, _storageItemMax, _storageFireItem, _magicalFireItem,
+                _toxicGasItem, _toxicGoldPilesMin, _toxicGoldPilesMax, _toxicGoldMinBase, _toxicGoldMinPerFloor, _toxicGoldMaxBase, _toxicGoldMaxPerFloor));
 
-        /// <summary>보물 · 무기고 · 도서관 · 정원 무게 + 연구실 무게(3-16c) + 창고 무게(3-41) + 마법 불 무게(3-42) — 예전 에셋의 4칸 배열을 그대로 쓰려고 따로 둠.</summary>
+        /// <summary>보물 · 무기고 · 도서관 · 정원 무게 + 연구실 무게(3-16c) + 창고 무게(3-41) + 마법 불 무게(3-42) + 독가스 무게(3-43) — 예전 에셋의 4칸 배열을 그대로 쓰려고 따로 둠.</summary>
         private int[] WithLab()
         {
-            var w = new int[7];
+            var w = new int[8];
             for (int i = 0; i < 4 && i < _specialRoomWeights.Length; i++) w[i] = _specialRoomWeights[i];
             w[4] = _laboratoryWeight;
             w[5] = _storageWeight;
             w[6] = _magicalFireWeight;
+            w[7] = _toxicGasWeight;
             return w;
         }
     }
