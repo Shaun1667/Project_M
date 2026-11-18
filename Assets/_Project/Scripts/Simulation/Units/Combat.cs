@@ -18,6 +18,7 @@ namespace ProjectM.Units
             ProjectM.Dungeon.AngryShopkeeper.OnDamaged(world, attacker, target, cause); // 3-29: 상인을 주문 · 던지기로 치면 화냄 (체력이 바뀐 뒤 이 피해가 들어감)
             if (world.EnemyRules != null) amount = world.EnemyRules.ModifyDamage(target, cause, amount); // 3-17b 약점 · 저항
             if (world.DebugInvulnerable && target.Faction == Faction.Player) amount = 0; // 디버그 무적
+            if (ProjectM.Dungeon.Sentries.IsSentry(world, target)) amount = 0; // 3-49 감시자는 무적
 
             target.Hp = Math.Max(0, target.Hp - amount);
             if (target.Faction == Faction.Player && amount > 0)

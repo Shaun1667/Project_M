@@ -605,3 +605,83 @@ MonoBehaviour:
     BoostRange: 1
     HitCount: 0
     MaxTargets: 0
+  - Id: sentry_bolt_1
+    Element: 2
+    Shape: 0
+    Range: 6
+    Damage: 4
+    ManaCost: 0
+    Radius: 0
+    AppliesStatus: 0
+    StatusChancePercent: 0
+    LeavesTerrain: 0
+    DisplayName: "\uAC10\uC2DC\uC790 \uBC88\uAC1C"
+    BoostWeaponId: 
+    BoostDamagePercent: 0
+    BoostRange: 0
+    HitCount: 0
+    MaxTargets: 0
+  - Id: sentry_bolt_2
+    Element: 2
+    Shape: 0
+    Range: 6
+    Damage: 7
+    ManaCost: 0
+    Radius: 0
+    AppliesStatus: 0
+    StatusChancePercent: 0
+    LeavesTerrain: 0
+    DisplayName: "\uAC10\uC2DC\uC790 \uBC88\uAC1C"
+    BoostWeaponId: 
+    BoostDamagePercent: 0
+    BoostRange: 0
+    HitCount: 0
+    MaxTargets: 0
+  - Id: sentry_bolt_3
+    Element: 2
+    Shape: 0
+    Range: 6
+    Damage: 10
+    ManaCost: 0
+    Radius: 0
+    AppliesStatus: 0
+    StatusChancePercent: 0
+    LeavesTerrain: 0
+    DisplayName: "\uAC10\uC2DC\uC790 \uBC88\uAC1C"
+    BoostWeaponId: 
+    BoostDamagePercent: 0
+    BoostRange: 0
+    HitCount: 0
+    MaxTargets: 0
+  - Id: sentry_bolt_4
+    Element: 2
+    Shape: 0
+    Range: 6
+    Damage: 13
+    ManaCost: 0
+    Radius: 0
+    AppliesStatus: 0
+    StatusChancePercent: 0
+    LeavesTerrain: 0
+    DisplayName: "\uAC10\uC2DC\uC790 \uBC88\uAC1C"
+    BoostWeaponId: 
+    BoostDamagePercent: 0
+    BoostRange: 0
+    HitCount: 0
+    MaxTargets: 0
+  - Id: sentry_bolt_5
+    Element: 2
+    Shape: 0
+    Range: 6
+    Damage: 16
+    ManaCost: 0
+    Radius: 0
+    AppliesStatus: 0
+    StatusChancePercent: 0
+    LeavesTerrain: 0
+    DisplayName: "\uAC10\uC2DC\uC790 \uBC88\uAC1C"
+    BoostWeaponId: 
+    BoostDamagePercent: 0
+    BoostRange: 0
+    HitCount: 0
+    MaxTargets: 0

@@ -486,6 +486,7 @@ namespace ProjectM.Editor
                 ("boss_time_guardian", new Color(0.85f, 0.75f, 0.35f), 1.8f),
                 ("enemy_wraith", new Color(0.45f, 0.75f, 0.75f), 0.9f), // 3-47 지하 묘지 지킴이
                 ("enemy_statue", new Color(0.6f, 0.6f, 0.62f), 1.2f), // 3-48 석상
+                ("enemy_sentry", new Color(0.35f, 0.55f, 0.95f), 1.3f), // 3-49 감시자
             })
                 catalog.Set(id, AssetDatabase.LoadAssetAtPath<Sprite>(UnitCircleSpritePath), color, height);
             // 3-4b 임시 보스: 짙은 자주색, 두 배 키 (판정은 1칸)
@@ -587,6 +588,15 @@ namespace ProjectM.Editor
                 { Id = "boss_time_collapse", Element = Element.Lightning, Shape = SpellShape.Burst, Range = 6, Damage = 12, ManaCost = 0, Radius = 1 });
             changed |= catalog.SetStatusIfNone("boss_time_collapse", StatusType.Paralyze, 50);
             changed |= catalog.SetDisplayNameIfEmpty("boss_time_collapse", "시간 붕괴");
+            // 3-49 감시자 번개 (BALANCE 16번 — 예고 칸 1칸 → 다음 차례, 마나 0, 5층마다 다음 단계)
+            int[] sentryDamage = { 4, 7, 10, 13, 16 };
+            for (int t = 0; t < sentryDamage.Length; t++)
+            {
+                string id = "sentry_bolt_" + (t + 1);
+                changed |= catalog.AddIfMissing(new SpellCatalogAsset.Entry
+                    { Id = id, Element = Element.Lightning, Shape = SpellShape.Bolt, Range = 6, Damage = sentryDamage[t], ManaCost = 0 });
+                changed |= catalog.SetDisplayNameIfEmpty(id, "감시자 번개");
+            }
             // 3-21a 루멘 빛의 창 공통 기술 (BALANCE 21번, Docs/직업_루멘.md 2번): 무속성 — 반응 없음. 창(spear)을 들면 피해 ×1.5 · 사거리 +1
             changed |= catalog.AddIfMissing(new SpellCatalogAsset.Entry
                 { Id = "light_spear_thrust", Element = Element.Neutral, Shape = SpellShape.Beam, Range = 2, Damage = 4, ManaCost = 2 });
@@ -809,6 +819,8 @@ namespace ProjectM.Editor
             // 3-48 석상 (구역 적 목록 밖 — 석상 방에만, 잠들어 있다 깨어남, 느린 탱커. 세기는 층마다 FloorDecorConfig _statuePercentPerFloor, BALANCE 16번)
             var statueRow = E("enemy_statue", "살아난 석상", 20, 4, 6, 10, 4, 8, 30); statueRow.MoveCostTicks = 2;
             changed |= catalog.AddIfMissing(statueRow);
+            // 3-49 감시자 (감시탑에만 — 무적 · 움직이지 않음, 번개는 FloorDecorConfig _sentrySpells 층 단계, BALANCE 16번). 체력 · 공격은 쓰이지 않는 자리값
+            changed |= catalog.AddIfMissing(E("enemy_sentry", "감시자", 10, 1, 6, 1, 0, 0, 30));
             ZoneCatalogAsset.Zone Z(string name, int first, int last, int percent, string boss, params (string id, int weight)[] enemies)
             {
                 var rows = new System.Collections.Generic.List<ZoneCatalogAsset.ZoneEnemyRow>();

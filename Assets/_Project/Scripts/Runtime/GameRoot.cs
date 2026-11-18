@@ -630,6 +630,13 @@ namespace ProjectM
                     World.SetStatueRules(new ProjectM.Dungeon.StatueRules(statue, ZoneCatalogAsset.ToDef(statueRow), enemyAi, Items));
                 }
                 else Debug.LogWarning($"[GameRoot] 석상 '{statue.StatueId}'이 적 표에 없다 — 석상 방은 비어 있다", this);
+                var sentry = _floorDecorConfig.ToSentry(); // 3-49 감시탑: 무적 감시자 · 예고 → 번개
+                if (_zoneCatalog.TryGetEnemy(sentry.SentryId, out var sentryRow))
+                {
+                    EnsureAi(World);
+                    World.SetSentryRules(new ProjectM.Dungeon.SentryRules(sentry, ZoneCatalogAsset.ToDef(sentryRow), enemyAi));
+                }
+                else Debug.LogWarning($"[GameRoot] 감시자 '{sentry.SentryId}'가 적 표에 없다 — 감시탑은 비어 있다", this);
             }
             _unitVisuals.Clear();
             _enemyNames = _zoneCatalog != null ? _zoneCatalog.DisplayNames() : new System.Collections.Generic.Dictionary<string, string>();

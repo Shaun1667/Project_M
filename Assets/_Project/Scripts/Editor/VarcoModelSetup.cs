@@ -101,6 +101,7 @@ namespace ProjectM.Editor
             ("enemy_wraith", new ModelSpec("Enemy_Wraith", "Unit_Wraith", 1.1f, 0f), true, null),               // 3-47 원혼 키 약 0.95 m (T포즈 원본은 너비가 가장 긴 쪽 — 리깅 뒤 다시 잼) (T포즈 · Mixamo 리깅 — 2026-11-18 사용자: 캐릭터는 무기 없이 T포즈)
             ("enemy_statue", new ModelSpec("Enemy_Statue", "Unit_Statue", 1.85f, 0f), true,                    // 3-48 석상 키 약 1.25 m (T포즈 원본 기준 — 리깅 뒤 다시 잼) (T포즈 · Mixamo 리깅)
                 new ModelSpec("Prop_Weapon_Longsword", "", 0.85f, 0f)),                                            // 칼은 몸과 따로 — 오른손에 롱소드 0.85 m
+            ("enemy_sentry", new ModelSpec("Prop_Sentry", "Unit_Sentry", 1.3f, 0f), false, null),              // 3-49 감시자 높이 1.3 m (사물 — 리깅 없음, 코드 통통 튐)
         };
         private static readonly ModelSpec Staff = new ModelSpec("Prop_MageStaff", "", 0.85f, 0f);
         private static readonly ModelSpec Floor = new ModelSpec("Tile_Floor", "Tile_Floor", 1f, 0f);

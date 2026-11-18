@@ -42,6 +42,9 @@ namespace ProjectM.Units
             int cost = _config.DefaultActionCostTicks;
             if (!_world.Units.TryGet(context.Actor, out var self) || !self.IsAlive) return new WaitCommand(cost);
 
+            // 3-49 감시탑: 감시자는 움직이지 않고 예고 → 번개만
+            if (ProjectM.Dungeon.Sentries.IsSentry(_world, self)) return ProjectM.Dungeon.Sentries.NextCommand(_world, _spells, _sight, _statuses, self, cost);
+
             // 3-48 석상: 잠든 동안 쉬고, 플레이어가 바로 옆에 오면 깨어나 이번 차례부터 싸운다
             if (self.Dormant)
             {

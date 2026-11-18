@@ -737,6 +737,30 @@ MonoBehaviour:
     SummonId: 
     SummonCount: 0
     SummonAtHpPercent: 0
+  - Id: enemy_sentry
+    DisplayName: "\uAC10\uC2DC\uC790"
+    MaxHp: 10
+    AttackDamage: 1
+    SightRange: 6
+    Accuracy: 1
+    Evasion: 0
+    ExpReward: 0
+    ExpMaxLevel: 30
+    MoveSteps: 0
+    MoveCostTicks: 0
+    HitStatus: 0
+    HitStatusPercent: 0
+    HurtTerrain: 0
+    SpellId: 
+    MaxMana: 0
+    KeepDistance: 0
+    DamagePercents: []
+    ChargeSpellId: 
+    ChargePercent: 0
+    TeleportPercent: 0
+    SummonId: 
+    SummonCount: 0
+    SummonAtHpPercent: 0
   _zones:
   - Name: "\uC232 \uC18D \uB3D9\uAD74"
     FirstFloor: 1
