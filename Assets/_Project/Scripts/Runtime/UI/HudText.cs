@@ -278,6 +278,9 @@ namespace ProjectM.UI
         /// <summary>잠긴 문 (3-15b).</summary>
         public const string DoorLocked = "잠겨 있다 — 열쇠가 필요하다";
         public const string DoorUnlocked = "열쇠로 문을 열었다";
+        public const string WellEmpty = "우물이 말라 있다"; // 3-46
+        public const string WellHealthDrunk = "치유의 우물을 마셨다 — 몸이 회복된다";
+        public const string WellAwarenessDrunk = "지식의 우물을 마셨다 — 배낭의 물건과 이 층이 보인다";
 
         /// <summary>금화 (3-15a): HUD 표시 · 주웠을 때 로그.</summary>
         public static string GoldLabel(int gold) => $"<color=#FFD54F>금화 {gold}</color>";
@@ -475,6 +478,9 @@ namespace ProjectM.UI
                 case TileType.SealedStairs: return "봉인된 계단";
                 case TileType.ArtifactBench: return "마법 제작대";
                 case TileType.Barricade: return "나무 바리케이드 — 불로 태울 수 있다"; // 3-41 창고 입구
+                case TileType.WellHealth: return "치유의 우물 — 부딪혀 마시면 체력이 가득 찬다"; // 3-46
+                case TileType.WellAwareness: return "지식의 우물 — 부딪혀 마시면 물건을 알아보고 층 지도를 얻는다";
+                case TileType.EmptyWell: return "마른 우물";
                 default: return CellUnknown;
             }
         }

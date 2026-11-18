@@ -73,5 +73,20 @@ MonoBehaviour:
     Module: {fileID: 8696896479290541133, guid: 4df33c927123cd64db08fc8e995e01bf, type: 3}
     RandomRotation: 0
     StandHeight: 0
+  - Type: 15
+    Tile: {fileID: 11400000, guid: 5b63fb610d7d8704ea4f2cedf2eed37e, type: 2}
+    Module: {fileID: 6710401465361655263, guid: cfe77d51fe767a34e83ebbd2127be856, type: 3}
+    RandomRotation: 0
+    StandHeight: 0
+  - Type: 16
+    Tile: {fileID: 11400000, guid: 2d5d28d11aa28f84da33f1a36c97136f, type: 2}
+    Module: {fileID: 8022194228084895573, guid: 26049b4d600da7341be244cda46ea359, type: 3}
+    RandomRotation: 0
+    StandHeight: 0
+  - Type: 17
+    Tile: {fileID: 11400000, guid: a218b06e77583ee4cbca49989bc1b12d, type: 2}
+    Module: {fileID: 4277332251663019258, guid: e9676c34fca6dd04a8afb447443d2c71, type: 3}
+    RandomRotation: 0
+    StandHeight: 0
   _pillarModule: {fileID: 3755136026008039189, guid: 1e8750001f10bd748acf99a84ed93664, type: 3}
   _zoneSets: []

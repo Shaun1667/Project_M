@@ -75,12 +75,15 @@ namespace ProjectM.Core
         /// </summary>
         public static bool IsSpellCatcherType(TileType type) => type == TileType.Barricade;
 
+        /// <summary>우물 칸 (3-46 마법 우물): 치유 · 지식 · 마른 우물 — 낮아서 시야를 막지 않는다.</summary>
+        public static bool IsWellType(TileType type) => type == TileType.WellHealth || type == TileType.WellAwareness || type == TileType.EmptyWell;
+
         /// <summary>시야를 막는 칸인지: 벽 · 빈칸 · 맵 밖 · 높은 풀(3-11a) · 닫힌 문(3-11c). 바닥 · 계단 · 짧은 풀 · 열린 문은 보인다.</summary>
         public bool BlocksSight(GridPos pos)
         {
             if (!InBounds(pos)) return true;
             var type = _cells[IndexOf(pos)];
-            return (!IsWalkableType(type) && type != TileType.AlchemyPot && type != TileType.ArtifactBench) || type == TileType.TallGrass || type == TileType.Door; // 3-16c 솥은 낮아 안 가림
+            return (!IsWalkableType(type) && type != TileType.AlchemyPot && type != TileType.ArtifactBench && !IsWellType(type)) || type == TileType.TallGrass || type == TileType.Door; // 3-16c 솥은 낮아 안 가림
         }
 
         /// <summary>주문 · 투척 경로를 막는 칸인지: 벽 · 빈칸 · 맵 밖. 높은 풀 · 닫힌 문은 시야만 가리고 막지 않는다 (3-11a · 3-11c, SPD).</summary>

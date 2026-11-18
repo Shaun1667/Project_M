@@ -361,16 +361,8 @@ namespace ProjectM.Items
                     break;
                 }
                 case ConsumableEffect.Healing:
-                {
-                    int healed = unit.MaxHp - unit.Hp;
-                    if (healed > 0)
-                    {
-                        unit.Hp = unit.MaxHp;
-                        world.Events.Publish(new UnitHealedEvent(unit.Id, healed, unit.Hp, unit.MaxHp));
-                    }
-                    foreach (var status in config.HealingCures) StatusEffects.Remove(world, unit, status);
+                    HealFully(world, config, unit);
                     break;
-                }
                 case ConsumableEffect.Experience:
                     if (rules.Progression != null)
                         Progression.GainExp(world, unit, Math.Max(0, Progression.ExpToNextOrZero(unit, rules.Progression) - unit.Exp), rules.Progression);
@@ -507,6 +499,46 @@ namespace ProjectM.Items
         }
 
         /// <summary>지도 주문서: 걸을 수 있는 칸과 그 둘레 벽을 모두 탐험한 것으로 (⑥ 시야 단계가 화면에 알린다).</summary>
+        /// <summary>치유 물약 · 치유의 우물 (3-46): 체력 가득 + HealingCures 상태 제거.</summary>
+        private static void HealFully(World world, ConsumableConfig config, Unit unit)
+        {
+            int healed = unit.MaxHp - unit.Hp;
+            if (healed > 0)
+            {
+                unit.Hp = unit.MaxHp;
+                world.Events.Publish(new UnitHealedEvent(unit.Id, healed, unit.Hp, unit.MaxHp));
+            }
+            foreach (var status in config.HealingCures) StatusEffects.Remove(world, unit, status);
+        }
+
+        /// <summary>
+        /// 마법 우물 마시기 (3-46, SPD Magic Well — 틱 안, DrinkWellCommand가 부름): 옆(8방향) 우물 칸을 마신다.
+        /// 치유 = 치유 물약과 같음, 지식 = 배낭의 모르는 아이템 모두 식별 + 층 지도 + 숨겨진 것 드러냄. 마시면 마른 우물. 마셨으면 true.
+        /// </summary>
+        public static bool DrinkWell(World world, ConsumableRules rules, Unit unit, GridPos well)
+        {
+            if (world == null) throw new ArgumentNullException(nameof(world));
+            if (rules == null) throw new ArgumentNullException(nameof(rules));
+            if (unit == null || !unit.IsAlive || !world.Map.InBounds(well) || GridMovement.Chebyshev(unit.Pos, well) != 1) return false;
+            var type = world.Map.Get(well);
+            if (type == TileType.WellHealth) HealFully(world, rules.Config, unit);
+            else if (type == TileType.WellAwareness)
+            {
+                foreach (var entry in unit.InventorySlots)
+                {
+                    if (entry.IsEmpty || entry.Kind != InventoryKind.Item || world.Run.IsKnown(entry.Id)) continue;
+                    var look = world.Run.LookOf(entry.Id);
+                    if (Identification.Identify(world, entry.Id)) world.Events.Publish(new ItemIdentifiedEvent(entry.Id, look));
+                }
+                RevealFloor(world);
+                ProjectM.Dungeon.Searching.RevealAll(world);
+            }
+            else return false;
+            world.SetTile(well, TileType.EmptyWell);
+            world.Events.Publish(new WellDrunkEvent(unit.Id, well, type));
+            return true;
+        }
+
         private static void RevealFloor(World world)
         {
             var map = world.Map;
@@ -790,6 +822,45 @@ namespace ProjectM.Items
     }
 
     /// <summary>식별 주문서로 한 종류를 식별했다 (3-9). ItemId가 null이면 식별할 것이 없었다.</summary>
+    /// <summary>마법 우물 마시기 (3-46, 차례 1): 옆 우물을 마신다 (Consumables.DrinkWell). 우물이 아니거나 말랐으면 차례만 쓴다.</summary>
+    public sealed class DrinkWellCommand : ICommand
+    {
+        private readonly World _world;
+        private readonly ConsumableRules _rules;
+
+        public GridPos Well { get; }
+        public int CostTicks { get; }
+
+        public DrinkWellCommand(World world, ConsumableRules rules, GridPos well, int costTicks)
+        {
+            if (costTicks < 1) throw new ArgumentOutOfRangeException(nameof(costTicks));
+            _world = world ?? throw new ArgumentNullException(nameof(world));
+            _rules = rules ?? throw new ArgumentNullException(nameof(rules));
+            Well = well;
+            CostTicks = costTicks;
+        }
+
+        public void Execute(in TickContext context)
+        {
+            if (_world.Units.TryGet(context.Actor, out var unit)) Consumables.DrinkWell(_world, _rules, unit, Well);
+        }
+    }
+
+    /// <summary>우물을 마셨다 (3-46 — 로그 · 화면). Kind = 마시기 전 우물 종류 (WellHealth · WellAwareness).</summary>
+    public sealed class WellDrunkEvent : ISimEvent
+    {
+        public EntityId Unit { get; }
+        public GridPos Pos { get; }
+        public TileType Kind { get; }
+
+        public WellDrunkEvent(EntityId unit, GridPos pos, TileType kind)
+        {
+            Unit = unit;
+            Pos = pos;
+            Kind = kind;
+        }
+    }
+
     public sealed class ItemIdentifiedEvent : ISimEvent
     {
         public string ItemId { get; }

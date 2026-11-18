@@ -22,12 +22,13 @@ namespace ProjectM.Tests
 
         private static SpecialRoomConfig Only(SpecialRoomType type)
         {
-            var w = new int[10];
+            var w = new int[11];
             w[(int)type - 1] = 1;
             return new SpecialRoomConfig(100, w, 3, 5, new[] { "scroll_upgrade" }, 1, new[] { "a" }, 1, new[] { "b" }, 1, new[] { "c" }, 1, "key_iron", new[] { "seed_x" }, 2,
                 new[] { "potion_x", "scroll_y" }, 3, 4, "potion_liquid_flame", "potion_frost",
                 "potion_purity", 2, 3, 30, 10, 60, 20, 4, 6,
-                new[] { TrapType.Fire, TrapType.Shock }, "potion_levitation");
+                new[] { TrapType.Fire, TrapType.Shock }, "potion_levitation",
+                new[] { TileType.WellHealth, TileType.WellAwareness });
         }
 
         private static (World World, DungeonFloor Floor, SpecialRooms.Result Room) Carve(ulong seed, SpecialRoomType type)
@@ -369,6 +370,71 @@ namespace ProjectM.Tests
             Assert.That(carved, Is.GreaterThan(0));
         }
 
+        // 3-46 마법 우물: 입구 = 문, 가운데 칸에 우물(치유 · 지식 중 하나) · 아이템 없음 · 우물은 걸을 수 없고 시야를 막지 않는다
+        [Test]
+        public void MagicWell_WellInCenter_NoItems()
+        {
+            int carved = 0;
+            var kinds = new System.Collections.Generic.HashSet<TileType>();
+            for (ulong seed = 1; seed <= 30; seed++)
+            {
+                var (world, _, room) = Carve(seed, SpecialRoomType.MagicWell);
+                if (room == null) continue;
+                carved++;
+                var map = world.Map;
+                Assert.That(map.Get(room.Entrance), Is.EqualTo(TileType.Door), $"시드 {seed}");
+                var center = room.Cells[room.Cells.Count / 2];
+                var type = map.Get(center);
+                Assert.That(type == TileType.WellHealth || type == TileType.WellAwareness, Is.True, $"시드 {seed}: {type}");
+                kinds.Add(type);
+                Assert.That(map.IsWalkable(center), Is.False);
+                Assert.That(map.BlocksSight(center), Is.False, "낮아서 안 가림");
+                foreach (var c in room.Cells) Assert.That(world.FloorItems.ItemsAt(c), Is.Empty, $"시드 {seed}");
+            }
+            Assert.That(carved, Is.GreaterThan(0));
+            Assert.That(kinds.Count, Is.EqualTo(2), "두 종류 다 나온다");
+        }
+
+        private static (World World, Unit Player, TurnClock Clock) WellWorld(TileType well)
+        {
+            var map = GridMovementTests.Parse("#######", "#.....#", "#.....#", "#######");
+            map.Set(new GridPos(3, 1), well);
+            var world = new World(map, 3UL);
+            world.InstallCoreSystems(new ShadowcastSightRule(), Magic, SpellTests.BalanceStatuses(), SpellTests.BalanceTerrains());
+            var player = UnitSpawner.SpawnPlayer(world, new UnitDef("player", 20, 3, 8, 10), new GridPos(2, 1), Magic.QuickSlotCount);
+            world.Events.Flush();
+            return (world, player, new TurnClock(world.Scheduler, world.PlayerInput));
+        }
+
+        // 3-46: 치유의 우물 = 체력 가득 → 마른 우물, 마른 우물은 다시 마셔도 효과 없음
+        [Test]
+        public void MagicWell_Health_HealsOnce_ThenEmpty()
+        {
+            var (world, player, clock) = WellWorld(TileType.WellHealth);
+            var rules = new ConsumableRules(Items);
+            Combat.ApplyDamage(world, EntityId.None, player, player.Hp - 5, DamageCause.Attack);
+            clock.SubmitPlayerCommand(new DrinkWellCommand(world, rules, new GridPos(3, 1), 1));
+            Assert.That(player.Hp, Is.EqualTo(player.MaxHp));
+            Assert.That(world.Map.Get(new GridPos(3, 1)), Is.EqualTo(TileType.EmptyWell));
+            Combat.ApplyDamage(world, EntityId.None, player, player.Hp - 5, DamageCause.Attack);
+            Assert.That(Consumables.DrinkWell(world, rules, player, new GridPos(3, 1)), Is.False, "마른 우물");
+            Assert.That(player.Hp, Is.EqualTo(5));
+            Assert.That(Consumables.DrinkWell(world, rules, player, new GridPos(5, 1)), Is.False, "옆 칸이 아니면 못 마심");
+        }
+
+        // 3-46: 지식의 우물 = 층의 걸을 수 있는 칸을 모두 본 칸으로 → 마른 우물
+        [Test]
+        public void MagicWell_Awareness_RevealsFloor_ThenEmpty()
+        {
+            var (world, player, _) = WellWorld(TileType.WellAwareness);
+            for (int i = 0; i < world.Explored.Length; i++) world.Explored[i] = false;
+            Assert.That(Consumables.DrinkWell(world, new ConsumableRules(Items), player, new GridPos(3, 1)), Is.True);
+            Assert.That(world.Map.Get(new GridPos(3, 1)), Is.EqualTo(TileType.EmptyWell));
+            for (int y = 0; y < world.Map.Height; y++)
+                for (int x = 0; x < world.Map.Width; x++)
+                    if (world.Map.IsWalkable(new GridPos(x, y))) Assert.That(world.Explored[y * world.Map.Width + x], Is.True, $"{x},{y}");
+        }
+
         // 검산: FloorDecorConfig 특수 방 값 = BALANCE.md 16번, 목록의 아이템은 ItemCatalog에 있다
         [Test]
         public void ProjectAsset_MatchesBalanceTable()
@@ -376,7 +442,8 @@ namespace ProjectM.Tests
             var c = AssetDatabase.LoadAssetAtPath<FloorDecorConfigAsset>("Assets/_Project/Data/Dungeon/FloorDecorConfig.asset").ToConfig().SpecialRooms;
             Assert.That((c.RoomPercent, c.MinSize, c.MaxSize, c.VaultItemCount, c.ArmoryItemCount, c.LibraryItemCount, c.GardenItemCount, c.KeyItem),
                 Is.EqualTo((70, 3, 5, 2, 2, 3, 2, "key_iron")));
-            Assert.That(c.Weights, Is.EqualTo(new[] { 3, 2, 2, 2, 2, 2, 2, 2, 2, 2 }), "3-16c 연구실 2 · 3-41 창고 2 · 3-42 마법 불 2 · 3-43 독가스 2 · 3-44 보물 창고 2 · 3-45 함정 방 2");
+            Assert.That(c.Weights, Is.EqualTo(new[] { 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 }), "3-16c 연구실 2 · 3-41 창고 2 · 3-42 마법 불 2 · 3-43 독가스 2 · 3-44 보물 창고 2 · 3-45 함정 방 2 · 3-46 마법 우물 2");
+            Assert.That(c.WellTypes, Is.EqualTo(new[] { TileType.WellHealth, TileType.WellAwareness }));
             Assert.That(c.TrapRoomTypes, Is.EqualTo(new[] { TrapType.Fire, TrapType.ToxicGas, TrapType.ParalyticGas, TrapType.Shock }));
             Assert.That(c.TrapRoomItem, Is.EqualTo("potion_levitation"));
             Assert.That((c.TreasuryPilesMin, c.TreasuryPilesMax), Is.EqualTo((4, 6)));

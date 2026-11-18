@@ -469,6 +469,7 @@ Varco는 모든 모델을 **가장 긴 쪽 1 m**로 보내므로 크기는 프�
 | 짧은 풀 `Grass` | Tile_Grass | 바닥 + 풀 덤불(0.98 × 0.98, 키 0.12 m) |
 | 높은 풀 `TallGrass` | Tile_TallGrass | 바닥 + 풀 덤불(키 0.55 m — 0.15 m보다 높아 시야를 가림) |
 | 연금 솥 `AlchemyPot` | Tile_AlchemyPot | 바닥 + 솥(너비 0.7 m) |
+| 마법 우물 `WellHealth` · `WellAwareness` · `EmptyWell` (3-46) | Tile_WellHealth · Tile_WellAwareness · Tile_EmptyWell (구역마다 `Tile_<구역>_…`) | 바닥 + 돌 우물 `Prop_Well`(너비 0.85 m) + 물 원판(우물 너비 × 0.66, 높이 × 0.95 — 치유 = 붉은 빛 `Mat_Well_F2404C`, 지식 = 푸른 빛 `Mat_Well_408CFF`, 마른 우물 = 없음). 원본 그림 `Docs/특수방_원본/well.png`, 렌더 `_well_tile.png` |
 
 - **결정 (2026-11-05, 사용자)**: 문은 SPD처럼 **양쪽으로 여는 여닫이 양문**(미닫이 아님). 칸 종류가 바뀔 때 프리팹이 바뀌어 열고 닫는 애니메이션은 없음.
 - Varco 문틀 모델은 정면 그림에서 깊이를 잘못 추정해 **십자 아치**(가로 = 깊이 1 m)로 나와 버리고, 벽 모델로 짰다 — 옆 벽과 돌 질감이 이어진다.

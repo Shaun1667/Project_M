@@ -258,6 +258,7 @@ namespace ProjectM.Editor
                 : AssetDatabase.LoadAssetAtPath<GameObject>($"{PrefabDir}/Tile_Door.prefab")); // 3-15b 잠긴 문 = 자물쇠 문짝
             tiles.SetModule(TileType.AlchemyPot, varcoTiles ? BuildModelPotPrefab(floorPrefab) : BuildPotPrefab(floorPrefab)); // 3-16c 연금 솥
             if (HasModels(BarricadeModel)) tiles.SetModule(TileType.Barricade, BuildBarricadePrefab(floorPrefab)); // 3-41 창고 바리케이드 (모델이 없으면 그레이박스 색 칸)
+            if (HasModels(WellModel)) SetWellModules(tiles, floorPrefab, "Tile_"); // 3-46 마법 우물
             tiles.SetModule(TileType.Wall, BuildPrefab(Wall, null));
             tiles.SetModule(TileType.StairsDown, BuildPrefab(StairsDown, FillCellSunk)); // G-20: 테두리 = 바닥 높이 (원본은 0.39 m 솟아 있었음)
             tiles.SetModule(TileType.StairsUp, BuildPrefab(StairsUp, FillCellFootprint));
@@ -383,6 +384,7 @@ namespace ProjectM.Editor
                 set.SetModule(TileType.LockedDoor, BuildDoubleDoorPrefab(floor, prefix + "LockedDoor", DoorLeafLockedModel, open: false, wallSpec.Model));
                 set.SetModule(TileType.AlchemyPot, BuildModelPotPrefab(floor, prefix + "AlchemyPot"));
                 if (HasModels(BarricadeModel)) set.SetModule(TileType.Barricade, BuildBarricadePrefab(floor, prefix + "Barricade"));
+                if (HasModels(WellModel)) SetWellModules(set, floor, prefix);
             }
             EditorUtility.SetDirty(set);
             tiles.SetZoneSet(firstFloor, lastFloor, set);
@@ -407,6 +409,11 @@ namespace ProjectM.Editor
         private const float CauldronWidth = 0.7f;
         private const string BarricadeModel = "Prop_Barricade";
         private const float BarricadeWidth = 0.95f;
+        // 3-46 마법 우물: 돌 우물 모델 하나 + 물 원판(종류마다 색 · 빛, 마른 우물은 없음)
+        private const string WellModel = "Prop_Well";
+        private const float WellWidth = 0.85f;
+        private const float WellWaterDiameter = 0.66f; // 우물 너비에 대한 비율
+        private const float WellWaterHeight = 0.95f; // 우물 높이에 대한 비율
 
         private static bool HasModels(params string[] models)
         {
@@ -495,6 +502,45 @@ namespace ProjectM.Editor
         /// <summary>3-41 창고 바리케이드: 바닥 + 판자 바리케이드(너비 BarricadeWidth — 칸을 가로질러 막음, 방향은 TilemapPresenter가 문처럼 옆 벽을 보고 돌림).</summary>
         private static GameObject BuildBarricadePrefab(GameObject floor, string name = "Tile_Barricade") =>
             SaveTilePrefab(floor, name, root => AddFitted(root, BarricadeModel, "Barricade", new Vector3(BarricadeWidth, 0f, 0f)));
+
+        /// <summary>3-46 마법 우물 세 칸 종류(치유 = 붉은 물 · 지식 = 푸른 물 · 마른 우물 = 물 없음)를 세트에 넣는다.</summary>
+        private static void SetWellModules(TileVisualSet set, GameObject floor, string prefix)
+        {
+            set.SetModule(TileType.WellHealth, BuildWellPrefab(floor, prefix + "WellHealth", new Color(0.95f, 0.25f, 0.3f)));
+            set.SetModule(TileType.WellAwareness, BuildWellPrefab(floor, prefix + "WellAwareness", new Color(0.25f, 0.55f, 1f)));
+            set.SetModule(TileType.EmptyWell, BuildWellPrefab(floor, prefix + "EmptyWell", null));
+        }
+
+        /// <summary>우물: 바닥 + 돌 우물(너비 WellWidth) + 물 원판(water = null이면 없음 — 빛나는 색 재질 Mat_Well_색).</summary>
+        private static GameObject BuildWellPrefab(GameObject floor, string name, Color? water) =>
+            SaveTilePrefab(floor, name, root =>
+            {
+                var well = AddFitted(root, WellModel, "Well", new Vector3(WellWidth, 0f, 0f));
+                if (water == null) return;
+                var b = RendererBounds(well.gameObject);
+                var disc = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                Object.DestroyImmediate(disc.GetComponent<Collider>());
+                disc.name = "Water";
+                disc.transform.SetParent(root, false);
+                float d = WellWidth * WellWaterDiameter;
+                disc.transform.localPosition = new Vector3(b.center.x, b.max.y * WellWaterHeight, b.center.z);
+                disc.transform.localScale = new Vector3(d, 0.01f, d);
+                disc.GetComponent<Renderer>().sharedMaterial = EnsureWaterMaterial(water.Value);
+            });
+
+        private static Material EnsureWaterMaterial(Color color)
+        {
+            string path = $"{PrefabDir}/Mat_Well_{ColorUtility.ToHtmlStringRGB(color)}.mat";
+            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (material != null) return material;
+            material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { enableInstancing = true };
+            material.SetColor("_BaseColor", color);
+            material.EnableKeyword("_EMISSION");
+            material.SetColor("_EmissionColor", color * 1.5f);
+            material.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
+            AssetDatabase.CreateAsset(material, path);
+            return material;
+        }
 
         /// <summary>연금 솥: 바닥 + 솥(너비 CauldronWidth).</summary>
         private static GameObject BuildModelPotPrefab(GameObject floor, string name = "Tile_AlchemyPot") =>

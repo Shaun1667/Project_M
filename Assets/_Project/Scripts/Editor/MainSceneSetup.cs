@@ -84,6 +84,9 @@ namespace ProjectM.Editor
         private const string LockedDoorTilePath = VisualsDir + "/LockedDoorTile.asset";
         private const string AlchemyPotTilePath = VisualsDir + "/AlchemyPotTile.asset";
         private const string ArtifactBenchTilePath = VisualsDir + "/ArtifactBenchTile.asset"; // 3-28b
+        private const string WellHealthTilePath = VisualsDir + "/WellHealthTile.asset"; // 3-46
+        private const string WellAwarenessTilePath = VisualsDir + "/WellAwarenessTile.asset";
+        private const string EmptyWellTilePath = VisualsDir + "/EmptyWellTile.asset";
         private const string BarricadeTilePath = VisualsDir + "/BarricadeTile.asset"; // 3-41
         private const string PlayerSpritePath = "Assets/_Project/Art/Greybox/player.png";
         private const string UnitCircleSpritePath = "Assets/_Project/Art/Greybox/unit_circle.png";
@@ -338,6 +341,9 @@ namespace ProjectM.Editor
             set.Set(TileType.AlchemyPot, EnsureTintTile(AlchemyPotTilePath, new Color(0.55f, 0.3f, 0.75f))); // 3-16c: 보라
             set.Set(TileType.ArtifactBench, EnsureTintTile(ArtifactBenchTilePath, new Color(0.3f, 0.75f, 0.8f))); // 3-28b 마법 제작대: 청록 (3D 모델 전 그레이박스)
             set.Set(TileType.Barricade, EnsureTintTile(BarricadeTilePath, new Color(0.55f, 0.38f, 0.2f))); // 3-41 창고 바리케이드: 나무 갈색
+            set.Set(TileType.WellHealth, EnsureTintTile(WellHealthTilePath, new Color(0.85f, 0.3f, 0.35f))); // 3-46 치유의 우물: 붉은
+            set.Set(TileType.WellAwareness, EnsureTintTile(WellAwarenessTilePath, new Color(0.3f, 0.5f, 0.95f))); // 지식의 우물: 푸른
+            set.Set(TileType.EmptyWell, EnsureTintTile(EmptyWellTilePath, new Color(0.45f, 0.45f, 0.45f))); // 마른 우물: 회색
             EditorUtility.SetDirty(set);
             return set;
         }

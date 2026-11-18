@@ -1281,6 +1281,13 @@ namespace ProjectM.Input
                 if (seeds < Alchemy.SeedsPerBrew) Hint(HudText.NotEnoughSeeds);
                 else _inventory.OpenForBrew(e => IsBrewSeed(brewer, e), brewer.InventorySlots, 0);
             }
+            else if (PlayerActions.TryGetPlayer(_world, out var drinker) && _world.Map.InBounds(drinker.Pos + direction)
+                && GridMap.IsWellType(_world.Map.Get(drinker.Pos + direction))) // 3-46 마법 우물: 부딪히면 마심
+            {
+                var well = drinker.Pos + direction;
+                if (_world.Map.Get(well) == TileType.EmptyWell) Hint(HudText.WellEmpty);
+                else _clock.SubmitPlayerCommand(new ProjectM.Items.DrinkWellCommand(_world, _consumables, well, _config.DefaultActionCostTicks));
+            }
             else if (_shop != null && PlayerActions.TryGetPlayer(_world, out var buyer) && _world.Units.TryGetAt(buyer.Pos + direction, out var keeper)
                 && keeper.Faction == Faction.Neutral) // 3-15c: 상인에게 부딪히면 팔기
             {

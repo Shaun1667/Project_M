@@ -33,5 +33,11 @@ namespace ProjectM.Core
         ArtifactBench = 13,
         /// <summary>바리케이드 (3-41 창고 입구, SPD) — 걸을 수 없음 · 시야 · 투사체를 막음. 불에 탄다(불 주문을 맞히거나 옆 화염 지대 → 바닥 + 화염 지대).</summary>
         Barricade = 14,
+        /// <summary>치유의 우물 (3-46 마법 우물, SPD) — 걸을 수 없음 · 시야는 안 막음. 부딪히면 마심: 체력 가득 + 해로운 상태 제거 → 마른 우물.</summary>
+        WellHealth = 15,
+        /// <summary>지식의 우물 (3-46) — 부딪히면 마심: 배낭의 모르는 물약 · 주문서 모두 식별 + 층 지도(지도 주문서 효과) → 마른 우물.</summary>
+        WellAwareness = 16,
+        /// <summary>마른 우물 (3-46) — 걸을 수 없음 · 시야는 안 막음. 효과 없음.</summary>
+        EmptyWell = 17,
     }
 }

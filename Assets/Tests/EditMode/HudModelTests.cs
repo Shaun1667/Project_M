@@ -107,6 +107,18 @@ namespace ProjectM.Tests
             Assert.That(s.Hud.Log, Is.EqualTo(new[] { $"{enemy}: 중독 5턴", $"{enemy}: 중독 풀림", $"{enemy}: 중독 5턴" }));
         }
 
+        // 3-46 마법 우물: 마시면 종류별 문구
+        [Test]
+        public void WellDrunk_LogsByKind()
+        {
+            var s = Start();
+            var bus = s.World.Events;
+            bus.Publish(new WellDrunkEvent(s.Player.Id, new GridPos(2, 2), TileType.WellHealth));
+            bus.Publish(new WellDrunkEvent(s.Player.Id, new GridPos(2, 2), TileType.WellAwareness));
+            bus.Flush();
+            Assert.That(s.Hud.Log, Is.EqualTo(new[] { "치유의 우물을 마셨다 — 몸이 회복된다", "지식의 우물을 마셨다 — 배낭의 물건과 이 층이 보인다" }));
+        }
+
         [Test]
         public void StrengthChanged_LogsUpOrDown()
         {

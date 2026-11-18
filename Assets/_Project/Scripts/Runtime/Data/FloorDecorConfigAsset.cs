@@ -87,6 +87,10 @@ namespace ProjectM.Data
             { ProjectM.Dungeon.TrapType.Fire, ProjectM.Dungeon.TrapType.ToxicGas, ProjectM.Dungeon.TrapType.ParalyticGas, ProjectM.Dungeon.TrapType.Shock };
         [Tooltip("함정 방이 생긴 층의 방 밖에 놓는 아이템 (부양 = 함정 위를 떠서 지나감)")] [SerializeField] private string _trapRoomItem = "potion_levitation";
 
+        [Header("마법 우물 (3-46, SPD Magic Well — BALANCE 16번)")]
+        [Tooltip("마법 우물 방 무게 (같은 척도)")] [Min(0)] [SerializeField] private int _magicWellWeight = 2;
+        [Tooltip("우물 종류 (방마다 하나 — 같은 종류를 여러 번 넣으면 무게)")] [SerializeField] private ProjectM.Core.TileType[] _wellTypes = { ProjectM.Core.TileType.WellHealth, ProjectM.Core.TileType.WellAwareness };
+
         [Header("상점 (3-15c — BALANCE 16번)")]
         [Tooltip("상점이 있는 첫 층")] [Min(1)] [SerializeField] private int _shopFloor = 3;
         [Tooltip("상점이 더 있는 층 (2026-11-05 사용자 — 구역 시작층 6 · 11 · 16 · 21층)")] [SerializeField] private int[] _moreShopFloors = { 6, 11, 16, 21 };
@@ -120,12 +124,12 @@ namespace ProjectM.Data
                 _armoryItems, _armoryItemCount, _libraryItems, _libraryItemCount, _gardenItems, _gardenItemCount, _keyItem, _labItems, _labItemCount,
                 _storageItems, _storageItemMin, _storageItemMax, _storageFireItem, _magicalFireItem,
                 _toxicGasItem, _toxicGoldPilesMin, _toxicGoldPilesMax, _toxicGoldMinBase, _toxicGoldMinPerFloor, _toxicGoldMaxBase, _toxicGoldMaxPerFloor,
-                _treasuryPilesMin, _treasuryPilesMax, _trapRoomTypes, _trapRoomItem));
+                _treasuryPilesMin, _treasuryPilesMax, _trapRoomTypes, _trapRoomItem, _wellTypes));
 
-        /// <summary>보물 · 무기고 · 도서관 · 정원 무게 + 연구실 무게(3-16c) + 창고 무게(3-41) + 마법 불 무게(3-42) + 독가스 무게(3-43) + 보물 창고 무게(3-44) + 함정 방 무게(3-45) — 예전 에셋의 4칸 배열을 그대로 쓰려고 따로 둠.</summary>
+        /// <summary>보물 · 무기고 · 도서관 · 정원 무게 + 연구실 무게(3-16c) + 창고 무게(3-41) + 마법 불 무게(3-42) + 독가스 무게(3-43) + 보물 창고 무게(3-44) + 함정 방 무게(3-45) + 마법 우물 무게(3-46) — 예전 에셋의 4칸 배열을 그대로 쓰려고 따로 둠.</summary>
         private int[] WithLab()
         {
-            var w = new int[10];
+            var w = new int[11];
             for (int i = 0; i < 4 && i < _specialRoomWeights.Length; i++) w[i] = _specialRoomWeights[i];
             w[4] = _laboratoryWeight;
             w[5] = _storageWeight;
@@ -133,6 +137,7 @@ namespace ProjectM.Data
             w[7] = _toxicGasWeight;
             w[8] = _treasuryWeight;
             w[9] = _trapRoomWeight;
+            w[10] = _magicWellWeight;
             return w;
         }
     }

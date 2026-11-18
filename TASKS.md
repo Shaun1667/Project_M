@@ -6,7 +6,7 @@
 
 ## 진행 요약 (2026-11-06 기준 — 새 세션은 여기부터 읽는다)
 
-**최신 (2026-11-18): 특수 방 추가 시작 — 브랜치 `phase3-special-rooms`. SPD에 있고 없는 방을 순서대로: ① 창고(3-41, 끝 · 플레이 확인 대기) → ② 마법 불 방(3-42, 끝 · 플레이 확인 대기) → ③ 독가스 방(3-43, 끝 · 플레이 확인 대기) → ④ 보물 창고(3-44, 끝 · 플레이 확인 대기) → ⑤ 함정 방(3-45, 끝 · 플레이 확인 대기) → ⑥ 마법 우물.**
+**최신 (2026-11-18): 특수 방 추가 시작 — 브랜치 `phase3-special-rooms`. SPD에 있고 없는 방을 순서대로: ① 창고(3-41, 끝 · 플레이 확인 대기) → ② 마법 불 방(3-42, 끝 · 플레이 확인 대기) → ③ 독가스 방(3-43, 끝 · 플레이 확인 대기) → ④ 보물 창고(3-44, 끝 · 플레이 확인 대기) → ⑤ 함정 방(3-45, 끝 · 플레이 확인 대기) → ⑥ 마법 우물(3-46, 끝 · 플레이 확인 대기). 여섯 방 모두 넣음 — 다음 작업: 미정(플레이 확인 뒤 사용자와 정함).**
 
 **이전 (2026-11-17): `main3`(지스타 빌드 `4b29b7f`에서 갈라짐 — 다음 시연 준비) → 작업 브랜치 `phase3-weapon-tiers`. 3-39 SPD 3~5티어 무기 20종(데이터 · 공격 지연 · 채찍 3칸 · Varco 모델) · 3-40 0티어 시작 무기(루멘 단창 · 시아 붕대, 창 · 너클 계열) 끝, 테스트 작성 · 실행 안 함 · 플레이 확인 대기.**
 
@@ -1005,6 +1005,11 @@
   - 결정 (2026-11-18): 배치 = **맨 안쪽 줄 앞까지 바닥 전체**(선택지: 전체(추천) · 절반쯤 무작위) · 종류 = **방마다 한 종류 · 보임**(선택지: 한 종류 보임(추천) · 섞임 · 숨김) · 보상 = **좋은 물건 1개 + 방 밖 부양 물약**(선택지: 보장(추천) · 보장 없음)
   - 구현: `SpecialRoomType.TrapRoom`(10, 무게 2 — `FloorDecorConfig` `_trapRoomWeight` · `_trapRoomTypes` · `_trapRoomItem`), 함정 밭 `SpecialRooms.PlaceTrapField`(보이는 함정 — `Traps.Place`), 보상은 보물 방 목록에서 1개를 맨 안쪽 줄에. `Traps.PlaceForFloor`가 이미 함정 있는 칸을 건너뜀(함정 방을 덮지 않게). 그림은 기존 함정 그대로
   - 확인: 테스트 1개(`SpecialRoomTests.TrapRoom_VisibleTrapField_PrizeAtBack_LevitationOutside`) + 검산 무게 10칸 · 함정 종류 작성, 실행 안 함. 확인 못 한 것: 실제 층. 알려진 점: 화염 함정이 맨 안쪽 줄 옆에서 터지면 보상 주문서가 탈 수 있음(SPD도 같음)
+- [x] **3-46. 특수 방 ⑥ 마법 우물 (SPD Magic Well)** (2026-11-18 사용자 "다음 방으로", 브랜치 `phase3-special-rooms`) — 플레이 확인 대기
+  - 결정 (2026-11-18): 종류 = **치유 · 지식 두 종류**(선택지: 치유 · 지식(추천) · 치유만 · 치유 · 지식 · 마나) · 모습 = **Varco 3D 모델 새로**(선택지: Varco 모델(추천) · 그레이박스 색 칸)
+  - 구현: 칸 종류 `TileType.WellHealth`(15) · `WellAwareness`(16) · `EmptyWell`(17) — 걸을 수 없음 · 시야는 안 막음(`GridMap.IsWellType`). 특수 방 `SpecialRoomType.MagicWell`(11, 무게 2 — `_magicWellWeight` · `_wellTypes`), 가운데 칸에 우물. 마시기 = 부딪힘(`PlayerInputController`) → `DrinkWellCommand`(차례 1) → `Consumables.DrinkWell`(치유 = 치유 물약과 같은 `HealFully` · 지식 = 배낭 식별 + 층 지도 + `Searching.RevealAll`) → 마른 우물, `WellDrunkEvent` → HUD 로그. 칸 이름 · 마른 우물 안내는 `HudText`
+  - 화면: Varco `Prop_Well`(돌 우물) → `Tile_WellHealth/WellAwareness/EmptyWell`(구역마다), 물 원판 색(치유 붉은 · 지식 푸른 · 마른 우물 없음), 그레이박스 색 칸, 2D는 바닥
+  - 확인: 컴파일 0 · 설정 값 읽기 · 프리팹 렌더(`Docs/특수방_원본/_well_tile.png`). 테스트 4개(`SpecialRoomTests.MagicWell_*` 3 · `HudModelTests.WellDrunk_LogsByKind`) + 검산 무게 11칸 작성, 실행 안 함. 확인 못 한 것: 실제 층에서 우물 · 마시는 동작(클릭으로 옆 우물을 누를 때도 마시는지)
 - [x] **문서. 내 표준 작업 가이드** (2026-11-06 사용자 "지금까지 작업한 방식에 적합한 MD파일 하나 만들어줘 — 그거 하나로 프로젝트 진행할 수 있는거로") — `Docs/MY_DEV_GUIDE.md`(친구 가이드 `Docs/Source/claude_all_type_genre.md`에서 출발해 이 프로젝트 방식으로: 시작하는 법 · 협업 약속 · 문서 체계 · 로드맵 · 사이클 · 질문 · 보고 · 코드 원칙 · 직접 확인 · 안전 규칙 · AI 에셋 · 환경 · 시연 체크리스트 · 템플릿 7종), CLAUDE.md 참조 문서 표에 한 줄. 커밋 9de90f3 (브랜치 `phase3-devguide`)
 - [~] **G-5. 3D로 되돌리기** (2026-10-28) — 플레이 확인 대기
   - 결정 (2026-10-28, 사용자): 그래픽 기준 = **실시간 3D**(Phase G)로 되돌림, Phase P 중단. 2D 코드 · 그림은 지우지 않고 남겨 둠(추천안) — `Pixel2D = true` + Setup이면 다시 2D. 맨 위 진행 요약 "최신 (2026-10-28)" 참고
