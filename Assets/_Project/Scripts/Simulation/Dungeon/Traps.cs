@@ -197,7 +197,7 @@ namespace ProjectM.Dungeon
             for (int x = 0; x < map.Width; x++)
             {
                 var pos = new GridPos(x, y);
-                if (GridMap.IsGroundType(map.Get(pos)) && world.Terrain.At(pos).Count == 0 && GridMovement.Chebyshev(pos, start) >= book.MinDistanceFromStart)
+                if (GridMap.IsGroundType(map.Get(pos)) && world.Terrain.At(pos).Count == 0 && !world.Traps.Has(pos) && GridMovement.Chebyshev(pos, start) >= book.MinDistanceFromStart) // 3-45: 함정 방 함정을 덮지 않는다
                     cells.Add(pos);
             }
             for (int i = 0; i < book.TrapsPerFloor && cells.Count > 0; i++)

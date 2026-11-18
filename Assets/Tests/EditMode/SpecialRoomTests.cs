@@ -22,11 +22,12 @@ namespace ProjectM.Tests
 
         private static SpecialRoomConfig Only(SpecialRoomType type)
         {
-            var w = new int[9];
+            var w = new int[10];
             w[(int)type - 1] = 1;
             return new SpecialRoomConfig(100, w, 3, 5, new[] { "scroll_upgrade" }, 1, new[] { "a" }, 1, new[] { "b" }, 1, new[] { "c" }, 1, "key_iron", new[] { "seed_x" }, 2,
                 new[] { "potion_x", "scroll_y" }, 3, 4, "potion_liquid_flame", "potion_frost",
-                "potion_purity", 2, 3, 30, 10, 60, 20, 4, 6);
+                "potion_purity", 2, 3, 30, 10, 60, 20, 4, 6,
+                new[] { TrapType.Fire, TrapType.Shock }, "potion_levitation");
         }
 
         private static (World World, DungeonFloor Floor, SpecialRooms.Result Room) Carve(ulong seed, SpecialRoomType type)
@@ -321,6 +322,53 @@ namespace ProjectM.Tests
             Assert.That(carved, Is.GreaterThan(0));
         }
 
+        // 3-45 함정 방: 입구 = 문, 맨 안쪽 줄 앞까지 모두 보이는 함정(한 종류), 맨 안쪽 줄에 물건 1개, 방 밖에 부양 물약 하나
+        [Test]
+        public void TrapRoom_VisibleTrapField_PrizeAtBack_LevitationOutside()
+        {
+            int carved = 0;
+            for (ulong seed = 1; seed <= 20; seed++)
+            {
+                var (world, floor, room) = Carve(seed, SpecialRoomType.TrapRoom);
+                if (room == null) continue;
+                carved++;
+                var map = world.Map;
+                Assert.That(map.Get(room.Entrance), Is.EqualTo(TileType.Door), $"시드 {seed}");
+                int size = (int)System.Math.Round(System.Math.Sqrt(room.Cells.Count));
+                var kinds = new System.Collections.Generic.HashSet<TrapType>();
+                int prize = 0;
+                for (int a = 0; a < size; a++)
+                    for (int b = 0; b < size; b++)
+                    {
+                        var c = room.Cells[a * size + b];
+                        bool back = a == size - 1;
+                        Assert.That(world.Traps.Has(c), Is.EqualTo(!back), $"시드 {seed} {c} 깊이 {a}");
+                        if (!back)
+                        {
+                            Assert.That(world.Traps.TryGet(c, out var trap) && !trap.Hidden, Is.True, "보이는 함정");
+                            kinds.Add(trap.Type);
+                        }
+                        int n = world.FloorItems.ItemsAt(c).Count;
+                        if (n > 0) Assert.That(back, Is.True, $"시드 {seed}: 보상은 맨 안쪽 줄");
+                        prize += n;
+                    }
+                Assert.That(kinds.Count, Is.EqualTo(1), "방마다 한 종류");
+                Assert.That(kinds, Is.SubsetOf(new[] { TrapType.Fire, TrapType.Shock }));
+                Assert.That(prize, Is.EqualTo(1), $"시드 {seed}");
+                var cells = new System.Collections.Generic.HashSet<GridPos>(room.Cells);
+                int outside = 0;
+                for (int y = 0; y < map.Height; y++)
+                    for (int x = 0; x < map.Width; x++)
+                    {
+                        var p = new GridPos(x, y);
+                        if (cells.Contains(p)) continue;
+                        foreach (var item in world.FloorItems.ItemsAt(p)) if (item.ItemId == "potion_levitation") outside++;
+                    }
+                Assert.That(outside, Is.EqualTo(1), $"시드 {seed}");
+            }
+            Assert.That(carved, Is.GreaterThan(0));
+        }
+
         // 검산: FloorDecorConfig 특수 방 값 = BALANCE.md 16번, 목록의 아이템은 ItemCatalog에 있다
         [Test]
         public void ProjectAsset_MatchesBalanceTable()
@@ -328,7 +376,9 @@ namespace ProjectM.Tests
             var c = AssetDatabase.LoadAssetAtPath<FloorDecorConfigAsset>("Assets/_Project/Data/Dungeon/FloorDecorConfig.asset").ToConfig().SpecialRooms;
             Assert.That((c.RoomPercent, c.MinSize, c.MaxSize, c.VaultItemCount, c.ArmoryItemCount, c.LibraryItemCount, c.GardenItemCount, c.KeyItem),
                 Is.EqualTo((70, 3, 5, 2, 2, 3, 2, "key_iron")));
-            Assert.That(c.Weights, Is.EqualTo(new[] { 3, 2, 2, 2, 2, 2, 2, 2, 2 }), "3-16c 연구실 2 · 3-41 창고 2 · 3-42 마법 불 2 · 3-43 독가스 2 · 3-44 보물 창고 2");
+            Assert.That(c.Weights, Is.EqualTo(new[] { 3, 2, 2, 2, 2, 2, 2, 2, 2, 2 }), "3-16c 연구실 2 · 3-41 창고 2 · 3-42 마법 불 2 · 3-43 독가스 2 · 3-44 보물 창고 2 · 3-45 함정 방 2");
+            Assert.That(c.TrapRoomTypes, Is.EqualTo(new[] { TrapType.Fire, TrapType.ToxicGas, TrapType.ParalyticGas, TrapType.Shock }));
+            Assert.That(c.TrapRoomItem, Is.EqualTo("potion_levitation"));
             Assert.That((c.TreasuryPilesMin, c.TreasuryPilesMax), Is.EqualTo((4, 6)));
             Assert.That((c.ToxicGasItem, c.ToxicGoldPilesMin, c.ToxicGoldPilesMax, c.ToxicGoldMinBase, c.ToxicGoldMinPerFloor, c.ToxicGoldMaxBase, c.ToxicGoldMaxPerFloor),
                 Is.EqualTo(("potion_purity", 2, 3, 30, 10, 60, 20)));
@@ -340,6 +390,7 @@ namespace ProjectM.Tests
                 foreach (var id in list) Assert.That(items.TryGet(id, out _), Is.True, id);
             Assert.That(items.TryGet(c.MagicalFireItem, out _), Is.True);
             Assert.That(items.TryGet(c.ToxicGasItem, out _), Is.True);
+            Assert.That(items.TryGet(c.TrapRoomItem, out _), Is.True);
             Assert.That(items.TryGet("key_iron", out var key) && key.Use == ItemUse.Key, Is.True);
         }
     }
