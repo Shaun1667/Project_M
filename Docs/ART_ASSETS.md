@@ -427,8 +427,8 @@ Varco는 모든 모델을 **가장 긴 쪽 1 m**로 보내므로 크기는 프�
 | `enemy_time_afterimage` | Enemy_TimeAfterimage | Unit_TimeAfterimage | 1.0 | 약 1.0 m | 6,000 | Blender (`Tools/blender_rig_from_joints.py`) | — |
 | `enemy_temple_guardian` | Enemy_TempleGuardian | Unit_TempleGuardian | 1.3 | 약 1.3 m | 6,000 | Blender (`Tools/blender_rig_from_joints.py`) | — |
 | `enemy_time_priest` | Enemy_TimePriest | Unit_TimePriest | 1.0 | 약 1.1 m | 6,000 | Mixamo | — |
-| `enemy_wraith` | Enemy_Wraith | Unit_Wraith | 0.95 | 약 0.9 m | 6,000 | Mixamo (T포즈로 다시 생성 2026-11-18) | 3-47 지하 묘지 지킴이, 원본 그림 `Docs/특수방_원본/wraith.png` |
-| `enemy_statue` | Enemy_Statue | Unit_Statue | 1.25 | 약 1.25 m | 6,000 | Mixamo (T포즈로 생성) | `Prop_Weapon_Longsword` 0.85 m · 3-48 석상 방, 원본 그림 `Docs/특수방_원본/statue.png` |
+| `enemy_wraith` | Enemy_Wraith | Unit_Wraith | 0.95 | 약 0.9 m | 6,000 | **Mixamo `Enemy_Wraith_Rigged.fbx`** (T포즈로 다시 생성 2026-11-18, 손가락 없음 25뼈 — 65뼈는 실패) | 3-47 지하 묘지 지킴이, 원본 그림 `Docs/특수방_원본/wraith.png` |
+| `enemy_statue` | Enemy_Statue | Unit_Statue | 1.25 | 약 1.25 m | 6,000 | **Mixamo `Enemy_Statue_Rigged.fbx`** (T포즈, 65뼈) | `Prop_Weapon_Longsword` 0.85 m — 무기 소품은 플레이어 무기처럼 손잡이(`WeaponSpecs` Grip · Tilt)를 쥠 · 3-48 석상 방, 원본 그림 `Docs/특수방_원본/statue.png` |
 | `boss_time_guardian` | Boss_TimeGuardian | Unit_TimeGuardian | 1.9 | 약 1.9 m | 12,000 | Blender (`Tools/blender_rig_from_joints.py`) | — |
 
 - **결정 (2026-11-05, 사용자)**: 사람형 리깅은 **Mixamo**(사람형만 — 네발 · 전갈은 리깅 없이 코드 움직임). 무기 · 지팡이 등 **든 물건은 몸과 따로 만들어 Unity에서 손 뼈에 붙인다**(`AttachStaff` — 높이 1 m 소품, 원점 = 아래 끝, 손이 길이 40% 지점). 그래서 고블린 · 사막 주술사 · 파라오는 지팡이 없는 몸으로 다시 생성.
@@ -438,6 +438,7 @@ Varco는 모든 모델을 **가장 긴 쪽 1 m**로 보내므로 크기는 프�
 - Varco 플로우 `MoaDungeon`(f679a6c8) y 105600 ~ 117000에 프롬프트 → 이미지 → 3D 노드. 포인트 약 5,900.
 - 3~5구역 15종 (2026-11-05, 사용자 요청): Varco 플로우 `MoaDungeon` y 159600 ~ 168400 (그림 2장씩 1,500 + 3D 3,000 포인트). 텍스처는 FBX에 묻힌 `base_color` · `normal`을 Blender로 꺼내 `Textures/<모델>_…`로 (Unity `ExtractTextures`는 확인 창이 떠서 MCP에서 막힘). Mixamo가 실패한 사람형 8종은 Blender로 리깅 — 정면 렌더(`Tools/blender_front_render.py`)에서 관절 픽셀을 찍어(`Tools/blender_rig_joints.json`) Mixamo 이름 25뼈를 세우고 뼈 선분까지 거리로 무게(가까운 3뼈, 1/d^4)를 칠함(`Tools/blender_rig_from_joints.py`) → Unity Humanoid · Idle · Walk 그대로.
 - Mixamo 자동 리깅 (2026-11-05): **팔꿈치 표시는 실제 팔꿈치에** — 어깨에 두면 `Unknown error while generating motion`으로 실패했다(얼음 마녀 · 화염 주술사에서 확인, 화염 주술사는 팔꿈치로 옮기자 성공). 가는 로브형(주술사 · 사제 · 임프)은 성공, 큰 치마(마녀) · 갑옷 덩어리(골렘 · 시계병) · 덩굴 가장자리(잔상)는 손가락 없는 뼈대로도 실패.
+- Mixamo 턱 표시 (2026-11-18, 석상): **턱 표시를 투구 · 머리 아래 끝에 두면 목 · 머리 뼈가 거의 같은 자리(길이 0)에 생겨 Unity Humanoid가 목을 뒤집는다**(머리가 몸 뒤로 넘어가 안 보임 — 목 뼈 회전 (33, 180, 180)). 머리가 어깨에 묻힌 모델은 턱 표시를 눈높이쯤으로 올린다. 확인: 프리팹의 `mixamorig:Neck` 회전이 수 도 안쪽이면 정상.
 - 확인 못 한 것: 게임 화면(고각도 카메라)에서의 크기 · 걷기 모습, 고블린 Idle이 비틀어져 보이는지.
 
 ### 12-6. 바닥 아이템 (2026-11-05 — ★ 2차 12 ~ 18)

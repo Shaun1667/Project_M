@@ -923,6 +923,15 @@ namespace ProjectM.Editor
             staff.transform.SetParent(hand, true);
             staff.transform.localScale = model.transform.localScale * (spec.Scale / Mathf.Max(1e-4f, hand.lossyScale.y));
             var upright = sheep.transform.parent; // 프리팹 루트 (Y-up)
+            foreach (var w in WeaponSpecs)
+            {
+                if (w.Model != spec.Model) continue;
+                // 3-48 석상: 무기 소품(원점 = 가운데)은 플레이어 무기처럼 — 손이 손잡이(Grip)에, 날을 Tilt만큼 앞으로
+                var tilt = upright.rotation * Quaternion.Euler(w.Tilt, spec.Yaw, 0f);
+                staff.transform.rotation = tilt * model.transform.localRotation;
+                staff.transform.position = hand.position - (tilt * Vector3.up) * (length * (w.Grip - 0.5f));
+                return;
+            }
             staff.transform.rotation = upright.rotation * Quaternion.Euler(0f, spec.Yaw, 0f) * model.transform.localRotation; // 세워서
             staff.transform.position = hand.position - upright.up * (length * StaffGripRatio);
         }
