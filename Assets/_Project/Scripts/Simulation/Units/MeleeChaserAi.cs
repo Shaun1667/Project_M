@@ -45,6 +45,9 @@ namespace ProjectM.Units
             // 3-49 감시탑: 감시자는 움직이지 않고 예고 → 번개만
             if (ProjectM.Dungeon.Sentries.IsSentry(_world, self)) return ProjectM.Dungeon.Sentries.NextCommand(_world, _spells, _sight, _statuses, self, cost);
 
+            // 3-50 피라냐: 자기 칸에 물이 없으면(얼음 · 증발 · 밀려남) 숨이 막혀 죽는다
+            if (!CanEnter(self, self.Pos)) return new ProjectM.Dungeon.StrandedCommand(_world, cost);
+
             // 3-48 석상: 잠든 동안 쉬고, 플레이어가 바로 옆에 오면 깨어나 이번 차례부터 싸운다
             if (self.Dormant)
             {
@@ -124,7 +127,7 @@ namespace ProjectM.Units
             if (!player.PreviousPos.HasValue) return null;
             var trail = player.PreviousPos.Value;
             if (trail == self.Pos || GridMovement.Chebyshev(trail, player.Pos) != 1) return null;
-            if (!GridMovement.CanStep(_world.Map, self.Pos, trail) || _world.Units.IsOccupied(trail)) return null;
+            if (!GridMovement.CanStep(_world.Map, self.Pos, trail) || _world.Units.IsOccupied(trail) || !CanEnter(self, trail)) return null;
             return new MoveCommand(_world, trail, MoveCost(self, cost));
         }
 
@@ -132,7 +135,7 @@ namespace ProjectM.Units
         {
             if (!self.WanderTarget.HasValue || self.WanderTarget.Value == self.Pos)
             {
-                self.WanderTarget = PickWanderTarget(self.Pos);
+                self.WanderTarget = PickWanderTarget(self);
                 if (!self.WanderTarget.HasValue) return new WaitCommand(cost);
             }
 
@@ -143,8 +146,9 @@ namespace ProjectM.Units
         }
 
         /// <summary>맵의 바닥 · 계단 칸 중 하나 (지금 칸 제외), 후보는 y → x 순, 난수는 RngStream.Ai.</summary>
-        private GridPos? PickWanderTarget(GridPos current)
+        private GridPos? PickWanderTarget(Unit self)
         {
+            var current = self.Pos;
             var map = _world.Map;
             var candidates = new List<GridPos>();
             for (int y = 0; y < map.Height; y++)
@@ -152,7 +156,7 @@ namespace ProjectM.Units
                 for (int x = 0; x < map.Width; x++)
                 {
                     var p = new GridPos(x, y);
-                    if (p != current && map.IsWalkable(p)) candidates.Add(p);
+                    if (p != current && map.IsWalkable(p) && CanEnter(self, p)) candidates.Add(p);
                 }
             }
             if (candidates.Count == 0) return null;
@@ -178,7 +182,7 @@ namespace ProjectM.Units
             foreach (var dir in GridMovement.Directions)
             {
                 var p = self.Pos + dir;
-                if (!GridMovement.CanStep(_world.Map, self.Pos, p) || _world.Units.IsOccupied(p)) continue;
+                if (!GridMovement.CanStep(_world.Map, self.Pos, p) || _world.Units.IsOccupied(p) || !CanEnter(self, p)) continue;
                 int d = GridMovement.Chebyshev(p, from);
                 if (d > bestDistance) { bestDistance = d; best = p; }
             }
@@ -188,17 +192,39 @@ namespace ProjectM.Units
         /// <summary>goal 쪽으로 한 걸음 (GridPathfinder.ChaseStep). 길이 없거나 첫 칸이 막혀 있으면 null.</summary>
         private ICommand StepToward(Unit self, GridPos goal, int cost)
         {
-            var step = GridPathfinder.ChaseStep(_world.Map, self.Pos, goal, _world.Units.IsOccupied);
-            if (!step.HasValue || _world.Units.IsOccupied(step.Value)) return null;
+            var step = GridPathfinder.ChaseStep(_world.Map, self.Pos, goal, p => _world.Units.IsOccupied(p) || !CanEnter(self, p)); // 3-50 피라냐: 물 칸으로만
+            if (!step.HasValue && TraitsOf(self)?.WaterOnly == true) step = WaterStepToward(self, goal); // 물로 이어지지 않는 목표 — 물 가장자리까지 다가감
+            if (!step.HasValue || _world.Units.IsOccupied(step.Value) || !CanEnter(self, step.Value)) return null;
             GridPos? then = null;
             var traits = TraitsOf(self);
             if (traits != null && traits.MoveSteps > 1 && step.Value != goal && GridMovement.Chebyshev(step.Value, goal) > 1) // 3-17b 빠름: 같은 차례에 한 칸 더 (목표 칸 앞에서 멈춤)
             {
-                var second = GridPathfinder.ChaseStep(_world.Map, step.Value, goal, p => p != self.Pos && _world.Units.IsOccupied(p));
-                if (second.HasValue && second.Value != goal && !_world.Units.IsOccupied(second.Value)) then = second;
+                var second = GridPathfinder.ChaseStep(_world.Map, step.Value, goal, p => p != self.Pos && _world.Units.IsOccupied(p) || !CanEnter(self, p));
+                if (second.HasValue && second.Value != goal && !_world.Units.IsOccupied(second.Value) && CanEnter(self, second.Value)) then = second;
             }
             return new MoveCommand(_world, step.Value, MoveCost(self, cost), then);
         }
+
+        /// <summary>3-50 피라냐: 물 길이 목표까지 이어지지 않을 때 — 목표와 거리(체비셰프, 같으면 유클리드)가 줄어드는 이웃 물 칸 (방향 순서 고정). 없으면 null.</summary>
+        private GridPos? WaterStepToward(Unit self, GridPos goal)
+        {
+            GridPos? best = null;
+            int bestCheb = GridMovement.Chebyshev(self.Pos, goal);
+            int bestEuclid = Sq(self.Pos, goal);
+            foreach (var dir in GridMovement.Directions)
+            {
+                var p = self.Pos + dir;
+                if (!GridMovement.CanStep(_world.Map, self.Pos, p) || _world.Units.IsOccupied(p) || !CanEnter(self, p)) continue;
+                int cheb = GridMovement.Chebyshev(p, goal), euclid = Sq(p, goal);
+                if (cheb < bestCheb || cheb == bestCheb && euclid < bestEuclid) { best = p; bestCheb = cheb; bestEuclid = euclid; }
+            }
+            return best;
+        }
+
+        private static int Sq(GridPos a, GridPos b) => (a.X - b.X) * (a.X - b.X) + (a.Y - b.Y) * (a.Y - b.Y);
+
+        /// <summary>3-50: 물에서만 사는 종류(EnemyTraits.WaterOnly)는 물 지형 칸에만 들어간다. 나머지는 늘 true.</summary>
+        private bool CanEnter(Unit self, GridPos p) => TraitsOf(self)?.WaterOnly != true || _world.Terrain.Has(p, ProjectM.Status.TerrainEffectType.Water);
 
         private EnemyTraits TraitsOf(Unit self) => _enemies != null && _enemies.TryGet(self.VisualId, out var t) ? t : null;
 

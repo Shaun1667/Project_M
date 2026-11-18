@@ -283,6 +283,7 @@ namespace ProjectM.UI
         public const string TombOpened = "관을 열었다";
         public const string TombGuardians = "원혼이 깨어났다!";
         public const string StatueAwoken = "석상이 살아 움직인다!"; // 3-48
+        public const string Stranded = "물 밖으로 나온 피라냐가 숨이 막힌다"; // 3-50
         public const string WellHealthDrunk = "치유의 우물을 마셨다 — 몸이 회복된다";
         public const string WellAwarenessDrunk = "지식의 우물을 마셨다 — 배낭의 물건과 이 층이 보인다";
 

@@ -44,6 +44,8 @@ namespace ProjectM.Data
             [Tooltip("소환할 적 ID (이 표) · 수 · 체력 % 이하에서 한 번")] public string SummonId;
             [Min(0)] public int SummonCount;
             [Range(0, 100)] public int SummonAtHpPercent;
+            [Header("물에서만 (3-50 피라냐)")]
+            [Tooltip("물 지형 칸으로만 움직이고, 물이 없어지면 죽음")] public bool WaterOnly;
         }
 
         [System.Serializable]
@@ -216,7 +218,7 @@ namespace ProjectM.Data
                 }
                 list.Add(new EnemyTraits(e.Id, e.DisplayName, System.Math.Max(1, e.MoveSteps), System.Math.Max(1, e.MoveCostTicks),
                     e.HitStatus, e.HitStatusPercent, e.HurtTerrain, e.SpellId, e.KeepDistance, percents,
-                    e.ChargeSpellId, e.ChargePercent, e.TeleportPercent, summon, e.SummonCount, e.SummonAtHpPercent));
+                    e.ChargeSpellId, e.ChargePercent, e.TeleportPercent, summon, e.SummonCount, e.SummonAtHpPercent, waterOnly: e.WaterOnly));
             }
             return new EnemyBook(list);
         }

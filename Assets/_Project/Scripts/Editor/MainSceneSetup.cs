@@ -487,6 +487,7 @@ namespace ProjectM.Editor
                 ("enemy_wraith", new Color(0.45f, 0.75f, 0.75f), 0.9f), // 3-47 지하 묘지 지킴이
                 ("enemy_statue", new Color(0.6f, 0.6f, 0.62f), 1.2f), // 3-48 석상
                 ("enemy_sentry", new Color(0.35f, 0.55f, 0.95f), 1.3f), // 3-49 감시자
+                ("enemy_piranha", new Color(0.75f, 0.3f, 0.3f), 0.5f), // 3-50 피라냐
             })
                 catalog.Set(id, AssetDatabase.LoadAssetAtPath<Sprite>(UnitCircleSpritePath), color, height);
             // 3-4b 임시 보스: 짙은 자주색, 두 배 키 (판정은 1칸)
@@ -821,6 +822,9 @@ namespace ProjectM.Editor
             changed |= catalog.AddIfMissing(statueRow);
             // 3-49 감시자 (감시탑에만 — 무적 · 움직이지 않음, 번개는 FloorDecorConfig _sentrySpells 층 단계, BALANCE 16번). 체력 · 공격은 쓰이지 않는 자리값
             changed |= catalog.AddIfMissing(E("enemy_sentry", "감시자", 10, 1, 6, 1, 0, 0, 30));
+            // 3-50 피라냐 (피라냐 연못에만 — 물에서만 · 빠름 2칸, 세기는 층마다 FloorDecorConfig _poolPiranhaPercentPerFloor, BALANCE 16번)
+            var piranhaRow = E("enemy_piranha", "피라냐", 6, 3, 6, 12, 8, 3, 30); piranhaRow.MoveSteps = 2; piranhaRow.WaterOnly = true;
+            changed |= catalog.AddIfMissing(piranhaRow);
             ZoneCatalogAsset.Zone Z(string name, int first, int last, int percent, string boss, params (string id, int weight)[] enemies)
             {
                 var rows = new System.Collections.Generic.List<ZoneCatalogAsset.ZoneEnemyRow>();

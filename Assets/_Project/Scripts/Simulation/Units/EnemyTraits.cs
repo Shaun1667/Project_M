@@ -39,13 +39,16 @@ namespace ProjectM.Units
         public int SummonAtHpPercent { get; }
         /// <summary>원거리 주문 다음에 차례로 시도하는 주문 (3-23b 지난 회차 플레이어 보스 — 빠른 칸 순서). 비면 없음.</summary>
         public IReadOnlyList<string> ExtraSpellIds { get; }
+        /// <summary>3-50 피라냐: 물 지형(TerrainEffectType.Water) 칸으로만 움직이고, 자기 칸에 물이 없으면 그 차례에 죽는다.</summary>
+        public bool WaterOnly { get; }
 
         public EnemyTraits(string id, string displayName = null, int moveSteps = 1, int moveCostTicks = 1,
             StatusType hitStatus = StatusType.None, int hitStatusPercent = 0, TerrainEffectType hurtTerrain = TerrainEffectType.None,
             string spellId = null, int keepDistance = 0, IReadOnlyDictionary<Element, int> damagePercent = null,
             string chargeSpellId = null, int chargePercent = 0, int teleportPercent = 0, UnitDef summonDef = null, int summonCount = 0, int summonAtHpPercent = 0,
-            IReadOnlyList<string> extraSpellIds = null)
+            IReadOnlyList<string> extraSpellIds = null, bool waterOnly = false)
         {
+            WaterOnly = waterOnly;
             var extra = new List<string>();
             if (extraSpellIds != null) foreach (var s in extraSpellIds) if (!string.IsNullOrEmpty(s)) extra.Add(s);
             ExtraSpellIds = extra;

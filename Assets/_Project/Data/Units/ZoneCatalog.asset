@@ -37,6 +37,7 @@ MonoBehaviour:
     SummonId: 
     SummonCount: 0
     SummonAtHpPercent: 0
+    WaterOnly: 0
   - Id: boss
     DisplayName: "\uBCF4\uC2A4"
     MaxHp: 60
@@ -61,6 +62,7 @@ MonoBehaviour:
     SummonId: 
     SummonCount: 0
     SummonAtHpPercent: 0
+    WaterOnly: 0
   - Id: enemy_rat
     DisplayName: "\uC950"
     MaxHp: 8
@@ -85,6 +87,7 @@ MonoBehaviour:
     SummonId: 
     SummonCount: 0
     SummonAtHpPercent: 0
+    WaterOnly: 0
   - Id: enemy_bunny
     DisplayName: "\uD1A0\uB07C"
     MaxHp: 5
@@ -109,6 +112,7 @@ MonoBehaviour:
     SummonId: 
     SummonCount: 0
     SummonAtHpPercent: 0
+    WaterOnly: 0
   - Id: enemy_slime
     DisplayName: "\uC2AC\uB77C\uC784"
     MaxHp: 12
@@ -135,6 +139,7 @@ MonoBehaviour:
     SummonId: 
     SummonCount: 0
     SummonAtHpPercent: 0
+    WaterOnly: 0
   - Id: enemy_goblin_shaman
     DisplayName: "\uACE0\uBE14\uB9B0 \uC8FC\uC220\uC0AC"
     MaxHp: 6
@@ -159,6 +164,7 @@ MonoBehaviour:
     SummonId: 
     SummonCount: 0
     SummonAtHpPercent: 0
+    WaterOnly: 0
   - Id: enemy_scorpion
     DisplayName: "\uC804\uAC08"
     MaxHp: 12
@@ -183,6 +189,7 @@ MonoBehaviour:
     SummonId: 
     SummonCount: 0
     SummonAtHpPercent: 0
+    WaterOnly: 0
   - Id: enemy_jackal
     DisplayName: "\uC790\uCE7C"
     MaxHp: 9
@@ -207,6 +214,7 @@ MonoBehaviour:
     SummonId: 
     SummonCount: 0
     SummonAtHpPercent: 0
+    WaterOnly: 0
   - Id: enemy_mummy
     DisplayName: "\uBBF8\uB77C"
     MaxHp: 22
@@ -235,6 +243,7 @@ MonoBehaviour:
     SummonId: 
     SummonCount: 0
     SummonAtHpPercent: 0
+    WaterOnly: 0
   - Id: enemy_desert_shaman
     DisplayName: "\uC0AC\uB9C9 \uC8FC\uC220\uC0AC"
     MaxHp: 10
@@ -259,6 +268,7 @@ MonoBehaviour:
     SummonId: 
     SummonCount: 0
     SummonAtHpPercent: 0
+    WaterOnly: 0
   - Id: boss_slime_girl
     DisplayName: "\uC2AC\uB77C\uC784 \uC18C\uB140"
     MaxHp: 60
@@ -283,6 +293,7 @@ MonoBehaviour:
     SummonId: 
     SummonCount: 0
     SummonAtHpPercent: 0
+    WaterOnly: 0
   - Id: boss_pharaoh
     DisplayName: "\uD30C\uB77C\uC624 \uC220\uC0AC"
     MaxHp: 80
@@ -307,6 +318,7 @@ MonoBehaviour:
     SummonId: enemy_mummy
     SummonCount: 2
     SummonAtHpPercent: 50
+    WaterOnly: 0
   - Id: enemy_frost_bat
     DisplayName: "\uC11C\uB9AC \uBC15\uC950"
     MaxHp: 10
@@ -331,6 +343,7 @@ MonoBehaviour:
     SummonId: 
     SummonCount: 0
     SummonAtHpPercent: 0
+    WaterOnly: 0
   - Id: enemy_snow_wolf
     DisplayName: "\uB208\uB291\uB300"
     MaxHp: 16
@@ -355,6 +368,7 @@ MonoBehaviour:
     SummonId: 
     SummonCount: 0
     SummonAtHpPercent: 0
+    WaterOnly: 0
   - Id: enemy_ice_golem
     DisplayName: "\uC5BC\uC74C \uACE8\uB818"
     MaxHp: 32
@@ -383,6 +397,7 @@ MonoBehaviour:
     SummonId: 
     SummonCount: 0
     SummonAtHpPercent: 0
+    WaterOnly: 0
   - Id: enemy_frost_shaman
     DisplayName: "\uC11C\uB9AC \uC8FC\uC220\uC0AC"
     MaxHp: 14
@@ -407,6 +422,7 @@ MonoBehaviour:
     SummonId: 
     SummonCount: 0
     SummonAtHpPercent: 0
+    WaterOnly: 0
   - Id: boss_ice_witch
     DisplayName: "\uC5BC\uC74C \uB9C8\uB140"
     MaxHp: 110
@@ -433,6 +449,7 @@ MonoBehaviour:
     SummonId: enemy_frost_bat
     SummonCount: 3
     SummonAtHpPercent: 50
+    WaterOnly: 0
   - Id: enemy_fire_salamander
     DisplayName: "\uD654\uC5FC \uB3C4\uB871\uB1FD"
     MaxHp: 18
@@ -457,6 +474,7 @@ MonoBehaviour:
     SummonId: 
     SummonCount: 0
     SummonAtHpPercent: 0
+    WaterOnly: 0
   - Id: enemy_flame_imp
     DisplayName: "\uBD88\uAF43 \uC784\uD504"
     MaxHp: 12
@@ -481,6 +499,7 @@ MonoBehaviour:
     SummonId: 
     SummonCount: 0
     SummonAtHpPercent: 0
+    WaterOnly: 0
   - Id: enemy_magma_golem
     DisplayName: "\uB9C8\uADF8\uB9C8 \uACE8\uB818"
     MaxHp: 40
@@ -511,6 +530,7 @@ MonoBehaviour:
     SummonId: 
     SummonCount: 0
     SummonAtHpPercent: 0
+    WaterOnly: 0
   - Id: enemy_fire_shaman
     DisplayName: "\uD654\uC5FC \uC8FC\uC220\uC0AC"
     MaxHp: 18
@@ -535,6 +555,7 @@ MonoBehaviour:
     SummonId: 
     SummonCount: 0
     SummonAtHpPercent: 0
+    WaterOnly: 0
   - Id: boss_lava_lord
     DisplayName: "\uC6A9\uC554 \uAD70\uC8FC"
     MaxHp: 140
@@ -565,6 +586,7 @@ MonoBehaviour:
     SummonId: enemy_magma_golem
     SummonCount: 2
     SummonAtHpPercent: 50
+    WaterOnly: 0
   - Id: enemy_clockwork_soldier
     DisplayName: "\uB179\uC2A8 \uC2DC\uACC4\uBCD1"
     MaxHp: 24
@@ -589,6 +611,7 @@ MonoBehaviour:
     SummonId: 
     SummonCount: 0
     SummonAtHpPercent: 0
+    WaterOnly: 0
   - Id: enemy_time_afterimage
     DisplayName: "\uC2DC\uAC04 \uC794\uC0C1"
     MaxHp: 15
@@ -613,6 +636,7 @@ MonoBehaviour:
     SummonId: 
     SummonCount: 0
     SummonAtHpPercent: 0
+    WaterOnly: 0
   - Id: enemy_temple_guardian
     DisplayName: "\uC2E0\uC804 \uC218\uD638\uC0C1"
     MaxHp: 50
@@ -641,6 +665,7 @@ MonoBehaviour:
     SummonId: 
     SummonCount: 0
     SummonAtHpPercent: 0
+    WaterOnly: 0
   - Id: enemy_time_priest
     DisplayName: "\uC2DC\uAC04 \uC0AC\uC81C"
     MaxHp: 22
@@ -665,6 +690,7 @@ MonoBehaviour:
     SummonId: 
     SummonCount: 0
     SummonAtHpPercent: 0
+    WaterOnly: 0
   - Id: boss_time_guardian
     DisplayName: "\uC2DC\uAC04\uC758 \uC218\uD638\uC790"
     MaxHp: 200
@@ -689,6 +715,7 @@ MonoBehaviour:
     SummonId: enemy_time_afterimage
     SummonCount: 3
     SummonAtHpPercent: 50
+    WaterOnly: 0
   - Id: enemy_wraith
     DisplayName: "\uC6D0\uD63C"
     MaxHp: 6
@@ -713,6 +740,7 @@ MonoBehaviour:
     SummonId: 
     SummonCount: 0
     SummonAtHpPercent: 0
+    WaterOnly: 0
   - Id: enemy_statue
     DisplayName: "\uC0B4\uC544\uB09C \uC11D\uC0C1"
     MaxHp: 20
@@ -737,6 +765,7 @@ MonoBehaviour:
     SummonId: 
     SummonCount: 0
     SummonAtHpPercent: 0
+    WaterOnly: 0
   - Id: enemy_sentry
     DisplayName: "\uAC10\uC2DC\uC790"
     MaxHp: 10
@@ -761,6 +790,32 @@ MonoBehaviour:
     SummonId: 
     SummonCount: 0
     SummonAtHpPercent: 0
+    WaterOnly: 0
+  - Id: enemy_piranha
+    DisplayName: "\uD53C\uB77C\uB0D0"
+    MaxHp: 6
+    AttackDamage: 3
+    SightRange: 6
+    Accuracy: 12
+    Evasion: 8
+    ExpReward: 3
+    ExpMaxLevel: 30
+    MoveSteps: 2
+    MoveCostTicks: 0
+    HitStatus: 0
+    HitStatusPercent: 0
+    HurtTerrain: 0
+    SpellId: 
+    MaxMana: 0
+    KeepDistance: 0
+    DamagePercents: []
+    ChargeSpellId: 
+    ChargePercent: 0
+    TeleportPercent: 0
+    SummonId: 
+    SummonCount: 0
+    SummonAtHpPercent: 0
+    WaterOnly: 1
   _zones:
   - Name: "\uC232 \uC18D \uB3D9\uAD74"
     FirstFloor: 1

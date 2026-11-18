@@ -37,6 +37,8 @@ namespace ProjectM.Dungeon
         Statue = 13,
         /// <summary>감시탑 (3-49, SPD Sentry): 맨 안쪽 줄 가운데에 무적 감시자(Sentries.Place) · 그 줄에 좋은 물건 하나(보물 방 목록). 감시자는 보이는 플레이어 칸에 예고 → 다음 차례 번개.</summary>
         Sentry = 14,
+        /// <summary>피라냐 연못 (3-50, SPD Pool): 가운데 받침대만 빼고 영구 물 · 물속 피라냐(Pools.Fill) · 받침대에 좋은 물건 하나(보물 방 목록).</summary>
+        Pool = 15,
     }
 
     /// <summary>특수 방 수치 · 아이템 목록 (3-15b). 값은 FloorDecorConfigAsset에서 — 기준은 BALANCE.md 16번.</summary>
@@ -44,7 +46,7 @@ namespace ProjectM.Dungeon
     {
         /// <summary>층마다 특수 방이 생길 확률 (%) — 생기면 하나.</summary>
         public int RoomPercent { get; }
-        /// <summary>종류 무게 (보물 방 · 무기고 · 도서관 · 정원 · 연구실 · 창고 · 마법 불 · 독가스 · 보물 창고 · 함정 방 · 마법 우물 · 지하 묘지 · 석상 · 감시탑 순 — 모자란 뒤쪽은 0).</summary>
+        /// <summary>종류 무게 (보물 방 · 무기고 · 도서관 · 정원 · 연구실 · 창고 · 마법 불 · 독가스 · 보물 창고 · 함정 방 · 마법 우물 · 지하 묘지 · 석상 · 감시탑 · 피라냐 연못 순 — 모자란 뒤쪽은 0).</summary>
         public IReadOnlyList<int> Weights { get; }
         /// <summary>방 안쪽 크기 (정사각 한 변 최소 ~ 최대).</summary>
         public int MinSize { get; }
@@ -121,7 +123,7 @@ namespace ProjectM.Dungeon
             LabItems = labItems ?? Array.Empty<string>();
             LabItemCount = Math.Max(0, labItemCount);
             if (roomPercent < 0 || roomPercent > 100) throw new ArgumentOutOfRangeException(nameof(roomPercent));
-            if (weights == null || weights.Count < 4 || weights.Count > 14) throw new ArgumentException("종류 무게는 4 ~ 14개 (보물 · 무기고 · 도서관 · 정원 · 연구실 · 창고 · 마법 불 · 독가스 · 보물 창고 · 함정 방 · 마법 우물 · 지하 묘지 · 석상 · 감시탑)", nameof(weights));
+            if (weights == null || weights.Count < 4 || weights.Count > 15) throw new ArgumentException("종류 무게는 4 ~ 15개 (보물 · 무기고 · 도서관 · 정원 · 연구실 · 창고 · 마법 불 · 독가스 · 보물 창고 · 함정 방 · 마법 우물 · 지하 묘지 · 석상 · 감시탑 · 피라냐 연못)", nameof(weights));
             if (minSize < 2 || maxSize < minSize) throw new ArgumentOutOfRangeException(nameof(maxSize), "2 ≤ 최소 ≤ 최대");
             RoomPercent = roomPercent;
             Weights = weights;
@@ -247,7 +249,8 @@ namespace ProjectM.Dungeon
                 case SpecialRoomType.MagicalFire:
                 case SpecialRoomType.ToxicGas:
                 case SpecialRoomType.TrapRoom:
-                case SpecialRoomType.Sentry: pool = config.VaultItems; count = 1; break; // 3-49: 감시자 옆 맨 안쪽 줄에
+                case SpecialRoomType.Sentry: // 3-49: 감시자 옆 맨 안쪽 줄에
+                case SpecialRoomType.Pool: pool = config.VaultItems; count = 1; break; // 3-50: 가운데 받침대에
                 case SpecialRoomType.Treasury: // 3-44: 금화만
                 case SpecialRoomType.MagicWell: // 3-46: 우물만
                 case SpecialRoomType.Crypt: // 3-47: 관만 (갑옷은 열 때)
@@ -270,6 +273,7 @@ namespace ProjectM.Dungeon
             if (type == SpecialRoomType.Crypt) world.SetTile(cells[cells.Count / 2], TileType.Tomb); // 3-47: 가운데 칸에 관
             if (type == SpecialRoomType.Statue) Statues.Place(world, cells[cells.Count / 2]); // 3-48: 가운데 칸에 잠든 석상
             if (type == SpecialRoomType.Sentry) spots = PlaceSentry(world, cells); // 3-49: 맨 안쪽 줄 가운데에 감시자
+            if (type == SpecialRoomType.Pool) spots = Pools.Fill(world, rng, cells); // 3-50: 물 · 피라냐, 가운데 받침대
             if (type == SpecialRoomType.MagicWell && config.WellTypes.Count > 0) // 3-46: 가운데 칸에 우물
                 world.SetTile(cells[cells.Count / 2], config.WellTypes[rng.Range(0, config.WellTypes.Count)]);
             if (type == SpecialRoomType.ToxicGas) // 3-43: 방 전체 영구 독구름 · 금화 더미 먼저

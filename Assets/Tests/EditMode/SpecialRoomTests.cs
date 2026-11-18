@@ -22,7 +22,7 @@ namespace ProjectM.Tests
 
         private static SpecialRoomConfig Only(SpecialRoomType type)
         {
-            var w = new int[14];
+            var w = new int[15];
             w[(int)type - 1] = 1;
             return new SpecialRoomConfig(100, w, 3, 5, new[] { "scroll_upgrade" }, 1, new[] { "a" }, 1, new[] { "b" }, 1, new[] { "c" }, 1, "key_iron", new[] { "seed_x" }, 2,
                 new[] { "potion_x", "scroll_y" }, 3, 4, "potion_liquid_flame", "potion_frost",
@@ -446,7 +446,7 @@ namespace ProjectM.Tests
             var c = AssetDatabase.LoadAssetAtPath<FloorDecorConfigAsset>("Assets/_Project/Data/Dungeon/FloorDecorConfig.asset").ToConfig().SpecialRooms;
             Assert.That((c.RoomPercent, c.MinSize, c.MaxSize, c.VaultItemCount, c.ArmoryItemCount, c.LibraryItemCount, c.GardenItemCount, c.KeyItem),
                 Is.EqualTo((70, 3, 5, 2, 2, 3, 2, "key_iron")));
-            Assert.That(c.Weights, Is.EqualTo(new[] { 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 }), "3-16c 연구실 2 · 3-41 창고 2 · 3-42 마법 불 2 · 3-43 독가스 2 · 3-44 보물 창고 2 · 3-45 함정 방 2 · 3-46 마법 우물 2 · 3-47 지하 묘지 2 · 3-48 석상 2 · 3-49 감시탑 2");
+            Assert.That(c.Weights, Is.EqualTo(new[] { 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 }), "3-16c 연구실 2 · 3-41 창고 2 · 3-42 마법 불 2 · 3-43 독가스 2 · 3-44 보물 창고 2 · 3-45 함정 방 2 · 3-46 마법 우물 2 · 3-47 지하 묘지 2 · 3-48 석상 2 · 3-49 감시탑 2 · 3-50 피라냐 연못 2");
             Assert.That(c.WellTypes, Is.EqualTo(new[] { TileType.WellHealth, TileType.WellAwareness }));
             Assert.That(c.TrapRoomTypes, Is.EqualTo(new[] { TrapType.Fire, TrapType.ToxicGas, TrapType.ParalyticGas, TrapType.Shock }));
             Assert.That(c.TrapRoomItem, Is.EqualTo("potion_levitation"));

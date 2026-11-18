@@ -637,6 +637,13 @@ namespace ProjectM
                     World.SetSentryRules(new ProjectM.Dungeon.SentryRules(sentry, ZoneCatalogAsset.ToDef(sentryRow), enemyAi));
                 }
                 else Debug.LogWarning($"[GameRoot] 감시자 '{sentry.SentryId}'가 적 표에 없다 — 감시탑은 비어 있다", this);
+                var pool = _floorDecorConfig.ToPool(); // 3-50 피라냐 연못: 물속 피라냐
+                if (_zoneCatalog.TryGetEnemy(pool.PiranhaId, out var piranhaRow))
+                {
+                    EnsureAi(World);
+                    World.SetPoolRules(new ProjectM.Dungeon.PoolRules(pool, ZoneCatalogAsset.ToDef(piranhaRow), enemyAi));
+                }
+                else Debug.LogWarning($"[GameRoot] 피라냐 '{pool.PiranhaId}'가 적 표에 없다 — 연못은 물만 있다", this);
             }
             _unitVisuals.Clear();
             _enemyNames = _zoneCatalog != null ? _zoneCatalog.DisplayNames() : new System.Collections.Generic.Dictionary<string, string>();

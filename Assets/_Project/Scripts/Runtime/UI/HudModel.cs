@@ -146,6 +146,7 @@ namespace ProjectM.UI
             _bus.Subscribe<WellDrunkEvent>(OnWellDrunk); // 3-46
             _bus.Subscribe<ProjectM.Dungeon.TombOpenedEvent>(OnTombOpened); // 3-47
             _bus.Subscribe<ProjectM.Dungeon.StatueAwokenEvent>(OnStatueAwoken); // 3-48
+            _bus.Subscribe<ProjectM.Dungeon.StrandedEvent>(OnStranded); // 3-50
             _bus.Subscribe<ProjectM.Dungeon.ItemBoughtEvent>(OnBought);
             _bus.Subscribe<ThrownBrokeEvent>(OnThrownBroke);
             _bus.Subscribe<ProjectM.Dungeon.StairsUnsealedEvent>(OnStairsUnsealed);
@@ -452,6 +453,11 @@ namespace ProjectM.UI
             AddLog(HudText.StatueAwoken);
         }
 
+        private void OnStranded(ProjectM.Dungeon.StrandedEvent e) // 3-50
+        {
+            AddLog(HudText.Stranded);
+        }
+
         private void OnTombOpened(ProjectM.Dungeon.TombOpenedEvent e)
         {
             AddLog(e.Guardians > 0 ? HudText.TombOpened + " — " + HudText.TombGuardians : HudText.TombOpened);
@@ -586,6 +592,7 @@ namespace ProjectM.UI
             _bus.Unsubscribe<WellDrunkEvent>(OnWellDrunk);
             _bus.Unsubscribe<ProjectM.Dungeon.TombOpenedEvent>(OnTombOpened);
             _bus.Unsubscribe<ProjectM.Dungeon.StatueAwokenEvent>(OnStatueAwoken);
+            _bus.Unsubscribe<ProjectM.Dungeon.StrandedEvent>(OnStranded);
             _bus.Unsubscribe<ProjectM.Dungeon.ItemBoughtEvent>(OnBought);
             _bus.Unsubscribe<ThrownBrokeEvent>(OnThrownBroke);
             _bus.Unsubscribe<ProjectM.Dungeon.StairsUnsealedEvent>(OnStairsUnsealed);

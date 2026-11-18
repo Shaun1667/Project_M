@@ -124,6 +124,14 @@ namespace ProjectM.Data
 
         public SentryConfig ToSentry() => new SentryConfig(_sentryId, _sentrySpells, _sentryFloorsPerTier, _sentryRange);
 
+        [Header("피라냐 연못 (3-50, SPD Pool — BALANCE 16번)")]
+        [Tooltip("피라냐 연못 무게 (같은 척도) — 가운데 받침대만 빼고 물 · 피라냐 · 보물 방 목록 1개")] [Min(0)] [SerializeField] private int _poolWeight = 2;
+        [Tooltip("피라냐 (ZoneCatalog 적 표 ID — WaterOnly)")] [SerializeField] private string _poolPiranhaId = "enemy_piranha";
+        [Tooltip("피라냐 수")] [Min(0)] [SerializeField] private int _poolPiranhaCount = 3;
+        [Tooltip("피라냐 세기 % = 100 + 이 값 × (층 − 1)")] [Min(0)] [SerializeField] private int _poolPiranhaPercentPerFloor = 8;
+
+        public PoolConfig ToPool() => new PoolConfig(_poolPiranhaId, _poolPiranhaCount, _poolPiranhaPercentPerFloor);
+
         [Header("상점 (3-15c — BALANCE 16번)")]
         [Tooltip("상점이 있는 첫 층")] [Min(1)] [SerializeField] private int _shopFloor = 3;
         [Tooltip("상점이 더 있는 층 (2026-11-05 사용자 — 구역 시작층 6 · 11 · 16 · 21층)")] [SerializeField] private int[] _moreShopFloors = { 6, 11, 16, 21 };
@@ -159,10 +167,10 @@ namespace ProjectM.Data
                 _toxicGasItem, _toxicGoldPilesMin, _toxicGoldPilesMax, _toxicGoldMinBase, _toxicGoldMinPerFloor, _toxicGoldMaxBase, _toxicGoldMaxPerFloor,
                 _treasuryPilesMin, _treasuryPilesMax, _trapRoomTypes, _trapRoomItem, _wellTypes));
 
-        /// <summary>보물 · 무기고 · 도서관 · 정원 무게 + 연구실 무게(3-16c) + 창고 무게(3-41) + 마법 불 무게(3-42) + 독가스 무게(3-43) + 보물 창고 무게(3-44) + 함정 방 무게(3-45) + 마법 우물 무게(3-46) + 지하 묘지 무게(3-47) + 석상 무게(3-48) + 감시탑 무게(3-49) — 예전 에셋의 4칸 배열을 그대로 쓰려고 따로 둠.</summary>
+        /// <summary>보물 · 무기고 · 도서관 · 정원 무게 + 연구실 무게(3-16c) + 창고 무게(3-41) + 마법 불 무게(3-42) + 독가스 무게(3-43) + 보물 창고 무게(3-44) + 함정 방 무게(3-45) + 마법 우물 무게(3-46) + 지하 묘지 무게(3-47) + 석상 무게(3-48) + 감시탑 무게(3-49) + 피라냐 연못 무게(3-50) — 예전 에셋의 4칸 배열을 그대로 쓰려고 따로 둠.</summary>
         private int[] WithLab()
         {
-            var w = new int[14];
+            var w = new int[15];
             for (int i = 0; i < 4 && i < _specialRoomWeights.Length; i++) w[i] = _specialRoomWeights[i];
             w[4] = _laboratoryWeight;
             w[5] = _storageWeight;
@@ -174,6 +182,7 @@ namespace ProjectM.Data
             w[11] = _cryptWeight;
             w[12] = _statueWeight;
             w[13] = _sentryWeight;
+            w[14] = _poolWeight;
             return w;
         }
     }
