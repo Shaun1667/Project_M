@@ -485,6 +485,7 @@ namespace ProjectM.Editor
                 ("enemy_time_priest", new Color(0.55f, 0.3f, 0.85f), 1f),
                 ("boss_time_guardian", new Color(0.85f, 0.75f, 0.35f), 1.8f),
                 ("enemy_wraith", new Color(0.45f, 0.75f, 0.75f), 0.9f), // 3-47 지하 묘지 지킴이
+                ("enemy_statue", new Color(0.6f, 0.6f, 0.62f), 1.2f), // 3-48 석상
             })
                 catalog.Set(id, AssetDatabase.LoadAssetAtPath<Sprite>(UnitCircleSpritePath), color, height);
             // 3-4b 임시 보스: 짙은 자주색, 두 배 키 (판정은 1칸)
@@ -805,6 +806,9 @@ namespace ProjectM.Editor
             foreach (var row in new[] { clockwork, afterimage, guardian, timePriest, timeGuardian }) changed |= catalog.AddIfMissing(row);
             // 3-47 지하 묘지 지킴이 (구역 적 목록에는 없음 — 관을 열 때만, 세기는 층마다 FloorDecorConfig _cryptGuardianPercentPerFloor, BALANCE 16번)
             changed |= catalog.AddIfMissing(E("enemy_wraith", "원혼", 6, 2, 8, 8, 6, 4, 30));
+            // 3-48 석상 (구역 적 목록 밖 — 석상 방에만, 잠들어 있다 깨어남, 느린 탱커. 세기는 층마다 FloorDecorConfig _statuePercentPerFloor, BALANCE 16번)
+            var statueRow = E("enemy_statue", "살아난 석상", 20, 4, 6, 10, 4, 8, 30); statueRow.MoveCostTicks = 2;
+            changed |= catalog.AddIfMissing(statueRow);
             ZoneCatalogAsset.Zone Z(string name, int first, int last, int percent, string boss, params (string id, int weight)[] enemies)
             {
                 var rows = new System.Collections.Generic.List<ZoneCatalogAsset.ZoneEnemyRow>();

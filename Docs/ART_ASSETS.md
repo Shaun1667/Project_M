@@ -427,7 +427,8 @@ Varco는 모든 모델을 **가장 긴 쪽 1 m**로 보내므로 크기는 프�
 | `enemy_time_afterimage` | Enemy_TimeAfterimage | Unit_TimeAfterimage | 1.0 | 약 1.0 m | 6,000 | Blender (`Tools/blender_rig_from_joints.py`) | — |
 | `enemy_temple_guardian` | Enemy_TempleGuardian | Unit_TempleGuardian | 1.3 | 약 1.3 m | 6,000 | Blender (`Tools/blender_rig_from_joints.py`) | — |
 | `enemy_time_priest` | Enemy_TimePriest | Unit_TimePriest | 1.0 | 약 1.1 m | 6,000 | Mixamo | — |
-| `enemy_wraith` | Enemy_Wraith | Unit_Wraith | 0.95 | 약 0.9 m | 3,000 | — (떠 있는 유령, 코드 움직임) | 3-47 지하 묘지 지킴이, 원본 그림 `Docs/특수방_원본/wraith.png` |
+| `enemy_wraith` | Enemy_Wraith | Unit_Wraith | 0.95 | 약 0.9 m | 6,000 | Mixamo (T포즈로 다시 생성 2026-11-18) | 3-47 지하 묘지 지킴이, 원본 그림 `Docs/특수방_원본/wraith.png` |
+| `enemy_statue` | Enemy_Statue | Unit_Statue | 1.25 | 약 1.25 m | 6,000 | Mixamo (T포즈로 생성) | `Prop_Weapon_Longsword` 0.85 m · 3-48 석상 방, 원본 그림 `Docs/특수방_원본/statue.png` |
 | `boss_time_guardian` | Boss_TimeGuardian | Unit_TimeGuardian | 1.9 | 약 1.9 m | 12,000 | Blender (`Tools/blender_rig_from_joints.py`) | — |
 
 - **결정 (2026-11-05, 사용자)**: 사람형 리깅은 **Mixamo**(사람형만 — 네발 · 전갈은 리깅 없이 코드 움직임). 무기 · 지팡이 등 **든 물건은 몸과 따로 만들어 Unity에서 손 뼈에 붙인다**(`AttachStaff` — 높이 1 m 소품, 원점 = 아래 끝, 손이 길이 40% 지점). 그래서 고블린 · 사막 주술사 · 파라오는 지팡이 없는 몸으로 다시 생성.

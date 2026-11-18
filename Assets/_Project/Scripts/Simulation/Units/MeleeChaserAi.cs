@@ -42,6 +42,14 @@ namespace ProjectM.Units
             int cost = _config.DefaultActionCostTicks;
             if (!_world.Units.TryGet(context.Actor, out var self) || !self.IsAlive) return new WaitCommand(cost);
 
+            // 3-48 석상: 잠든 동안 쉬고, 플레이어가 바로 옆에 오면 깨어나 이번 차례부터 싸운다
+            if (self.Dormant)
+            {
+                if (!PlayerActions.TryGetPlayer(_world, out var near) || !near.IsAlive || GridMovement.Chebyshev(self.Pos, near.Pos) != 1) return new WaitCommand(cost);
+                ProjectM.Dungeon.Statues.Wake(_world, self);
+                self.LastSeenTargetPos = near.Pos;
+            }
+
             // 3-13b 공포: 플레이어에게서 멀어진다 (공격하지 않음)
             if (ProjectM.Status.StatusEffects.Any(_statuses, self, d => d.Flees))
                 return PlayerActions.TryGetPlayer(_world, out var feared) ? StepAway(self, feared.Pos, cost) : new WaitCommand(cost);

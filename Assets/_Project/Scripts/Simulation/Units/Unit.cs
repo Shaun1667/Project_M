@@ -88,6 +88,9 @@ namespace ProjectM.Units
         /// <summary>패턴 보스 (3-17d, v23): 소환을 이미 했다.</summary>
         public bool Summoned { get; set; }
 
+        /// <summary>잠듦 (3-48 석상, v34): 차례를 쉬다가 피해를 입거나 플레이어가 옆에 오면 깨어난다 (Statues.Wake).</summary>
+        public bool Dormant { get; set; }
+
         /// <summary>걸려 있는 상태 이상 (2-3). 종류 순으로 정렬, 종류마다 하나. StatusEffects로만 바꾼다.</summary>
         public List<StatusInstance> Statuses { get; } = new List<StatusInstance>();
 

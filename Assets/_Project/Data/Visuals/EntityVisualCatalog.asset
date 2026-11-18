@@ -384,3 +384,14 @@ MonoBehaviour:
     WalkBack: []
     WalkSide: []
     PixelVariants: []
+  - Id: enemy_statue
+    Sprite: {fileID: 21300000, guid: 334a18aa6cf2f934e9f956af7e2ddbbd, type: 3}
+    Tint: {r: 0.6, g: 0.6, b: 0.62, a: 1}
+    Prefab: {fileID: 6454684595769083312, guid: f91d66ac902cb404da7109fd74999012, type: 3}
+    Height: 1.2
+    Variants: []
+    PixelIdle: {fileID: 0}
+    WalkFront: []
+    WalkBack: []
+    WalkSide: []
+    PixelVariants: []

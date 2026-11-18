@@ -122,6 +122,11 @@ namespace ProjectM.Core
 
         public void SetCryptRules(ProjectM.Dungeon.CryptRules rules) => CryptRules = rules;
 
+        /// <summary>석상 방 규칙 (3-48 — 석상 세우기 · 무기 떨어뜨리기). GameRoot가 넣는다 — 규칙 연결이라 저장하지 않는다. null이면 석상 방은 비어 있다.</summary>
+        internal ProjectM.Dungeon.StatueRules StatueRules { get; private set; }
+
+        public void SetStatueRules(ProjectM.Dungeon.StatueRules rules) => StatueRules = rules;
+
         /// <summary>디버그 무적 (2026-11-05): 켜면 플레이어 진영이 피해를 받지 않는다 (Combat.ApplyDamage). 개발 도구라 저장하지 않는다 — 새 판 · 불러오기 때 GameRoot가 다시 넣는다.</summary>
         public bool DebugInvulnerable { get; set; }
 
@@ -333,7 +338,7 @@ namespace ProjectM.Core
                 seen.HasValue, seen?.X ?? 0, seen?.Y ?? 0, u.MaxMana, u.Mana, (InventoryRef[])u.InventorySlots.Clone(), (InventoryRef[])u.QuickSlots.Clone(),
                 u.PreviousPos, u.WanderTarget, u.Statuses.ConvertAll(s => new UnitStatusState(s.Type, s.Remaining)).ToArray(),
                 u.Accuracy, u.Evasion, u.ExpReward, u.ExpMaxLevel, u.Level, u.Exp, u.Weapon, u.Strength, u.Armor, u.Hunger,
-                u.ChargeTarget, u.Summoned, (InventoryRef[])u.Relics.Clone(), u.TimeFrozenTicks, u.AccelTicks, u.AccelActions, u.AccelUsed, u.StopActions, u.AttackCredit);
+                u.ChargeTarget, u.Summoned, (InventoryRef[])u.Relics.Clone(), u.TimeFrozenTicks, u.AccelTicks, u.AccelActions, u.AccelUsed, u.StopActions, u.AttackCredit, u.Dormant);
         }
 
         private static Unit ToUnit(UnitState u)
@@ -353,6 +358,7 @@ namespace ProjectM.Core
             unit.AccelUsed = u.AccelUsed;
             unit.StopActions = u.StopActions;
             unit.AttackCredit = u.AttackCredit; // 31 (3-39)
+            unit.Dormant = u.Dormant; // 34 (3-48)
             return unit;
         }
 

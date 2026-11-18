@@ -32,6 +32,7 @@ namespace ProjectM.Units
                 _world.Events.Publish(new UnitDiedEvent(unit.Id, unit.Faction));
                 _world.Events.Publish(new EntityRemovedEvent(unit.Id));
                 _world.OnUnitDied?.Invoke(unit); // 3-14: 고기 떨어뜨리기
+                ProjectM.Dungeon.Statues.OnDied(_world, unit); // 3-48: 석상 = 강화된 무기
 
                 if (unit.Faction == Faction.Enemy)
                 {

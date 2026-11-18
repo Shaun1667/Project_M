@@ -33,6 +33,8 @@ namespace ProjectM.Dungeon
         MagicWell = 11,
         /// <summary>지하 묘지 (3-47, SPD Crypt): 잠긴 문 · 가운데 관 하나. 열면 강화된 갑옷 + 지킴이(원혼) — Crypts.Open. 열쇠는 같은 층 방 밖.</summary>
         Crypt = 12,
+        /// <summary>석상 방 (3-48, SPD Statue): 가운데에 잠든 석상 하나(Statues.Place). 쓰러뜨리면 강화된 무기. 아이템 없음.</summary>
+        Statue = 13,
     }
 
     /// <summary>특수 방 수치 · 아이템 목록 (3-15b). 값은 FloorDecorConfigAsset에서 — 기준은 BALANCE.md 16번.</summary>
@@ -40,7 +42,7 @@ namespace ProjectM.Dungeon
     {
         /// <summary>층마다 특수 방이 생길 확률 (%) — 생기면 하나.</summary>
         public int RoomPercent { get; }
-        /// <summary>종류 무게 (보물 방 · 무기고 · 도서관 · 정원 · 연구실 · 창고 · 마법 불 · 독가스 · 보물 창고 · 함정 방 · 마법 우물 · 지하 묘지 순 — 모자란 뒤쪽은 0).</summary>
+        /// <summary>종류 무게 (보물 방 · 무기고 · 도서관 · 정원 · 연구실 · 창고 · 마법 불 · 독가스 · 보물 창고 · 함정 방 · 마법 우물 · 지하 묘지 · 석상 순 — 모자란 뒤쪽은 0).</summary>
         public IReadOnlyList<int> Weights { get; }
         /// <summary>방 안쪽 크기 (정사각 한 변 최소 ~ 최대).</summary>
         public int MinSize { get; }
@@ -117,7 +119,7 @@ namespace ProjectM.Dungeon
             LabItems = labItems ?? Array.Empty<string>();
             LabItemCount = Math.Max(0, labItemCount);
             if (roomPercent < 0 || roomPercent > 100) throw new ArgumentOutOfRangeException(nameof(roomPercent));
-            if (weights == null || weights.Count < 4 || weights.Count > 12) throw new ArgumentException("종류 무게는 4 ~ 12개 (보물 · 무기고 · 도서관 · 정원 · 연구실 · 창고 · 마법 불 · 독가스 · 보물 창고 · 함정 방 · 마법 우물 · 지하 묘지)", nameof(weights));
+            if (weights == null || weights.Count < 4 || weights.Count > 13) throw new ArgumentException("종류 무게는 4 ~ 13개 (보물 · 무기고 · 도서관 · 정원 · 연구실 · 창고 · 마법 불 · 독가스 · 보물 창고 · 함정 방 · 마법 우물 · 지하 묘지 · 석상)", nameof(weights));
             if (minSize < 2 || maxSize < minSize) throw new ArgumentOutOfRangeException(nameof(maxSize), "2 ≤ 최소 ≤ 최대");
             RoomPercent = roomPercent;
             Weights = weights;
@@ -245,7 +247,8 @@ namespace ProjectM.Dungeon
                 case SpecialRoomType.TrapRoom: pool = config.VaultItems; count = 1; break;
                 case SpecialRoomType.Treasury: // 3-44: 금화만
                 case SpecialRoomType.MagicWell: // 3-46: 우물만
-                case SpecialRoomType.Crypt: pool = Array.Empty<string>(); count = 0; break; // 3-47: 관만 (갑옷은 열 때) // 3-42: 보물 방 목록에서 하나
+                case SpecialRoomType.Crypt: // 3-47: 관만 (갑옷은 열 때)
+                case SpecialRoomType.Statue: pool = Array.Empty<string>(); count = 0; break; // 3-48: 석상만 (무기는 쓰러질 때) // 3-42: 보물 방 목록에서 하나
                 case SpecialRoomType.Storage: pool = config.StorageItems; count = config.StorageItemMin + rng.Range(0, config.StorageItemMax - config.StorageItemMin + 1); break;
                 default: pool = config.GardenItems; count = config.GardenItemCount; break;
             }
@@ -262,6 +265,7 @@ namespace ProjectM.Dungeon
             if (type == SpecialRoomType.MagicalFire) spots = PlaceFireWall(world, cells);
             if (type == SpecialRoomType.TrapRoom) spots = PlaceTrapField(world, config, rng, cells);
             if (type == SpecialRoomType.Crypt) world.SetTile(cells[cells.Count / 2], TileType.Tomb); // 3-47: 가운데 칸에 관
+            if (type == SpecialRoomType.Statue) Statues.Place(world, cells[cells.Count / 2]); // 3-48: 가운데 칸에 잠든 석상
             if (type == SpecialRoomType.MagicWell && config.WellTypes.Count > 0) // 3-46: 가운데 칸에 우물
                 world.SetTile(cells[cells.Count / 2], config.WellTypes[rng.Range(0, config.WellTypes.Count)]);
             if (type == SpecialRoomType.ToxicGas) // 3-43: 방 전체 영구 독구름 · 금화 더미 먼저

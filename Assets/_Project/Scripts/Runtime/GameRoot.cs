@@ -623,6 +623,13 @@ namespace ProjectM
                     World.SetCryptRules(new ProjectM.Dungeon.CryptRules(crypt, ZoneCatalogAsset.ToDef(cryptGuardian), enemyAi));
                 }
                 else Debug.LogWarning($"[GameRoot] 지하 묘지 지킴이 '{crypt.GuardianId}'가 적 표에 없다 — 관은 비어 있다", this);
+                var statue = _floorDecorConfig.ToStatue(); // 3-48 석상 방: 잠든 석상 · 쓰러지면 무기
+                if (_zoneCatalog.TryGetEnemy(statue.StatueId, out var statueRow))
+                {
+                    EnsureAi(World);
+                    World.SetStatueRules(new ProjectM.Dungeon.StatueRules(statue, ZoneCatalogAsset.ToDef(statueRow), enemyAi, Items));
+                }
+                else Debug.LogWarning($"[GameRoot] 석상 '{statue.StatueId}'이 적 표에 없다 — 석상 방은 비어 있다", this);
             }
             _unitVisuals.Clear();
             _enemyNames = _zoneCatalog != null ? _zoneCatalog.DisplayNames() : new System.Collections.Generic.Dictionary<string, string>();
