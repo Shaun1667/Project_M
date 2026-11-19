@@ -50,13 +50,13 @@
 ## 기술 스택
 | 항목 | 현재 값 | 상태 |
 |---|---|---|
-| 엔진 | Unity 6.6 (6000.6.0f1) | 확정 |
-| 렌더 파이프라인 | **URP 17.6.0 + Universal Renderer (3D)** (`Assets/_Project/Settings/Rendering/URP3D.asset`) — ~~2D Renderer~~ | 변경 2026-10-18 (사용자 결정, G-1), 이후 변경 금지 |
+| 엔진 | **Unity 6.3 LTS (6000.3.25f1)** — ~~Unity 6.6 (6000.6.0f1)~~ | 변경 2026-11-19 (사용자 결정 — LTS로 내림, 브랜치 `phase3-unity63`) |
+| 렌더 파이프라인 | **URP 17.3.0 + Universal Renderer (3D)** (6.6 때 17.6.0) (`Assets/_Project/Settings/Rendering/URP3D.asset`) — ~~2D Renderer~~ | 변경 2026-10-18 (사용자 결정, G-1), 이후 변경 금지 |
 | 그래픽 방식 | **실시간 3D로 되돌림 (결정 2026-10-28, 사용자 — Main Scene Setup의 `Pixel2D` 상수 = false).** 2D 픽셀 코드 · 그림(Phase P)은 지우지 않고 남겨 두어 상수만 켜면 다시 2D. 아래는 Phase P 때 값: ~~**2D 픽셀 그래픽으로 전환 중 (결정 2026-10-20 · 21, 사용자 — Phase P)**: 64px 칸 · 위에서 비스듬히(SPD식) · AI 픽셀 이미지(격자 맞춤) · 정사영 카메라 정수 배율 · 렌더러는 Universal 그대로(조명 없는 스프라이트 재질). 단계(맵 → 유닛 → 아이템 → 이펙트 → 3D 정리)는 TASKS Phase P~~. 지금 기준: **실시간 3D 모델 (Varco 제작) + 고각도 카메라** — 1칸 = 1 m, 바닥 · 지형 효과 · 안개 · 조준은 바닥에 눕힌 Tilemap, 벽 · 유닛은 3D. 목록은 `Docs/ART_ASSETS.md` — ~~2D 스프라이트 + 고각도 아트~~ | 변경 2026-10-18 (사용자 결정, G-1) · 2D 시도 뒤 되돌림 2026-10-28 |
-| 입력 | **Input System 패키지 1.20.1**, Active Input Handling = New만. `UnityEngine.Input` 사용 금지, UI는 `InputSystemUIInputModule` | 확정 2026-10-14, 변경 금지 |
+| 입력 | **Input System 패키지 1.20.0** (6.3 내장 — 6.6 때 1.20.1), Active Input Handling = New만. `UnityEngine.Input` 사용 금지, UI는 `InputSystemUIInputModule` | 확정 2026-10-14, 변경 금지 |
 | UI | **uGUI + TextMeshPro** | 확정 2026-10-14, 변경 금지 |
 | 맵 표현 | Tilemap (com.unity.modules.tilemap) | 표현 레이어 전용. 규칙은 Tilemap을 모른다 |
-| 테스트 | Unity Test Framework 1.8.0 (EditMode) | 확정 |
+| 테스트 | Unity Test Framework 1.6.0 (EditMode — 6.3 내장, 6.6 때 1.8.0) | 확정 |
 | 버전 관리 | Git (원격 GitHub, 1인 개발) | 확정 |
 | 에디터 연동 | Unity MCP (`unity-mcp`, Project_M 연결 확인됨) | 사용 가능 |
 
@@ -127,7 +127,8 @@ Assets/
 - enum은 끝에만 추가한다 (에셋이 정수로 저장함).
 - 바뀔 수 있는 판정(시야, 사거리, 전이 경로, 반응 규칙)은 인터페이스 뒤에 둔다.
 - 마법서 · 아이템 효과는 한 조회 지점(예: `SpellModifiers`)에서 읽고, 시뮬레이션 · 미리보기 UI · 연출이 같은 값을 쓴다.
-- Unity 6.6에는 `UnityEngine.EntityId`가 있다. `UnityEngine`과 `ProjectM.Core`를 함께 쓰는 파일은 `using EntityId = ProjectM.Core.EntityId;` 별칭을 둔다.
+- 6.3에서 쓸 수 없는 6.6 API (E-1): `FindObjectsByType<T>(FindObjectsInactive)` 한 인자 오버로드 → `(FindObjectsInactive.X, FindObjectsSortMode.None)`. 6.6 전용 내장 모듈(`physicscore2d` · `tetgen` · `timelinefoundation`)을 manifest에 넣지 않는다.
+- Unity 6.3 · 6.6에는 `UnityEngine.EntityId`가 있다. `UnityEngine`과 `ProjectM.Core`를 함께 쓰는 파일은 `using EntityId = ProjectM.Core.EntityId;` 별칭을 둔다.
 - 시뮬레이션 → 화면은 `SimEventBus` 이벤트로만 (`Core/Events/WorldEvents.cs`). 표현 어댑터는 `Bind(bus)`/`Unbind()`로 구독하고 규칙을 갖지 않는다. 씬 연결은 `GameRoot` 하나, 씬 구성은 메뉴 `ProjectM/Setup/Main Scene`(멱등).
 - 정보 모드 (3-24, SPD): E = `PlayerInputController` 정보 모드(차례 안 씀, 화살표 · 마우스 = 커서), 칸 설명 글은 `HudText.CellInfo` 하나, 창은 `HudPresenter.SetInfo`
 - 공격 대상 표시 (3-25, SPD): 고르기는 `AttackTargets`(근접으로 닿는 보이는 적 — 마지막에 공격한 적 → 가까운 순) 하나, Q · 상자 클릭 = `PlayerActions.TryAttackAt`, 상자 `HudPresenter.SetAttackTarget`
@@ -181,7 +182,7 @@ Assets/
 
 ## 새 PC 환경 준비
 절차는 `TASKS.md` "다른 PC에서 할 일"에 있다. 요약:
-- Unity 6.6 (6000.6.0f1). 프로젝트 패키지에 `com.unity.ai.assistant`(Unity MCP 브리지 포함)가 있다.
+- Unity 6.3 LTS (6000.3.25f1, 2026-11-19부터 — 이전 6.6). 프로젝트 패키지에 `com.unity.ai.assistant`(Unity MCP 브리지 포함)가 있다.
 - Claude Code에 Unity MCP를 사용자 전역으로 등록: `~/.claude.json`의 `mcpServers`에 `"unity-mcp": { "type": "stdio", "command": "C:/Users/<사용자>/.unity/relay/relay_win.exe", "args": ["--mcp"] }`. relay 실행 파일은 Unity AI Assistant가 `~/.unity/relay/`에 설치한다. 등록 후 새 세션을 열고, Unity의 MCP 연결 요청을 승인해야 도구가 보인다.
 - 연결 확인: `~/.unity/mcp/connections/`에 `bridge-*.json`(project_path = 이 프로젝트)이 생기고, 콘솔 읽기 도구가 응답하면 정상.
 

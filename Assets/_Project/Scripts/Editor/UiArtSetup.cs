@@ -81,10 +81,10 @@ namespace ProjectM.Editor
 
             var font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(FontPath);
             int linked = 0;
-            foreach (var hud in Object.FindObjectsByType<HudPresenter>(FindObjectsInactive.Include)) linked += SetRef(hud, "_skin", skin);
-            foreach (var inv in Object.FindObjectsByType<InventoryPresenter>(FindObjectsInactive.Include)) linked += SetRef(inv, "_skin", skin);
-            foreach (var res in Object.FindObjectsByType<ResultPresenter>(FindObjectsInactive.Include)) linked += SetRef(res, "_skin", skin);
-            foreach (var ent in Object.FindObjectsByType<EntityPresenter>(FindObjectsInactive.Include)) linked += SetRef(ent, "_damageFont", font);
+            foreach (var hud in Object.FindObjectsByType<HudPresenter>(FindObjectsInactive.Include, FindObjectsSortMode.None)) linked += SetRef(hud, "_skin", skin);
+            foreach (var inv in Object.FindObjectsByType<InventoryPresenter>(FindObjectsInactive.Include, FindObjectsSortMode.None)) linked += SetRef(inv, "_skin", skin);
+            foreach (var res in Object.FindObjectsByType<ResultPresenter>(FindObjectsInactive.Include, FindObjectsSortMode.None)) linked += SetRef(res, "_skin", skin);
+            foreach (var ent in Object.FindObjectsByType<EntityPresenter>(FindObjectsInactive.Include, FindObjectsSortMode.None)) linked += SetRef(ent, "_damageFont", font);
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
             AssetDatabase.SaveAssets();
