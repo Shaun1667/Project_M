@@ -685,3 +685,67 @@ MonoBehaviour:
     BoostRange: 0
     HitCount: 0
     MaxTargets: 0
+  - Id: rune_blast
+    Element: 0
+    Shape: 2
+    Range: 1
+    Damage: 6
+    ManaCost: 0
+    Radius: 1
+    AppliesStatus: 1
+    StatusChancePercent: 100
+    LeavesTerrain: 0
+    DisplayName: "\uD3ED\uBC1C\uC758 \uB8EC"
+    BoostWeaponId: 
+    BoostDamagePercent: 0
+    BoostRange: 0
+    HitCount: 0
+    MaxTargets: 0
+  - Id: rune_shock
+    Element: 2
+    Shape: 2
+    Range: 1
+    Damage: 5
+    ManaCost: 0
+    Radius: 1
+    AppliesStatus: 0
+    StatusChancePercent: 0
+    LeavesTerrain: 0
+    DisplayName: "\uBC88\uAC1C\uC758 \uB8EC"
+    BoostWeaponId: 
+    BoostDamagePercent: 0
+    BoostRange: 0
+    HitCount: 0
+    MaxTargets: 0
+  - Id: rune_sleep
+    Element: 7
+    Shape: 2
+    Range: 1
+    Damage: 0
+    ManaCost: 0
+    Radius: 1
+    AppliesStatus: 11
+    StatusChancePercent: 100
+    LeavesTerrain: 0
+    DisplayName: "\uC7A0\uC758 \uB8EC"
+    BoostWeaponId: 
+    BoostDamagePercent: 0
+    BoostRange: 0
+    HitCount: 0
+    MaxTargets: 0
+  - Id: rune_fear
+    Element: 7
+    Shape: 2
+    Range: 1
+    Damage: 0
+    ManaCost: 0
+    Radius: 1
+    AppliesStatus: 12
+    StatusChancePercent: 100
+    LeavesTerrain: 0
+    DisplayName: "\uACF5\uD3EC\uC758 \uB8EC"
+    BoostWeaponId: 
+    BoostDamagePercent: 0
+    BoostRange: 0
+    HitCount: 0
+    MaxTargets: 0

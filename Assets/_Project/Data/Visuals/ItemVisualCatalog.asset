@@ -433,4 +433,24 @@ MonoBehaviour:
     Upright: 1
     Icon: {fileID: 0}
     Icon3D: {fileID: 0}
+  - ItemId: runestone_blast
+    Prefab: {fileID: 1842332854716371149, guid: 57bba105d61a75741b08d50f9cb8385d, type: 3}
+    Upright: 1
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 0}
+  - ItemId: runestone_shock
+    Prefab: {fileID: 2766883809880928363, guid: dbb2f52fc4f272147999793c4a382e70, type: 3}
+    Upright: 1
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 0}
+  - ItemId: runestone_sleep
+    Prefab: {fileID: 5439525592192899436, guid: da88be47bf38b384eb3e5ce690a67269, type: 3}
+    Upright: 1
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 0}
+  - ItemId: runestone_fear
+    Prefab: {fileID: 5159173458425904846, guid: a08c43f96acfafa4595ae37c7a6c956d, type: 3}
+    Upright: 1
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 0}
   _use3DIcons: 1

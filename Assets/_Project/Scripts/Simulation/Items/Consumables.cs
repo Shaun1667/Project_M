@@ -235,7 +235,7 @@ namespace ProjectM.Items
 
         /// <summary>던질 수 있는지 — 물약만 (3-9).</summary>
         public static bool CanThrow(ItemBook items, InventoryRef entry) =>
-            entry.Kind == InventoryKind.Item && items.TryGet(entry.Id, out var def) && (def.Use == ItemUse.Potion || def.Use == ItemUse.Thrown || def.Use == ItemUse.Seed); // 3-16a · 3-16b
+            entry.Kind == InventoryKind.Item && items.TryGet(entry.Id, out var def) && (def.Use == ItemUse.Potion || def.Use == ItemUse.Thrown || def.Use == ItemUse.Seed || def.Use == ItemUse.Runestone); // 3-16a · 3-16b · 3-53
 
         /// <summary>범위로 퍼지는 효과인지 (마시면 발밑, 던지면 떨어진 칸).</summary>
         public static bool IsArea(ConsumableEffect effect) =>
@@ -290,6 +290,11 @@ namespace ProjectM.Items
                 ThrowWeapon(world, unit, def, landing);
                 return ConsumeResult.Used;
             }
+            if (def.Use == ItemUse.Runestone) // 3-53: 떨어진 칸에서 주문 효과 (시전자 = 던진 유닛 — 반응 · 처치가 그 유닛 것)
+            {
+                ThrowRunestone(world, rules, unit, def, landing);
+                return ConsumeResult.Used;
+            }
             if (def.Use == ItemUse.Seed) // 3-16b: 떨어진 칸에 심는다 (못 심는 칸이면 씨앗이 바닥에 남음)
             {
                 if (!ProjectM.Dungeon.Traps.Plant(world, landing, def.PlantTrap))
@@ -303,6 +308,15 @@ namespace ProjectM.Items
             Announce(world, unit, def, ConsumeMode.Throw, landing, identify: area);
             if (area) Apply(world, rules, unit, def, landing);
             return ConsumeResult.Used;
+        }
+
+        /// <summary>룬석 (3-53): 떨어진 칸 중심으로 SpellId 주문 효과 — 함정과 같은 PreviewAt · ApplyEffect, 화면 · 로그는 SpellCastEvent. 주문이 없으면 그냥 사라짐.</summary>
+        private static void ThrowRunestone(World world, ConsumableRules rules, Unit unit, ItemDef def, GridPos landing)
+        {
+            if (rules.Spells == null || def.SpellId == null || !rules.Spells.TryGet(def.SpellId, out var spell)) return;
+            var area = ProjectM.Magic.SpellCasting.PreviewAt(world, spell, landing);
+            world.Events.Publish(new ProjectM.Magic.SpellCastEvent(unit.Id, spell.Id, spell.Element, landing, area));
+            ProjectM.Magic.SpellCasting.ApplyEffect(world, rules.Spells, unit.Id, spell, area);
         }
 
         /// <summary>

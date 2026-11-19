@@ -2945,6 +2945,138 @@ MonoBehaviour:
     TimeKind: 0
     TimeGauge: 
     TimePower: 
+  - Id: runestone_blast
+    DisplayName: "\uD3ED\uBC1C\uC758 \uB8EC\uC11D"
+    Use: 15
+    SpellId: rune_blast
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
+    HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
+    Tier: 0
+    Amount: 0
+    Effect: 0
+    Weight: 0
+    Food: 0
+    Risky: 0
+    FireTransformsTo: 
+    IceTransformsTo: 
+    Value: 30
+    ThrowMinDamage: 0
+    ThrowMaxDamage: 0
+    BreakPercent: 0
+    PlantTrap: 0
+    BrewsInto: 
+    RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
+  - Id: runestone_shock
+    DisplayName: "\uBC88\uAC1C\uC758 \uB8EC\uC11D"
+    Use: 15
+    SpellId: rune_shock
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
+    HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
+    Tier: 0
+    Amount: 0
+    Effect: 0
+    Weight: 0
+    Food: 0
+    Risky: 0
+    FireTransformsTo: 
+    IceTransformsTo: 
+    Value: 30
+    ThrowMinDamage: 0
+    ThrowMaxDamage: 0
+    BreakPercent: 0
+    PlantTrap: 0
+    BrewsInto: 
+    RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
+  - Id: runestone_sleep
+    DisplayName: "\uC7A0\uC758 \uB8EC\uC11D"
+    Use: 15
+    SpellId: rune_sleep
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
+    HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
+    Tier: 0
+    Amount: 0
+    Effect: 0
+    Weight: 0
+    Food: 0
+    Risky: 0
+    FireTransformsTo: 
+    IceTransformsTo: 
+    Value: 30
+    ThrowMinDamage: 0
+    ThrowMaxDamage: 0
+    BreakPercent: 0
+    PlantTrap: 0
+    BrewsInto: 
+    RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
+  - Id: runestone_fear
+    DisplayName: "\uACF5\uD3EC\uC758 \uB8EC\uC11D"
+    Use: 15
+    SpellId: rune_fear
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
+    HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
+    Tier: 0
+    Amount: 0
+    Effect: 0
+    Weight: 0
+    Food: 0
+    Risky: 0
+    FireTransformsTo: 
+    IceTransformsTo: 
+    Value: 30
+    ThrowMinDamage: 0
+    ThrowMaxDamage: 0
+    BreakPercent: 0
+    PlantTrap: 0
+    BrewsInto: 
+    RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
   _weaponDamageDivisor: 3
   _weaponMinDamage: 2
   _armorDefenseDivisor: 3

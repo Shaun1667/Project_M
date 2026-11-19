@@ -236,6 +236,7 @@ namespace ProjectM.UI
                 case ItemUse.Seed: return $"{text.Entry(entry)}{count} — 씨앗. 사용 = 발밑에 심기 · 던지기 = 그 칸에 심기 → {Trap(def.PlantTrap)} (밟으면 발동)";
                 case ItemUse.Thrown: return $"{text.Entry(entry)}{count} — 던지는 무기. 던지기 = 피해 {def.ThrowMinDamage}~{def.ThrowMaxDamage}" + (def.BreakPercent > 0 ? $" · {def.BreakPercent}%로 부러짐" : " · 다시 주울 수 있음");
                 case ItemUse.Key: return $"{text.Entry(entry)}{count} — 열쇠. 잠긴 문에 부딪히면 열린다";
+                case ItemUse.Runestone: return $"{text.Entry(entry)}{count} — 룬석. 던지면 떨어진 칸 둘레 3×3에 {text.Spell(def.SpellId)}"; // 3-53
                 case ItemUse.CrystalKey: return $"{text.Entry(entry)}{count} — 수정 열쇠. 수정 문에 부딪히면 열린다 (하나만 열 수 있다)"; // 3-52
                 case ItemUse.Food: return $"{text.Entry(entry)}{count} — 음식. 먹으면 허기 −{def.Food}" + (def.Risky ? " · 탈이 날 수 있음 (불에 구우면 안전)" : string.Empty);
                 case ItemUse.Relic:

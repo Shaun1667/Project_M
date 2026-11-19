@@ -43,6 +43,8 @@ namespace ProjectM.Dungeon
         WeakFloor = 16,
         /// <summary>수정 방 (3-52, SPD Crystal Choice): 앞쪽 빈 칸 · 안쪽 작은 방 둘(수정 문 · 투명). 앞쪽에 수정 열쇠 하나 — 한쪽만 열 수 있다. 한 방 = 보물 방 목록 1개, 다른 방 = 금화(보물 창고만큼).</summary>
         Crystal = 17,
+        /// <summary>룬석 방 (3-53, SPD Runestone): 보통 문 · 룬석(던지면 떨어진 칸에 주문 효과) 2~3개 (같은 종류 겹침 가능). 룬석은 이 방에서만 나온다.</summary>
+        Runestone = 18,
     }
 
     /// <summary>특수 방 수치 · 아이템 목록 (3-15b). 값은 FloorDecorConfigAsset에서 — 기준은 BALANCE.md 16번.</summary>
@@ -50,7 +52,7 @@ namespace ProjectM.Dungeon
     {
         /// <summary>층마다 특수 방이 생길 확률 (%) — 생기면 하나.</summary>
         public int RoomPercent { get; }
-        /// <summary>종류 무게 (보물 방 · 무기고 · 도서관 · 정원 · 연구실 · 창고 · 마법 불 · 독가스 · 보물 창고 · 함정 방 · 마법 우물 · 지하 묘지 · 석상 · 감시탑 · 피라냐 연못 · 약한 바닥 · 수정 방 순 — 모자란 뒤쪽은 0).</summary>
+        /// <summary>종류 무게 (보물 방 · 무기고 · 도서관 · 정원 · 연구실 · 창고 · 마법 불 · 독가스 · 보물 창고 · 함정 방 · 마법 우물 · 지하 묘지 · 석상 · 감시탑 · 피라냐 연못 · 약한 바닥 · 수정 방 · 룬석 방 순 — 모자란 뒤쪽은 0).</summary>
         public IReadOnlyList<int> Weights { get; }
         /// <summary>방 안쪽 크기 (정사각 한 변 최소 ~ 최대).</summary>
         public int MinSize { get; }
@@ -96,6 +98,10 @@ namespace ProjectM.Dungeon
         public string WeakFloorItem { get; }
         /// <summary>수정 방 (3-52): 앞쪽에 놓는 수정 열쇠 (ItemUse.CrystalKey).</summary>
         public string CrystalKeyItem { get; }
+        /// <summary>룬석 방 (3-53): 룬석 목록(같은 ID를 여러 번 넣어 무게) · 개수 최소 ~ 최대.</summary>
+        public IReadOnlyList<string> RunestoneItems { get; }
+        public int RunestoneMin { get; }
+        public int RunestoneMax { get; }
 
         public SpecialRoomConfig(int roomPercent, IReadOnlyList<int> weights, int minSize, int maxSize,
             IReadOnlyList<string> vaultItems, int vaultItemCount, IReadOnlyList<string> armoryItems, int armoryItemCount,
@@ -107,8 +113,12 @@ namespace ProjectM.Dungeon
             int toxicGoldMinBase = 0, int toxicGoldMinPerFloor = 0, int toxicGoldMaxBase = 0, int toxicGoldMaxPerFloor = 0,
             int treasuryPilesMin = 0, int treasuryPilesMax = 0,
             IReadOnlyList<TrapType> trapRoomTypes = null, string trapRoomItem = null,
-            IReadOnlyList<TileType> wellTypes = null, string weakFloorItem = null, string crystalKeyItem = null)
+            IReadOnlyList<TileType> wellTypes = null, string weakFloorItem = null, string crystalKeyItem = null,
+            IReadOnlyList<string> runestoneItems = null, int runestoneMin = 0, int runestoneMax = 0)
         {
+            RunestoneItems = runestoneItems ?? Array.Empty<string>();
+            RunestoneMin = Math.Max(0, runestoneMin);
+            RunestoneMax = Math.Max(RunestoneMin, runestoneMax);
             CrystalKeyItem = string.IsNullOrEmpty(crystalKeyItem) ? null : crystalKeyItem;
             WeakFloorItem = string.IsNullOrEmpty(weakFloorItem) ? null : weakFloorItem;
             StorageItems = storageItems ?? Array.Empty<string>();
@@ -133,7 +143,7 @@ namespace ProjectM.Dungeon
             LabItems = labItems ?? Array.Empty<string>();
             LabItemCount = Math.Max(0, labItemCount);
             if (roomPercent < 0 || roomPercent > 100) throw new ArgumentOutOfRangeException(nameof(roomPercent));
-            if (weights == null || weights.Count < 4 || weights.Count > 17) throw new ArgumentException("종류 무게는 4 ~ 17개 (보물 · 무기고 · 도서관 · 정원 · 연구실 · 창고 · 마법 불 · 독가스 · 보물 창고 · 함정 방 · 마법 우물 · 지하 묘지 · 석상 · 감시탑 · 피라냐 연못 · 약한 바닥 · 수정 방)", nameof(weights));
+            if (weights == null || weights.Count < 4 || weights.Count > 18) throw new ArgumentException("종류 무게는 4 ~ 18개 (보물 · 무기고 · 도서관 · 정원 · 연구실 · 창고 · 마법 불 · 독가스 · 보물 창고 · 함정 방 · 마법 우물 · 지하 묘지 · 석상 · 감시탑 · 피라냐 연못 · 약한 바닥 · 수정 방 · 룬석 방)", nameof(weights));
             if (minSize < 2 || maxSize < minSize) throw new ArgumentOutOfRangeException(nameof(maxSize), "2 ≤ 최소 ≤ 최대");
             RoomPercent = roomPercent;
             Weights = weights;
@@ -268,6 +278,7 @@ namespace ProjectM.Dungeon
                 case SpecialRoomType.Crypt: // 3-47: 관만 (갑옷은 열 때)
                 case SpecialRoomType.Crystal: // 3-52: 열쇠 · 보상은 PlaceCrystal이 직접
                 case SpecialRoomType.Statue: pool = Array.Empty<string>(); count = 0; break; // 3-48: 석상만 (무기는 쓰러질 때) // 3-42: 보물 방 목록에서 하나
+                case SpecialRoomType.Runestone: pool = config.RunestoneItems; count = config.RunestoneMin + rng.Range(0, config.RunestoneMax - config.RunestoneMin + 1); break; // 3-53
                 case SpecialRoomType.Storage: pool = config.StorageItems; count = config.StorageItemMin + rng.Range(0, config.StorageItemMax - config.StorageItemMin + 1); break;
                 default: pool = config.GardenItems; count = config.GardenItemCount; break;
             }
@@ -304,7 +315,7 @@ namespace ProjectM.Dungeon
                 world.FloorItems.Add(spots[s], choices[k]);
                 world.Events.Publish(new ProjectM.Items.FloorItemPlacedEvent(spots[s], choices[k], ProjectM.Items.Identification.VisualOf(world, choices[k]))); // 3-41: 물약 · 주문서는 겉모습으로 (정체 숨김)
                 spots.RemoveAt(s);
-                if (type != SpecialRoomType.Garden && type != SpecialRoomType.Laboratory && type != SpecialRoomType.Storage) choices.RemoveAt(k); // 음식 · 씨앗 · 창고 소모품은 겹쳐도 됨
+                if (type != SpecialRoomType.Garden && type != SpecialRoomType.Laboratory && type != SpecialRoomType.Storage && type != SpecialRoomType.Runestone) choices.RemoveAt(k); // 음식 · 씨앗 · 창고 소모품은 겹쳐도 됨
             }
 
             if ((type == SpecialRoomType.Vault || type == SpecialRoomType.Treasury || type == SpecialRoomType.Crypt) && config.KeyItem != null) PlaceOutside(world, floor, config.KeyItem, rng, new HashSet<GridPos>(cells));

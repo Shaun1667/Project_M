@@ -89,6 +89,8 @@ namespace ProjectM.Items
         Relic = 13,
         /// <summary>수정 열쇠 (3-52 수정 방, SPD Crystal): 수정 문에 부딪히면 하나 써서 연다 (UnlockCommand). 잠긴 문은 못 엶. 겹친다.</summary>
         CrystalKey = 14,
+        /// <summary>룬석 (3-53 룬석 방, SPD Runestone): 던지면 떨어진 칸에서 SpellId 주문 효과(함정처럼 PreviewAt · ApplyEffect)가 나고 사라진다. 식별 없음 · 겹친다.</summary>
+        Runestone = 15,
     }
 
     /// <summary>
@@ -229,10 +231,11 @@ namespace ProjectM.Items
             Weight = consumable ? weight : 0;
             if (string.IsNullOrEmpty(id)) throw new ArgumentException("아이템 ID가 비어 있다.", nameof(id));
             if (use == ItemUse.LearnSpell && string.IsNullOrEmpty(spellId)) throw new ArgumentException("마법서에 가르칠 주문이 없다: " + id, nameof(spellId));
+            if (use == ItemUse.Runestone && string.IsNullOrEmpty(spellId)) throw new ArgumentException("룬석에 주문이 없다: " + id, nameof(spellId)); // 3-53
             if (use == ItemUse.EquipWeapon && weapon == null) throw new ArgumentException("무기 수치가 없다: " + id, nameof(weapon));
             Id = id;
             Use = use;
-            SpellId = use == ItemUse.LearnSpell ? spellId : null;
+            SpellId = use == ItemUse.LearnSpell || use == ItemUse.Runestone ? spellId : null;
             Weapon = use == ItemUse.EquipWeapon ? weapon : null;
         }
     }
@@ -319,7 +322,7 @@ namespace ProjectM.Items
 
         /// <summary>겹치는 항목인지 (3-10b): 물약 · 주문서.</summary>
         public static bool IsStackable(ItemBook items, InventoryRef entry) =>
-            entry.Kind == InventoryKind.Item && items != null && items.TryGet(entry.Id, out var def) && (def.IsConsumable || def.Use == ItemUse.Food || def.Use == ItemUse.Key || def.Use == ItemUse.CrystalKey || def.Use == ItemUse.Thrown || def.Use == ItemUse.Seed); // 3-14 음식 · 3-15b 열쇠 · 3-16a 던지는 무기 · 3-16b 씨앗도
+            entry.Kind == InventoryKind.Item && items != null && items.TryGet(entry.Id, out var def) && (def.IsConsumable || def.Use == ItemUse.Food || def.Use == ItemUse.Key || def.Use == ItemUse.CrystalKey || def.Use == ItemUse.Runestone || def.Use == ItemUse.Thrown || def.Use == ItemUse.Seed); // 3-14 음식 · 3-15b 열쇠 · 3-16a 던지는 무기 · 3-16b 씨앗도
 
         /// <summary>인벤토리 칸에서 하나를 뺀다 (겹친 칸은 개수 −1). 칸이 비었고 그 항목이 인벤토리에 더 없으면 가리키던 빠른 칸도 비운다.</summary>
         public static void RemoveAt(World world, Unit unit, int index)

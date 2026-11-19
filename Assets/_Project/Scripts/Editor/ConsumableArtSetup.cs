@@ -164,6 +164,16 @@ namespace ProjectM.Editor
             ("spellbook_poison", new Color(0.55f, 0.20f, 0.75f)),
             ("spellbook_water", new Color(0.12f, 0.40f, 0.95f)),
         };
+        // 3-53 룬석: 조약돌 1종(흰 룬)을 종류마다 룬 색으로 (TintWhite)
+        private const string RunestoneModel = "Item_Runestone";
+        private const float RunestoneSize = 0.25f;
+        private static readonly (string ItemId, Color Color)[] RunestoneColors =
+        {
+            ("runestone_blast", new Color(1.00f, 0.35f, 0.15f)),
+            ("runestone_shock", new Color(1.00f, 0.90f, 0.20f)),
+            ("runestone_sleep", new Color(0.65f, 0.45f, 1.00f)),
+            ("runestone_fear", new Color(0.35f, 0.85f, 0.35f)),
+        };
         private const string SeedModel = "Item_Seed";
         private const float SeedSize = 0.22f;
         private static readonly (string ItemId, Color Color)[] SeedColors =
@@ -189,6 +199,7 @@ namespace ProjectM.Editor
             }
             count += BuildTinted(catalog, SpellbookModel, SpellbookSize, SpellbookColors);
             count += BuildTinted(catalog, SeedModel, SeedSize, SeedColors);
+            count += BuildTinted(catalog, RunestoneModel, RunestoneSize, RunestoneColors); // 3-53
             return count;
         }
 

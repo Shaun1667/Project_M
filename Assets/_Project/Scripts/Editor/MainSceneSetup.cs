@@ -593,6 +593,18 @@ namespace ProjectM.Editor
                 { Id = "boss_time_collapse", Element = Element.Lightning, Shape = SpellShape.Burst, Range = 6, Damage = 12, ManaCost = 0, Radius = 1 });
             changed |= catalog.SetStatusIfNone("boss_time_collapse", StatusType.Paralyze, 50);
             changed |= catalog.SetDisplayNameIfEmpty("boss_time_collapse", "시간 붕괴");
+            // 3-53 룬석 주문 (BALANCE 16번 — 던진 칸 3×3, 마나 0, 시전자 = 던진 유닛)
+            changed |= catalog.AddIfMissing(new SpellCatalogAsset.Entry { Id = "rune_blast", Element = Element.Fire, Shape = SpellShape.Burst, Range = 1, Damage = 6, ManaCost = 0, Radius = 1 });
+            changed |= catalog.SetStatusIfNone("rune_blast", StatusType.Burn, 100);
+            changed |= catalog.SetDisplayNameIfEmpty("rune_blast", "폭발의 룬");
+            changed |= catalog.AddIfMissing(new SpellCatalogAsset.Entry { Id = "rune_shock", Element = Element.Lightning, Shape = SpellShape.Burst, Range = 1, Damage = 5, ManaCost = 0, Radius = 1 });
+            changed |= catalog.SetDisplayNameIfEmpty("rune_shock", "번개의 룬");
+            changed |= catalog.AddIfMissing(new SpellCatalogAsset.Entry { Id = "rune_sleep", Element = Element.Neutral, Shape = SpellShape.Burst, Range = 1, Damage = 0, ManaCost = 0, Radius = 1 });
+            changed |= catalog.SetStatusIfNone("rune_sleep", StatusType.Asleep, 100);
+            changed |= catalog.SetDisplayNameIfEmpty("rune_sleep", "잠의 룬");
+            changed |= catalog.AddIfMissing(new SpellCatalogAsset.Entry { Id = "rune_fear", Element = Element.Neutral, Shape = SpellShape.Burst, Range = 1, Damage = 0, ManaCost = 0, Radius = 1 });
+            changed |= catalog.SetStatusIfNone("rune_fear", StatusType.Terrified, 100);
+            changed |= catalog.SetDisplayNameIfEmpty("rune_fear", "공포의 룬");
             // 3-49 감시자 번개 (BALANCE 16번 — 예고 칸 1칸 → 다음 차례, 마나 0, 5층마다 다음 단계)
             int[] sentryDamage = { 4, 7, 10, 13, 16 };
             for (int t = 0; t < sentryDamage.Length; t++)
@@ -1246,6 +1258,11 @@ namespace ProjectM.Editor
             changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "gold", DisplayName = "금화", Use = ItemUse.Gold }); // 3-15a
             changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "key_iron", DisplayName = "쇠 열쇠", Use = ItemUse.Key }); // 3-15b
             changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "key_crystal", DisplayName = "수정 열쇠", Use = ItemUse.CrystalKey }); // 3-52 수정 방
+            // 3-53 룬석 (룬석 방에서만 — 던지면 떨어진 칸에 SpellId 주문)
+            changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "runestone_blast", DisplayName = "폭발의 룬석", Use = ItemUse.Runestone, SpellId = "rune_blast" });
+            changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "runestone_shock", DisplayName = "번개의 룬석", Use = ItemUse.Runestone, SpellId = "rune_shock" });
+            changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "runestone_sleep", DisplayName = "잠의 룬석", Use = ItemUse.Runestone, SpellId = "rune_sleep" });
+            changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "runestone_fear", DisplayName = "공포의 룬석", Use = ItemUse.Runestone, SpellId = "rune_fear" });
             // 3-16a 던지는 무기 (SPD 다트 · 투창, 피해는 근접처럼 1/3 크기 — BALANCE 13번)
             changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "dart", DisplayName = "다트", Use = ItemUse.Thrown, ThrowMinDamage = 1, ThrowMaxDamage = 3, BreakPercent = 0 });
             // 3-16b 씨앗 5종 (SPD)
@@ -1304,6 +1321,7 @@ namespace ProjectM.Editor
                 case ItemUse.Key: return 50;
                 case ItemUse.Thrown: return e.ThrowMaxDamage >= 6 ? 25 : 5;
                 case ItemUse.Seed: return 10;
+                case ItemUse.Runestone: return 30; // 3-53
                 default: return 0;
             }
         }
