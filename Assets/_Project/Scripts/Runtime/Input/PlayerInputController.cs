@@ -1294,11 +1294,12 @@ namespace ProjectM.Input
             if (PlayerActions.TryStep(_world, _config, direction, out var command, _spells.Statuses)) // 3-13a 신속: 두 칸
                 _clock.SubmitPlayerCommand(command);
             else if (PlayerActions.TryGetPlayer(_world, out var bumper) && _world.Map.InBounds(bumper.Pos + direction)
-                && _world.Map.Get(bumper.Pos + direction) == TileType.LockedDoor && (direction.X == 0 || direction.Y == 0)) // 3-15b 잠긴 문
+                && ProjectM.Dungeon.UnlockCommand.KeyFor(_world.Map.Get(bumper.Pos + direction)) != ItemUse.None && (direction.X == 0 || direction.Y == 0)) // 3-15b 잠긴 문 · 3-52 수정 문
             {
-                if (ProjectM.Dungeon.UnlockCommand.KeySlot(_items, bumper) >= 0)
+                var lockedTile = _world.Map.Get(bumper.Pos + direction);
+                if (ProjectM.Dungeon.UnlockCommand.KeySlot(_items, bumper, ProjectM.Dungeon.UnlockCommand.KeyFor(lockedTile)) >= 0)
                     _clock.SubmitPlayerCommand(new ProjectM.Dungeon.UnlockCommand(_world, _items, bumper.Pos + direction, _config.DefaultActionCostTicks));
-                else Hint(HudText.DoorLocked);
+                else Hint(lockedTile == TileType.CrystalDoor ? HudText.CrystalDoorLocked : HudText.DoorLocked);
             }
             else if (WorkbenchRequested != null && PlayerActions.TryGetPlayer(_world, out var crafter) && _world.Map.InBounds(crafter.Pos + direction)
                 && _world.Map.Get(crafter.Pos + direction) == TileType.ArtifactBench) // 3-28b 마법 제작대 — 창은 GameRoot (카드 창, 틱 밖)

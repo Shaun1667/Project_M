@@ -26,6 +26,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 0
@@ -57,6 +59,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 0
@@ -88,6 +92,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 0
@@ -119,6 +125,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 0
@@ -150,6 +158,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 0
@@ -181,6 +191,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 0
@@ -212,6 +224,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 2
     Amount: 0
     Effect: 0
@@ -243,6 +257,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 2
     Amount: 0
     Effect: 0
@@ -274,6 +290,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 2
     Amount: 0
     Effect: 0
@@ -305,6 +323,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 2
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 2
     Amount: 0
     Effect: 0
@@ -336,6 +356,8 @@ MonoBehaviour:
     SurpriseMinPercent: 67
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 2
     Amount: 0
     Effect: 0
@@ -367,6 +389,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 2
     Amount: 0
     Effect: 0
@@ -398,6 +422,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 1
     Effect: 1
@@ -429,6 +455,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 1
     Effect: 2
@@ -460,6 +488,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 3
@@ -491,6 +521,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 4
@@ -522,6 +554,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 5
@@ -553,6 +587,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 6
@@ -584,6 +620,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 7
@@ -615,6 +653,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 8
@@ -646,6 +686,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 9
@@ -677,6 +719,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 10
@@ -708,6 +752,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 11
@@ -739,6 +785,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 12
@@ -770,6 +818,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 13
@@ -801,6 +851,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 14
@@ -832,6 +884,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 15
@@ -863,6 +917,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 1
     Amount: 0
     Effect: 0
@@ -894,6 +950,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 2
     Amount: 0
     Effect: 0
@@ -925,6 +983,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 3
     Amount: 0
     Effect: 0
@@ -956,6 +1016,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 4
     Amount: 0
     Effect: 0
@@ -987,6 +1049,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 5
     Amount: 0
     Effect: 0
@@ -1018,6 +1082,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 16
@@ -1049,6 +1115,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 17
@@ -1080,6 +1148,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 18
@@ -1111,6 +1181,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 19
@@ -1142,6 +1214,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 20
@@ -1173,6 +1247,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 21
@@ -1204,6 +1280,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 22
@@ -1235,6 +1313,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 23
@@ -1266,6 +1346,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 0
@@ -1297,6 +1379,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 0
@@ -1328,6 +1412,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 0
@@ -1359,6 +1445,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 0
@@ -1390,6 +1478,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 0
@@ -1421,6 +1511,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 0
@@ -1452,6 +1544,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 0
@@ -1483,6 +1577,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 0
@@ -1514,6 +1610,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 0
@@ -1545,6 +1643,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 0
@@ -1576,6 +1676,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 0
@@ -1607,6 +1709,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 0
@@ -1638,6 +1742,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 0
@@ -1669,6 +1775,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 0
@@ -1766,6 +1874,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 2
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 1
     Amount: 0
     Effect: 0
@@ -1798,6 +1908,7 @@ MonoBehaviour:
     Defense: 0
     HitsPerAttack: 0
     AttackDelay: 0
+    WeaponFamily: 
     Tier: 3
     Amount: 0
     Effect: 0
@@ -1830,6 +1941,7 @@ MonoBehaviour:
     Defense: 0
     HitsPerAttack: 0
     AttackDelay: 0
+    WeaponFamily: 
     Tier: 3
     Amount: 0
     Effect: 0
@@ -1862,6 +1974,7 @@ MonoBehaviour:
     Defense: 0
     HitsPerAttack: 0
     AttackDelay: 0.8
+    WeaponFamily: 
     Tier: 3
     Amount: 0
     Effect: 0
@@ -1894,6 +2007,7 @@ MonoBehaviour:
     Defense: 4
     HitsPerAttack: 0
     AttackDelay: 0
+    WeaponFamily: 
     Tier: 3
     Amount: 0
     Effect: 0
@@ -1926,6 +2040,7 @@ MonoBehaviour:
     Defense: 0
     HitsPerAttack: 0
     AttackDelay: 0.5
+    WeaponFamily: 
     Tier: 3
     Amount: 0
     Effect: 0
@@ -1958,6 +2073,7 @@ MonoBehaviour:
     Defense: 0
     HitsPerAttack: 0
     AttackDelay: 0
+    WeaponFamily: 
     Tier: 3
     Amount: 0
     Effect: 0
@@ -1990,6 +2106,7 @@ MonoBehaviour:
     Defense: 0
     HitsPerAttack: 0
     AttackDelay: 0
+    WeaponFamily: 
     Tier: 4
     Amount: 0
     Effect: 0
@@ -2022,6 +2139,7 @@ MonoBehaviour:
     Defense: 0
     HitsPerAttack: 0
     AttackDelay: 0
+    WeaponFamily: 
     Tier: 4
     Amount: 0
     Effect: 0
@@ -2054,6 +2172,7 @@ MonoBehaviour:
     Defense: 0
     HitsPerAttack: 0
     AttackDelay: 0
+    WeaponFamily: 
     Tier: 4
     Amount: 0
     Effect: 0
@@ -2086,6 +2205,7 @@ MonoBehaviour:
     Defense: 0
     HitsPerAttack: 0
     AttackDelay: 0
+    WeaponFamily: 
     Tier: 4
     Amount: 0
     Effect: 0
@@ -2118,6 +2238,7 @@ MonoBehaviour:
     Defense: 0
     HitsPerAttack: 0
     AttackDelay: 0
+    WeaponFamily: 
     Tier: 4
     Amount: 0
     Effect: 0
@@ -2150,6 +2271,7 @@ MonoBehaviour:
     Defense: 0
     HitsPerAttack: 0
     AttackDelay: 0
+    WeaponFamily: 
     Tier: 4
     Amount: 0
     Effect: 0
@@ -2182,6 +2304,7 @@ MonoBehaviour:
     Defense: 0
     HitsPerAttack: 0
     AttackDelay: 0
+    WeaponFamily: 
     Tier: 4
     Amount: 0
     Effect: 0
@@ -2214,6 +2337,7 @@ MonoBehaviour:
     Defense: 0
     HitsPerAttack: 0
     AttackDelay: 0
+    WeaponFamily: 
     Tier: 5
     Amount: 0
     Effect: 0
@@ -2246,6 +2370,7 @@ MonoBehaviour:
     Defense: 0
     HitsPerAttack: 0
     AttackDelay: 0
+    WeaponFamily: 
     Tier: 5
     Amount: 0
     Effect: 0
@@ -2278,6 +2403,7 @@ MonoBehaviour:
     Defense: 0
     HitsPerAttack: 0
     AttackDelay: 1.5
+    WeaponFamily: 
     Tier: 5
     Amount: 0
     Effect: 0
@@ -2310,6 +2436,7 @@ MonoBehaviour:
     Defense: 0
     HitsPerAttack: 0
     AttackDelay: 0
+    WeaponFamily: 
     Tier: 5
     Amount: 0
     Effect: 0
@@ -2342,6 +2469,7 @@ MonoBehaviour:
     Defense: 6
     HitsPerAttack: 0
     AttackDelay: 0
+    WeaponFamily: 
     Tier: 5
     Amount: 0
     Effect: 0
@@ -2374,6 +2502,7 @@ MonoBehaviour:
     Defense: 0
     HitsPerAttack: 0
     AttackDelay: 0.5
+    WeaponFamily: 
     Tier: 5
     Amount: 0
     Effect: 0
@@ -2406,6 +2535,7 @@ MonoBehaviour:
     Defense: 0
     HitsPerAttack: 0
     AttackDelay: 0
+    WeaponFamily: 
     Tier: 5
     Amount: 0
     Effect: 0
@@ -2437,6 +2567,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 0
@@ -2468,6 +2600,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 0
@@ -2505,6 +2639,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 0
@@ -2541,6 +2677,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 0
@@ -2577,6 +2715,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 0
@@ -2614,6 +2754,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 0
@@ -2651,6 +2793,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 0
@@ -2682,6 +2826,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 0
@@ -2713,6 +2859,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 0
@@ -2744,6 +2892,8 @@ MonoBehaviour:
     SurpriseMinPercent: 0
     Defense: 0
     HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
     Tier: 0
     Amount: 0
     Effect: 0
@@ -2761,6 +2911,39 @@ MonoBehaviour:
     RelicEffects: []
     TimeKind: 4
     TimeGauge: 03000000040000000500000006000000i
+    TimePower: 
+  - Id: key_crystal
+    DisplayName: "\uC218\uC815 \uC5F4\uC1E0"
+    Use: 14
+    SpellId: 
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
+    HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
+    Tier: 0
+    Amount: 0
+    Effect: 0
+    Weight: 0
+    Food: 0
+    Risky: 0
+    FireTransformsTo: 
+    IceTransformsTo: 
+    Value: 0
+    ThrowMinDamage: 0
+    ThrowMaxDamage: 0
+    BreakPercent: 0
+    PlantTrap: 0
+    BrewsInto: 
+    RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
     TimePower: 
   _weaponDamageDivisor: 3
   _weaponMinDamage: 2

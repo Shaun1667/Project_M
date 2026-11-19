@@ -105,7 +105,8 @@ namespace ProjectM.Presentation
                 case TileType.EmptyWell:
                 case TileType.Tomb: // 3-47
                 case TileType.OpenTomb:
-                case TileType.Chasm: return _tiles.Floor(x, y); // 3-51 (2D 그림 없음)
+                case TileType.Chasm:
+                case TileType.CrystalDoor: return _tiles.Floor(x, y); // 3-51 · 3-52 (2D 그림 없음)
                 case TileType.StairsDown: return _tiles.StairsDown;
                 case TileType.StairsUp: return _tiles.StairsUp;
                 case TileType.Wall:

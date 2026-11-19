@@ -428,4 +428,9 @@ MonoBehaviour:
     Upright: 0
     Icon: {fileID: 0}
     Icon3D: {fileID: 0}
+  - ItemId: key_crystal
+    Prefab: {fileID: 4073024342558104240, guid: a4ae5e7079a01d9449557e8eb5bf04a9, type: 3}
+    Upright: 1
+    Icon: {fileID: 0}
+    Icon3D: {fileID: 0}
   _use3DIcons: 1

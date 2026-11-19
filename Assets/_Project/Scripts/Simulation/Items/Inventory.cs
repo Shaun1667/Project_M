@@ -87,6 +87,8 @@ namespace ProjectM.Items
         Artifact = 12,
         /// <summary>유물 장비 (3-28a, 결정 2026-11-05): 유물 칸(2칸)에 끼면 RelicEffects가 켜진다 (특성 효과 표와 같음 — 강화 단계 n이면 Values[n]). 같은 종류는 한 칸만. 모래시계(Artifact)와 다름.</summary>
         Relic = 13,
+        /// <summary>수정 열쇠 (3-52 수정 방, SPD Crystal): 수정 문에 부딪히면 하나 써서 연다 (UnlockCommand). 잠긴 문은 못 엶. 겹친다.</summary>
+        CrystalKey = 14,
     }
 
     /// <summary>
@@ -317,7 +319,7 @@ namespace ProjectM.Items
 
         /// <summary>겹치는 항목인지 (3-10b): 물약 · 주문서.</summary>
         public static bool IsStackable(ItemBook items, InventoryRef entry) =>
-            entry.Kind == InventoryKind.Item && items != null && items.TryGet(entry.Id, out var def) && (def.IsConsumable || def.Use == ItemUse.Food || def.Use == ItemUse.Key || def.Use == ItemUse.Thrown || def.Use == ItemUse.Seed); // 3-14 음식 · 3-15b 열쇠 · 3-16a 던지는 무기 · 3-16b 씨앗도
+            entry.Kind == InventoryKind.Item && items != null && items.TryGet(entry.Id, out var def) && (def.IsConsumable || def.Use == ItemUse.Food || def.Use == ItemUse.Key || def.Use == ItemUse.CrystalKey || def.Use == ItemUse.Thrown || def.Use == ItemUse.Seed); // 3-14 음식 · 3-15b 열쇠 · 3-16a 던지는 무기 · 3-16b 씨앗도
 
         /// <summary>인벤토리 칸에서 하나를 뺀다 (겹친 칸은 개수 −1). 칸이 비었고 그 항목이 인벤토리에 더 없으면 가리키던 빠른 칸도 비운다.</summary>
         public static void RemoveAt(World world, Unit unit, int index)

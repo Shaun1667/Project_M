@@ -45,5 +45,7 @@ namespace ProjectM.Core
         OpenTomb = 19,
         /// <summary>구덩이 (3-51 약한 바닥, SPD Chasm) — 걸을 수 없음(적 · 길 찾기는 피함) · 시야 · 투사체는 안 막음. 플레이어는 뛰어들면 아래층으로 떨어지고(Chasms), 부양 중이면 떠서 지난다.</summary>
         Chasm = 20,
+        /// <summary>수정 문 (3-52 수정 방, SPD Crystal) — 걸을 수 없음 · 투사체를 막음 · 시야는 안 막음(투명 — 안이 보임). 수정 열쇠로 열면 바닥(UnlockCommand).</summary>
+        CrystalDoor = 21,
     }
 }

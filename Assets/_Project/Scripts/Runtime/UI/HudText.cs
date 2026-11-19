@@ -236,6 +236,7 @@ namespace ProjectM.UI
                 case ItemUse.Seed: return $"{text.Entry(entry)}{count} — 씨앗. 사용 = 발밑에 심기 · 던지기 = 그 칸에 심기 → {Trap(def.PlantTrap)} (밟으면 발동)";
                 case ItemUse.Thrown: return $"{text.Entry(entry)}{count} — 던지는 무기. 던지기 = 피해 {def.ThrowMinDamage}~{def.ThrowMaxDamage}" + (def.BreakPercent > 0 ? $" · {def.BreakPercent}%로 부러짐" : " · 다시 주울 수 있음");
                 case ItemUse.Key: return $"{text.Entry(entry)}{count} — 열쇠. 잠긴 문에 부딪히면 열린다";
+                case ItemUse.CrystalKey: return $"{text.Entry(entry)}{count} — 수정 열쇠. 수정 문에 부딪히면 열린다 (하나만 열 수 있다)"; // 3-52
                 case ItemUse.Food: return $"{text.Entry(entry)}{count} — 음식. 먹으면 허기 −{def.Food}" + (def.Risky ? " · 탈이 날 수 있음 (불에 구우면 안전)" : string.Empty);
                 case ItemUse.Relic:
                 {
@@ -277,6 +278,7 @@ namespace ProjectM.UI
 
         /// <summary>잠긴 문 (3-15b).</summary>
         public const string DoorLocked = "잠겨 있다 — 열쇠가 필요하다";
+        public const string CrystalDoorLocked = "수정 문 — 수정 열쇠가 필요하다"; // 3-52
         public const string DoorUnlocked = "열쇠로 문을 열었다";
         public const string WellEmpty = "우물이 말라 있다"; // 3-46
         public const string TombEmpty = "빈 관이다"; // 3-47
@@ -492,6 +494,7 @@ namespace ProjectM.UI
                 case TileType.Tomb: return "돌 관 — 부딪혀 열면 무언가 있다"; // 3-47
                 case TileType.OpenTomb: return "빈 관";
                 case TileType.Chasm: return "구덩이 — 뛰어들면 아래층 (부양이면 떠서 건넘)"; // 3-51
+                case TileType.CrystalDoor: return "수정 문 — 안이 비쳐 보인다. 수정 열쇠로 연다"; // 3-52
                 default: return CellUnknown;
             }
         }

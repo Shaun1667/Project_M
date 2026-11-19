@@ -266,6 +266,7 @@ namespace ProjectM.Editor
             if (HasModels(WellModel)) SetWellModules(tiles, floorPrefab, "Tile_"); // 3-46 마법 우물
             if (HasModels(TombModel, OpenTombModel)) SetTombModules(tiles, floorPrefab, "Tile_"); // 3-47 지하 묘지 관
             tiles.SetModule(TileType.Chasm, BuildChasmPrefab("Tile_Chasm")); // 3-51 구덩이 (모델 없음 — 코드로)
+            tiles.SetModule(TileType.CrystalDoor, BuildCrystalDoorPrefab(floorPrefab, "Tile_CrystalDoor")); // 3-52 수정 문 (코드로)
             tiles.SetModule(TileType.Wall, BuildPrefab(Wall, null));
             tiles.SetModule(TileType.StairsDown, BuildPrefab(StairsDown, FillCellSunk)); // G-20: 테두리 = 바닥 높이 (원본은 0.39 m 솟아 있었음)
             tiles.SetModule(TileType.StairsUp, BuildPrefab(StairsUp, FillCellFootprint));
@@ -394,6 +395,7 @@ namespace ProjectM.Editor
                 if (HasModels(WellModel)) SetWellModules(set, floor, prefix);
                 if (HasModels(TombModel, OpenTombModel)) SetTombModules(set, floor, prefix);
                 set.SetModule(TileType.Chasm, BuildChasmPrefab(prefix + "Chasm")); // 3-51
+                set.SetModule(TileType.CrystalDoor, BuildCrystalDoorPrefab(floor, prefix + "CrystalDoor")); // 3-52
             }
             EditorUtility.SetDirty(set);
             tiles.SetZoneSet(firstFloor, lastFloor, set);
@@ -547,6 +549,54 @@ namespace ProjectM.Editor
                     rim.GetComponent<Renderer>().sharedMaterial = rimMat;
                 }
             });
+
+        /// <summary>
+        /// 3-52 수정 문 (결정 2026-11-18 — 코드로 만든 반투명 수정 판): 바닥 + 칸을 가로지르는 반투명 하늘색 판(너비 0.9 · 키 CrystalDoorHeight · 두께 0.12) +
+        /// 위아래 얇은 빛나는 테. 방향은 TilemapPresenter가 문처럼 옆 벽을 보고 돌림.
+        /// </summary>
+        private static GameObject BuildCrystalDoorPrefab(GameObject floor, string name) =>
+            SaveTilePrefab(floor, name, root =>
+            {
+                var glass = EnsureCrystalMaterial($"{PrefabDir}/Mat_CrystalDoor.mat", new Color(0.45f, 0.8f, 1f, 0.45f));
+                var rimMat = EnsureWaterMaterial(new Color(0.35f, 0.75f, 1f));
+                void Box(string boxName, Vector3 pos, Vector3 scale, Material mat)
+                {
+                    var box = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    Object.DestroyImmediate(box.GetComponent<Collider>());
+                    box.name = boxName;
+                    box.transform.SetParent(root, false);
+                    box.transform.localPosition = pos;
+                    box.transform.localScale = scale;
+                    box.GetComponent<Renderer>().sharedMaterial = mat;
+                }
+                Box("Crystal", new Vector3(0f, CrystalDoorHeight * 0.5f, 0f), new Vector3(0.9f, CrystalDoorHeight, 0.12f), glass);
+                Box("RimBottom", new Vector3(0f, 0.03f, 0f), new Vector3(0.94f, 0.06f, 0.16f), rimMat);
+                Box("RimTop", new Vector3(0f, CrystalDoorHeight, 0f), new Vector3(0.94f, 0.06f, 0.16f), rimMat);
+            });
+
+        private const float CrystalDoorHeight = 1.1f;
+
+        /// <summary>반투명 URP Lit 재질 (3-52 수정 문) — 알파 블렌드 · 약한 발광.</summary>
+        private static Material EnsureCrystalMaterial(string path, Color color)
+        {
+            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (material != null) return material;
+            material = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+            material.SetFloat("_Surface", 1f); // 투명
+            material.SetFloat("_Blend", 0f); // 알파
+            material.SetFloat("_ZWrite", 0f);
+            material.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            material.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+            material.SetOverrideTag("RenderType", "Transparent");
+            material.SetColor("_BaseColor", color);
+            material.SetFloat("_Smoothness", 0.9f);
+            material.EnableKeyword("_EMISSION");
+            material.SetColor("_EmissionColor", new Color(color.r, color.g, color.b) * 0.4f);
+            AssetDatabase.CreateAsset(material, path);
+            return material;
+        }
 
         /// <summary>3-47 관 · 빈 관 모듈을 세트에 넣는다.</summary>
         private static void SetTombModules(TileVisualSet set, GameObject floor, string prefix)

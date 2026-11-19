@@ -89,6 +89,7 @@ namespace ProjectM.Editor
         private const string EmptyWellTilePath = VisualsDir + "/EmptyWellTile.asset";
         private const string TombTilePath = VisualsDir + "/TombTile.asset"; // 3-47
         private const string ChasmTilePath = VisualsDir + "/ChasmTile.asset"; // 3-51
+        private const string CrystalDoorTilePath = VisualsDir + "/CrystalDoorTile.asset"; // 3-52
         private const string OpenTombTilePath = VisualsDir + "/OpenTombTile.asset";
         private const string BarricadeTilePath = VisualsDir + "/BarricadeTile.asset"; // 3-41
         private const string PlayerSpritePath = "Assets/_Project/Art/Greybox/player.png";
@@ -350,6 +351,7 @@ namespace ProjectM.Editor
             set.Set(TileType.Tomb, EnsureTintTile(TombTilePath, new Color(0.35f, 0.33f, 0.4f))); // 3-47 관: 짙은 돌색
             set.Set(TileType.OpenTomb, EnsureTintTile(OpenTombTilePath, new Color(0.25f, 0.24f, 0.28f))); // 빈 관
             set.Set(TileType.Chasm, EnsureTintTile(ChasmTilePath, new Color(0.03f, 0.03f, 0.05f))); // 3-51 구덩이: 거의 검정
+            set.Set(TileType.CrystalDoor, EnsureTintTile(CrystalDoorTilePath, new Color(0.45f, 0.8f, 1f))); // 3-52 수정 문: 밝은 하늘색
             EditorUtility.SetDirty(set);
             return set;
         }
@@ -1243,6 +1245,7 @@ namespace ProjectM.Editor
             // 3-14 음식 (SPD): 식량 300 · 작은 빵 · 고기 150. 정체불명 고기는 불 = 구운 고기, 얼음 = 얼린 고기 (BALANCE 18번)
             changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "gold", DisplayName = "금화", Use = ItemUse.Gold }); // 3-15a
             changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "key_iron", DisplayName = "쇠 열쇠", Use = ItemUse.Key }); // 3-15b
+            changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "key_crystal", DisplayName = "수정 열쇠", Use = ItemUse.CrystalKey }); // 3-52 수정 방
             // 3-16a 던지는 무기 (SPD 다트 · 투창, 피해는 근접처럼 1/3 크기 — BALANCE 13번)
             changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "dart", DisplayName = "다트", Use = ItemUse.Thrown, ThrowMinDamage = 1, ThrowMaxDamage = 3, BreakPercent = 0 });
             // 3-16b 씨앗 5종 (SPD)

@@ -138,6 +138,7 @@ namespace ProjectM.Editor
             ("food_frozen_meat", "Item_MeatFrozen", 0.32f, -90f),
             ("gold", "Item_Gold", 0.3f, 0f),
             ("key_iron", "Item_KeyIron", 0.3f, 0f),
+            ("key_crystal", "Item_KeyIron", 0.3f, 0f), // 3-52 수정 열쇠 — 모델이 생기기 전까지 쇠 열쇠 모양
             ("dart", "Item_Dart", 0.3f, 0f),
             ("javelin", "Item_Javelin", 0.7f, 0f),
             ("fusion_device", "Item_FusionDevice", 0.4f, 0f),

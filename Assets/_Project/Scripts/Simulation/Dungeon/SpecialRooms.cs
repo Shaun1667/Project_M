@@ -41,6 +41,8 @@ namespace ProjectM.Dungeon
         Pool = 15,
         /// <summary>약한 바닥 (3-51, SPD Weak Floor): 입구 쪽 발판 한 줄만 남기고 구덩이 · 맨 안쪽 줄 가운데 돌기둥에 좋은 물건 하나(보물 방 목록). 같은 층 방 밖에 부양 물약 하나 보장. 떨어질 수 없는 층(다음 층이 보스)에는 안 생김.</summary>
         WeakFloor = 16,
+        /// <summary>수정 방 (3-52, SPD Crystal Choice): 앞쪽 빈 칸 · 안쪽 작은 방 둘(수정 문 · 투명). 앞쪽에 수정 열쇠 하나 — 한쪽만 열 수 있다. 한 방 = 보물 방 목록 1개, 다른 방 = 금화(보물 창고만큼).</summary>
+        Crystal = 17,
     }
 
     /// <summary>특수 방 수치 · 아이템 목록 (3-15b). 값은 FloorDecorConfigAsset에서 — 기준은 BALANCE.md 16번.</summary>
@@ -48,7 +50,7 @@ namespace ProjectM.Dungeon
     {
         /// <summary>층마다 특수 방이 생길 확률 (%) — 생기면 하나.</summary>
         public int RoomPercent { get; }
-        /// <summary>종류 무게 (보물 방 · 무기고 · 도서관 · 정원 · 연구실 · 창고 · 마법 불 · 독가스 · 보물 창고 · 함정 방 · 마법 우물 · 지하 묘지 · 석상 · 감시탑 · 피라냐 연못 · 약한 바닥 순 — 모자란 뒤쪽은 0).</summary>
+        /// <summary>종류 무게 (보물 방 · 무기고 · 도서관 · 정원 · 연구실 · 창고 · 마법 불 · 독가스 · 보물 창고 · 함정 방 · 마법 우물 · 지하 묘지 · 석상 · 감시탑 · 피라냐 연못 · 약한 바닥 · 수정 방 순 — 모자란 뒤쪽은 0).</summary>
         public IReadOnlyList<int> Weights { get; }
         /// <summary>방 안쪽 크기 (정사각 한 변 최소 ~ 최대).</summary>
         public int MinSize { get; }
@@ -92,6 +94,8 @@ namespace ProjectM.Dungeon
         public IReadOnlyList<TileType> WellTypes { get; }
         /// <summary>약한 바닥 (3-51): 방 밖에 보장하는 아이템 (부양 물약 — 떠서 건넘).</summary>
         public string WeakFloorItem { get; }
+        /// <summary>수정 방 (3-52): 앞쪽에 놓는 수정 열쇠 (ItemUse.CrystalKey).</summary>
+        public string CrystalKeyItem { get; }
 
         public SpecialRoomConfig(int roomPercent, IReadOnlyList<int> weights, int minSize, int maxSize,
             IReadOnlyList<string> vaultItems, int vaultItemCount, IReadOnlyList<string> armoryItems, int armoryItemCount,
@@ -103,8 +107,9 @@ namespace ProjectM.Dungeon
             int toxicGoldMinBase = 0, int toxicGoldMinPerFloor = 0, int toxicGoldMaxBase = 0, int toxicGoldMaxPerFloor = 0,
             int treasuryPilesMin = 0, int treasuryPilesMax = 0,
             IReadOnlyList<TrapType> trapRoomTypes = null, string trapRoomItem = null,
-            IReadOnlyList<TileType> wellTypes = null, string weakFloorItem = null)
+            IReadOnlyList<TileType> wellTypes = null, string weakFloorItem = null, string crystalKeyItem = null)
         {
+            CrystalKeyItem = string.IsNullOrEmpty(crystalKeyItem) ? null : crystalKeyItem;
             WeakFloorItem = string.IsNullOrEmpty(weakFloorItem) ? null : weakFloorItem;
             StorageItems = storageItems ?? Array.Empty<string>();
             StorageItemMin = Math.Max(0, storageItemMin);
@@ -128,7 +133,7 @@ namespace ProjectM.Dungeon
             LabItems = labItems ?? Array.Empty<string>();
             LabItemCount = Math.Max(0, labItemCount);
             if (roomPercent < 0 || roomPercent > 100) throw new ArgumentOutOfRangeException(nameof(roomPercent));
-            if (weights == null || weights.Count < 4 || weights.Count > 16) throw new ArgumentException("종류 무게는 4 ~ 16개 (보물 · 무기고 · 도서관 · 정원 · 연구실 · 창고 · 마법 불 · 독가스 · 보물 창고 · 함정 방 · 마법 우물 · 지하 묘지 · 석상 · 감시탑 · 피라냐 연못 · 약한 바닥)", nameof(weights));
+            if (weights == null || weights.Count < 4 || weights.Count > 17) throw new ArgumentException("종류 무게는 4 ~ 17개 (보물 · 무기고 · 도서관 · 정원 · 연구실 · 창고 · 마법 불 · 독가스 · 보물 창고 · 함정 방 · 마법 우물 · 지하 묘지 · 석상 · 감시탑 · 피라냐 연못 · 약한 바닥 · 수정 방)", nameof(weights));
             if (minSize < 2 || maxSize < minSize) throw new ArgumentOutOfRangeException(nameof(maxSize), "2 ≤ 최소 ≤ 최대");
             RoomPercent = roomPercent;
             Weights = weights;
@@ -261,6 +266,7 @@ namespace ProjectM.Dungeon
                 case SpecialRoomType.Treasury: // 3-44: 금화만
                 case SpecialRoomType.MagicWell: // 3-46: 우물만
                 case SpecialRoomType.Crypt: // 3-47: 관만 (갑옷은 열 때)
+                case SpecialRoomType.Crystal: // 3-52: 열쇠 · 보상은 PlaceCrystal이 직접
                 case SpecialRoomType.Statue: pool = Array.Empty<string>(); count = 0; break; // 3-48: 석상만 (무기는 쓰러질 때) // 3-42: 보물 방 목록에서 하나
                 case SpecialRoomType.Storage: pool = config.StorageItems; count = config.StorageItemMin + rng.Range(0, config.StorageItemMax - config.StorageItemMin + 1); break;
                 default: pool = config.GardenItems; count = config.GardenItemCount; break;
@@ -282,6 +288,7 @@ namespace ProjectM.Dungeon
             if (type == SpecialRoomType.Sentry) spots = PlaceSentry(world, cells); // 3-49: 맨 안쪽 줄 가운데에 감시자
             if (type == SpecialRoomType.Pool) spots = Pools.Fill(world, rng, cells); // 3-50: 물 · 피라냐, 가운데 받침대
             if (type == SpecialRoomType.WeakFloor) spots = Chasms.PlaceWeakFloor(world, cells); // 3-51: 발판 한 줄 · 구덩이 · 돌기둥
+            if (type == SpecialRoomType.Crystal) PlaceCrystal(world, config, rng, cells); // 3-52: 작은 방 둘 · 수정 문 · 열쇠
             if (type == SpecialRoomType.MagicWell && config.WellTypes.Count > 0) // 3-46: 가운데 칸에 우물
                 world.SetTile(cells[cells.Count / 2], config.WellTypes[rng.Range(0, config.WellTypes.Count)]);
             if (type == SpecialRoomType.ToxicGas) // 3-43: 방 전체 영구 독구름 · 금화 더미 먼저
@@ -307,6 +314,54 @@ namespace ProjectM.Dungeon
             if (type == SpecialRoomType.Treasury) PlaceGold(world, config, rng, spots, config.TreasuryPilesMin, config.TreasuryPilesMax, keepOne: false);
             if (type == SpecialRoomType.ToxicGas && config.ToxicGasItem != null) PlaceOutside(world, floor, config.ToxicGasItem, rng, new HashSet<GridPos>(cells)); // 3-43: 번개가 없어도 없앨 수 있게
             if (type == SpecialRoomType.MagicalFire && config.MagicalFireItem != null) PlaceOutside(world, floor, config.MagicalFireItem, rng, new HashSet<GridPos>(cells)); // 3-42: 얼음을 못 써도 끌 수 있게
+        }
+
+        /// <summary>
+        /// 수정 방 (3-52): 방 칸은 입구에서 깊이 순(한 줄 = size칸). 맨 안쪽 줄 = 작은 방 둘(가운데 칸 mid = 벽으로 나눔), 그 앞 줄 = 벽 + 양쪽 방 입구에 수정 문,
+        /// 나머지 앞쪽 = 빈 칸(열쇠는 입구 바로 안쪽 첫 줄 가운데). 어느 방이 보물 · 금화인지는 rng. 금화 = 보물 창고 더미 수만큼 굴린 금액의 합을 한 무더기로.
+        /// </summary>
+        public static void PlaceCrystal(World world, SpecialRoomConfig config, IRng rng, List<GridPos> cells)
+        {
+            int size = (int)Math.Round(Math.Sqrt(cells.Count));
+            int mid = size / 2, back = size - 1, gate = size - 2;
+            int leftDoor = (mid - 1) / 2, rightDoor = size - 1 - (mid - 1) / 2;
+            var left = new List<GridPos>();
+            var right = new List<GridPos>();
+            for (int b = 0; b < size; b++)
+            {
+                var g = cells[gate * size + b];
+                world.SetTile(g, b == leftDoor || b == rightDoor ? TileType.CrystalDoor : TileType.Wall);
+                var c = cells[back * size + b];
+                if (b == mid) world.SetTile(c, TileType.Wall);
+                else (b < mid ? left : right).Add(c);
+            }
+            if (config.CrystalKeyItem != null && gate > 0)
+            {
+                var keyAt = cells[mid]; // 입구 줄(깊이 0) 가운데
+                world.FloorItems.Add(keyAt, config.CrystalKeyItem);
+                world.Events.Publish(new ProjectM.Items.FloorItemPlacedEvent(keyAt, config.CrystalKeyItem, ProjectM.Items.Identification.VisualOf(world, config.CrystalKeyItem)));
+            }
+            bool prizeLeft = rng.Range(0, 2) == 0;
+            var prizeRoom = prizeLeft ? left : right;
+            var goldRoom = prizeLeft ? right : left;
+            if (config.VaultItems.Count > 0 && prizeRoom.Count > 0)
+            {
+                var item = config.VaultItems[rng.Range(0, config.VaultItems.Count)];
+                var at = prizeRoom[rng.Range(0, prizeRoom.Count)];
+                world.FloorItems.Add(at, item);
+                world.Events.Publish(new ProjectM.Items.FloorItemPlacedEvent(at, item, ProjectM.Items.Identification.VisualOf(world, item)));
+            }
+            int piles = config.TreasuryPilesMin + rng.Range(0, config.TreasuryPilesMax - config.TreasuryPilesMin + 1);
+            int min = config.ToxicGoldMinBase + config.ToxicGoldMinPerFloor * world.Floor;
+            int max = Math.Max(min, config.ToxicGoldMaxBase + config.ToxicGoldMaxPerFloor * world.Floor);
+            int total = 0;
+            for (int i = 0; i < piles; i++) total += rng.Range(min, max + 1);
+            if (total > 0 && goldRoom.Count > 0)
+            {
+                var at = goldRoom[rng.Range(0, goldRoom.Count)];
+                world.FloorItems.Add(at, ProjectM.Items.Loot.GoldItemId, total);
+                world.Events.Publish(new ProjectM.Items.FloorItemPlacedEvent(at, ProjectM.Items.Loot.GoldItemId, ProjectM.Items.Loot.GoldItemId));
+            }
         }
 
         /// <summary>특수 방 금화 (3-43 독가스 방 · 3-44 보물 창고): 더미 수 최소 ~ 최대, 금액 = 기본 + 층마다 × 층 (최소 ~ 최대). 놓은 칸은 spots에서 뺀다. keepOne = 물건 자리 한 칸을 남김.</summary>
@@ -401,6 +456,7 @@ namespace ProjectM.Dungeon
 
     /// <summary>
     /// 잠긴 문 열기 (3-15b, 차례 1): 옆(상하좌우) 잠긴 문에 배낭의 열쇠(ItemUse.Key) 하나를 쓰고 닫힌 문으로. 열쇠가 없거나 잠긴 문이 아니면 차례만 쓴다.
+    /// 3-52 수정 문: 수정 열쇠(ItemUse.CrystalKey)를 쓰고 바닥으로 — 열쇠 종류는 문 종류로 정한다(KeyFor).
     /// </summary>
     public sealed class UnlockCommand : ProjectM.Core.ICommand
     {
@@ -419,13 +475,17 @@ namespace ProjectM.Dungeon
             CostTicks = costTicks;
         }
 
+        /// <summary>문 종류에 맞는 열쇠 (잠긴 문 = Key, 수정 문 = CrystalKey). 열 수 없는 칸이면 None.</summary>
+        public static ProjectM.Items.ItemUse KeyFor(TileType door) =>
+            door == TileType.LockedDoor ? ProjectM.Items.ItemUse.Key : door == TileType.CrystalDoor ? ProjectM.Items.ItemUse.CrystalKey : ProjectM.Items.ItemUse.None;
+
         /// <summary>열쇠가 든 인벤토리 칸, 없으면 -1.</summary>
-        public static int KeySlot(ProjectM.Items.ItemBook items, ProjectM.Units.Unit unit)
+        public static int KeySlot(ProjectM.Items.ItemBook items, ProjectM.Units.Unit unit, ProjectM.Items.ItemUse use = ProjectM.Items.ItemUse.Key)
         {
             for (int i = 0; i < unit.InventorySlots.Length; i++)
             {
                 var e = unit.InventorySlots[i];
-                if (!e.IsEmpty && e.Kind == ProjectM.Items.InventoryKind.Item && items.TryGet(e.Id, out var def) && def.Use == ProjectM.Items.ItemUse.Key) return i;
+                if (!e.IsEmpty && e.Kind == ProjectM.Items.InventoryKind.Item && items.TryGet(e.Id, out var def) && def.Use == use) return i;
             }
             return -1;
         }
@@ -433,11 +493,14 @@ namespace ProjectM.Dungeon
         public void Execute(in TickContext context)
         {
             if (!_world.Units.TryGet(context.Actor, out var unit) || !unit.IsAlive) return;
-            if (!_world.Map.InBounds(Door) || _world.Map.Get(Door) != TileType.LockedDoor || GridMovement.Chebyshev(unit.Pos, Door) != 1) return;
-            int slot = KeySlot(_items, unit);
+            if (!_world.Map.InBounds(Door) || GridMovement.Chebyshev(unit.Pos, Door) != 1) return;
+            var door = _world.Map.Get(Door);
+            var use = KeyFor(door);
+            if (use == ProjectM.Items.ItemUse.None) return;
+            int slot = KeySlot(_items, unit, use);
             if (slot < 0) return;
             ProjectM.Items.Inventory.RemoveAt(_world, unit, slot);
-            _world.SetTile(Door, TileType.Door);
+            _world.SetTile(Door, door == TileType.CrystalDoor ? TileType.Floor : TileType.Door); // 3-52 수정 문은 사라짐
             _world.Events.Publish(new DoorUnlockedEvent(Door));
         }
     }
