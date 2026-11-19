@@ -13,6 +13,8 @@ namespace ProjectM.Tests
     /// <summary>3-49 감시탑 (SPD Sentry — 결정 2026-11-18): 무적 감시자 · 보이면 예고 → 다음 차례 번개(층 단계) · 움직이지 않음 · 보물 방 목록 1개 (BALANCE.md 16번).</summary>
     public class SentryTests
     {
+        private sealed class WaitAi : ICommandSource { public ICommand NextCommand(in TickContext context) => new WaitCommand(1); }
+
         private static readonly GameConfig Config = new GameConfig(1, 1f);
         private static readonly ISightRule Sight = new ShadowcastSightRule();
         private static readonly SentryConfig SentryCfg = new SentryConfig("enemy_sentry", new[] { "bolt_1", "bolt_2" }, 5, 6);
@@ -124,7 +126,7 @@ namespace ProjectM.Tests
         {
             var r = Start(new GridPos(5, 2));
             Act(r);
-            var restored = World.Restore(WorldSnapshotCodec.Decode(WorldSnapshotCodec.Encode(r.World.Capture())), (w, id) => null);
+            var restored = World.Restore(WorldSnapshotCodec.Decode(WorldSnapshotCodec.Encode(r.World.Capture())), (w, id) => new WaitAi());
             Assert.That(restored.Units.TryGet(r.Sentry.Id, out var back) && back.VisualId == "enemy_sentry", Is.True);
             Assert.That(back.ChargeTarget, Is.EqualTo((GridPos?)new GridPos(5, 2)));
         }

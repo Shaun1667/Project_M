@@ -12,6 +12,8 @@ namespace ProjectM.Tests
     /// <summary>3-48 석상 방 (SPD Statue — 결정 2026-11-18): 가운데 잠든 석상, 맞거나 옆에 오면 깨어남, 쓰러지면 그 층 티어 무기(+1~2) (BALANCE.md 16번).</summary>
     public class StatueTests
     {
+        private sealed class WaitAi : ICommandSource { public ICommand NextCommand(in TickContext context) => new WaitCommand(1); }
+
         private static readonly MagicConfig Magic = new MagicConfig(3, 1, 4);
         private static readonly GameConfig StepConfig = new GameConfig(1, 1f);
         private static readonly StatueConfig Config = new StatueConfig("enemy_statue", 8, new[] { 2, 3, 4, 5, 5 }, 5, 1, 2);
@@ -105,7 +107,7 @@ namespace ProjectM.Tests
         {
             Assert.That(WorldSnapshot.CurrentFormatVersion, Is.GreaterThanOrEqualTo(34));
             var (world, _, statue, _) = StatueWorld();
-            var restored = World.Restore(WorldSnapshotCodec.Decode(WorldSnapshotCodec.Encode(world.Capture())), (w, id) => null);
+            var restored = World.Restore(WorldSnapshotCodec.Decode(WorldSnapshotCodec.Encode(world.Capture())), (w, id) => new WaitAi());
             Assert.That(restored.Units.TryGet(statue.Id, out var back) && back.Dormant, Is.True);
         }
 

@@ -16,7 +16,7 @@ namespace ProjectM.Tests
         private static readonly CryptConfig Config = new CryptConfig("enemy_wraith", 2, 8,
             new[] { "armor_cloth", "armor_leather", "armor_mail", "armor_scale", "armor_plate" }, 5, 1, 2);
         private static readonly UnitDef Wraith = new UnitDef("enemy_wraith", 6, 2, 8, 0, accuracy: 8, evasion: 6, expReward: 4, expMaxLevel: 30);
-        private static readonly ItemBook Items = new ItemBook(new[] { new ItemDef("armor_cloth", ItemUse.EquipArmor) });
+        private static readonly ItemBook Items = new ItemBook(new[] { new ItemDef("armor_cloth", ItemUse.EquipArmor, armor: new ArmorDef(1, 10)) });
 
         private sealed class IdleAi : ICommandSource
         {

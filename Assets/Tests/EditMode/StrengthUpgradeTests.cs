@@ -150,6 +150,7 @@ namespace ProjectM.Tests
             Assert.That(s.Player.Strength, Is.EqualTo(7));
             Assert.That(Consumables.AddStrength(s.World, s.Player, -20), Is.EqualTo(-6), "1 아래로 안 내려감");
             Assert.That(s.Player.Strength, Is.EqualTo(1));
+            s.World.Events.Flush(); // 앞의 변경 이벤트를 먼저 보내고 비운다
             s.Events.Clear();
             Assert.That(Consumables.AddStrength(s.World, s.Player, -1), Is.EqualTo(0));
             s.World.Events.Flush();

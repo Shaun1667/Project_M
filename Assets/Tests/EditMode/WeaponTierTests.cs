@@ -242,7 +242,7 @@ namespace ProjectM.Tests
             s.Items = Tier0Book();
             Weapons.Wield(s.World, s.Items, s.Player, "bandage");
             s.World.Events.Flush();
-            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.EqualTo(32), "3-40 무기 계열");
+            Assert.That(WorldSnapshot.CurrentFormatVersion, Is.GreaterThanOrEqualTo(32), "3-40 무기 계열");
             var restored = WorldSnapshotCodec.Decode(WorldSnapshotCodec.Encode(s.World.Capture()));
             var unit = System.Array.Find(restored.Units, u => u.Id == s.Player.Id);
             Assert.That((unit.Weapon.ItemId, unit.Weapon.Family), Is.EqualTo(("bandage", "knuckle")));
