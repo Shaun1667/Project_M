@@ -69,8 +69,8 @@ namespace ProjectM.Tests.EditMode
         public void PlayerAsset_StartKit()
         {
             var player = AssetDatabase.LoadAssetAtPath<UnitDefAsset>("Assets/_Project/Data/Units/Player.asset").ToDef();
-            Assert.That(player.StartingItems, Is.EqualTo(new[] { "fusion_device", "spellbook_water", "potion_healing" }));
-            Assert.That(player.StartingRandomItems, Is.EqualTo(Pool));
+            Assert.That(player.StartingItems, Is.EqualTo(new[] { "spellbook_water", "potion_healing" })); // 3-54: 융합기 뺌
+            Assert.That(player.StartingRandomItems, Is.Empty); // 3-54: 무작위 마법서 뺌
             var items = AssetDatabase.LoadAssetAtPath<ItemCatalogAsset>("Assets/_Project/Data/Items/ItemCatalog.asset").ToBook();
             foreach (var id in player.StartingItems.Concat(player.StartingRandomItems)) Assert.That(items.TryGet(id, out _), Is.True, $"ItemCatalog에 {id}");
         }
