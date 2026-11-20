@@ -63,8 +63,8 @@ namespace ProjectM
         [SerializeField] private long _fixedSeed;
 
         [Header("지스타 시연 (3-37, 2026-11-05) — 시연이 끝나면 끈다")]
-        [Tooltip("이 층의 보스를 잡으면 '시연 완료' 창 (이어서 하기 · 타이틀로). 0 = 끔")] [SerializeField] private int _demoClearFloor = 5;
-        [Tooltip("켜면 자동 저장 · 명예의 전당 기록을 하지 않는다 (여러 관람객이 이어서 하는 시연용)")] [SerializeField] private bool _demoNoRecords = true;
+        [Tooltip("이 층의 보스를 잡으면 '시연 완료' 창 (이어서 하기 · 타이틀로). 0 = 끔")] [SerializeField] private int _demoClearFloor = 0;
+        [Tooltip("켜면 자동 저장 · 명예의 전당 기록을 하지 않는다 (여러 관람객이 이어서 하는 시연용)")] [SerializeField] private bool _demoNoRecords = false;
         private bool _demoCleared; // 이 판에서 시연 완료 창을 이미 띄움 (판 밖 데이터 — 저장하지 않음)
 
         public GameConfig Config { get; private set; }

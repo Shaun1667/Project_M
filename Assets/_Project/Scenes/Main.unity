@@ -2503,8 +2503,8 @@ MonoBehaviour:
   _result: {fileID: 2085256670}
   _camera: {fileID: 29343493}
   _fixedSeed: 0
-  _demoClearFloor: 5
-  _demoNoRecords: 1
+  _demoClearFloor: 0
+  _demoNoRecords: 0
 --- !u!4 &1701493087
 Transform:
   m_ObjectHideFlags: 0
@@ -3985,7 +3985,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: ProjectM.Runtime::ProjectM.UI.TitlePresenter
   _panel: {fileID: 1104821347}
   _font: {fileID: 11400000, guid: 338c26c4c2562ae4faab95c889e4d7f7, type: 2}
-  _realTimeLocked: 1
+  _realTimeLocked: 0
 --- !u!1 &2108178769
 GameObject:
   m_ObjectHideFlags: 0
