@@ -476,6 +476,18 @@ namespace ProjectM.Input
         /// <summary>타임머신 (3-28c): 몇 턴 전으로 되돌릴지 고르는 창은 GameRoot (기록 · 다시 연결이 Runtime에 있음).</summary>
         public System.Action<string> TimeMachineRequested { get; set; }
 
+        /// <summary>강화 주문서를 읽으려 함 (3-55) → GameRoot가 무엇을 강화할지 창을 연다. 비면 예전처럼 든 무기 · 입은 갑옷 자동.</summary>
+        public System.Action<InventoryRef> UpgradeScrollRequested { get; set; }
+
+        /// <summary>강화 주문서를 고른 대상에 쓴다 (3-55 — 창에서 고른 뒤, 차례 1). 그새 배낭이 바뀌었으면 아무 일 없음.</summary>
+        public void SubmitUpgradeScroll(InventoryRef scroll, UpgradeTarget target, InventoryRef pick, ProjectM.Magic.SpellUpgradeKind kind)
+        {
+            if (_world == null || _clock == null || !PlayerActions.TryGetPlayer(_world, out var user)) return;
+            int index = System.Array.IndexOf(user.InventorySlots, scroll);
+            if (index < 0) return;
+            _clock.SubmitPlayerCommand(new UseConsumableCommand(_world, _consumables, index, scroll, _config.DefaultActionCostTicks, target, pick, kind));
+        }
+
         /// <summary>
         /// 시간 유물 발동 (3-28c, 결정 2026-11-05 — 껴야 쓸 수 있음 · 빠른 칸): 틱 밖 — 이벤트를 바로 비운다.
         /// 회중시계는 발동 뒤 멈춘 턴만큼 시계가 흐른다 (턴제). 끼지 않았거나 게이지가 비면 이유만.
@@ -557,6 +569,14 @@ namespace ProjectM.Input
             }
             if (_items.TryGet(entry.Id, out var consumable) && consumable.IsConsumable && PlayerActions.TryGetPlayer(_world, out var user))
             {
+                // 3-55: 강화 주문서 = 무기 · 갑옷 · 마법 고르기 창 (GameRoot) → 고른 뒤 차례 1 (SubmitUpgradeScroll)
+                if (consumable.Effect == ConsumableEffect.Upgrade && UpgradeScrollRequested != null)
+                {
+                    CancelAim();
+                    CloseInventory();
+                    UpgradeScrollRequested(entry);
+                    return;
+                }
                 // 3-7b · 3-9: 물약 · 주문서 = 차례 1 (결정 2026-10-19). 든 무기 없이 강화 주문서는 차례를 쓰지 않고 안내만
                 if (Consumables.Check(_items, user, entry) == ConsumeResult.NoWeapon)
                 {

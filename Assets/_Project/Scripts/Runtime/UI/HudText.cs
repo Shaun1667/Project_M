@@ -188,6 +188,68 @@ namespace ProjectM.UI
         public const string RelicMaxUpgrade = "최대 강화";
         public const string NoRelics = "강화할 유물이 없다";
         public const string NoRelicsInBackpack = "배낭에 분해할 유물이 없다";
+
+        // ── 강화 주문서 · 마법 강화 (3-55) — 카드 글은 한 줄 10자 안팎으로 직접 나눔 ──
+        public const string UpgradeScrollTitle = "무엇을 강화할까?";
+        /// <summary>모르던 강화 주문서를 읽었을 때 — 닫을 수 없음 (닫기로 무엇인지 알아내지 못하게).</summary>
+        public const string UpgradeScrollHintNoCancel = "← → 고르기 · Enter/클릭 확정";
+        public const string UpgradeWeapon = "무기 강화";
+        public const string UpgradeArmor = "갑옷 강화";
+        public const string UpgradeSpell = "마법 강화";
+        public static string UpgradeGearDetail(string name, int upgrade) => $"{name}\n\n+{upgrade} → +{upgrade + 1}";
+        public static string UpgradeSpellDetail(int choices) => $"배운 마법 하나에\n강화 카드 {choices}장 중\n하나를 고른다";
+        public const string SpellUpgradePickTitle = "어느 마법을 강화할까?";
+        public static string SpellUpgradeChoiceTitle(string spell) => $"{spell} — 강화 하나 고르기";
+        public const string NothingToUpgrade = "강화할 것이 없다 — 무기 · 갑옷 · 더 강화할 수 있는 마법이 없다";
+        public static string SpellUpgradeCount(int count, int max) => $"강화 {count}/{max}";
+        public static string Roman(int n) => n >= 1 && n <= 5 ? new[] { "I", "II", "III", "IV", "V" }[n - 1] : n.ToString();
+
+        /// <summary>강화 종류 이름 — 범위는 모양에 따라 (화살 = 관통, 여러 대상 = 대상 수).</summary>
+        public static string SpellUpgradeName(ProjectM.Magic.SpellUpgradeKind kind, ProjectM.Magic.SpellShape shape)
+        {
+            switch (kind)
+            {
+                case ProjectM.Magic.SpellUpgradeKind.Damage: return "피해 강화";
+                case ProjectM.Magic.SpellUpgradeKind.Area:
+                    return shape == ProjectM.Magic.SpellShape.Bolt ? "관통 강화" : shape == ProjectM.Magic.SpellShape.Multi ? "대상 수 강화" : "범위 강화";
+                case ProjectM.Magic.SpellUpgradeKind.StatusChance: return "상태 확률 강화";
+                case ProjectM.Magic.SpellUpgradeKind.Duration: return "지속 강화";
+                case ProjectM.Magic.SpellUpgradeKind.ManaCost: return "마나 절약";
+                case ProjectM.Magic.SpellUpgradeKind.HitCount: return "연속 타격";
+                default: return kind.ToString();
+            }
+        }
+
+        /// <summary>단계 값(누적) 하나의 효과 글. 0이면 "없음".</summary>
+        public static string SpellUpgradeEffect(ProjectM.Magic.SpellUpgradeKind kind, ProjectM.Magic.SpellShape shape, int value, int terrainTicksPerLevel,
+            bool hasStatus, bool hasTerrain)
+        {
+            if (value <= 0) return "없음";
+            switch (kind)
+            {
+                case ProjectM.Magic.SpellUpgradeKind.Damage: return $"피해 +{value}";
+                case ProjectM.Magic.SpellUpgradeKind.Area:
+                    return shape == ProjectM.Magic.SpellShape.Bolt ? $"적 {value}명 더\n꿰뚫음" : shape == ProjectM.Magic.SpellShape.Multi ? $"대상 +{value}" : $"반지름 +{value}";
+                case ProjectM.Magic.SpellUpgradeKind.StatusChance: return $"상태 확률 +{value}%";
+                case ProjectM.Magic.SpellUpgradeKind.Duration:
+                {
+                    var lines = new System.Collections.Generic.List<string>();
+                    if (hasStatus) lines.Add($"상태 +{value}턴");
+                    if (hasTerrain) lines.Add($"지형 +{value * terrainTicksPerLevel}턴");
+                    return string.Join("\n", lines);
+                }
+                case ProjectM.Magic.SpellUpgradeKind.ManaCost: return $"마나 −{value}\n(최소 1)";
+                case ProjectM.Magic.SpellUpgradeKind.HitCount: return $"한 대상 {1 + value}번";
+                default: return value.ToString();
+            }
+        }
+
+        /// <summary>강화 카드 설명: 고르면 · 지금.</summary>
+        public static string SpellUpgradeCardDetail(string next, string now) => $"{next}\n\n지금: {now}";
+
+        /// <summary>로그: "불꽃 화살 — 피해 강화 II".</summary>
+        public string SpellUpgraded(string spellId, ProjectM.Magic.SpellUpgradeKind kind, ProjectM.Magic.SpellShape shape, int level) =>
+            $"{Spell(spellId)} — {SpellUpgradeName(kind, shape)} {Roman(level)}";
         public static string WorkbenchFailed(ProjectM.Items.WorkbenchResult result) =>
             result == ProjectM.Items.WorkbenchResult.NotEnoughEther ? "에테르가 모자라다"
             : result == ProjectM.Items.WorkbenchResult.BackpackFull ? "배낭이 가득 찼다"

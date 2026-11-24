@@ -152,6 +152,34 @@ namespace ProjectM.Core
             _talents.AddRange(talents);
         }
 
+        // ── 마법 강화 (3-55): 주문 ID · 종류 → 단계, 처음 강화한 순서 — 스냅샷 v35. SpellUpgrades로만 바꾼다 ──
+        private readonly System.Collections.Generic.List<SpellUpgradeLevel> _spellUpgrades = new System.Collections.Generic.List<SpellUpgradeLevel>();
+
+        public System.Collections.Generic.IReadOnlyList<SpellUpgradeLevel> SpellUpgrades => _spellUpgrades;
+
+        public int SpellUpgradeLevel(string spellId, ProjectM.Magic.SpellUpgradeKind kind)
+        {
+            foreach (var u in _spellUpgrades) if (u.SpellId == spellId && u.Kind == kind) return u.Level;
+            return 0;
+        }
+
+        internal void SetSpellUpgradeLevel(string spellId, ProjectM.Magic.SpellUpgradeKind kind, int level)
+        {
+            for (int i = 0; i < _spellUpgrades.Count; i++)
+            {
+                if (_spellUpgrades[i].SpellId != spellId || _spellUpgrades[i].Kind != kind) continue;
+                _spellUpgrades[i] = new SpellUpgradeLevel(spellId, kind, level);
+                return;
+            }
+            _spellUpgrades.Add(new SpellUpgradeLevel(spellId, kind, level));
+        }
+
+        internal void SetSpellUpgrades(System.Collections.Generic.IEnumerable<SpellUpgradeLevel> upgrades)
+        {
+            _spellUpgrades.Clear();
+            if (upgrades != null) _spellUpgrades.AddRange(upgrades);
+        }
+
         private readonly System.Collections.Generic.List<PendingFloorItem> _pendingFloorItems = new System.Collections.Generic.List<PendingFloorItem>();
         /// <summary>아직 가 보지 않은 층에 놓을 아이템 (3-5 마법서 배치 계획), 층 → 나눠 준 순서. 처음 가는 층에서 꺼내 놓는다.</summary>
         public System.Collections.Generic.IReadOnlyList<PendingFloorItem> PendingFloorItems => _pendingFloorItems;
@@ -219,6 +247,21 @@ namespace ProjectM.Core
 
     /// <summary>판마다 정한 물약 · 주문서의 겉모습 하나 (3-9 식별): 아이템 ID → 모습 키 (ItemVisualCatalog, 예: potion_crimson). 스냅샷 v16.</summary>
     [System.Serializable]
+    /// <summary>주문 하나의 강화 종류 하나 · 단계 (3-55 마법 강화). 스냅샷 v35에 저장.</summary>
+    public readonly struct SpellUpgradeLevel
+    {
+        public readonly string SpellId;
+        public readonly ProjectM.Magic.SpellUpgradeKind Kind;
+        public readonly int Level;
+
+        public SpellUpgradeLevel(string spellId, ProjectM.Magic.SpellUpgradeKind kind, int level)
+        {
+            SpellId = spellId;
+            Kind = kind;
+            Level = level;
+        }
+    }
+
     /// <summary>특성 하나에 찍은 점수 (3-21c). 스냅샷 v25에 저장.</summary>
     public readonly struct TalentPoint
     {

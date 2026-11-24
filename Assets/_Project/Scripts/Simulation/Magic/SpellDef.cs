@@ -83,12 +83,25 @@ namespace ProjectM.Magic
         public int ManaOnHitPercent { get; }
         /// <summary>시전자를 못 본 적(기습 판정)에게 피해 + % (3-21c 그림자 사냥).</summary>
         public int UnseenDamagePercent { get; }
+        /// <summary>화살(Bolt)이 꿰뚫고 지나가는 유닛 수 (3-55 마법 강화 "관통") — 조준 칸까지 가는 길의 유닛 Pierce + 1명을 맞힌다. 0 = 첫 유닛에서 멈춤.</summary>
+        public int Pierce { get; }
+        /// <summary>거는 상태의 지속 + 틱 (3-55 마법 강화 "지속"). 0 = 상태 규칙(StatusDef) 그대로.</summary>
+        public int StatusDurationBonus { get; }
+        /// <summary>남기는 지형의 지속 + 틱 (3-55 마법 강화 "지속"). 0 = 그대로.</summary>
+        public int TerrainDurationBonus { get; }
 
         public SpellDef(string id, Element element, SpellShape shape, int range, int damage, int manaCost, int radius = 0,
             StatusType appliesStatus = StatusType.None, int statusChancePercent = 100, TerrainEffectType leavesTerrain = TerrainEffectType.None,
             int terrainDurationTicks = 0, bool triggersReactions = true, string boostWeaponId = null, int boostDamagePercent = 100, int boostRange = 0,
-            int hitCount = 1, int maxTargets = 0, int manaOnKill = 0, int manaOnHitPercent = 0, int unseenDamagePercent = 0)
+            int hitCount = 1, int maxTargets = 0, int manaOnKill = 0, int manaOnHitPercent = 0, int unseenDamagePercent = 0,
+            int pierce = 0, int statusDurationBonus = 0, int terrainDurationBonus = 0)
         {
+            if (pierce < 0 || statusDurationBonus < 0 || terrainDurationBonus < 0)
+                throw new ArgumentOutOfRangeException(nameof(pierce), "관통 · 상태 지속 + · 지형 지속 +는 0 이상.");
+            if (pierce > 0 && shape != SpellShape.Bolt) throw new ArgumentOutOfRangeException(nameof(pierce), pierce, "관통은 화살(Bolt)만.");
+            Pierce = pierce;
+            StatusDurationBonus = statusDurationBonus;
+            TerrainDurationBonus = terrainDurationBonus;
             if (manaOnKill < 0 || manaOnHitPercent < 0 || manaOnHitPercent > 100 || unseenDamagePercent < 0)
                 throw new ArgumentOutOfRangeException(nameof(manaOnKill), "처치 마나 · 맞힘 마나 확률(0~100) · 기습 피해 %는 0 이상.");
             ManaOnKill = manaOnKill;
@@ -132,7 +145,15 @@ namespace ProjectM.Magic
         internal SpellDef Modified(int range, int damage, int manaCost, int hitCount, int maxTargets, StatusType status, int statusChance,
             int manaOnKill, int manaOnHitPercent, int unseenDamagePercent) =>
             new SpellDef(Id, Element, Shape, range, damage, manaCost, Radius, status, statusChance, LeavesTerrain, TerrainDurationTicks, TriggersReactions,
-                hitCount: hitCount, maxTargets: maxTargets, manaOnKill: manaOnKill, manaOnHitPercent: manaOnHitPercent, unseenDamagePercent: unseenDamagePercent);
+                hitCount: hitCount, maxTargets: maxTargets, manaOnKill: manaOnKill, manaOnHitPercent: manaOnHitPercent, unseenDamagePercent: unseenDamagePercent,
+                pierce: Pierce, statusDurationBonus: StatusDurationBonus, terrainDurationBonus: TerrainDurationBonus);
+
+        /// <summary>마법 강화를 더한 사본 (3-55 SpellUpgrades 전용) — 같은 ID, 무기 강화 필드는 그대로 둔다 (뒤에서 SpellModifiers가 적용).</summary>
+        internal SpellDef Upgraded(int damage, int manaCost, int radius, int hitCount, int maxTargets, int statusChance, int pierce,
+            int statusDurationBonus, int terrainDurationBonus) =>
+            new SpellDef(Id, Element, Shape, Range, damage, manaCost, radius, AppliesStatus, statusChance, LeavesTerrain, TerrainDurationTicks, TriggersReactions,
+                BoostWeaponId, BoostDamagePercent, BoostRange, hitCount, maxTargets, ManaOnKill, ManaOnHitPercent, UnseenDamagePercent,
+                pierce, statusDurationBonus, terrainDurationBonus);
     }
 
     /// <summary>
@@ -166,6 +187,14 @@ namespace ProjectM.Magic
 
             if (world != null)
             {
+                var upgraded = SpellUpgrades.ApplyTo(world, caster, spell); // 3-55 마법 강화 (강화 주문서) — 특성 · 무기 강화보다 먼저
+                if (!ReferenceEquals(upgraded, spell))
+                {
+                    spell = upgraded;
+                    changed = true;
+                    range = spell.Range; damage = spell.Damage; mana = spell.ManaCost; hits = spell.HitCount; targets = spell.MaxTargets;
+                    chance = spell.StatusChancePercent;
+                }
                 int T(ProjectM.Units.TalentEffect e) => ProjectM.Units.Talents.ForSpell(world, caster, e, spell.Id, spell.Element); // 3-28a: "*elemental" 유물
                 int dDamage = T(ProjectM.Units.TalentEffect.SpellDamage), dRange = T(ProjectM.Units.TalentEffect.SpellRange),
                     dHits = T(ProjectM.Units.TalentEffect.SpellHitCount), dTargets = T(ProjectM.Units.TalentEffect.SpellMaxTargets),

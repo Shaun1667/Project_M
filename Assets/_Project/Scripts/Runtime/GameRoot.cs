@@ -38,6 +38,7 @@ namespace ProjectM
         [Tooltip("층 꾸미기 수치 (3-11a — 풀 · 물 웅덩이). 비우면 꾸미지 않는다")] [SerializeField] private FloorDecorConfigAsset _floorDecorConfig;
         [Tooltip("함정 표 (3-12a). 비우면 함정을 놓지 않는다")] [SerializeField] private TrapCatalogAsset _trapCatalog;
         [Tooltip("허기 · 음식 (3-14). 비우면 허기 없음")] [SerializeField] private HungerConfigAsset _hungerConfig;
+        [Tooltip("마법 강화 (3-55 — 강화 주문서로 배운 마법 강화). 비우면 마법 강화 없음")] [SerializeField] private SpellUpgradeConfigAsset _spellUpgradeConfig;
         [Tooltip("경험치 · 레벨업 수치 (3-6). 비우면 경험치를 주지 않는다")] [SerializeField] private ProgressionConfigAsset _progressionConfig;
         [Tooltip("물약 · 주문서 수치 · 겉모습 (3-9). 비우면 식별 · 무작위 배치 없음")] [SerializeField] private ConsumableConfigAsset _consumableConfig;
         [Tooltip("고를 수 있는 캐릭터 (2026-10-21). 비우거나 창이 없으면 고르지 않고 Player.asset 모습으로 시작")] [SerializeField] private CharacterCatalogAsset _characters;
@@ -687,8 +688,10 @@ namespace ProjectM
             World.Events.Subscribe<LevelUpEvent>(OnLevelUp); // 3-21c: 특성 점수 안내
             World.SetClassRules(Classes); // 3-21c: 특성 효과 조회 (규칙 연결 — 저장 안 함)
             World.SetRelicRules(Items); // 3-28a: 유물 효과 조회 (규칙 연결 — 저장 안 함)
+            World.SetSpellUpgradeRules(_spellUpgradeConfig != null ? _spellUpgradeConfig.ToConfig() : null); // 3-55 마법 강화 (규칙 연결 — 저장 안 함)
             _input.WorkbenchRequested = OpenWorkbench; // 3-28b 제작대에 부딪힘 → 창
             _input.TimeMachineRequested = OpenTimeMachine; // 3-28c 타임머신 → 몇 턴 전 창
+            _input.UpgradeScrollRequested = _spellUpgradeConfig != null ? OpenUpgradeScroll : (System.Action<InventoryRef>)null; // 3-55 강화 주문서 → 대상 창
             var consumableConfigForRun = consumableConfig;
 
             Unit player;
@@ -1066,6 +1069,123 @@ namespace ProjectM
             });
             _history.AddRange(kept);
             _hud.Model?.AddNotice(HudText.TimeMachineRewound(turns));
+        }
+
+        // ── 강화 주문서 (3-55, 결정 2026-11-24 — 사용자): 무기 · 갑옷 · 마법 카드 → 마법이면 주문 카드 → 강화 카드 3장. 고르면 차례 1 ──
+
+        /// <summary>강화 카드가 나오는 배운 주문 (배낭 순서).</summary>
+        private System.Collections.Generic.List<string> UpgradeableSpells()
+        {
+            var ids = new System.Collections.Generic.List<string>();
+            foreach (var entry in _player.InventorySlots)
+                if (entry.Kind == InventoryKind.Spell && !ids.Contains(entry.Id) && SpellUpgrades.Offer(World, Spells, entry.Id).Count > 0) ids.Add(entry.Id);
+            return ids;
+        }
+
+        /// <summary>모르던 주문서면 창을 닫을 수 없다 (닫아서 정체만 알아내지 못하게) — 뒤로 가기는 됨.</summary>
+        private System.Action UpgradeCancel(InventoryRef scroll, System.Action back) =>
+            back ?? (World.Run.IsKnown(scroll.Id) ? () => { } : (System.Action)null);
+
+        private void OpenUpgradeScroll(InventoryRef scroll)
+        {
+            if (_characterSelect == null || _player == null || _runEnded) return;
+            var names = new System.Collections.Generic.List<string>();
+            var details = new System.Collections.Generic.List<string>();
+            var picks = new System.Collections.Generic.List<System.Action>();
+            if (!_player.Weapon.IsEmpty)
+            {
+                names.Add(HudText.UpgradeWeapon);
+                details.Add(HudText.UpgradeGearDetail(_hudText.Item(_player.Weapon.ItemId), _player.Weapon.Upgrade));
+                picks.Add(() => _input.SubmitUpgradeScroll(scroll, UpgradeTarget.Weapon, default, SpellUpgradeKind.None));
+            }
+            if (!_player.Armor.IsEmpty)
+            {
+                names.Add(HudText.UpgradeArmor);
+                details.Add(HudText.UpgradeGearDetail(_hudText.Item(_player.Armor.ItemId), _player.Armor.Upgrade));
+                picks.Add(() => _input.SubmitUpgradeScroll(scroll, UpgradeTarget.Armor, default, SpellUpgradeKind.None));
+            }
+            if (UpgradeableSpells().Count > 0)
+            {
+                names.Add(HudText.UpgradeSpell);
+                details.Add(HudText.UpgradeSpellDetail(World.SpellUpgradeRules.ChoiceCount));
+                picks.Add(() => OpenUpgradeSpellPick(scroll));
+            }
+            if (names.Count == 0)
+            {
+                _hud.SetHint(HudText.NothingToUpgrade);
+                return;
+            }
+            bool known = World.Run.IsKnown(scroll.Id);
+            var world = World;
+            _characterSelect.Open(null, names, 0, index =>
+            {
+                if (World != world || _player == null) return;
+                picks[index]();
+            }, title: HudText.UpgradeScrollTitle, hint: known ? HudText.WorkbenchHint : HudText.UpgradeScrollHintNoCancel, details: details,
+               onCancel: UpgradeCancel(scroll, null));
+        }
+
+        private void OpenUpgradeSpellPick(InventoryRef scroll)
+        {
+            var ids = UpgradeableSpells();
+            if (ids.Count == 0)
+            {
+                OpenUpgradeScroll(scroll);
+                return;
+            }
+            var config = World.SpellUpgradeRules;
+            var names = new System.Collections.Generic.List<string>();
+            var details = new System.Collections.Generic.List<string>();
+            foreach (var id in ids)
+            {
+                Spells.TryGet(id, out var spell);
+                names.Add(_hudText.Spell(id));
+                var lines = new System.Collections.Generic.List<string>();
+                foreach (var u in config.Upgrades)
+                {
+                    int level = SpellUpgrades.Level(World, id, u.Kind);
+                    if (level > 0) lines.Add($"{HudText.SpellUpgradeName(u.Kind, spell.Shape)} {HudText.Roman(level)}");
+                }
+                lines.Add(string.Empty);
+                lines.Add(HudText.SpellUpgradeCount(SpellUpgrades.Count(World, id), config.MaxPerSpell));
+                details.Add(string.Join("\n", lines).TrimStart('\n'));
+            }
+            var world = World;
+            _characterSelect.Open(null, names, 0, index =>
+            {
+                if (World != world || _player == null) return;
+                OpenUpgradeChoice(scroll, ids[index]);
+            }, title: HudText.SpellUpgradePickTitle, hint: HudText.WorkbenchHint, details: details, onCancel: () => OpenUpgradeScroll(scroll));
+        }
+
+        private void OpenUpgradeChoice(InventoryRef scroll, string spellId)
+        {
+            var offer = SpellUpgrades.Offer(World, Spells, spellId);
+            if (offer.Count == 0 || !Spells.TryGet(spellId, out var spell))
+            {
+                OpenUpgradeSpellPick(scroll);
+                return;
+            }
+            var config = World.SpellUpgradeRules;
+            bool hasStatus = spell.AppliesStatus != StatusType.None, hasTerrain = spell.LeavesTerrain != TerrainEffectType.None;
+            var names = new System.Collections.Generic.List<string>();
+            var details = new System.Collections.Generic.List<string>();
+            foreach (var kind in offer)
+            {
+                config.TryGet(kind, out var def);
+                int level = SpellUpgrades.Level(World, spellId, kind);
+                names.Add($"{HudText.SpellUpgradeName(kind, spell.Shape)} {HudText.Roman(level + 1)}");
+                details.Add(HudText.SpellUpgradeCardDetail(
+                    HudText.SpellUpgradeEffect(kind, spell.Shape, def.ValueAt(level + 1), config.TerrainTicksPerLevel, hasStatus, hasTerrain),
+                    HudText.SpellUpgradeEffect(kind, spell.Shape, def.ValueAt(level), config.TerrainTicksPerLevel, hasStatus, hasTerrain)));
+            }
+            var world = World;
+            _characterSelect.Open(null, names, 0, index =>
+            {
+                if (World != world || _player == null) return;
+                _input.SubmitUpgradeScroll(scroll, UpgradeTarget.Spell, InventoryRef.Spell(spellId), offer[index]);
+            }, title: HudText.SpellUpgradeChoiceTitle(_hudText.Spell(spellId)), hint: HudText.WorkbenchHint, details: details,
+               onCancel: () => OpenUpgradeSpellPick(scroll));
         }
 
         // ── 마법 제작대 (3-28b, 결정 2026-11-05): 만들기 · 강화 · 분해 — 카드 창(형태 · 특성 창과 같음), 모두 틱 밖 ──

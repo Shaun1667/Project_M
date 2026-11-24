@@ -112,6 +112,11 @@ namespace ProjectM.Core
 
         public void SetRelicRules(ProjectM.Items.ItemBook items) => RelicItems = items;
 
+        /// <summary>마법 강화 수치 (3-55 — 강화 주문서로 주문 강화). GameRoot가 넣는다 — 규칙 연결이라 저장하지 않는다 (단계는 Run.SpellUpgrades). null이면 마법 강화 없음.</summary>
+        public ProjectM.Magic.SpellUpgradeConfig SpellUpgradeRules { get; private set; }
+
+        public void SetSpellUpgradeRules(ProjectM.Magic.SpellUpgradeConfig config) => SpellUpgradeRules = config;
+
         /// <summary>화난 상인 규칙 (3-29). GameRoot가 넣는다 — 규칙 연결이라 저장하지 않는다. null이면 상인은 화내지 않는다.</summary>
         internal ProjectM.Dungeon.ShopRules ShopRules { get; private set; }
 
@@ -311,6 +316,7 @@ namespace ProjectM.Core
                 ClassId = Run.ClassId, // 24 (3-21b)
                 FormId = Run.FormId,
                 Talents = new List<TalentPoint>(Run.Talents).ToArray(), // 25 (3-21c)
+                SpellUpgrades = new List<SpellUpgradeLevel>(Run.SpellUpgrades).ToArray(), // 35 (3-55)
             };
         }
 
@@ -424,6 +430,7 @@ namespace ProjectM.Core
             world.Run.ClassId = snapshot.ClassId; // 24 (3-21b)
             world.Run.FormId = snapshot.FormId;
             world.Run.SetTalents(snapshot.Talents ?? System.Array.Empty<TalentPoint>()); // 25 (3-21c)
+            world.Run.SetSpellUpgrades(snapshot.SpellUpgrades); // 35 (3-55)
             world.Run.Outcome = snapshot.Outcome;
             world.Run.BossId = snapshot.BossId;
             world.Run.LastPlayerDamage = snapshot.LastPlayerDamage;

@@ -134,6 +134,7 @@ namespace ProjectM.Items
             toPlayer.AccelUsed = 0;
             toPlayer.StopActions = 0;
             to.Run.SetRelicCharges(from.Run.RelicCharges);
+            to.Run.SetSpellUpgrades(from.Run.SpellUpgrades); // 3-55: 쓴 강화 주문서는 안 돌아오니 강화도 지금 그대로
             to.Run.Ether = from.Run.Ether;
             to.Run.Gold = from.Run.Gold;
             if (to.Floor == from.Floor)

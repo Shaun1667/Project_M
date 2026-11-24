@@ -48,6 +48,7 @@ namespace ProjectM.Editor
         private const string ZoneCatalogPath = "Assets/_Project/Data/Units/ZoneCatalog.asset";
         private const string ConsumableConfigPath = "Assets/_Project/Data/Items/ConsumableConfig.asset";
         private const string HungerConfigPath = "Assets/_Project/Data/Units/HungerConfig.asset";
+        private const string SpellUpgradeConfigPath = "Assets/_Project/Data/Magic/SpellUpgradeConfig.asset"; // 3-55
         // P-3a (결정 2026-10-21): 2D 픽셀 그래픽 — Grid를 눕히지 않고 정사영 카메라, 맵은 PixelMapPresenter. false면 G-1 3D 그대로
         internal static readonly bool Pixel2D = false; // 결정 2026-10-28 (사용자): 3D로 되돌림 — 2D 코드 · 그림은 남겨 두고 이 스위치로만 끔
         private const int PixelsPerUnit = 64;
@@ -262,6 +263,7 @@ namespace ProjectM.Editor
             if (floorDecorConfig.AddArmoryItemIfMissing("knuckle")) EditorUtility.SetDirty(floorDecorConfig); // 3-22a 너클 → 무기고 후보
             var trapCatalog = EnsureTrapCatalog(); // 3-12a
             var hungerConfig = LoadOrCreate<HungerConfigAsset>(HungerConfigPath); // 3-14: 새로 만들면 필드 초기값 = BALANCE 18번
+            var spellUpgradeConfig = LoadOrCreate<SpellUpgradeConfigAsset>(SpellUpgradeConfigPath); // 3-55: 새로 만들면 필드 초기값 = BALANCE 26번
             var zoneCatalog = EnsureZoneCatalog(); // 3-17a: 적 종류 · 구역 표 (BALANCE 20번)
             var floorItemsGo = FindOrCreate("FloorItems", null);
             var floorItems = GetOrAdd<FloorItemPresenter>(floorItemsGo);
@@ -305,6 +307,7 @@ namespace ProjectM.Editor
                 ("_floorDecorConfig", floorDecorConfig),
                 ("_trapCatalog", trapCatalog),
                 ("_hungerConfig", hungerConfig),
+                ("_spellUpgradeConfig", spellUpgradeConfig), // 3-55
                 ("_zoneCatalog", zoneCatalog),
                 ("_zoneTheme", EnsureZoneTheme(zoneCatalog)), // 3-17c
                 ("_traps", trapPresenter),

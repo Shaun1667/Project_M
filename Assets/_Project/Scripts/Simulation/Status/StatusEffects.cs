@@ -10,7 +10,10 @@ namespace ProjectM.Status
     /// </summary>
     public static class StatusEffects
     {
-        public static void Apply(World world, Unit unit, StatusDef def)
+        public static void Apply(World world, Unit unit, StatusDef def) => Apply(world, unit, def, 0);
+
+        /// <param name="extraTicks">지속 + 틱 (3-55 마법 강화 "지속" — SpellDef.StatusDurationBonus). 지속이 0인 상태에는 더하지 않는다.</param>
+        public static void Apply(World world, Unit unit, StatusDef def, int extraTicks)
         {
             if (world == null) throw new ArgumentNullException(nameof(world));
             if (unit == null) throw new ArgumentNullException(nameof(unit));
@@ -18,15 +21,16 @@ namespace ProjectM.Status
             if (unit.TimeFrozenTicks > 0) return; // 3-28c 회중시계: 멈춘 동안 새 상태를 받지 않음
             if (!unit.IsAlive) return;
 
+            int duration = def.DurationTicks > 0 ? def.DurationTicks + Math.Max(0, extraTicks) : def.DurationTicks;
             var existing = unit.Statuses.Find(s => s.Type == def.Type);
             if (existing != null)
             {
-                existing.Remaining = Math.Max(existing.Remaining, def.DurationTicks);
+                existing.Remaining = Math.Max(existing.Remaining, duration);
                 world.Events.Publish(new StatusChangedEvent(unit.Id, def.Type, existing.Remaining, true));
                 return;
             }
 
-            var instance = new StatusInstance(def.Type, def.DurationTicks);
+            var instance = new StatusInstance(def.Type, duration);
             int index = unit.Statuses.FindIndex(s => s.Type > def.Type);
             if (index < 0) unit.Statuses.Add(instance);
             else unit.Statuses.Insert(index, instance);
@@ -46,11 +50,14 @@ namespace ProjectM.Status
         }
 
         /// <summary>chancePercent(0~100) 확률로 건다. 100 미만이면 전투 난수(RngStream.Combat)를 한 번 굴린다. 걸렸으면 true.</summary>
-        public static bool TryApply(World world, Unit unit, StatusDef def, int chancePercent)
+        public static bool TryApply(World world, Unit unit, StatusDef def, int chancePercent) => TryApply(world, unit, def, chancePercent, 0);
+
+        /// <param name="extraTicks">지속 + 틱 (3-55 마법 강화).</param>
+        public static bool TryApply(World world, Unit unit, StatusDef def, int chancePercent, int extraTicks)
         {
             if (chancePercent <= 0) return false;
             if (chancePercent < 100 && world.Rng.Get(RngStream.Combat).Range(0, 100) >= chancePercent) return false;
-            Apply(world, unit, def);
+            Apply(world, unit, def, extraTicks);
             return true;
         }
 

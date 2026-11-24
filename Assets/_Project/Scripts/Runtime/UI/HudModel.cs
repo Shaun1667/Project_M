@@ -122,6 +122,7 @@ namespace ProjectM.UI
             _bus.Subscribe<LevelUpEvent>(OnLevelUp);
             _bus.Subscribe<WeaponEquippedEvent>(OnWeaponEquipped);
             _bus.Subscribe<WeaponUpgradedEvent>(OnWeaponUpgraded);
+            _bus.Subscribe<ProjectM.Magic.SpellUpgradedEvent>(OnSpellUpgraded); // 3-55
             _bus.Subscribe<StrengthChangedEvent>(OnStrengthChanged);
             _bus.Subscribe<SurpriseAttackEvent>(OnSurprise);
             _bus.Subscribe<DamageBlockedEvent>(OnBlocked);
@@ -310,6 +311,14 @@ namespace ProjectM.UI
             if (e.Unit != _playerId) return;
             Weapon = e.Weapon;
             AddLog(Text.Upgraded(e.Weapon));
+            Changed?.Invoke();
+        }
+
+        // 3-55: "불꽃 화살 — 피해 강화 II"
+        private void OnSpellUpgraded(ProjectM.Magic.SpellUpgradedEvent e)
+        {
+            if (e.Unit != _playerId) return;
+            AddLog(Text.SpellUpgraded(e.SpellId, e.Kind, e.Shape, e.Level));
             Changed?.Invoke();
         }
 
@@ -575,6 +584,7 @@ namespace ProjectM.UI
             _bus.Unsubscribe<LevelUpEvent>(OnLevelUp);
             _bus.Unsubscribe<WeaponEquippedEvent>(OnWeaponEquipped);
             _bus.Unsubscribe<WeaponUpgradedEvent>(OnWeaponUpgraded);
+            _bus.Unsubscribe<ProjectM.Magic.SpellUpgradedEvent>(OnSpellUpgraded);
             _bus.Unsubscribe<StrengthChangedEvent>(OnStrengthChanged);
             _bus.Unsubscribe<SurpriseAttackEvent>(OnSurprise);
             _bus.Unsubscribe<DamageBlockedEvent>(OnBlocked);

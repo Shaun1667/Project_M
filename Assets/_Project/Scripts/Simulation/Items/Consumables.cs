@@ -169,6 +169,8 @@ namespace ProjectM.Items
         NoWeapon = 2,
         /// <summary>던질 수 없는 아이템 (3-9 — 물약만 던진다).</summary>
         NotThrowable = 3,
+        /// <summary>강화 주문서로 고른 주문 · 강화를 쓸 수 없다 (3-55 — SpellUpgrades.Check) — 쓰지 않음.</summary>
+        CannotUpgradeSpell = 4,
     }
 
     /// <summary>강화 주문서가 강화할 장비 (3-10a). Auto = 든 무기, 없으면 입은 갑옷.</summary>
@@ -177,6 +179,8 @@ namespace ProjectM.Items
         Auto = 0,
         Weapon = 1,
         Armor = 2,
+        /// <summary>배운 주문 (3-55 마법 강화) — 고른 주문 = pick(InventoryRef.Spell), 고른 강화 = SpellUpgradeKind.</summary>
+        Spell = 3,
     }
 
     /// <summary>물약 · 주문서를 어떻게 썼는지 (3-9). 끝에만 추가한다.</summary>
@@ -227,6 +231,7 @@ namespace ProjectM.Items
             {
                 case UpgradeTarget.Weapon: return unit.Weapon.IsEmpty ? UpgradeTarget.Auto : UpgradeTarget.Weapon;
                 case UpgradeTarget.Armor: return unit.Armor.IsEmpty ? UpgradeTarget.Auto : UpgradeTarget.Armor;
+                case UpgradeTarget.Spell: return UpgradeTarget.Spell; // 3-55: 주문 · 강화는 Use가 SpellUpgrades.Check로 본다
                 default:
                     if (!unit.Weapon.IsEmpty) return UpgradeTarget.Weapon;
                     return unit.Armor.IsEmpty ? UpgradeTarget.Auto : UpgradeTarget.Armor;
@@ -247,8 +252,9 @@ namespace ProjectM.Items
 
         /// <summary>인벤토리 칸 index의 물약을 마시거나 주문서를 읽는다 (틱 안 — UseConsumableCommand가 부름).</summary>
         /// <param name="pick">배낭에서 고른 대상 (3-10b — 식별 주문서 등, PickFilter). 비면 예전처럼 알아서 고른다.</param>
+        /// <param name="spellUpgrade">강화 주문서로 주문을 강화할 때 고른 강화 (3-55, upgradeTarget = Spell).</param>
         public static ConsumeResult Use(World world, ConsumableRules rules, Unit unit, int inventoryIndex, UpgradeTarget upgradeTarget = UpgradeTarget.Auto,
-            InventoryRef pick = default)
+            InventoryRef pick = default, ProjectM.Magic.SpellUpgradeKind spellUpgrade = ProjectM.Magic.SpellUpgradeKind.None)
         {
             if (world == null) throw new ArgumentNullException(nameof(world));
             if (rules == null) throw new ArgumentNullException(nameof(rules));
@@ -259,10 +265,14 @@ namespace ProjectM.Items
             if (result != ConsumeResult.Used) return result;
 
             rules.Items.TryGet(entry.Id, out var def);
+            if (def.Effect == ConsumableEffect.Upgrade && upgradeTarget == UpgradeTarget.Spell
+                && (pick.Kind != InventoryKind.Spell
+                    || ProjectM.Magic.SpellUpgrades.Check(world, rules.Spells, unit, pick.Id, spellUpgrade) != ProjectM.Magic.SpellUpgradeResult.Done))
+                return ConsumeResult.CannotUpgradeSpell; // 3-55: 쓰기 전에 막는다 (주문서가 사라지지 않게)
             Inventory.RemoveAt(world, unit, inventoryIndex);
             var mode = def.Use == ItemUse.Potion ? ConsumeMode.Drink : ConsumeMode.Read;
             Announce(world, unit, def, mode, unit.Pos, identify: true);
-            Apply(world, rules, unit, def, unit.Pos, upgradeTarget, pick);
+            Apply(world, rules, unit, def, unit.Pos, upgradeTarget, pick, spellUpgrade);
             return result;
         }
 
@@ -353,7 +363,7 @@ namespace ProjectM.Items
         }
 
         private static void Apply(World world, ConsumableRules rules, Unit unit, ItemDef def, GridPos at, UpgradeTarget upgradeTarget = UpgradeTarget.Auto,
-            InventoryRef pick = default)
+            InventoryRef pick = default, ProjectM.Magic.SpellUpgradeKind spellUpgrade = ProjectM.Magic.SpellUpgradeKind.None)
         {
             var config = rules.Config;
             switch (def.Effect)
@@ -363,6 +373,11 @@ namespace ProjectM.Items
                     break;
                 case ConsumableEffect.Upgrade:
                 {
+                    if (upgradeTarget == UpgradeTarget.Spell) // 3-55 마법 강화 (Use가 미리 Check함)
+                    {
+                        ProjectM.Magic.SpellUpgrades.Upgrade(world, rules.Spells, unit, pick.Id, spellUpgrade);
+                        break;
+                    }
                     if (ResolveTarget(unit, upgradeTarget) == UpgradeTarget.Armor)
                     {
                         Armors.Upgrade(world, rules.Items, unit, def.Amount); // 3-10a
@@ -743,6 +758,7 @@ namespace ProjectM.Items
         private readonly int _inventoryIndex;
         private readonly InventoryRef _entry;
         private readonly InventoryRef _pick;
+        private readonly ProjectM.Magic.SpellUpgradeKind _spellUpgrade;
 
         public int CostTicks { get; }
 
@@ -755,9 +771,11 @@ namespace ProjectM.Items
 
         /// <param name="pick">배낭에서 고른 대상 (3-10b). 비면 알아서.</param>
         public UseConsumableCommand(World world, ConsumableRules rules, int inventoryIndex, InventoryRef entry, int costTicks,
-            UpgradeTarget upgradeTarget = UpgradeTarget.Auto, InventoryRef pick = default)
+            UpgradeTarget upgradeTarget = UpgradeTarget.Auto, InventoryRef pick = default,
+            ProjectM.Magic.SpellUpgradeKind spellUpgrade = ProjectM.Magic.SpellUpgradeKind.None)
         {
             _pick = pick;
+            _spellUpgrade = spellUpgrade;
             _upgradeTarget = upgradeTarget;
             if (costTicks < 1) throw new ArgumentOutOfRangeException(nameof(costTicks));
             _world = world ?? throw new ArgumentNullException(nameof(world));
@@ -771,7 +789,7 @@ namespace ProjectM.Items
         {
             if (!_world.Units.TryGet(context.Actor, out var unit) || !unit.IsAlive) return;
             if (_inventoryIndex < 0 || _inventoryIndex >= unit.InventorySlots.Length || unit.InventorySlots[_inventoryIndex] != _entry) return;
-            Consumables.Use(_world, _rules, unit, _inventoryIndex, _upgradeTarget, _pick);
+            Consumables.Use(_world, _rules, unit, _inventoryIndex, _upgradeTarget, _pick, _spellUpgrade);
         }
     }
 

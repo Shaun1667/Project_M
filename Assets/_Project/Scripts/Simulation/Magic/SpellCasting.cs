@@ -92,6 +92,24 @@ namespace ProjectM.Magic
 
             switch (spell.Shape)
             {
+                case SpellShape.Bolt when spell.Pierce > 0:
+                {
+                    // 3-55 관통 강화: 조준 칸까지 가는 길의 유닛 Pierce + 1명을 꿰뚫는다 (그 수를 채우면 거기서 멈춤)
+                    var path = targeting.Trace(map, caster, target, spell.Range, null);
+                    AppendCatcher(map, caster, target, path);
+                    var hit = new List<GridPos>();
+                    for (int i = 0; i < path.Count; i++)
+                    {
+                        if (!world.Units.IsOccupied(path[i])) continue;
+                        hit.Add(path[i]);
+                        if (hit.Count > spell.Pierce)
+                        {
+                            path.RemoveRange(i + 1, path.Count - i - 1);
+                            break;
+                        }
+                    }
+                    return new SpellPreview(path, hit);
+                }
                 case SpellShape.Bolt:
                 {
                     var path = targeting.Trace(map, caster, target, spell.Range, world.Units.IsOccupied);
@@ -298,7 +316,7 @@ namespace ProjectM.Magic
             {
                 foreach (var victim in victims)
                 {
-                    if (victim.IsAlive) StatusEffects.TryApply(world, victim, status, spell.StatusChancePercent);
+                    if (victim.IsAlive) StatusEffects.TryApply(world, victim, status, spell.StatusChancePercent, spell.StatusDurationBonus); // 3-55 지속 강화
                 }
             }
 
@@ -307,8 +325,11 @@ namespace ProjectM.Magic
             // 지형 효과 (2-4): 놓인 틱의 ③에서 바로 그 칸 유닛에게 상태를 건다
             if (book.Terrains.TryGet(spell.LeavesTerrain, out var terrain))
             {
+                int ticks = spell.TerrainDurationBonus > 0 // 3-55 지속 강화: 정한 지속(없으면 지형 규칙) + 틱
+                    ? (spell.TerrainDurationTicks > 0 ? spell.TerrainDurationTicks : terrain.DurationTicks) + spell.TerrainDurationBonus
+                    : spell.TerrainDurationTicks;
                 foreach (var cell in cells)
-                    TerrainEffects.Place(world, cell, terrain, spell.TerrainDurationTicks);
+                    TerrainEffects.Place(world, cell, terrain, ticks);
             }
         }
 

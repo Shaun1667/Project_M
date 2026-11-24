@@ -115,6 +115,13 @@ namespace ProjectM.Core
                     w.Write(t.TalentId ?? string.Empty);
                     w.Write(t.Points);
                 }
+                w.Write(snapshot.SpellUpgrades.Length); // 35 (3-55)
+                foreach (var u in snapshot.SpellUpgrades)
+                {
+                    w.Write(u.SpellId ?? string.Empty);
+                    w.Write((int)u.Kind);
+                    w.Write(u.Level);
+                }
 
                 w.Flush();
                 return stream.ToArray();
@@ -224,6 +231,13 @@ namespace ProjectM.Core
                 {
                     var talentId = r.ReadString();
                     s.Talents[i] = new TalentPoint(talentId, r.ReadInt32());
+                }
+                s.SpellUpgrades = new SpellUpgradeLevel[ReadCount(r)]; // 35 (3-55)
+                for (int i = 0; i < s.SpellUpgrades.Length; i++)
+                {
+                    var spellId = r.ReadString();
+                    var upgradeKind = (ProjectM.Magic.SpellUpgradeKind)r.ReadInt32();
+                    s.SpellUpgrades[i] = new SpellUpgradeLevel(spellId, upgradeKind, r.ReadInt32());
                 }
 
                 if (stream.Position != stream.Length)
