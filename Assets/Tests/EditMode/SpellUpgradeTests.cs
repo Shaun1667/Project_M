@@ -161,7 +161,7 @@ namespace ProjectM.Tests
             var (world, player, _) = Start();
             var statuses = SpellTests.BalanceStatuses();
             statuses.TryGet(StatusType.Poison, out var poisonStatus);
-            var enemy = UnitSpawner.SpawnEnemy(world, EnemyDef, new GridPos(5, 2), new Idle());
+            var enemy = UnitSpawner.SpawnEnemy(world, EnemyDef, new GridPos(3, 3), new Idle());
             StatusEffects.Apply(world, enemy, poisonStatus, 2);
             Assert.That(enemy.Statuses.Find(s => s.Type == StatusType.Poison).Remaining, Is.EqualTo(7), "중독 5 + 2");
 
