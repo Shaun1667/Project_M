@@ -38,10 +38,14 @@ namespace ProjectM.Status
         public int DamagePerTick { get; }
         /// <summary>이 지형이 있는 칸에는 놓이지 않는다 (3-2: 화염 지대 위에는 물 타일이 깔리지 않음). None이면 없음.</summary>
         public TerrainEffectType BlockedBy { get; }
+        /// <summary>흡수(3-58, R)하면 얻는 마나. 0 = 흡수 안 됨 (예고 칸). 영구 지형은 값과 상관없이 흡수 안 됨.</summary>
+        public int AbsorbMana { get; }
 
         public TerrainDef(TerrainEffectType type, int durationTicks, StatusType appliesStatus = StatusType.None,
-            int damagePerTick = 0, TerrainEffectType blockedBy = TerrainEffectType.None)
+            int damagePerTick = 0, TerrainEffectType blockedBy = TerrainEffectType.None, int absorbMana = 0)
         {
+            if (absorbMana < 0) throw new ArgumentOutOfRangeException(nameof(absorbMana), absorbMana, "흡수 마나는 0 이상이어야 한다.");
+            AbsorbMana = absorbMana;
             if (type == TerrainEffectType.None) throw new ArgumentException("None은 지형 효과가 아니다.", nameof(type));
             if (durationTicks < 1) throw new ArgumentOutOfRangeException(nameof(durationTicks), durationTicks, "지속은 1틱 이상이어야 한다.");
             if (damagePerTick < 0) throw new ArgumentOutOfRangeException(nameof(damagePerTick), damagePerTick, "틱당 피해는 0 이상이어야 한다.");

@@ -88,6 +88,7 @@ namespace ProjectM.Input
         }
         /// <summary>찾기 키 (3-12b) — S는 이동(WASD)이라 Z.</summary>
         private const Key SearchKey = Key.Z;
+        private const Key AbsorbKey = Key.R; // 3-58 지형 흡수
         private const Key AttackKey = Key.Q; // 3-25 공격 대상 (SPD)
         // 3-25: 마지막에 공격한 적 / 지금 표시 중인 적 / 표시 칸 그림 — 화면 편의라 저장하지 않음
         private EntityId _lastAttacked;
@@ -1235,6 +1236,15 @@ namespace ProjectM.Input
             {
                 CancelPath();
                 _clock.SubmitPlayerCommand(PlayerActions.Search(_world, _search));
+                return true;
+            }
+
+            if (keyboard[AbsorbKey].wasPressedThisFrame) // 3-58 지형 흡수 (둘레에 없으면 차례를 쓰지 않음)
+            {
+                CancelPath();
+                var absorb = PlayerActions.Absorb(_world, _config, _spells?.Terrains);
+                if (absorb == null) { Hint(HudText.NothingToAbsorb); return false; }
+                _clock.SubmitPlayerCommand(absorb);
                 return true;
             }
 

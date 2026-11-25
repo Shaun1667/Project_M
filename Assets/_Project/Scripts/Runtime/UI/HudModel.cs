@@ -154,6 +154,7 @@ namespace ProjectM.UI
             _bus.Subscribe<ProjectM.Dungeon.StairsUnsealedEvent>(OnStairsUnsealed);
             _bus.Subscribe<BossChargingEvent>(OnBossCharging);
             _bus.Subscribe<BossChargeCanceledEvent>(OnBossChargeCanceled); // 3-57
+            _bus.Subscribe<TerrainAbsorbedEvent>(OnTerrainAbsorbed); // 3-58
             _bus.Subscribe<BossTeleportedEvent>(OnBossTeleported);
             _bus.Subscribe<BossSummonedEvent>(OnBossSummoned);
             _bus.Subscribe<PotionBrewedEvent>(OnBrewed);
@@ -418,6 +419,12 @@ namespace ProjectM.UI
 
         private void OnBossCharging(BossChargingEvent e) { AddLog(HudText.BossCharging(e.Boss)); Changed?.Invoke(); }
         private void OnBossChargeCanceled(BossChargeCanceledEvent e) { AddLog(HudText.BossChargeCanceled(e.Boss)); Changed?.Invoke(); }
+        private void OnTerrainAbsorbed(TerrainAbsorbedEvent e)
+        {
+            if (e.Unit != _playerId) return;
+            AddLog(HudText.TerrainAbsorbed(e.Amount, e.Gained));
+            Changed?.Invoke();
+        }
         private void OnBossTeleported(BossTeleportedEvent e) { AddLog(HudText.BossTeleported(e.Boss)); Changed?.Invoke(); }
         private void OnBossSummoned(BossSummonedEvent e) { AddLog(HudText.BossSummoned(e.Boss, e.Count)); Changed?.Invoke(); }
 
@@ -618,6 +625,7 @@ namespace ProjectM.UI
             _bus.Unsubscribe<ProjectM.Dungeon.StairsUnsealedEvent>(OnStairsUnsealed);
             _bus.Unsubscribe<BossChargingEvent>(OnBossCharging);
             _bus.Unsubscribe<BossChargeCanceledEvent>(OnBossChargeCanceled);
+            _bus.Unsubscribe<TerrainAbsorbedEvent>(OnTerrainAbsorbed);
             _bus.Unsubscribe<BossTeleportedEvent>(OnBossTeleported);
             _bus.Unsubscribe<BossSummonedEvent>(OnBossSummoned);
             _bus.Unsubscribe<PotionBrewedEvent>(OnBrewed);

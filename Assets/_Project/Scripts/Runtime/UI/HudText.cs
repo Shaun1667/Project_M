@@ -322,6 +322,10 @@ namespace ProjectM.UI
         public const string NotEnoughSeeds = "씨앗이 3개 있어야 한다";
         /// <summary>3-17d 패턴 보스.</summary>
         public static string BossCharging(EntityId boss) => $"{Enemy(boss)}이(가) 힘을 모은다! 붉은 칸에서 벗어나라";
+        /// <summary>3-58 지형 흡수.</summary>
+        public const string NothingToAbsorb = "둘레에 흡수할 지형이 없다";
+        public static string TerrainAbsorbed(int amount, int gained) =>
+            gained < amount ? $"지형을 흡수했다 — 마나 +{gained} (가득 참)" : $"지형을 흡수했다 — 마나 +{gained}";
         /// <summary>3-57 가로채기: 상극 속성이 예고 칸에 닿아 힘이 흩어짐.</summary>
         public static string BossChargeCanceled(EntityId boss) => $"{Enemy(boss)}의 힘이 흩어졌다! 역류에 휘청인다";
         public static string BossTeleported(EntityId boss) => $"{Enemy(boss)}이(가) 순간이동했다";
@@ -434,6 +438,7 @@ namespace ProjectM.UI
             + "<b>마우스 · 방향키</b>   조준 칸 옮기기\n"
             + "<b>Space · Enter · 클릭</b>   시전\n"
             + "<b>같은 숫자 두 번</b>   가까운 적에게 바로 시전\n"
+            + "<b>R</b>   둘레 지형을 마나로 흡수\n"
             + "<b>Esc · 오른쪽 클릭</b>   취소";
         /// <summary>오른쪽 칸 (아이템 · 살피기 · 화면 · 요령).</summary>
         public const string ControlsRight =

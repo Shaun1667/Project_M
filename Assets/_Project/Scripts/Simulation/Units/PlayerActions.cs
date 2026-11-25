@@ -1,5 +1,7 @@
 using System;
 using ProjectM.Core;
+using ProjectM.Magic;
+using ProjectM.Status;
 
 namespace ProjectM.Units
 {
@@ -52,6 +54,14 @@ namespace ProjectM.Units
             if (!MeleeWeapon.CanReach(world, player, target)) return false;
             command = new AttackCommand(world, occupant.Id, MeleeWeapon.PlanAttack(player, config.DefaultActionCostTicks));
             return true;
+        }
+
+        /// <summary>지형 흡수 (3-58, R): 둘레에 흡수할 지형이 없으면 null (차례를 쓰지 않음).</summary>
+        public static ICommand Absorb(World world, GameConfig config, TerrainBook terrains)
+        {
+            if (config == null) throw new ArgumentNullException(nameof(config));
+            if (!TryGetPlayer(world, out var player) || !player.IsAlive || Absorption.Preview(world, terrains, player.Pos) == 0) return null;
+            return new AbsorbCommand(world, terrains, config.DefaultActionCostTicks);
         }
 
         public static ICommand Wait(GameConfig config)

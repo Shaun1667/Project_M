@@ -717,21 +717,21 @@ namespace ProjectM.Editor
             var catalog = LoadOrCreate<TerrainCatalogAsset>(TerrainCatalogPath);
             bool changed = false;
             changed |= catalog.AddIfMissing(new TerrainCatalogAsset.Entry
-                { Type = TerrainEffectType.FireZone, DurationTicks = 4, AppliesStatus = StatusType.Burn });
+                { Type = TerrainEffectType.FireZone, DurationTicks = 4, AppliesStatus = StatusType.Burn, AbsorbMana = 2 });
             changed |= catalog.AddIfMissing(new TerrainCatalogAsset.Entry
-                { Type = TerrainEffectType.PoisonCloud, DurationTicks = 4, AppliesStatus = StatusType.Poison });
+                { Type = TerrainEffectType.PoisonCloud, DurationTicks = 4, AppliesStatus = StatusType.Poison, AbsorbMana = 2 });
             // 3-2: 물 타일 12틱 · 화염 지대 위에는 안 깔림, 오염된 물 8틱 · 젖음 + 매 틱 피해 1 (D7)
             changed |= catalog.AddIfMissing(new TerrainCatalogAsset.Entry
-                { Type = TerrainEffectType.Water, DurationTicks = 12, AppliesStatus = StatusType.Wet, BlockedBy = TerrainEffectType.FireZone });
+                { Type = TerrainEffectType.Water, DurationTicks = 12, AppliesStatus = StatusType.Wet, BlockedBy = TerrainEffectType.FireZone, AbsorbMana = 1 });
             changed |= catalog.AddIfMissing(new TerrainCatalogAsset.Entry
-                { Type = TerrainEffectType.ContaminatedWater, DurationTicks = 8, AppliesStatus = StatusType.Wet, DamagePerTick = 1 });
+                { Type = TerrainEffectType.ContaminatedWater, DurationTicks = 8, AppliesStatus = StatusType.Wet, DamagePerTick = 1, AbsorbMana = 1 });
             // 3-3a: 빙판 8틱 · 위 유닛 둔화 (D4 100%)
             changed |= catalog.AddIfMissing(new TerrainCatalogAsset.Entry
-                { Type = TerrainEffectType.IcePatch, DurationTicks = 8, AppliesStatus = StatusType.Slow });
+                { Type = TerrainEffectType.IcePatch, DurationTicks = 8, AppliesStatus = StatusType.Slow, AbsorbMana = 1 });
             // 3-9: 마비 가스 4틱 · 위 유닛 마비 (마비 가스 물약, BALANCE 7번)
             changed |= catalog.AddIfMissing(new TerrainCatalogAsset.Entry
-                { Type = TerrainEffectType.ParalyticGas, DurationTicks = 4, AppliesStatus = StatusType.Paralyze });
-            // 3-17d 보스 예고 칸: 효과 없음 · 2틱 (플레이어 한 차례 동안 보임)
+                { Type = TerrainEffectType.ParalyticGas, DurationTicks = 4, AppliesStatus = StatusType.Paralyze, AbsorbMana = 2 });
+            // 3-17d 보스 예고 칸: 효과 없음 · 2틱 (플레이어 한 차례 동안 보임). 흡수 안 됨 (3-58 — 흡수 마나: 위험 지형 2 · 물 계열 1)
             changed |= catalog.AddIfMissing(new TerrainCatalogAsset.Entry { Type = TerrainEffectType.Warning, DurationTicks = 2 });
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;

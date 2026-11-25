@@ -222,6 +222,8 @@
 필드 `SpellCatalog` 항목의 `LeavesTerrain`: `poison_basic` → PoisonCloud, `water_basic` → Water (3-2). (`fire_basic` → FireZone은 2026-10-17 3-1 D2로 삭제)
 지형이 매 턴 거는 상태는 **100%** (2026-10-17 사용자 확인 — 요청표의 50%는 쓰지 않음).
 
+**지형 흡수 (3-58, 결정 2026-11-25 — R · 1턴 · 내 칸 + 둘레 8칸)** — 필드 `AbsorbMana` [임시]: 화염 지대 · 독구름 · 마비 가스 **2** (위험 지형), 물 · 오염된 물 · 빙판 **1**, 예고 칸 **0**(흡수 안 됨). 영구 웅덩이(`TerrainLayer.Permanent`)는 흡수 안 됨. 마나가 가득해도 지형은 없앤다. 예: 화염 지대 3칸에 둘러싸이면 R 한 번 = 마나 +6 + 불길 탈출 — 마나 10 기준 불 주문(3) 두 번 값. 검산: `AbsorptionTests.ProjectAsset_MatchesBalanceTable`.
+
 **불 번짐 (3-11b, 결정 2026-11-04 — SPD)** — `TerrainCatalog.asset`의 공통 값, `FireSpreadSystem`(③ 지형 처리 다음)
 
 | 값 | 필드 | 값 | 뜻 |
