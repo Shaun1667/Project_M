@@ -43,6 +43,7 @@ namespace ProjectM.Data
             [Tooltip("Trigger = Tile일 때 대상 칸 종류 (3-11b 풀)")] public TileType Tile;
             [Tooltip("칸 반응: 칸을 이 종류로 (Empty = 그대로)")] public TileType TransformTileTo;
             [Tooltip("칸 반응: 그 칸에 놓는 지형 (지속 = TransformDurationTicks)")] public TerrainEffectType PlaceTerrain;
+            [Tooltip("Trigger = Charge일 때 적이 모으는 주문의 속성 (3-57 가로채기)")] public Element ChargeElement;
         }
 
         [Header("안전장치 (REACTIONS.md 2-5)")]
@@ -63,7 +64,7 @@ namespace ProjectM.Data
                     e.ExtraDamage, e.ConsumeTrigger, e.ExplosionRadius, e.ExplosionDamage, e.ExplosionDamageFromRemaining,
                     e.ExplosionStatus, e.ExplosionStatusChancePercent, e.Group, e.TransformTerrainTo, e.TransformDurationTicks,
                     e.TargetStatus, e.TargetStatusChancePercent, e.Spread, e.SpreadRange, e.SpreadMaxTargets, e.SpreadDamagePercent,
-                    e.Tile, e.TransformTileTo, e.PlaceTerrain));
+                    e.Tile, e.TransformTileTo, e.PlaceTerrain, e.ChargeElement));
             }
             return new ReactionBook(defs, new ReactionConfig(_maxReactionsPerCast, _extraDamageCapMin, _explosionDamageCapMin), statuses);
         }

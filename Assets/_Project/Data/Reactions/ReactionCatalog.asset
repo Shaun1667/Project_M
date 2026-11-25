@@ -42,6 +42,7 @@ MonoBehaviour:
     Tile: 0
     TransformTileTo: 0
     PlaceTerrain: 0
+    ChargeElement: 0
   - Id: toxic_burst
     DisplayName: "\uC720\uB3C5\uC131 \uD3ED\uBC1C"
     Group: 
@@ -68,6 +69,7 @@ MonoBehaviour:
     Tile: 0
     TransformTileTo: 0
     PlaceTerrain: 0
+    ChargeElement: 0
   - Id: extinguish
     DisplayName: "\uC18C\uD654"
     Group: 
@@ -94,6 +96,7 @@ MonoBehaviour:
     Tile: 0
     TransformTileTo: 0
     PlaceTerrain: 0
+    ChargeElement: 0
   - Id: toxic_ignite_cloud
     DisplayName: "\uB3C5\uD654"
     Group: toxic_ignite
@@ -120,6 +123,7 @@ MonoBehaviour:
     Tile: 0
     TransformTileTo: 0
     PlaceTerrain: 0
+    ChargeElement: 0
   - Id: gas_explosion
     DisplayName: "\uAC00\uC2A4 \uD3ED\uBC1C"
     Group: 
@@ -146,6 +150,7 @@ MonoBehaviour:
     Tile: 0
     TransformTileTo: 0
     PlaceTerrain: 0
+    ChargeElement: 0
   - Id: evaporate
     DisplayName: "\uC99D\uBC1C"
     Group: evaporate
@@ -172,6 +177,7 @@ MonoBehaviour:
     Tile: 0
     TransformTileTo: 0
     PlaceTerrain: 0
+    ChargeElement: 0
   - Id: evaporate_water
     DisplayName: "\uC99D\uBC1C"
     Group: evaporate
@@ -198,6 +204,7 @@ MonoBehaviour:
     Tile: 0
     TransformTileTo: 0
     PlaceTerrain: 0
+    ChargeElement: 0
   - Id: evaporate_contaminated
     DisplayName: "\uC99D\uBC1C"
     Group: evaporate
@@ -224,6 +231,7 @@ MonoBehaviour:
     Tile: 0
     TransformTileTo: 0
     PlaceTerrain: 0
+    ChargeElement: 0
   - Id: evaporate_fire_zone
     DisplayName: "\uC99D\uBC1C"
     Group: evaporate
@@ -250,6 +258,7 @@ MonoBehaviour:
     Tile: 0
     TransformTileTo: 0
     PlaceTerrain: 0
+    ChargeElement: 0
   - Id: contaminate
     DisplayName: "\uC624\uC5FC"
     Group: 
@@ -276,6 +285,7 @@ MonoBehaviour:
     Tile: 0
     TransformTileTo: 0
     PlaceTerrain: 0
+    ChargeElement: 0
   - Id: freeze
     DisplayName: "\uBE59\uACB0"
     Group: freeze
@@ -302,6 +312,7 @@ MonoBehaviour:
     Tile: 0
     TransformTileTo: 0
     PlaceTerrain: 0
+    ChargeElement: 0
   - Id: freeze_water
     DisplayName: "\uACB0\uBE59"
     Group: freeze
@@ -328,6 +339,7 @@ MonoBehaviour:
     Tile: 0
     TransformTileTo: 0
     PlaceTerrain: 0
+    ChargeElement: 0
   - Id: freeze_contaminated
     DisplayName: "\uACB0\uBE59"
     Group: freeze
@@ -354,6 +366,7 @@ MonoBehaviour:
     Tile: 0
     TransformTileTo: 0
     PlaceTerrain: 0
+    ChargeElement: 0
   - Id: thaw
     DisplayName: "\uD574\uB3D9"
     Group: thaw
@@ -380,6 +393,7 @@ MonoBehaviour:
     Tile: 0
     TransformTileTo: 0
     PlaceTerrain: 0
+    ChargeElement: 0
   - Id: thaw_ice
     DisplayName: "\uD574\uB3D9"
     Group: thaw
@@ -406,6 +420,7 @@ MonoBehaviour:
     Tile: 0
     TransformTileTo: 0
     PlaceTerrain: 0
+    ChargeElement: 0
   - Id: shatter
     DisplayName: "\uD30C\uC1C4"
     Group: 
@@ -432,6 +447,7 @@ MonoBehaviour:
     Tile: 0
     TransformTileTo: 0
     PlaceTerrain: 0
+    ChargeElement: 0
   - Id: shock
     DisplayName: "\uAC10\uC804"
     Group: shock
@@ -458,6 +474,7 @@ MonoBehaviour:
     Tile: 0
     TransformTileTo: 0
     PlaceTerrain: 0
+    ChargeElement: 0
   - Id: shock_water
     DisplayName: "\uC218\uBA74 \uAC10\uC804"
     Group: shock
@@ -484,6 +501,7 @@ MonoBehaviour:
     Tile: 0
     TransformTileTo: 0
     PlaceTerrain: 0
+    ChargeElement: 0
   - Id: shock_contaminated
     DisplayName: "\uC218\uBA74 \uAC10\uC804"
     Group: shock
@@ -510,6 +528,7 @@ MonoBehaviour:
     Tile: 0
     TransformTileTo: 0
     PlaceTerrain: 0
+    ChargeElement: 0
   - Id: grass_ignite
     DisplayName: "\uD480\uC5D0 \uBD88\uC774 \uBD99\uC74C"
     Group: grass_ignite
@@ -536,6 +555,7 @@ MonoBehaviour:
     Tile: 5
     TransformTileTo: 1
     PlaceTerrain: 1
+    ChargeElement: 0
   - Id: tallgrass_ignite
     DisplayName: "\uD480\uC5D0 \uBD88\uC774 \uBD99\uC74C"
     Group: grass_ignite
@@ -562,6 +582,7 @@ MonoBehaviour:
     Tile: 6
     TransformTileTo: 1
     PlaceTerrain: 1
+    ChargeElement: 0
   - Id: door_ignite
     DisplayName: "\uBB38\uC5D0 \uBD88\uC774 \uBD99\uC74C"
     Group: door_ignite
@@ -588,6 +609,7 @@ MonoBehaviour:
     Tile: 7
     TransformTileTo: 1
     PlaceTerrain: 1
+    ChargeElement: 0
   - Id: opendoor_ignite
     DisplayName: "\uBB38\uC5D0 \uBD88\uC774 \uBD99\uC74C"
     Group: door_ignite
@@ -614,6 +636,7 @@ MonoBehaviour:
     Tile: 8
     TransformTileTo: 1
     PlaceTerrain: 1
+    ChargeElement: 0
   - Id: barricade_ignite
     DisplayName: "\uBC14\uB9AC\uCF00\uC774\uB4DC\uAC00 \uBD88\uD0C4\uB2E4"
     Group: barricade_ignite
@@ -640,3 +663,139 @@ MonoBehaviour:
     Tile: 14
     TransformTileTo: 1
     PlaceTerrain: 1
+    ChargeElement: 0
+  - Id: counter_water
+    DisplayName: "\uBB3C\uAE30 \uC5ED\uB958"
+    Group: 
+    Trigger: 3
+    Status: 0
+    Terrain: 0
+    Element: 2
+    Priority: 30
+    ExtraDamage: 6
+    ConsumeTrigger: 1
+    ExplosionRadius: 0
+    ExplosionDamage: 0
+    ExplosionDamageFromRemaining: 0
+    ExplosionStatus: 0
+    ExplosionStatusChancePercent: 100
+    TransformTerrainTo: 0
+    TransformDurationTicks: 0
+    TargetStatus: 4
+    TargetStatusChancePercent: 100
+    Spread: 0
+    SpreadRange: 0
+    SpreadMaxTargets: 0
+    SpreadDamagePercent: 0
+    Tile: 0
+    TransformTileTo: 0
+    PlaceTerrain: 0
+    ChargeElement: 6
+  - Id: counter_earth
+    DisplayName: "\uBAA8\uB798 \uD769\uB0A0\uB9BC"
+    Group: 
+    Trigger: 3
+    Status: 0
+    Terrain: 0
+    Element: 5
+    Priority: 30
+    ExtraDamage: 6
+    ConsumeTrigger: 1
+    ExplosionRadius: 0
+    ExplosionDamage: 0
+    ExplosionDamageFromRemaining: 0
+    ExplosionStatus: 0
+    ExplosionStatusChancePercent: 100
+    TransformTerrainTo: 0
+    TransformDurationTicks: 0
+    TargetStatus: 4
+    TargetStatusChancePercent: 100
+    Spread: 0
+    SpreadRange: 0
+    SpreadMaxTargets: 0
+    SpreadDamagePercent: 0
+    Tile: 0
+    TransformTileTo: 0
+    PlaceTerrain: 0
+    ChargeElement: 4
+  - Id: counter_ice
+    DisplayName: "\uB0C9\uAE30 \uC99D\uBC1C"
+    Group: 
+    Trigger: 3
+    Status: 0
+    Terrain: 0
+    Element: 0
+    Priority: 30
+    ExtraDamage: 6
+    ConsumeTrigger: 1
+    ExplosionRadius: 0
+    ExplosionDamage: 0
+    ExplosionDamageFromRemaining: 0
+    ExplosionStatus: 0
+    ExplosionStatusChancePercent: 100
+    TransformTerrainTo: 0
+    TransformDurationTicks: 0
+    TargetStatus: 4
+    TargetStatusChancePercent: 100
+    Spread: 0
+    SpreadRange: 0
+    SpreadMaxTargets: 0
+    SpreadDamagePercent: 0
+    Tile: 0
+    TransformTileTo: 0
+    PlaceTerrain: 0
+    ChargeElement: 1
+  - Id: counter_fire
+    DisplayName: "\uBD88\uC528 \uAEBC\uC9D0"
+    Group: 
+    Trigger: 3
+    Status: 0
+    Terrain: 0
+    Element: 6
+    Priority: 30
+    ExtraDamage: 6
+    ConsumeTrigger: 1
+    ExplosionRadius: 0
+    ExplosionDamage: 0
+    ExplosionDamageFromRemaining: 0
+    ExplosionStatus: 0
+    ExplosionStatusChancePercent: 100
+    TransformTerrainTo: 0
+    TransformDurationTicks: 0
+    TargetStatus: 4
+    TargetStatusChancePercent: 100
+    Spread: 0
+    SpreadRange: 0
+    SpreadMaxTargets: 0
+    SpreadDamagePercent: 0
+    Tile: 0
+    TransformTileTo: 0
+    PlaceTerrain: 0
+    ChargeElement: 0
+  - Id: counter_lightning
+    DisplayName: "\uC811\uC9C0"
+    Group: 
+    Trigger: 3
+    Status: 0
+    Terrain: 0
+    Element: 4
+    Priority: 30
+    ExtraDamage: 6
+    ConsumeTrigger: 1
+    ExplosionRadius: 0
+    ExplosionDamage: 0
+    ExplosionDamageFromRemaining: 0
+    ExplosionStatus: 0
+    ExplosionStatusChancePercent: 100
+    TransformTerrainTo: 0
+    TransformDurationTicks: 0
+    TargetStatus: 4
+    TargetStatusChancePercent: 100
+    Spread: 0
+    SpreadRange: 0
+    SpreadMaxTargets: 0
+    SpreadDamagePercent: 0
+    Tile: 0
+    TransformTileTo: 0
+    PlaceTerrain: 0
+    ChargeElement: 2

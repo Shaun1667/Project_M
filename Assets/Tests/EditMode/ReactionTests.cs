@@ -78,6 +78,16 @@ namespace ProjectM.Tests
                 group: "door_ignite", transformDurationTicks: 3, tile: TileType.OpenDoor, transformTileTo: TileType.Floor, placeTerrain: TerrainEffectType.FireZone),
             new ReactionDef("barricade_ignite", ReactionTrigger.Tile, StatusType.None, TerrainEffectType.None, Element.Fire, 0,
                 group: "barricade_ignite", transformDurationTicks: 3, tile: TileType.Barricade, transformTileTo: TileType.Floor, placeTerrain: TerrainEffectType.FireZone), // 3-41 창고
+            new ReactionDef("counter_water", ReactionTrigger.Charge, StatusType.None, TerrainEffectType.None, Element.Lightning, 30,
+                extraDamage: 6, consumeTrigger: true, targetStatus: StatusType.Paralyze, chargeElement: Element.Water), // 3-57 가로채기
+            new ReactionDef("counter_earth", ReactionTrigger.Charge, StatusType.None, TerrainEffectType.None, Element.Wind, 30,
+                extraDamage: 6, consumeTrigger: true, targetStatus: StatusType.Paralyze, chargeElement: Element.Earth), // 3-57 가로채기
+            new ReactionDef("counter_ice", ReactionTrigger.Charge, StatusType.None, TerrainEffectType.None, Element.Fire, 30,
+                extraDamage: 6, consumeTrigger: true, targetStatus: StatusType.Paralyze, chargeElement: Element.Ice), // 3-57 가로채기
+            new ReactionDef("counter_fire", ReactionTrigger.Charge, StatusType.None, TerrainEffectType.None, Element.Water, 30,
+                extraDamage: 6, consumeTrigger: true, targetStatus: StatusType.Paralyze, chargeElement: Element.Fire), // 3-57 가로채기
+            new ReactionDef("counter_lightning", ReactionTrigger.Charge, StatusType.None, TerrainEffectType.None, Element.Earth, 30,
+                extraDamage: 6, consumeTrigger: true, targetStatus: StatusType.Paralyze, chargeElement: Element.Lightning), // 3-57 가로채기
         }, new ReactionConfig(4, 3, 5), statuses);
 
         // 주문 자체는 상태 · 지형 없이 (반응만 보려고). 상태 · 지형 규칙은 BALANCE 값
@@ -356,6 +366,7 @@ namespace ProjectM.Tests
                         e.ExplosionRadius, e.ExplosionDamage, e.ExplosionDamageFromRemaining, e.ExplosionStatus, e.ExplosionStatusChancePercent, e.TransformTerrainTo)), e.Id);
                 // 3-3a: 변환 지속 · 대상 상태 (대상 상태가 없으면 확률은 보지 않음 — 이전 줄은 에셋에 0으로 저장됨)
                 Assert.That((a.TransformDurationTicks, a.TargetStatus), Is.EqualTo((e.TransformDurationTicks, e.TargetStatus)), e.Id);
+                Assert.That(a.ChargeElement, Is.EqualTo(e.ChargeElement), e.Id); // 3-57
                 if (e.TargetStatus != StatusType.None) Assert.That(a.TargetStatusChancePercent, Is.EqualTo(e.TargetStatusChancePercent), e.Id);
                 // 3-11b: 칸 반응
                 Assert.That((a.Tile, a.TransformTileTo, a.PlaceTerrain), Is.EqualTo((e.Tile, e.TransformTileTo, e.PlaceTerrain)), e.Id);

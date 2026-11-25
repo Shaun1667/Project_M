@@ -85,6 +85,9 @@ namespace ProjectM.Units
         /// <summary>패턴 보스 (3-17d, v23): 힘을 모아 다음 차례에 주문을 터뜨릴 중심 칸. null = 모으지 않음.</summary>
         public GridPos? ChargeTarget { get; set; }
 
+        /// <summary>모으는 주문 ID (3-57 가로채기, v36). ChargeTarget과 함께 정하고 지운다. null = 모으지 않음.</summary>
+        public string ChargeSpellId { get; set; }
+
         /// <summary>패턴 보스 (3-17d, v23): 소환을 이미 했다.</summary>
         public bool Summoned { get; set; }
 

@@ -309,7 +309,7 @@ namespace ProjectM.Magic
             // 반응 (3-1): 맞은 유닛의 기존 상태 · 주문이 닿은 칸의 지형 × 주문 속성
             var cells = CastSpellCommand.TerrainCells(spell, preview);
             if (spell.TriggersReactions)
-                ReactionEngine.Resolve(world, book.Reactions, book.Statuses, casterId, spell, victims, cells);
+                ReactionEngine.Resolve(world, book.Reactions, book.Statuses, casterId, spell, victims, cells, book); // 3-57: 모으는 주문을 찾으려고 주문 표도
 
             // 새 상태 이상 (살아 있으면). 확률은 맞은 유닛마다 전투 난수로 따로 (같은 시드 = 같은 결과)
             if (book.Statuses.TryGet(spell.AppliesStatus, out var status))

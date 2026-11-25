@@ -20,6 +20,20 @@ namespace ProjectM.Units
             foreach (var c in preview.AffectedCells) if (c != self) area.Add(c);
             return new SpellPreview(new List<GridPos> { center }, area);
         }
+
+        /// <summary>
+        /// 모으던 힘을 없앤다 (3-57 가로채기 — 반응 표의 Charge 줄이 부른다): 예고 칸 지우기 · ChargeTarget · ChargeSpellId 비우기.
+        /// 다음 차례에 ReleaseChargeCommand가 나오지 않는다 (AI가 ChargeTarget을 본다).
+        /// </summary>
+        public static void CancelCharge(World world, Unit unit, IReadOnlyList<GridPos> area)
+        {
+            if (world == null || unit == null || !unit.ChargeTarget.HasValue) return;
+            if (area != null) foreach (var c in area) TerrainEffects.Remove(world, c, TerrainEffectType.Warning);
+            var center = unit.ChargeTarget.Value;
+            unit.ChargeTarget = null;
+            unit.ChargeSpellId = null;
+            world.Events.Publish(new BossChargeCanceledEvent(unit.Id, center));
+        }
     }
 
     /// <summary>힘 모으기: 예고 칸을 정하고 바닥에 경고 지형을 깐다 (다음 차례에 ReleaseChargeCommand).</summary>
@@ -44,6 +58,7 @@ namespace ProjectM.Units
         {
             if (!_world.Units.TryGet(context.Actor, out var self) || !self.IsAlive || !_spells.TryGet(_spellId, out var spell)) return;
             self.ChargeTarget = _center;
+            self.ChargeSpellId = _spellId; // 3-57 가로채기: 무슨 속성을 모으는지
             var area = BossActions.ChargeArea(_world, spell, _center, self.Pos);
             if (_spells.Terrains != null && _spells.Terrains.TryGet(TerrainEffectType.Warning, out var warning))
                 foreach (var c in area.AffectedCells) TerrainEffects.Place(_world, c, warning);
@@ -72,6 +87,7 @@ namespace ProjectM.Units
             if (!_world.Units.TryGet(context.Actor, out var self) || !self.IsAlive || !self.ChargeTarget.HasValue) return;
             var center = self.ChargeTarget.Value;
             self.ChargeTarget = null;
+            self.ChargeSpellId = null;
             if (!_spells.TryGet(_spellId, out var spell)) return;
             var area = BossActions.ChargeArea(_world, spell, center, self.Pos);
             foreach (var c in SpellCasting.PreviewAt(_world, spell, center).AffectedCells)
@@ -163,6 +179,19 @@ namespace ProjectM.Units
         public GridPos Center { get; }
 
         public BossChargingEvent(EntityId boss, GridPos center)
+        {
+            Boss = boss;
+            Center = center;
+        }
+    }
+
+    /// <summary>모으던 힘이 가로채기로 흩어졌다 (3-57). 로그 · 연출용.</summary>
+    public sealed class BossChargeCanceledEvent : ISimEvent
+    {
+        public EntityId Boss { get; }
+        public GridPos Center { get; }
+
+        public BossChargeCanceledEvent(EntityId boss, GridPos center)
         {
             Boss = boss;
             Center = center;

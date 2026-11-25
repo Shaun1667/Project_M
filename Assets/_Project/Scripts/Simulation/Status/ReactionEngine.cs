@@ -24,6 +24,7 @@ namespace ProjectM.Status
             public GridPos Pos;        // 상태 반응: 대상 칸, 지형 반응: 그 칸
             public int Remaining;      // 트리거의 남은 틱
             public int Order;          // 모은 순서
+            public IReadOnlyList<GridPos> Area; // 모으는 힘 반응 (3-57): 그 적의 예고 칸
         }
 
         private sealed class ExplosionHit
@@ -36,7 +37,7 @@ namespace ProjectM.Status
 
         /// <returns>발동한 반응 수.</returns>
         public static int Resolve(World world, ReactionBook book, StatusBook statuses, EntityId casterId, SpellDef spell,
-            IReadOnlyList<Unit> victims, IReadOnlyList<GridPos> cells)
+            IReadOnlyList<Unit> victims, IReadOnlyList<GridPos> cells, SpellBook spells = null)
         {
             if (world == null) throw new ArgumentNullException(nameof(world));
             if (book == null || book.Count == 0 || spell == null) return 0;
@@ -68,6 +69,22 @@ namespace ProjectM.Status
                 {
                     world.Units.TryGetAt(cell, out var unitOnTile);
                     candidates.Add(new Candidate { Reaction = tileReaction, Unit = unitOnTile, Pos = cell, Order = candidates.Count });
+                }
+            }
+            // 모으는 힘 (3-57 가로채기): 주문이 어떤 적의 예고 칸에 닿았으면 그 적 (모으는 주문을 알아야 하므로 SpellBook이 있을 때만)
+            if (spells != null && cells.Count > 0)
+            {
+                var hitCells = new HashSet<GridPos>(cells);
+                foreach (var unit in world.Units.ToSortedList())
+                {
+                    if (!unit.IsAlive || !unit.ChargeTarget.HasValue || unit.ChargeSpellId == null || unit.Id == casterId) continue;
+                    if (!spells.TryGet(unit.ChargeSpellId, out var charge)) continue;
+                    var r = book.FindCharge(charge.Element, spell.Element);
+                    if (r == null) continue;
+                    var area = BossActions.ChargeArea(world, charge, unit.ChargeTarget.Value, unit.Pos).AffectedCells;
+                    bool touched = false;
+                    foreach (var c in area) if (hitCells.Contains(c)) { touched = true; break; }
+                    if (touched) candidates.Add(new Candidate { Reaction = r, Unit = unit, Pos = unit.Pos, Order = candidates.Count, Area = area });
                 }
             }
             if (candidates.Count == 0) return 0;
@@ -230,6 +247,11 @@ namespace ProjectM.Status
         /// <summary>트리거 소모 · 지형 변환 (3-2) · 칸 바꾸기 · 지형 놓기 (3-11b).</summary>
         private static void ApplyTriggerChange(World world, ReactionDef r, Candidate c)
         {
+            if (r.Trigger == ReactionTrigger.Charge)
+            {
+                if (r.ConsumeTrigger) BossActions.CancelCharge(world, c.Unit, c.Area); // 3-57: 힘을 흩뜨린다
+                return;
+            }
             if (r.Trigger == ReactionTrigger.Tile)
             {
                 if (world.Map.Get(c.Pos) != r.Tile) return; // 같은 칸이 이미 바뀜

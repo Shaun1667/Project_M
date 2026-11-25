@@ -322,6 +322,8 @@ namespace ProjectM.UI
         public const string NotEnoughSeeds = "씨앗이 3개 있어야 한다";
         /// <summary>3-17d 패턴 보스.</summary>
         public static string BossCharging(EntityId boss) => $"{Enemy(boss)}이(가) 힘을 모은다! 붉은 칸에서 벗어나라";
+        /// <summary>3-57 가로채기: 상극 속성이 예고 칸에 닿아 힘이 흩어짐.</summary>
+        public static string BossChargeCanceled(EntityId boss) => $"{Enemy(boss)}의 힘이 흩어졌다! 역류에 휘청인다";
         public static string BossTeleported(EntityId boss) => $"{Enemy(boss)}이(가) 순간이동했다";
         public static string BossSummoned(EntityId boss, int count) => $"{Enemy(boss)}이(가) 부하 {count}을(를) 불러냈다";
 

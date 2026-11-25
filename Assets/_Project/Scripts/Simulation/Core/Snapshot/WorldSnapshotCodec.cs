@@ -397,6 +397,7 @@ namespace ProjectM.Core
                 w.Write(u.StopActions);
                 w.Write(u.AttackCredit); // 31 (3-39)
                 w.Write(u.Dormant); // 34 (3-48)
+                w.Write(u.ChargeSpellId ?? string.Empty); // 36 (3-57)
             }
         }
 
@@ -456,9 +457,11 @@ namespace ProjectM.Core
                 int frozen = r.ReadInt32(), accelTicks = r.ReadInt32(), accelActions = r.ReadInt32(), accelUsed = r.ReadInt32(), stopActions = r.ReadInt32(); // 30 (3-28c)
                 int attackCredit = r.ReadInt32(); // 31 (3-39)
                 bool dormant = r.ReadBoolean(); // 34 (3-48)
+                string chargeSpellId = r.ReadString(); // 36 (3-57)
+                if (chargeSpellId.Length == 0) chargeSpellId = null;
                 units[i] = new UnitState(id, faction, visualId, maxHp, attackDamage, sightRange, x, y, hp, hasLastSeen, lastSeenX, lastSeenY,
                     maxMana, mana, inventory, quick, previousPos, wanderTarget, statuses, accuracy, evasion, expReward, expMaxLevel, level, exp, weapon, strength, armor, hunger,
-                    chargeTarget, summoned, relics, frozen, accelTicks, accelActions, accelUsed, stopActions, attackCredit, dormant);
+                    chargeTarget, summoned, relics, frozen, accelTicks, accelActions, accelUsed, stopActions, attackCredit, dormant, chargeSpellId);
             }
             return units;
         }

@@ -1062,6 +1062,37 @@ namespace ProjectM.Editor
                 Element = Element.Fire, Priority = 0, TransformTileTo = TileType.Floor, PlaceTerrain = TerrainEffectType.FireZone,
                 TransformDurationTicks = 3, ExplosionStatusChancePercent = 100,
             });
+            // 3-57 가로채기: 적이 모으는 힘(예고 칸) × 상극 속성 → 힘이 흩어지고(소모) 역류 피해 + 마비 (BALANCE 8번)
+            changed |= catalog.AddIfMissing(new ReactionCatalogAsset.Entry
+            {
+                Id = "counter_water", DisplayName = "물기 역류", Trigger = ReactionTrigger.Charge, ChargeElement = Element.Water, Element = Element.Lightning,
+                Priority = 30, ExtraDamage = 6, ConsumeTrigger = true, TargetStatus = StatusType.Paralyze, TargetStatusChancePercent = 100,
+                ExplosionStatusChancePercent = 100,
+            });
+            changed |= catalog.AddIfMissing(new ReactionCatalogAsset.Entry
+            {
+                Id = "counter_earth", DisplayName = "모래 흩날림", Trigger = ReactionTrigger.Charge, ChargeElement = Element.Earth, Element = Element.Wind,
+                Priority = 30, ExtraDamage = 6, ConsumeTrigger = true, TargetStatus = StatusType.Paralyze, TargetStatusChancePercent = 100,
+                ExplosionStatusChancePercent = 100,
+            });
+            changed |= catalog.AddIfMissing(new ReactionCatalogAsset.Entry
+            {
+                Id = "counter_ice", DisplayName = "냉기 증발", Trigger = ReactionTrigger.Charge, ChargeElement = Element.Ice, Element = Element.Fire,
+                Priority = 30, ExtraDamage = 6, ConsumeTrigger = true, TargetStatus = StatusType.Paralyze, TargetStatusChancePercent = 100,
+                ExplosionStatusChancePercent = 100,
+            });
+            changed |= catalog.AddIfMissing(new ReactionCatalogAsset.Entry
+            {
+                Id = "counter_fire", DisplayName = "불씨 꺼짐", Trigger = ReactionTrigger.Charge, ChargeElement = Element.Fire, Element = Element.Water,
+                Priority = 30, ExtraDamage = 6, ConsumeTrigger = true, TargetStatus = StatusType.Paralyze, TargetStatusChancePercent = 100,
+                ExplosionStatusChancePercent = 100,
+            });
+            changed |= catalog.AddIfMissing(new ReactionCatalogAsset.Entry
+            {
+                Id = "counter_lightning", DisplayName = "접지", Trigger = ReactionTrigger.Charge, ChargeElement = Element.Lightning, Element = Element.Earth,
+                Priority = 30, ExtraDamage = 6, ConsumeTrigger = true, TargetStatus = StatusType.Paralyze, TargetStatusChancePercent = 100,
+                ExplosionStatusChancePercent = 100,
+            });
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }

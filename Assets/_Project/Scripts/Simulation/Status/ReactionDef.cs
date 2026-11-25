@@ -14,6 +14,11 @@ namespace ProjectM.Status
         Terrain = 1,
         /// <summary>주문이 닿은 칸의 칸 종류 (3-11b 풀 × 불).</summary>
         Tile = 2,
+        /// <summary>
+        /// 적이 모으는 힘 (3-57 가로채기): 예고 칸(Warning)에 주문이 닿으면, 모으는 주문 속성(ChargeElement) × 주문 속성.
+        /// 대상 = 모으는 적. ConsumeTrigger = 힘을 흩뜨린다 (예고 칸 · 다음 차례 주문이 사라짐).
+        /// </summary>
+        Charge = 3,
     }
 
     /// <summary>
@@ -44,6 +49,8 @@ namespace ProjectM.Status
         public TerrainEffectType Terrain { get; }
         /// <summary>Trigger = Tile일 때 대상 칸 종류 (3-11b).</summary>
         public TileType Tile { get; }
+        /// <summary>Trigger = Charge일 때 적이 모으는 주문의 속성 (3-57).</summary>
+        public Element ChargeElement { get; }
         /// <summary>반응을 일으키는 주문 속성.</summary>
         public Element Element { get; }
         /// <summary>발동 순서 (큰 것 먼저, 원본 4-3).</summary>
@@ -90,8 +97,11 @@ namespace ProjectM.Status
             TerrainEffectType transformTerrainTo = TerrainEffectType.None, int transformDurationTicks = 0,
             StatusType targetStatus = StatusType.None, int targetStatusChancePercent = 100,
             ReactionSpread spread = ReactionSpread.None, int spreadRange = 0, int spreadMaxTargets = 0, int spreadDamagePercent = 50,
-            TileType tile = TileType.Empty, TileType transformTileTo = TileType.Empty, TerrainEffectType placeTerrain = TerrainEffectType.None)
+            TileType tile = TileType.Empty, TileType transformTileTo = TileType.Empty, TerrainEffectType placeTerrain = TerrainEffectType.None,
+            Element chargeElement = Element.Fire)
         {
+            if (trigger == ReactionTrigger.Charge && (spread != ReactionSpread.None || transformTerrainTo != TerrainEffectType.None || explosionRadius > 0))
+                throw new ArgumentException("모으는 힘 반응은 전이 · 지형 변환 · 폭발 없이 (대상 = 모으는 적): " + id);
             if (trigger == ReactionTrigger.Tile && tile == TileType.Empty) throw new ArgumentException("칸 반응에 칸 종류가 없다: " + id);
             if ((transformTileTo != TileType.Empty || placeTerrain != TerrainEffectType.None) && trigger != ReactionTrigger.Tile)
                 throw new ArgumentException("칸 바꾸기 · 지형 놓기는 칸 반응에서만: " + id);
@@ -131,6 +141,7 @@ namespace ProjectM.Status
             TransformTileTo = transformTileTo;
             PlaceTerrain = placeTerrain;
             Element = element;
+            ChargeElement = trigger == ReactionTrigger.Charge ? chargeElement : Element.Fire;
             Priority = priority;
             ExtraDamage = extraDamage;
             ConsumeTrigger = consumeTrigger;
@@ -194,7 +205,7 @@ namespace ProjectM.Status
             {
                 if (r == null) throw new ArgumentException("null 반응", nameof(reactions));
                 if (_reactions.Exists(x => x.Id == r.Id)) throw new ArgumentException("같은 반응 ID가 두 번: " + r.Id, nameof(reactions));
-                if (_reactions.Exists(x => x.Trigger == r.Trigger && x.Status == r.Status && x.Terrain == r.Terrain && x.Tile == r.Tile && x.Element == r.Element))
+                if (_reactions.Exists(x => x.Trigger == r.Trigger && x.Status == r.Status && x.Terrain == r.Terrain && x.Tile == r.Tile && x.Element == r.Element && x.ChargeElement == r.ChargeElement))
                     throw new ArgumentException("같은 대상 · 속성 조합이 두 번: " + r.Id, nameof(reactions));
                 if (r.ExplosionStatus != StatusType.None && !statuses.TryGet(r.ExplosionStatus, out _))
                     throw new ArgumentException($"반응 {r.Id}의 상태 {r.ExplosionStatus}가 StatusBook에 없다.", nameof(reactions));
@@ -214,5 +225,9 @@ namespace ProjectM.Status
 
         public ReactionDef FindTile(TileType tile, Element element) =>
             _reactions.Find(r => r.Trigger == ReactionTrigger.Tile && r.Tile == tile && r.Element == element);
+
+        /// <summary>적이 charged 속성 힘을 모을 때 element 주문이 예고 칸에 닿으면 (3-57).</summary>
+        public ReactionDef FindCharge(Element charged, Element element) =>
+            _reactions.Find(r => r.Trigger == ReactionTrigger.Charge && r.ChargeElement == charged && r.Element == element);
     }
 }

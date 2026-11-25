@@ -353,7 +353,7 @@ namespace ProjectM.Core
                 seen.HasValue, seen?.X ?? 0, seen?.Y ?? 0, u.MaxMana, u.Mana, (InventoryRef[])u.InventorySlots.Clone(), (InventoryRef[])u.QuickSlots.Clone(),
                 u.PreviousPos, u.WanderTarget, u.Statuses.ConvertAll(s => new UnitStatusState(s.Type, s.Remaining)).ToArray(),
                 u.Accuracy, u.Evasion, u.ExpReward, u.ExpMaxLevel, u.Level, u.Exp, u.Weapon, u.Strength, u.Armor, u.Hunger,
-                u.ChargeTarget, u.Summoned, (InventoryRef[])u.Relics.Clone(), u.TimeFrozenTicks, u.AccelTicks, u.AccelActions, u.AccelUsed, u.StopActions, u.AttackCredit, u.Dormant);
+                u.ChargeTarget, u.Summoned, (InventoryRef[])u.Relics.Clone(), u.TimeFrozenTicks, u.AccelTicks, u.AccelActions, u.AccelUsed, u.StopActions, u.AttackCredit, u.Dormant, u.ChargeSpellId);
         }
 
         private static Unit ToUnit(UnitState u)
@@ -365,6 +365,7 @@ namespace ProjectM.Core
             foreach (var st in u.Statuses)
                 unit.Statuses.Add(new StatusInstance(st.Type, st.Remaining));
             unit.ChargeTarget = u.ChargeTarget; // 3-17d
+            unit.ChargeSpellId = u.ChargeSpellId; // 36 (3-57)
             unit.Summoned = u.Summoned;
             for (int i = 0; i < unit.Relics.Length && i < u.Relics.Length; i++) unit.Relics[i] = u.Relics[i]; // 28 (3-28a)
             unit.TimeFrozenTicks = u.TimeFrozenTicks; // 30 (3-28c)
