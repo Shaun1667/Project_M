@@ -114,8 +114,9 @@ namespace ProjectM.Magic
             if (firstId == secondId) return CastBlock.SameSpell;
             if (!caster.HasSpell(firstId) || !caster.HasSpell(secondId)) return CastBlock.NotOwned;
             if (!spells.TryGet(firstId, out var first) || !spells.TryGet(secondId, out var second)) return CastBlock.UnknownSpell;
-            fused = fusions.Build(SpellUpgrades.ApplyTo(world, caster, first), SpellUpgrades.ApplyTo(world, caster, second)); // 3-55: 재료 주문의 강화(피해 · 마나 · 범위)가 융합에도
+            fused = fusions.Build(first, second);
             if (fused == null) return CastBlock.NoFusionRecipe;
+            fused = SpellUpgrades.ApplyToFusion(world, caster, fused, first, second); // 3-55: 재료 강화 — 피해 · 마나는 합, 범위 · 연속 · 확률 · 지속은 큰 쪽
             fused = SpellModifiers.For(world, caster, fused); // 3-25b 플레이어 사거리 무한 — 시전(CastSpellCommand)과 같은 값
             return SpellCasting.CheckDef(world, targeting, sight, caster, fused, target, out preview);
         }

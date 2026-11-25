@@ -102,7 +102,7 @@ namespace ProjectM.Magic
     /// 마법 강화 (3-55, 결정 2026-11-24 — 사용자): 강화 주문서를 배운 주문에 쓰면 강화 카드 ChoiceCount장(기본 3) 중 하나를 고른다.
     /// 종류마다 단계(기본 3) · 주문당 MaxPerSpell번(기본 5). 상태 = RunState.SpellUpgrades (플레이어 것, 스냅샷 v35), 수치 = World.SpellUpgradeRules.
     /// 카드는 판 시드 · 주문 ID · 지금까지 강화한 횟수로만 정한다 (난수 흐름을 쓰지 않음 — 창을 닫았다 열어도 같은 카드).
-    /// 효과는 ApplyTo 한 곳 — SpellModifiers.For(미리보기 · 시전)와 융합 재료가 부른다.
+    /// 효과는 ApplyTo 한 곳 — SpellModifiers.For(미리보기 · 시전)가 부르고, 융합은 ApplyToFusion.
     /// </summary>
     public static class SpellUpgrades
     {
@@ -221,6 +221,34 @@ namespace ProjectM.Magic
                 pierce: spell.Pierce + (spell.Shape == SpellShape.Bolt ? area : 0),
                 statusDurationBonus: spell.StatusDurationBonus + (spell.AppliesStatus != StatusType.None ? duration : 0),
                 terrainDurationBonus: spell.TerrainDurationBonus + (spell.LeavesTerrain != TerrainEffectType.None ? duration * config.TerrainTicksPerLevel : 0));
+        }
+
+        /// <summary>
+        /// 융합 주문에 두 재료의 강화를 더한다 (3-55, 결정 2026-11-25 — 사용자 "1번"). fused는 강화 안 한 재료로 만든 융합 주문.
+        /// 피해 · 마나 절약은 두 재료 것을 더함 (융합 피해 · 마나가 원래 두 주문의 합이라서 — 마나는 재료마다 1 아래로 안 내림).
+        /// 범위 · 연속 타격 · 상태 확률 · 지속은 두 재료 중 큰 단계를 융합 모양에 맞춰 (폭발 · 둘레 = 반경, 화살 = 관통, 여러 대상 = 대상 수) — 더하지 않는다.
+        /// </summary>
+        public static SpellDef ApplyToFusion(World world, Unit caster, SpellDef fused, SpellDef first, SpellDef second)
+        {
+            var config = world?.SpellUpgradeRules;
+            if (config == null || caster == null || fused == null || first == null || second == null || caster.Id != world.Scheduler.PlayerId) return fused;
+            int V(SpellDef spell, SpellUpgradeKind kind) => config.TryGet(kind, out var def) ? def.ValueAt(Level(world, spell.Id, kind)) : 0;
+            int Best(SpellUpgradeKind kind) => Math.Max(V(first, kind), V(second, kind));
+            int ManaSaved(SpellDef spell) => spell.ManaCost <= 1 ? 0 : Math.Min(spell.ManaCost - 1, V(spell, SpellUpgradeKind.ManaCost));
+            int damage = V(first, SpellUpgradeKind.Damage) + V(second, SpellUpgradeKind.Damage), mana = ManaSaved(first) + ManaSaved(second);
+            int area = Best(SpellUpgradeKind.Area), chance = Best(SpellUpgradeKind.StatusChance), duration = Best(SpellUpgradeKind.Duration), hits = Best(SpellUpgradeKind.HitCount);
+            if (damage == 0 && area == 0 && chance == 0 && duration == 0 && mana == 0 && hits == 0) return fused;
+            bool radiusShape = fused.Shape == SpellShape.Burst || fused.Shape == SpellShape.Around;
+            return fused.Upgraded(
+                damage: fused.Damage + (fused.Damage > 0 ? damage : 0),
+                manaCost: Math.Max(1, fused.ManaCost - mana),
+                radius: fused.Radius + (radiusShape ? area : 0),
+                hitCount: fused.HitCount + (fused.Damage > 0 ? hits : 0),
+                maxTargets: fused.MaxTargets + (fused.Shape == SpellShape.Multi ? area : 0),
+                statusChance: fused.AppliesStatus != StatusType.None ? Math.Min(100, fused.StatusChancePercent + chance) : fused.StatusChancePercent,
+                pierce: fused.Pierce + (fused.Shape == SpellShape.Bolt ? area : 0),
+                statusDurationBonus: fused.StatusDurationBonus + (fused.AppliesStatus != StatusType.None ? duration : 0),
+                terrainDurationBonus: fused.TerrainDurationBonus + (fused.LeavesTerrain != TerrainEffectType.None ? duration * config.TerrainTicksPerLevel : 0));
         }
 
         /// <summary>FNV-1a 64 (string.GetHashCode는 실행마다 달라 쓰지 않는다 — 규칙 7).</summary>

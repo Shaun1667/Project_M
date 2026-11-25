@@ -218,6 +218,29 @@ namespace ProjectM.Tests
             Assert.That((after.Damage - before.Damage, before.ManaCost - after.ManaCost), Is.EqualTo((2, 1)));
         }
 
+        // 융합 (결정 2026-11-25): 범위 · 연속 · 지속은 두 재료 중 큰 단계를 융합 모양에 — 더하지 않음, 모양에 안 맞으면 없음
+        [Test]
+        public void Fusion_TakesBiggerUpgrade_OnFusedShape()
+        {
+            var (world, player, _) = Start();
+            var bolt = new SpellDef("a_bolt", Element.Fire, SpellShape.Bolt, 5, 3, 2);
+            var burst = new SpellDef("b_burst", Element.Water, SpellShape.Burst, 5, 2, 3, 1, StatusType.Wet, 100);
+            var fusedBurst = new SpellDef("fx_burst", Element.Water, SpellShape.Burst, 5, 5, 5, 1, StatusType.Wet, 100, TerrainEffectType.FireZone, 6);
+            Force(world, "a_bolt", SpellUpgradeKind.Area, 2);     // 화살 관통 2 — 융합이 폭발이면 반경 +2로
+            Force(world, "b_burst", SpellUpgradeKind.Area, 1);    // 반경 +1 — 작은 쪽이라 버림
+            Force(world, "a_bolt", SpellUpgradeKind.HitCount, 1);
+            Force(world, "b_burst", SpellUpgradeKind.Duration, 3);
+            var f = SpellUpgrades.ApplyToFusion(world, player, fusedBurst, bolt, burst);
+            Assert.That((f.Radius, f.Pierce, f.HitCount), Is.EqualTo((3, 0, 2)), "반경 1 + 큰 쪽 2 · 폭발이라 관통 없음 · 연속 +1");
+            Assert.That((f.StatusDurationBonus, f.TerrainDurationBonus), Is.EqualTo((3, 6)), "지속 III = 상태 +3 · 지형 +3×2");
+
+            var fusedBolt = new SpellDef("fx_bolt", Element.Fire, SpellShape.Bolt, 5, 5, 5);
+            Assert.That(SpellUpgrades.ApplyToFusion(world, player, fusedBolt, bolt, burst).Pierce, Is.EqualTo(2), "융합이 화살이면 관통으로");
+
+            var enemy = UnitSpawner.SpawnEnemy(world, EnemyDef, new GridPos(7, 2), new Idle());
+            Assert.That(SpellUpgrades.ApplyToFusion(world, enemy, fusedBurst, bolt, burst), Is.SameAs(fusedBurst), "플레이어만");
+        }
+
         // 스냅샷 v35 왕복 · 타임머신은 강화를 지금 그대로 가져감
         [Test]
         public void Snapshot_RoundTrip_AndTimeMachineCarryOver()
