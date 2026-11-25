@@ -17,6 +17,7 @@ namespace ProjectM.Data
         [Tooltip("한 판에 놓는 무기 수 (3-7a) — 무기 종류 중 시드로 고름, 1~마지막 전 층")]
         [Min(0)] [SerializeField] private int _weaponsPerRun = 2;
         [Tooltip("한 판에 놓는 강화 주문서 수 (3-7b)")] [Min(0)] [SerializeField] private int _upgradeScrollsPerRun = 3;
+        [Tooltip("층마다 보장하는 강화 주문서 수 (3-56) — 한 판 수와 따로 더해짐, 1~마지막 전 층")] [Min(0)] [SerializeField] private int _upgradeScrollsPerFloor = 1;
         [Tooltip("한 판에 놓는 힘 물약 수 (3-7b)")] [Min(0)] [SerializeField] private int _strengthPotionsPerRun = 2;
         [Tooltip("한 판에 놓는 갑옷 수 (3-10a) — 2티어 이상 중 시드로")] [Min(0)] [SerializeField] private int _armorsPerRun = 2;
         [Header("금화 (3-15a, SPD — BALANCE 11번)")]
@@ -42,6 +43,6 @@ namespace ProjectM.Data
 
         public LootConfig ToConfig() => new LootConfig(_maxBooksPerFloor, _minDistanceFromStart, _weaponsPerRun, _upgradeScrollsPerRun, _strengthPotionsPerRun, _armorsPerRun,
             _goldPilesPerFloor, _goldMinBase, _goldMinPerFloor, _goldMaxBase, _goldMaxPerFloor, _enemyGoldPercent, _enemyGoldMin, _enemyGoldMax,
-            _thrownPerFloor, _thrownItems, _thrownBundles, _seedsPerFloor, _seedItems, _seedDropPercent, _relicsPerRun, _bossRelicPercent);
+            _thrownPerFloor, _thrownItems, _thrownBundles, _seedsPerFloor, _seedItems, _seedDropPercent, _relicsPerRun, _bossRelicPercent, _upgradeScrollsPerFloor);
     }
 }

@@ -44,13 +44,18 @@ namespace ProjectM.Items
         /// <summary>유물 (3-28a): 한 판에 바닥에 놓는 수(종류 안 겹침, 1~마지막 전 층) · 구역 보스가 죽을 때 하나 떨어뜨릴 확률 (%).</summary>
         public int RelicsPerRun { get; }
         public int BossRelicPercent { get; }
+        /// <summary>층마다 보장하는 강화 주문서 수 (3-56, 결정 2026-11-25 — 마법 강화로 쓸 곳이 늘어남). UpgradeScrollsPerRun과 따로 더해진다.</summary>
+        public int UpgradeScrollsPerFloor { get; }
 
         public LootConfig(int maxBooksPerFloor, int minDistanceFromStart, int weaponsPerRun = 0, int upgradeScrollsPerRun = 0, int strengthPotionsPerRun = 0,
             int armorsPerRun = 0, int goldPilesPerFloor = 0, int goldMinBase = 0, int goldMinPerFloor = 0, int goldMaxBase = 0, int goldMaxPerFloor = 0,
             int enemyGoldPercent = 0, int enemyGoldMin = 0, int enemyGoldMax = 0,
             int thrownPerFloor = 0, IReadOnlyList<string> thrownItems = null, IReadOnlyList<int> thrownBundles = null,
-            int seedsPerFloor = 0, IReadOnlyList<string> seedItems = null, int seedDropPercent = 0, int relicsPerRun = 0, int bossRelicPercent = 0)
+            int seedsPerFloor = 0, IReadOnlyList<string> seedItems = null, int seedDropPercent = 0, int relicsPerRun = 0, int bossRelicPercent = 0,
+            int upgradeScrollsPerFloor = 0)
         {
+            if (upgradeScrollsPerFloor < 0) throw new ArgumentOutOfRangeException(nameof(upgradeScrollsPerFloor));
+            UpgradeScrollsPerFloor = upgradeScrollsPerFloor;
             if (relicsPerRun < 0 || bossRelicPercent < 0 || bossRelicPercent > 100) throw new ArgumentOutOfRangeException(nameof(bossRelicPercent));
             RelicsPerRun = relicsPerRun;
             BossRelicPercent = bossRelicPercent;
@@ -289,6 +294,21 @@ namespace ProjectM.Items
             for (int k = 0; k < count; k++)
                 plan.Add(new PendingFloorItem(1 + rng.Range(0, floors), armors[k]));
             if (plan.Count > 0) world.Run.AddPendingFloorItems(StableByFloor(plan));
+        }
+
+        /// <summary>
+        /// 층마다 강화 주문서 보장 (3-56): 1~마지막 전 층마다 UpgradeScrollsPerFloor장. 난수를 쓰지 않는다 — 앞 계획 · 맵 · 적 배치는 그대로. 계획 끝에 붙인다.
+        /// </summary>
+        public static void PlanFloorUpgradeScrolls(World world, ItemBook items, LootConfig config, int floorCount)
+        {
+            if (world == null) throw new ArgumentNullException(nameof(world));
+            if (items == null || config == null || config.UpgradeScrollsPerFloor == 0) return;
+            var scroll = FirstOfEffect(items, ConsumableEffect.Upgrade);
+            if (scroll == null) return;
+            var plan = new List<PendingFloorItem>();
+            for (int floor = 1; floor <= Math.Max(1, floorCount - 1); floor++)
+                for (int k = 0; k < config.UpgradeScrollsPerFloor; k++) plan.Add(new PendingFloorItem(floor, scroll));
+            world.Run.AddPendingFloorItems(plan);
         }
 
         /// <summary>

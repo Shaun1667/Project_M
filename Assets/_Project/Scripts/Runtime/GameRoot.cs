@@ -812,6 +812,7 @@ namespace ProjectM
                 Loot.PlanRandomConsumables(World, Items, consumableConfig, dungeonConfig.FloorCount); // 3-9: 층마다 무작위 물약 · 주문서
                 Loot.PlanArmors(World, Items, loot, planFloors); // 3-10a: 갑옷 (앞 계획 뒤)
                 if (hunger != null) Loot.PlanFood(World, Items, hunger, dungeonConfig.FloorCount); // 3-14: 층마다 식량 1 + 가끔 빵 (앞 계획 뒤)
+                Loot.PlanFloorUpgradeScrolls(World, Items, loot, dungeonConfig.FloorCount); // 3-56: 층마다 강화 주문서 보장 (앞 계획 뒤, 난수 없음)
             }
             Identification.AssignLooks(World, Items, consumableConfig); // 3-9: 판마다 겉모습 (배치 계획 모두 뒤 — 앞 계획은 그대로)
             foreach (var itemId in startKit) Identification.Identify(World, itemId); // 2026-11-05: 시작 배낭의 물약 · 주문서는 알고 시작 (겉모습 정한 뒤 — AssignLooks가 식별을 비움)

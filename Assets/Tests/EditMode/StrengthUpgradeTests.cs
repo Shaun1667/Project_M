@@ -224,6 +224,30 @@ namespace ProjectM.Tests
             }
         }
 
+        // 3-56: 1~마지막 전 층마다 강화 주문서 보장 — 앞 계획 뒤에 붙고 난수를 쓰지 않음, 0이면 없음
+        [Test]
+        public void PlanFloorUpgradeScrolls_OnePerFloor_AfterExistingPlan()
+        {
+            var world = new World(GridMovementTests.Parse("###", "#.#", "###"), 9UL);
+            Loot.PlanConsumables(world, Book(), new LootConfig(2, 3, 0, 3, 2), 5);
+            var before = new System.Collections.Generic.List<PendingFloorItem>(world.Run.PendingFloorItems);
+            ulong rngBefore = world.Rng.Get(RngStream.Loot).NextUInt();
+            var again = new World(GridMovementTests.Parse("###", "#.#", "###"), 9UL);
+            Loot.PlanConsumables(again, Book(), new LootConfig(2, 3, 0, 3, 2), 5);
+            Loot.PlanFloorUpgradeScrolls(again, Book(), new LootConfig(2, 3, upgradeScrollsPerFloor: 1), 5);
+            Assert.That(again.Rng.Get(RngStream.Loot).NextUInt(), Is.EqualTo(rngBefore), "난수를 쓰지 않음");
+
+            var plan = again.Run.PendingFloorItems;
+            for (int i = 0; i < before.Count; i++) Assert.That(plan[i], Is.EqualTo(before[i]), "앞 계획 그대로");
+            var added = new System.Collections.Generic.List<int>();
+            for (int i = before.Count; i < plan.Count; i++) { Assert.That(plan[i].ItemId, Is.EqualTo("scroll_upgrade")); added.Add(plan[i].Floor); }
+            Assert.That(added, Is.EqualTo(new[] { 1, 2, 3, 4 }), "층마다 하나, 마지막 층 제외");
+
+            var none = new World(GridMovementTests.Parse("###", "#.#", "###"), 9UL);
+            Loot.PlanFloorUpgradeScrolls(none, Book(), new LootConfig(2, 3), 5);
+            Assert.That(none.Run.PendingFloorItems, Is.Empty);
+        }
+
         // ── 저장 · 표시 ──
 
         [Test]
@@ -282,7 +306,7 @@ namespace ProjectM.Tests
             Assert.That(book.TryGet("potion_strength", out var potion) && potion.Use == ItemUse.Potion && potion.Effect == ConsumableEffect.Strength && potion.Amount == 1, Is.True);
             Assert.That(book.TryGet("scroll_upgrade", out var scroll) && scroll.Use == ItemUse.Scroll && scroll.Effect == ConsumableEffect.Upgrade && scroll.Amount == 1, Is.True);
             var loot = AssetDatabase.LoadAssetAtPath<LootConfigAsset>("Assets/_Project/Data/Items/LootConfig.asset").ToConfig();
-            Assert.That((loot.UpgradeScrollsPerRun, loot.StrengthPotionsPerRun), Is.EqualTo((3, 2)));
+            Assert.That((loot.UpgradeScrollsPerRun, loot.StrengthPotionsPerRun, loot.UpgradeScrollsPerFloor), Is.EqualTo((3, 2, 1)));
             var player = AssetDatabase.LoadAssetAtPath<UnitDefAsset>("Assets/_Project/Data/Units/Player.asset").ToDef();
             Assert.That(player.Strength, Is.EqualTo(10));
         }
