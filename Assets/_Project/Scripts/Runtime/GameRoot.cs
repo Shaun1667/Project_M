@@ -283,12 +283,32 @@ namespace ProjectM
         }
 
         /// <summary>3-33 명예의 전당 화면 줄 (위에서부터 HudText.HallOfFameShown개).</summary>
-        private static System.Collections.Generic.List<string> HallOfFameLines()
+        private System.Collections.Generic.List<string> HallOfFameLines()
         {
             var lines = new System.Collections.Generic.List<string>();
             var records = HallOfFameStore.Load();
             for (int i = 0; i < records.Count && i < HudText.HallOfFameShown; i++) lines.Add(HudText.HallOfFameLine(i + 1, records[i]));
+            if (records.Count == 0) lines.Add(HudText.HallOfFameEmpty);
+            lines.AddRange(CodexLines()); // 3-59 반응 도감 (같은 화면 아래)
             return lines;
+        }
+
+        /// <summary>3-59 반응 도감 줄: 반응 표의 그룹마다(표 순서) 발견했으면 이름, 아니면 ???.</summary>
+        private System.Collections.Generic.List<string> CodexLines()
+        {
+            var found = ReactionCodexStore.Load();
+            var names = new System.Collections.Generic.List<string>();
+            var seen = new System.Collections.Generic.HashSet<string>();
+            int count = 0;
+            if (Reactions != null)
+                foreach (var r in Reactions.All)
+                {
+                    if (!seen.Add(r.Group)) continue;
+                    bool has = found.Contains(r.Group);
+                    if (has) count++;
+                    names.Add(has ? _hudText.Reaction(r.Id) : HudText.CodexUnknown);
+                }
+            return new System.Collections.Generic.List<string> { string.Empty, HudText.CodexTitle(count, seen.Count), string.Join(" · ", names) };
         }
 
         /// <summary>3-33: 클리어한 판을 명예의 전당에 남긴다 (점수 순위 — 수치는 ZoneCatalog). 순위 줄 (못 남기면 빈 문자열).</summary>
@@ -536,6 +556,7 @@ namespace ProjectM
                 World.Events.Unsubscribe<ArtifactObtainedEvent>(OnArtifactObtained);
                 World.Events.Unsubscribe<StairsUnsealedEvent>(OnStairsUnsealed); // 3-21b
                 World.Events.Unsubscribe<LevelUpEvent>(OnLevelUp); // 3-21c
+                World.Events.Unsubscribe<ReactionDiscoveredEvent>(OnReactionDiscovered); // 3-59
             }
             _result.Hide();
 
@@ -686,6 +707,7 @@ namespace ProjectM
             World.Events.Subscribe<ArtifactObtainedEvent>(OnArtifactObtained); // 3-23b 모래시계 → 기록
             World.Events.Subscribe<StairsUnsealedEvent>(OnStairsUnsealed); // 3-21b: 선택 층 보스 처치 → 형태 선택
             World.Events.Subscribe<LevelUpEvent>(OnLevelUp); // 3-21c: 특성 점수 안내
+            World.Events.Subscribe<ReactionDiscoveredEvent>(OnReactionDiscovered); // 3-59 영구 도감
             World.SetClassRules(Classes); // 3-21c: 특성 효과 조회 (규칙 연결 — 저장 안 함)
             World.SetRelicRules(Items); // 3-28a: 유물 효과 조회 (규칙 연결 — 저장 안 함)
             World.SetSpellUpgradeRules(_spellUpgradeConfig != null ? _spellUpgradeConfig.ToConfig() : null); // 3-55 마법 강화 (규칙 연결 — 저장 안 함)
@@ -949,6 +971,20 @@ namespace ProjectM
             int total = Talents.Unspent(World, Classes, _player, 1);
             if (World.Run.FormId != null) total += Talents.Unspent(World, Classes, _player, 2);
             return total;
+        }
+
+        /// <summary>3-59: 판에서 처음 일으킨 반응 → 판 밖 도감(codex.json)에 남긴다. 시연 중엔 안 남김 (3-37).</summary>
+        private void OnReactionDiscovered(ReactionDiscoveredEvent e)
+        {
+            if (_demoNoRecords) return;
+            try
+            {
+                if (ReactionCodexStore.Add(e.Group)) _hud.SetHint(HudText.CodexNew(_hudText.Reaction(e.ReactionId)));
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogWarning($"[GameRoot] 도감 저장 실패: {ex.Message}");
+            }
         }
 
         private void OnLevelUp(LevelUpEvent e)

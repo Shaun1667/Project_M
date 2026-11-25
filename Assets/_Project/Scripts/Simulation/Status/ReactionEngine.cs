@@ -118,6 +118,7 @@ namespace ProjectM.Status
                 {
                     if (cellOnlyLogged.Add(r.Id))
                         world.Events.Publish(new ReactionTriggeredEvent(r.Id, casterId, c.Pos, EntityId.None));
+                    ReactionDiscovery.Record(world, book, r, casterId); // 3-59
                     ApplyTriggerChange(world, r, c);
                     continue;
                 }
@@ -132,6 +133,7 @@ namespace ProjectM.Status
                 fired++;
 
                 world.Events.Publish(new ReactionTriggeredEvent(r.Id, casterId, c.Pos, c.Unit != null ? c.Unit.Id : EntityId.None));
+                ReactionDiscovery.Record(world, book, r, casterId); // 3-59
 
                 int extra = r.ExtraDamage > 0 && c.Unit != null && c.Unit.IsAlive ? Math.Min(r.ExtraDamage, config.ExtraDamageCap(spell.Damage)) : 0;
                 if (extra > 0) Combat.ApplyDamage(world, casterId, c.Unit, extra, DamageCause.Reaction(r.Id));

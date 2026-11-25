@@ -15,6 +15,7 @@ MonoBehaviour:
   _maxReactionsPerCast: 4
   _extraDamageCapMin: 3
   _explosionDamageCapMin: 5
+  _discoveryExp: 5
   _reactions:
   - Id: toxic_ignite
     DisplayName: "\uB3C5\uD654"

@@ -171,8 +171,13 @@ namespace ProjectM.Status
         /// <summary>폭발 피해 상한 = max(주문 피해, 이 값) (D6: 폭발은 상한을 올림).</summary>
         public int ExplosionDamageCapMin { get; }
 
-        public ReactionConfig(int maxReactionsPerCast, int extraDamageCapMin, int explosionDamageCapMin)
+        /// <summary>이 판에서 처음 일으킨 반응 그룹마다 플레이어가 받는 경험치 (3-59). 0 = 없음.</summary>
+        public int DiscoveryExp { get; }
+
+        public ReactionConfig(int maxReactionsPerCast, int extraDamageCapMin, int explosionDamageCapMin, int discoveryExp = 0)
         {
+            if (discoveryExp < 0) throw new ArgumentOutOfRangeException(nameof(discoveryExp));
+            DiscoveryExp = discoveryExp;
             if (maxReactionsPerCast < 1) throw new ArgumentOutOfRangeException(nameof(maxReactionsPerCast));
             if (extraDamageCapMin < 0) throw new ArgumentOutOfRangeException(nameof(extraDamageCapMin));
             if (explosionDamageCapMin < 0) throw new ArgumentOutOfRangeException(nameof(explosionDamageCapMin));

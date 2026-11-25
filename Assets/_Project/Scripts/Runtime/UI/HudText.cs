@@ -322,6 +322,12 @@ namespace ProjectM.UI
         public const string NotEnoughSeeds = "씨앗이 3개 있어야 한다";
         /// <summary>3-17d 패턴 보스.</summary>
         public static string BossCharging(EntityId boss) => $"{Enemy(boss)}이(가) 힘을 모은다! 붉은 칸에서 벗어나라";
+        /// <summary>3-59 반응 발견 · 도감.</summary>
+        public static string ReactionDiscovered(string name, int exp) =>
+            exp > 0 ? $"<color=#FFD54F>새 반응 발견! {name}</color> — 경험치 +{exp}" : $"<color=#FFD54F>새 반응 발견! {name}</color>";
+        public static string CodexNew(string name) => $"반응 도감에 처음 기록: {name}";
+        public const string CodexUnknown = "???";
+        public static string CodexTitle(int found, int total) => $"<color=#FFD54F>반응 도감 {found} / {total}</color>";
         /// <summary>3-58 지형 흡수.</summary>
         public const string NothingToAbsorb = "둘레에 흡수할 지형이 없다";
         public static string TerrainAbsorbed(int amount, int gained) =>

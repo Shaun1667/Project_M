@@ -122,6 +122,8 @@ namespace ProjectM.Core
                     w.Write((int)u.Kind);
                     w.Write(u.Level);
                 }
+                w.Write(snapshot.DiscoveredReactions.Length); // 37 (3-59)
+                foreach (var g in snapshot.DiscoveredReactions) w.Write(g ?? string.Empty);
 
                 w.Flush();
                 return stream.ToArray();
@@ -239,6 +241,8 @@ namespace ProjectM.Core
                     var upgradeKind = (ProjectM.Magic.SpellUpgradeKind)r.ReadInt32();
                     s.SpellUpgrades[i] = new SpellUpgradeLevel(spellId, upgradeKind, r.ReadInt32());
                 }
+                s.DiscoveredReactions = new string[ReadCount(r)]; // 37 (3-59)
+                for (int i = 0; i < s.DiscoveredReactions.Length; i++) s.DiscoveredReactions[i] = r.ReadString();
 
                 if (stream.Position != stream.Length)
                     throw new InvalidDataException("스냅샷 끝에 남는 데이터가 있다.");

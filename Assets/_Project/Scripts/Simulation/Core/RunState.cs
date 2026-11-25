@@ -180,6 +180,25 @@ namespace ProjectM.Core
             if (upgrades != null) _spellUpgrades.AddRange(upgrades);
         }
 
+        // ── 반응 발견 (3-59): 이 판에서 처음 일으킨 반응 그룹, 발견 순서 — 스냅샷 v37. ReactionDiscovery로만 바꾼다 ──
+        private readonly System.Collections.Generic.List<string> _discoveredReactions = new System.Collections.Generic.List<string>();
+
+        public System.Collections.Generic.IReadOnlyList<string> DiscoveredReactions => _discoveredReactions;
+
+        /// <summary>처음이면 더하고 true.</summary>
+        internal bool AddDiscoveredReaction(string group)
+        {
+            if (string.IsNullOrEmpty(group) || _discoveredReactions.Contains(group)) return false;
+            _discoveredReactions.Add(group);
+            return true;
+        }
+
+        internal void SetDiscoveredReactions(System.Collections.Generic.IEnumerable<string> groups)
+        {
+            _discoveredReactions.Clear();
+            if (groups != null) _discoveredReactions.AddRange(groups);
+        }
+
         private readonly System.Collections.Generic.List<PendingFloorItem> _pendingFloorItems = new System.Collections.Generic.List<PendingFloorItem>();
         /// <summary>아직 가 보지 않은 층에 놓을 아이템 (3-5 마법서 배치 계획), 층 → 나눠 준 순서. 처음 가는 층에서 꺼내 놓는다.</summary>
         public System.Collections.Generic.IReadOnlyList<PendingFloorItem> PendingFloorItems => _pendingFloorItems;

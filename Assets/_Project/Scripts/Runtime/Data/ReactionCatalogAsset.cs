@@ -52,6 +52,8 @@ namespace ProjectM.Data
         [Min(0)] [SerializeField] private int _extraDamageCapMin = 3;
         [Tooltip("폭발 피해 상한 = max(주문 피해, 이 값)")]
         [Min(0)] [SerializeField] private int _explosionDamageCapMin = 5;
+        [Tooltip("3-59: 이 판에서 처음 일으킨 반응(그룹)마다 경험치")]
+        [Min(0)] [SerializeField] private int _discoveryExp = 5;
 
         [SerializeField] private List<Entry> _reactions = new List<Entry>();
 
@@ -66,7 +68,7 @@ namespace ProjectM.Data
                     e.TargetStatus, e.TargetStatusChancePercent, e.Spread, e.SpreadRange, e.SpreadMaxTargets, e.SpreadDamagePercent,
                     e.Tile, e.TransformTileTo, e.PlaceTerrain, e.ChargeElement));
             }
-            return new ReactionBook(defs, new ReactionConfig(_maxReactionsPerCast, _extraDamageCapMin, _explosionDamageCapMin), statuses);
+            return new ReactionBook(defs, new ReactionConfig(_maxReactionsPerCast, _extraDamageCapMin, _explosionDamageCapMin, _discoveryExp), statuses);
         }
 
         /// <summary>표시 이름 표 (ID → 이름). 이름이 빈 항목은 넣지 않는다.</summary>
