@@ -42,8 +42,8 @@ namespace ProjectM.Tests
             var spells = new SpellBook(new[]
             {
                 new SpellDef("slam", Element.Water, SpellShape.Burst, 3, 6, 0, radius: 1),
-                new SpellDef("zap", Element.Lightning, SpellShape.Burst, 8, 0, 0, radius: 0),
-                new SpellDef("flame", Element.Fire, SpellShape.Burst, 8, 0, 0, radius: 0),
+                new SpellDef("zap", Element.Lightning, SpellShape.Bolt, 8, 0, 0), // 화살: 닿은 칸 하나
+                new SpellDef("flame", Element.Fire, SpellShape.Bolt, 8, 0, 0),
             }, statuses, terrains, reactions);
             world.SetEnemyRules(new EnemyRules(Book, spells, statuses, terrains));
             var player = UnitSpawner.SpawnPlayer(world, new UnitDef("player", 40, 3, 8), new GridPos(2, 2));

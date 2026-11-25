@@ -47,7 +47,7 @@ namespace ProjectM.Tests
             var spells = Spells(statuses);
             Connect(world, statuses, spells);
             var ai = new MeleeChaserAi(world, Config, Sight, statuses);
-            var player = UnitSpawner.SpawnPlayer(world, new UnitDef("player", 30, 2, 8, 10, new[] { "blast" }), new GridPos(1, 2));
+            var player = UnitSpawner.SpawnPlayer(world, new UnitDef("player", 30, 2, 8, 10, new[] { "blast" }), new GridPos(1, 2), Magic.QuickSlotCount);
             var enemy = UnitSpawner.SpawnEnemy(world, new UnitDef("enemy", 20, 2, 8), new GridPos(6, 2), ai);
             world.Events.Flush();
             return new Run { World = world, Player = player, Enemy = enemy, Statuses = statuses, Spells = spells };
