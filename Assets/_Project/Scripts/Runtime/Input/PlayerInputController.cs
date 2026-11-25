@@ -192,6 +192,14 @@ namespace ProjectM.Input
         /// 다음 틱은 연출이 끝난 뒤에 진행된다. 규칙은 그대로 즉시 계산되고 입력만 기다린다. GameRoot가 EntityPresenter · FxPresenter로 채움.
         /// </summary>
         public System.Func<bool> PresentationBusy { get; set; }
+
+        /// <summary>3-60 예지: 켜져 있는지 (GameRoot — 예지 상태 · 턴제). null이면 끔.</summary>
+        public System.Func<bool> ForesightActive { get; set; }
+        /// <summary>3-60 예지: 미리 볼 행동이 바뀜 (null = 숨김). 같은 행동이면 다시 부르지 않는다.</summary>
+        public System.Action<ForesightIntent?> ForesightChanged { get; set; }
+        private ForesightIntent? _lastForesight;
+        private long _lastForesightTick = -1;
+        private World _lastForesightWorld;
         public InventoryMenu Inventory => _inventory;
 
         /// <summary>안내 문구 (한글 · 주문 · 아이템 표시 이름). GameRoot가 Catalog 이름으로 채운다.</summary>
@@ -351,6 +359,7 @@ namespace ProjectM.Input
                 return;
             }
             RefreshAttackTarget(player);
+            UpdateForesight(player, mouse); // 3-60
             HandleWheel(mouse);
             if (HandleCellPick(keyboard, mouse)) return; // 디버그 순간이동 칸 고르기
             if (keyboard != null && (keyboard[Key.I].wasPressedThisFrame || keyboard[Key.F].wasPressedThisFrame)) // 3-10b: F로도 (SPD 배낭)
@@ -1367,6 +1376,36 @@ namespace ProjectM.Input
                 if (System.Array.Exists(buyer.InventorySlots, Sellable)) _inventory.OpenForSale(Sellable, buyer.InventorySlots);
                 else Hint(HudText.NothingToSell);
             }
+        }
+
+        /// <summary>
+        /// 3-60 예지: 조준 중이면 그 주문 · 칸, 아니면 마우스 칸으로 가는 첫 걸음(자기 칸 · 길 없음 = 쉬기). 바뀌었을 때만 알린다.
+        /// 던지기 조준은 미리 보지 않는다 (쉬기로 봄).
+        /// </summary>
+        private void UpdateForesight(Unit player, Mouse mouse)
+        {
+            ForesightIntent? intent = null;
+            if (ForesightActive != null && ForesightActive())
+            {
+                if (_aimSpellId != null && _aimThrow.IsEmpty)
+                    intent = new ForesightIntent(_aimFusionSecond != null ? ForesightKind.Fusion : ForesightKind.Cast, _aimCursor, _aimSpellId, _aimFusionSecond);
+                else if (mouse != null)
+                {
+                    var target = ScreenToCell(mouse.position.ReadValue());
+                    var path = _world.Map.InBounds(target) && target != player.Pos
+                        ? GridPathfinder.FindPath(_world.Map, player.Pos, target, p => _world.Units.IsOccupied(p) || ProjectM.Dungeon.Traps.IsKnown(_world, p))
+                        : null;
+                    intent = path != null && path.Count > 0 ? new ForesightIntent(ForesightKind.Step, path[0]) : ForesightIntent.Wait;
+                }
+                else intent = ForesightIntent.Wait;
+            }
+            long tick = _world.Scheduler.CurrentTick * 1000 + _world.Floor; // 차례가 지나면 같은 행동이어도 다시 (층 · 판이 바뀌어도)
+            if (System.Nullable.Equals(intent, _lastForesight) && tick == _lastForesightTick && ReferenceEquals(_world, _lastForesightWorld)) return;
+            if (intent == null && _lastForesight == null) { _lastForesightTick = tick; _lastForesightWorld = _world; return; }
+            _lastForesight = intent;
+            _lastForesightTick = tick;
+            _lastForesightWorld = _world;
+            ForesightChanged?.Invoke(intent);
         }
 
         private void OnClick(Unit player, Vector2 screenPos)

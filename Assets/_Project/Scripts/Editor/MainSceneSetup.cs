@@ -232,6 +232,14 @@ namespace ProjectM.Editor
             var aimPreview = GetOrAdd<AimPreviewPresenter>(aimGo);
             SetRefs(aimPreview, ("_tilemap", aimTilemap), ("_tile", EnsureFogTile()));
 
+            // 3-60 예지: 조준 미리보기(30) 바로 아래
+            var foresightGo = FindOrCreate("Foresight", gridGo.transform);
+            var foresightTilemap = GetOrAdd<Tilemap>(foresightGo);
+            GetOrAdd<TilemapRenderer>(foresightGo).sortingOrder = 29;
+            foresightGo.transform.localPosition = new Vector3(0f, 0f, -0.025f);
+            var foresight = GetOrAdd<ForesightPresenter>(foresightGo);
+            SetRefs(foresight, ("_tilemap", foresightTilemap), ("_tile", EnsureFogTile()));
+
             var cameraGo = GameObject.FindWithTag("MainCamera");
             CameraController cameraController = null;
             if (cameraGo != null)
@@ -311,6 +319,7 @@ namespace ProjectM.Editor
                 ("_zoneCatalog", zoneCatalog),
                 ("_zoneTheme", EnsureZoneTheme(zoneCatalog)), // 3-17c
                 ("_traps", trapPresenter),
+                ("_foresight", foresight), // 3-60
                 ("_consumableConfig", consumableConfig),
                 ("_characters", characterCatalog),
                 ("_characterSelect", characterSelect),
@@ -707,6 +716,7 @@ namespace ProjectM.Editor
             // 3-13b 주문서 상태 (BALANCE 6번): 잠 = 행동 불가 · 맞으면 깸, 공포 = 도망 (SPD 20)
             changed |= catalog.AddIfMissing(new StatusCatalogAsset.Entry { Type = StatusType.Asleep, DurationTicks = 30, PreventsAction = true, WakesOnDamage = true });
             changed |= catalog.AddIfMissing(new StatusCatalogAsset.Entry { Type = StatusType.Terrified, DurationTicks = 20, Flees = true });
+            changed |= catalog.AddIfMissing(new StatusCatalogAsset.Entry { Type = StatusType.Foresight, DurationTicks = 20, Foresees = true }); // 3-60 예지
             if (changed) EditorUtility.SetDirty(catalog);
             return catalog;
         }
@@ -1288,6 +1298,7 @@ namespace ProjectM.Editor
             changed |= catalog.AddIfMissing(Consumable("scroll_terror", "공포 주문서", ItemUse.Scroll, ConsumableEffect.Terror, 1));
             changed |= catalog.AddIfMissing(Consumable("scroll_lullaby", "자장가 주문서", ItemUse.Scroll, ConsumableEffect.Lullaby, 1));
             changed |= catalog.AddIfMissing(Consumable("scroll_transmutation", "변환 주문서", ItemUse.Scroll, ConsumableEffect.Transmutation, 1));
+            changed |= catalog.AddIfMissing(Consumable("scroll_foresight", "예지 주문서", ItemUse.Scroll, ConsumableEffect.Foresight, 1)); // 3-60 (겉모습 12번째 칸)
             // 3-14 음식 (SPD): 식량 300 · 작은 빵 · 고기 150. 정체불명 고기는 불 = 구운 고기, 얼음 = 얼린 고기 (BALANCE 18번)
             changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "gold", DisplayName = "금화", Use = ItemUse.Gold }); // 3-15a
             changed |= catalog.AddIfMissing(new ItemCatalogAsset.Entry { Id = "key_iron", DisplayName = "쇠 열쇠", Use = ItemUse.Key }); // 3-15b

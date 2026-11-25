@@ -145,6 +145,8 @@ namespace ProjectM.Items
         Lullaby = 22,
         /// <summary>변환 주문서 (3-13b): 고른 아이템을 같은 쓰임의 다른 것으로.</summary>
         Transmutation = 23,
+        /// <summary>예지 주문서 (3-60): 읽은 유닛에 예지 — 고른 행동 뒤의 적 자리를 미리 본다.</summary>
+        Foresight = 24,
     }
 
     /// <summary>아이템 하나의 규칙 데이터 (3-2a). 값은 ItemCatalogAsset에서 온다 — BALANCE.md 9번.</summary>

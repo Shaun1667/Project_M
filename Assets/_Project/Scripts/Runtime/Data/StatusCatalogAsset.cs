@@ -25,6 +25,7 @@ namespace ProjectM.Data
             [Tooltip("층의 모든 적이 보임 (3-13a 정신 시야)")] public bool SensesEnemies;
             [Tooltip("피해를 받으면 풀림 (3-13b 잠)")] public bool WakesOnDamage;
             [Tooltip("플레이어에게서 도망 (3-13b 공포)")] public bool Flees;
+            [Tooltip("고른 행동 뒤의 적 자리를 미리 봄 (3-60 예지)")] public bool Foresees;
         }
 
         [SerializeField] private List<Entry> _statuses = new List<Entry>();
@@ -34,7 +35,7 @@ namespace ProjectM.Data
             var defs = new List<StatusDef>(_statuses.Count);
             foreach (var e in _statuses)
                 defs.Add(new StatusDef(e.Type, e.DurationTicks, e.DamagePerTick, e.ExtraActionCostTicks, e.PreventsAction,
-                    Math.Max(1, e.MoveSteps), e.HiddenFromEnemies, e.Levitates, e.SensesEnemies, e.WakesOnDamage, e.Flees));
+                    Math.Max(1, e.MoveSteps), e.HiddenFromEnemies, e.Levitates, e.SensesEnemies, e.WakesOnDamage, e.Flees, e.Foresees));
             return new StatusBook(defs);
         }
 

@@ -2618,7 +2618,7 @@ MonoBehaviour:
     BrewsInto: 
     RelicEffects:
     - Effect: 1
-      Values: 02000000030000000400000005000000i
+      Values: 02000000030000000400000005000000
       SpellIds:
       - '*elemental'
       WeaponId: 
@@ -2657,7 +2657,7 @@ MonoBehaviour:
     BrewsInto: 
     RelicEffects:
     - Effect: 10
-      Values: 0a0000000f0000001400000019000000i
+      Values: 0a0000000f0000001400000019000000
       SpellIds: []
       WeaponId: 
       Status: 0
@@ -2695,7 +2695,7 @@ MonoBehaviour:
     BrewsInto: 
     RelicEffects:
     - Effect: 14
-      Values: fffffffffffffffffefffffffeffffffi
+      Values: fffffffffffffffffefffffffeffffff
       SpellIds: []
       WeaponId: 
       Status: 0
@@ -2733,7 +2733,7 @@ MonoBehaviour:
     BrewsInto: 
     RelicEffects:
     - Effect: 8
-      Values: 19000000230000002d00000037000000i
+      Values: 19000000230000002d00000037000000
       SpellIds:
       - '*'
       WeaponId: 
@@ -2772,7 +2772,7 @@ MonoBehaviour:
     BrewsInto: 
     RelicEffects:
     - Effect: 11
-      Values: 1e0000002d0000003c0000004b000000i
+      Values: 1e0000002d0000003c0000004b000000
       SpellIds:
       - '*'
       WeaponId: 
@@ -2811,7 +2811,7 @@ MonoBehaviour:
     BrewsInto: 
     RelicEffects: []
     TimeKind: 1
-    TimeGauge: 05000000060000000700000008000000i
+    TimeGauge: 05000000060000000700000008000000
     TimePower: 
   - Id: relic_time_machine
     DisplayName: "\uD0C0\uC784\uBA38\uC2E0"
@@ -2844,7 +2844,7 @@ MonoBehaviour:
     BrewsInto: 
     RelicEffects: []
     TimeKind: 2
-    TimeGauge: 05000000080000000b0000000f000000i
+    TimeGauge: 05000000080000000b0000000f000000
     TimePower: 
   - Id: relic_accelerator
     DisplayName: "\uAC00\uC18D\uAE30"
@@ -2877,8 +2877,8 @@ MonoBehaviour:
     BrewsInto: 
     RelicEffects: []
     TimeKind: 3
-    TimeGauge: 03000000030000000400000005000000i
-    TimePower: 02000000020000000300000004000000i
+    TimeGauge: 03000000030000000400000005000000
+    TimePower: 02000000020000000300000004000000
   - Id: relic_stopwatch
     DisplayName: "\uC2A4\uD1B1\uC6CC\uCE58"
     Use: 13
@@ -2910,7 +2910,7 @@ MonoBehaviour:
     BrewsInto: 
     RelicEffects: []
     TimeKind: 4
-    TimeGauge: 03000000040000000500000006000000i
+    TimeGauge: 03000000040000000500000006000000
     TimePower: 
   - Id: key_crystal
     DisplayName: "\uC218\uC815 \uC5F4\uC1E0"
@@ -3063,6 +3063,39 @@ MonoBehaviour:
     Amount: 0
     Effect: 0
     Weight: 0
+    Food: 0
+    Risky: 0
+    FireTransformsTo: 
+    IceTransformsTo: 
+    Value: 30
+    ThrowMinDamage: 0
+    ThrowMaxDamage: 0
+    BreakPercent: 0
+    PlantTrap: 0
+    BrewsInto: 
+    RelicEffects: []
+    TimeKind: 0
+    TimeGauge: 
+    TimePower: 
+  - Id: scroll_foresight
+    DisplayName: "\uC608\uC9C0 \uC8FC\uBB38\uC11C"
+    Use: 5
+    SpellId: 
+    MaxDamage: 0
+    UpgradeEfficiency: 0
+    Accuracy: 0
+    AttackCostTicks: 0
+    Reach: 0
+    StrengthRequirement: 0
+    SurpriseMinPercent: 0
+    Defense: 0
+    HitsPerAttack: 0
+    AttackDelay: 0
+    WeaponFamily: 
+    Tier: 0
+    Amount: 0
+    Effect: 24
+    Weight: 1
     Food: 0
     Risky: 0
     FireTransformsTo: 

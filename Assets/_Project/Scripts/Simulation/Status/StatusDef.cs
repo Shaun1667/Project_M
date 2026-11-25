@@ -27,6 +27,8 @@ namespace ProjectM.Status
         Asleep = 11,
         /// <summary>공포 (3-13b 공포 주문서): 플레이어에게서 도망친다 (Flees).</summary>
         Terrified = 12,
+        /// <summary>예지 (3-60 예지 주문서): 고른 행동 뒤의 적 자리를 미리 본다 (Foresees — 플레이어만).</summary>
+        Foresight = 13,
     }
 
     /// <summary>
@@ -56,11 +58,14 @@ namespace ProjectM.Status
         public bool WakesOnDamage { get; }
         /// <summary>걸린 적은 플레이어 쪽에서 멀어지고 공격하지 않는다 (3-13b 공포).</summary>
         public bool Flees { get; }
+        /// <summary>고른 행동 뒤의 적 자리를 미리 본다 (3-60 예지 — 플레이어만, 화면은 Runtime).</summary>
+        public bool Foresees { get; }
 
         public StatusDef(StatusType type, int durationTicks, int damagePerTick = 0, int extraActionCostTicks = 0, bool preventsAction = false,
             int moveSteps = 1, bool hiddenFromEnemies = false, bool levitates = false, bool sensesEnemies = false,
-            bool wakesOnDamage = false, bool flees = false)
+            bool wakesOnDamage = false, bool flees = false, bool foresees = false)
         {
+            Foresees = foresees;
             WakesOnDamage = wakesOnDamage;
             Flees = flees;
             if (moveSteps < 1) throw new ArgumentOutOfRangeException(nameof(moveSteps), moveSteps, "이동 칸 수는 1 이상이어야 한다.");

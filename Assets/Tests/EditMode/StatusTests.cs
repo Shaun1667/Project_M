@@ -241,7 +241,7 @@ namespace ProjectM.Tests
             var expected = SpellTests.BalanceStatuses();
             Assert.That(book.Count, Is.EqualTo(expected.Count));
             foreach (StatusType type in new[] { StatusType.Burn, StatusType.Slow, StatusType.Poison, StatusType.Paralyze, StatusType.Wet, StatusType.Frozen,
-                StatusType.Haste, StatusType.Invisible, StatusType.Levitating, StatusType.MindVision, StatusType.Asleep, StatusType.Terrified })
+                StatusType.Haste, StatusType.Invisible, StatusType.Levitating, StatusType.MindVision, StatusType.Asleep, StatusType.Terrified, StatusType.Foresight })
             {
                 Assert.That(book.TryGet(type, out var a), Is.True, type.ToString());
                 expected.TryGet(type, out var e);
@@ -250,6 +250,7 @@ namespace ProjectM.Tests
                 Assert.That((a.MoveSteps, a.HiddenFromEnemies, a.Levitates, a.SensesEnemies),
                     Is.EqualTo((e.MoveSteps, e.HiddenFromEnemies, e.Levitates, e.SensesEnemies)), type.ToString() + " (3-13a)");
                 Assert.That((a.WakesOnDamage, a.Flees), Is.EqualTo((e.WakesOnDamage, e.Flees)), type.ToString() + " (3-13b)");
+                Assert.That(a.Foresees, Is.EqualTo(e.Foresees), type.ToString() + " (3-60)");
             }
         }
     }

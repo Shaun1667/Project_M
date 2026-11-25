@@ -38,6 +38,7 @@ namespace ProjectM.Tests
             // 3-13b 주문서 상태
             new ProjectM.Status.StatusDef(ProjectM.Status.StatusType.Asleep, 30, preventsAction: true, wakesOnDamage: true),
             new ProjectM.Status.StatusDef(ProjectM.Status.StatusType.Terrified, 20, flees: true),
+            new ProjectM.Status.StatusDef(ProjectM.Status.StatusType.Foresight, 20, foresees: true), // 3-60 예지 주문서
         });
 
         // 상태 동작 시험용: 확률 100%로 고정 (실제 수치는 BalanceBookFull — 3-1부터 70%)

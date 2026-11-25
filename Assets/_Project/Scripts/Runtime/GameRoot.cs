@@ -53,6 +53,7 @@ namespace ProjectM
         [Tooltip("지형 효과 오버레이. 비우면 지형 효과가 화면에 안 보인다")]
         [SerializeField] private TerrainOverlayPresenter _terrainOverlay;
         [SerializeField] private TrapPresenter _traps;
+        [Tooltip("3-60 예지 표시. 비우면 예지 주문서는 상태만")] [SerializeField] private ForesightPresenter _foresight;
         [Tooltip("3D 이펙트 (G-3). 비우면 이펙트 없이 색 덮개만")] [SerializeField] private FxPresenter _fx;
         [Tooltip("바닥 아이템 · 마법서 (3-5). 비우면 바닥 아이템이 화면에 안 보인다")] [SerializeField] private FloorItemPresenter _floorItems;
         [SerializeField] private PlayerInputController _input;
@@ -714,6 +715,16 @@ namespace ProjectM
             _input.WorkbenchRequested = OpenWorkbench; // 3-28b 제작대에 부딪힘 → 창
             _input.TimeMachineRequested = OpenTimeMachine; // 3-28c 타임머신 → 몇 턴 전 창
             _input.UpgradeScrollRequested = _spellUpgradeConfig != null ? OpenUpgradeScroll : (System.Action<InventoryRef>)null; // 3-55 강화 주문서 → 대상 창
+            // 3-60 예지: 복사본 규칙 (BuildForecastWorld) · 켜짐 판정 · 미리 볼 행동이 바뀌면 다시 계산
+            _forecast = new ForecastRules
+            {
+                Sight = sight, Enemies = enemiesBook, Shop = shopConfig, AiConsumables = aiConsumableConfig, AiProgression = aiProgression,
+                Progression = progression, Hunger = hunger, FireSpread = _terrainCatalog.ToFireSpread(), Traps = traps, Search = search,
+                Pickup = loot != null, Stairs = stairs,
+            };
+            _input.ForesightActive = () => World != null && World.Run.Mode == RunMode.TurnBased && PlayerActions.TryGetPlayer(World, out var seer) && Foresight.IsActive(Statuses, seer);
+            _input.ForesightChanged = ShowForesight;
+            if (_foresight != null) _foresight.Hide();
             var consumableConfigForRun = consumableConfig;
 
             Unit player;
@@ -761,6 +772,111 @@ namespace ProjectM
                 _camera.SnapToTarget(_entityPresenter.CellCenter(player.Pos));
             }
             if (restoring) OpenFormSelectIfReady(bossDefeated: !HasSealedStairs()); // 형태를 고르기 전에 껐으면 다시 묻는다
+        }
+
+        /// <summary>3-60 예지 복사본에 다시 거는 판 규칙 (BeginRun의 값 — 저장하지 않음).</summary>
+        private sealed class ForecastRules
+        {
+            public ISightRule Sight;
+            public EnemyBook Enemies;
+            public ProjectM.Dungeon.ShopConfig Shop;
+            public ConsumableConfig AiConsumables;
+            public ProgressionConfig AiProgression, Progression;
+            public HungerConfig Hunger;
+            public FireSpreadConfig FireSpread;
+            public TrapBook Traps;
+            public ProjectM.Dungeon.SearchConfig Search;
+            public bool Pickup;
+            public FloorTransition Stairs;
+        }
+
+        private ForecastRules _forecast;
+        private bool _forecastFailed; // 한 번 실패하면 경고를 되풀이하지 않음
+
+        /// <summary>
+        /// 3-60 예지: 지금 World를 스냅샷으로 복사하고 한 차례 움직임에 드는 판 규칙을 다시 건다 (BeginRun과 같은 규칙 — 화면 · 저장 · 층 이동 · 적 재생성 · 아이템 규칙은 빼고).
+        /// 복사본의 이벤트는 아무도 듣지 않는다. 실패하면 null.
+        /// </summary>
+        private World BuildForecastWorld()
+        {
+            var r = _forecast;
+            if (r == null || World == null) return null;
+            MeleeChaserAi enemyAi = null;
+            AllyAi allyAi = null;
+            ShopkeeperAi keeperAi = null;
+            void Ensure(World w)
+            {
+                if (enemyAi != null) return;
+                enemyAi = new MeleeChaserAi(w, Config, r.Sight, Statuses, r.Enemies, Spells, new BresenhamTargetingRule());
+                allyAi = new AllyAi(w, Config, r.Sight);
+                if (r.Shop != null)
+                    keeperAi = new ShopkeeperAi(w, Config, new ConsumableRules(Items, r.AiConsumables, Statuses, Terrains, r.AiProgression, r.Sight, allyAi, Spells),
+                        new BresenhamTargetingRule(), r.Sight, r.Shop, enemyAi);
+            }
+            System.Func<World, EntityId, ICommandSource> factory = (w, id) =>
+            {
+                Ensure(w);
+                return !w.Units.TryGet(id, out var u) ? enemyAi : u.Faction == Faction.Ally ? allyAi
+                    : keeperAi != null && u.Faction == Faction.Enemy && u.VisualId == r.Shop.KeeperVisualId ? keeperAi
+                    : u.Faction == Faction.Neutral ? new ProjectM.Dungeon.IdleNeutralAi() : (ICommandSource)enemyAi;
+            };
+            var clone = World.Restore(WorldSnapshotCodec.Decode(WorldSnapshotCodec.Encode(World.Capture())), factory);
+            Ensure(clone);
+            clone.InstallCoreSystems(r.Sight, Magic, Statuses, Terrains, r.Progression, r.FireSpread, r.Hunger);
+            clone.DebugInvulnerable = World.DebugInvulnerable;
+            if (r.Enemies != null) clone.SetEnemyRules(new EnemyRules(r.Enemies, Spells, Statuses, Terrains));
+            if (keeperAi != null) clone.SetShopRules(new ShopRules(r.Shop, _zones, keeperAi, Items));
+            if (_floorDecorConfig != null && _zoneCatalog != null)
+            {
+                var crypt = _floorDecorConfig.ToCrypt();
+                if (_zoneCatalog.TryGetEnemy(crypt.GuardianId, out var guardian))
+                    clone.SetCryptRules(new ProjectM.Dungeon.CryptRules(crypt, ZoneCatalogAsset.ToDef(guardian), enemyAi));
+                var statue = _floorDecorConfig.ToStatue();
+                if (_zoneCatalog.TryGetEnemy(statue.StatueId, out var statueRow))
+                    clone.SetStatueRules(new ProjectM.Dungeon.StatueRules(statue, ZoneCatalogAsset.ToDef(statueRow), enemyAi, Items));
+                var sentry = _floorDecorConfig.ToSentry();
+                if (_zoneCatalog.TryGetEnemy(sentry.SentryId, out var sentryRow))
+                    clone.SetSentryRules(new ProjectM.Dungeon.SentryRules(sentry, ZoneCatalogAsset.ToDef(sentryRow), enemyAi));
+                var pool = _floorDecorConfig.ToPool();
+                if (_zoneCatalog.TryGetEnemy(pool.PiranhaId, out var piranhaRow))
+                    clone.SetPoolRules(new ProjectM.Dungeon.PoolRules(pool, ZoneCatalogAsset.ToDef(piranhaRow), enemyAi));
+            }
+            clone.Scheduler.AddSystem(TickPhase.ManaRegen, new TimeRelicSystem(clone, Items));
+            if (r.Pickup) clone.Scheduler.AddSystem(TickPhase.ManaRegen, new ItemPickupSystem(clone, Items));
+            if (r.Search != null) clone.Scheduler.AddSystem(TickPhase.ManaRegen, new PassiveSearchSystem(clone, r.Search));
+            if (r.Traps != null) clone.Scheduler.AddSystem(TickPhase.ManaRegen, new TrapSystem(clone, r.Traps, Spells));
+            if (r.Stairs != null)
+                clone.SetChasmRules(new ProjectM.Dungeon.ChasmRules(_floorDecorConfig != null ? _floorDecorConfig.ToChasm() : new ProjectM.Dungeon.ChasmConfig(12, 25), r.Stairs.CanFallFrom));
+            clone.SetClassRules(Classes);
+            clone.SetRelicRules(Items);
+            clone.SetSpellUpgradeRules(_spellUpgradeConfig != null ? _spellUpgradeConfig.ToConfig() : null);
+            return clone;
+        }
+
+        /// <summary>3-60 예지: 고른 행동을 복사본에서 해 보고 지금 보이는 적의 결과를 칠한다. null = 숨김.</summary>
+        private void ShowForesight(ForesightIntent? intent)
+        {
+            if (_foresight == null) return;
+            if (intent == null || World == null || !PlayerActions.TryGetPlayer(World, out var player)) { _foresight.Hide(); return; }
+            try
+            {
+                var watch = new System.Collections.Generic.List<EntityId>();
+                foreach (var u in World.Units.ToSortedList())
+                    if (u.IsAlive && u.Id != player.Id && Factions.AreHostile(u.Faction, player.Faction) && (_forecast == null || _forecast.Sight.CanSee(World.Map, player.Pos, u.Pos, player.SightRange)))
+                        watch.Add(u.Id);
+                var clone = BuildForecastWorld();
+                var command = clone != null
+                    ? Foresight.BuildCommand(clone, Config, Spells, Fusions, Items, Statuses, new BresenhamTargetingRule(), _forecast.Sight, intent.Value)
+                    : null;
+                if (command == null) { _foresight.Hide(); return; }
+                _foresight.Show(Foresight.Run(clone, command, watch));
+            }
+            catch (System.Exception ex)
+            {
+                _foresight.Hide();
+                if (!_forecastFailed) Debug.LogWarning($"[GameRoot] 예지 계산 실패: {ex.Message}\n{ex.StackTrace}");
+                _forecastFailed = true;
+            }
         }
 
         /// <summary>캐릭터 모습 ID → 캐릭터 이름 (3-23b 기록 이름 — 이어하기에서 다시 찾음).</summary>

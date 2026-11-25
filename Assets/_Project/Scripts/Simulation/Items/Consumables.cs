@@ -444,6 +444,9 @@ namespace ProjectM.Items
                 case ConsumableEffect.MindVision:
                     ApplySelf(world, rules, unit, StatusType.MindVision);
                     break;
+                case ConsumableEffect.Foresight: // 3-60
+                    ApplySelf(world, rules, unit, StatusType.Foresight);
+                    break;
                 case ConsumableEffect.MirrorImage:
                     MirrorImages(world, rules, unit);
                     break;
